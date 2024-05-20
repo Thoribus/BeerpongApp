@@ -28,10 +28,19 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        //colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
+        buttonTheme: ButtonThemeData(
+          buttonColor: Colors.white, //  <-- dark color
+          textTheme:
+              ButtonTextTheme.primary, //  <-- this auto selects the right color
+        ),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Beerpong App'),
+      //home: new Scaffold(
+      //Here you can set what ever background color you need.
+      //backgroundColor: Colors.black,
+      //),
     );
   }
 }
@@ -68,6 +77,26 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  _new_button_becher(int index) {
+    return Visibility(
+        child: FloatingActionButton.large(
+            onPressed: _incrementCounter,
+            tooltip: 'Becher ' + index.toString(),
+            child: Icon(Icons.album_outlined, color: Colors.red, size: 90.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(45),
+            )));
+  }
+
+  _new_button_airball(int index) {
+    return Visibility(
+        child: FloatingActionButton.extended(
+      onPressed: () {},
+      tooltip: 'Airball',
+      label: Text('Airball'),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -81,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.amber,
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
@@ -103,11 +132,37 @@ class _MyHomePageState extends State<MyHomePage> {
           // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
           // action in the IDE, or press "p" in the console), to see the
           // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+
           children: <Widget>[
-            const Text(
-              'So oft gedrückt wie oft ich will:',
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [_new_button_airball(10)]),
+            SizedBox(
+              height: 50,
             ),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              _new_button_becher(6),
+              _new_button_becher(7),
+              _new_button_becher(8),
+              _new_button_becher(9)
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              _new_button_becher(3),
+              _new_button_becher(4),
+              _new_button_becher(5)
+            ]),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [_new_button_becher(1), _new_button_becher(2)]),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [_new_button_becher(0)]),
+            SizedBox(
+              height: 50,
+            ),
+            const Text('So viele Becher habe ich getroffen:',
+                style: TextStyle(color: Colors.white)),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
@@ -115,11 +170,38 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+
+      //floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
+
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(left: 20),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              onPressed: _incrementCounter,
+              tooltip: 'Increment',
+              child: const Icon(Icons.add),
+            ),
+            SizedBox(
+              width: 10,
+            ),
+            FloatingActionButton.extended(
+              onPressed: () {},
+              tooltip: 'Kein Becher wurde diese Runde getroffen.',
+              label: Text('Nix getroffen'),
+            ),
+            Expanded(child: Container()),
+            FloatingActionButton.extended(
+              onPressed: () {},
+              tooltip:
+                  'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
+              label: Text('Zug beenden'),
+            ),
+          ],
+        ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+      backgroundColor: Colors.black,
     );
   }
 }
