@@ -80,9 +80,11 @@ class _MyHomePageState extends State<MyHomePage> {
   _new_button_becher(int index) {
     return Visibility(
         child: FloatingActionButton.large(
+            backgroundColor: const Color(0xFFFFFF), //schwarzer Hintergrund
             onPressed: _incrementCounter,
             tooltip: 'Becher ' + index.toString(),
-            child: Icon(Icons.album_outlined, color: Colors.red, size: 90.0),
+            child: Icon(Icons.panorama_fish_eye_rounded,
+                color: Colors.red, size: 90.0),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(45),
             )));
@@ -91,10 +93,10 @@ class _MyHomePageState extends State<MyHomePage> {
   _new_button_airball(int index) {
     return Visibility(
         child: FloatingActionButton.extended(
-      onPressed: () {},
-      tooltip: 'Airball',
-      label: Text('Airball'),
-    ));
+            onPressed: () {},
+            tooltip: 'Airball',
+            label: Text('Airball'),
+            icon: Icon(Icons.air_rounded)));
   }
 
   @override
@@ -138,9 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [_new_button_airball(10)]),
-            SizedBox(
-              height: 50,
-            ),
+            SizedBox(height: 50),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               _new_button_becher(6),
               _new_button_becher(7),
@@ -158,9 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [_new_button_becher(0)]),
-            SizedBox(
-              height: 50,
-            ),
+            SizedBox(height: 50),
             const Text('So viele Becher habe ich getroffen:',
                 style: TextStyle(color: Colors.white)),
             Text(
@@ -181,23 +179,21 @@ class _MyHomePageState extends State<MyHomePage> {
             FloatingActionButton(
               onPressed: _incrementCounter,
               tooltip: 'Increment',
-              child: const Icon(Icons.add),
+              child: const Icon(Icons.scatter_plot_outlined),
             ),
-            SizedBox(
-              width: 10,
-            ),
+            SizedBox(width: 10),
             FloatingActionButton.extended(
-              onPressed: () {},
-              tooltip: 'Kein Becher wurde diese Runde getroffen.',
-              label: Text('Nix getroffen'),
-            ),
+                onPressed: () {},
+                tooltip: 'Kein Becher wurde diese Runde getroffen.',
+                label: Text('Nix getroffen'),
+                icon: Icon(Icons.clear_rounded)),
             Expanded(child: Container()),
             FloatingActionButton.extended(
-              onPressed: () {},
-              tooltip:
-                  'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
-              label: Text('Zug beenden'),
-            ),
+                onPressed: () {},
+                tooltip:
+                    'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
+                label: Text('Zug beenden'),
+                icon: Icon(Icons.check_rounded)),
           ],
         ),
       ), // This trailing comma makes auto-formatting nicer for build methods.
