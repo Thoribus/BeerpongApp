@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const BeerPongApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class BeerPongApp extends StatelessWidget {
+  const BeerPongApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -45,36 +44,25 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class BeerPongTable extends StatefulWidget {
+  const BeerPongTable({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _BeerPongTableState createState() => _BeerPongTableState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _BeerPongTableState extends State<BeerPongTable> {
+  List<Cup> cups = [];
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    // Generate cups for the pyramid
+    for (int row = 3; row >= 0; row--) {
+      for (int col = 0; col <= row; col++) {
+        cups.add(Cup(row * 4 + col));
+      }
+    }
   }
 
   _new_button_becher(int index) {
@@ -165,7 +153,31 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-          ],
+        ],
+      ),
+    );
+  }
+}
+
+class Cup {
+  final int index;
+  bool isVisible;
+
+  Cup(this.index) : isVisible = true;
+
+  // Define a getter for the cup widget
+  Widget get widget {
+    return Visibility(
+      visible: isVisible,
+      maintainSize: true,
+      maintainAnimation: true,
+      maintainState: true,
+      child: Container(
+        width: 50.0,
+        height: 50.0,
+        decoration: const BoxDecoration(
+          color: Colors.red, // Cup color
+          shape: BoxShape.circle,
         ),
       ),
 
