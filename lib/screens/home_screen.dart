@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MyHomePage(
+                            builder: (context) => GameScreen(
                               title: 'Beer Pong',
                               players: [
                                 Player(player1Name),

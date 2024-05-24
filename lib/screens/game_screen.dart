@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
 
-// MyHomePage is a stateful widget that represents the main page of the application.
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, required this.players});
+// GameScreen is a stateful widget that represents the main page of the application.
+class GameScreen extends StatefulWidget {
+  const GameScreen({super.key, required this.title, required this.players});
 
   final String title; // The title of the page
   final List<Player> players; // List of players participating in the game
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<GameScreen> createState() => _GameScreenState();
 }
 
-// _MyHomePageState is the state for MyHomePage, managing its state and behavior.
-class _MyHomePageState extends State<MyHomePage> {
+// _GameScreenState is the state for GameScreen, managing its state and behavior.
+class _GameScreenState extends State<GameScreen> {
   // Initializing players based on the provided list of players
   late Player player1 = Player(widget.players[0].name);
   late Player player2 = Player(widget.players[1].name);
