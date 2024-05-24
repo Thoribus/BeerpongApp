@@ -7,55 +7,56 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        //colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         buttonTheme: ButtonThemeData(
-          buttonColor: Colors.white, //  <-- dark color
-          textTheme:
-              ButtonTextTheme.primary, //  <-- this auto selects the right color
+          buttonColor: Colors.white,
+          textTheme: ButtonTextTheme.primary,
         ),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Beerpong App'),
-      //home: new Scaffold(
-      //Here you can set what ever background color you need.
-      //backgroundColor: Colors.black,
-      //),
     );
+  }
+}
+
+class Player {
+  final String name;
+  int score;
+  int misses;
+  int airballs;
+  bool hitThisRound;
+
+  Player(this.name)
+      : score = 0,
+        misses = 0,
+        airballs = 0,
+        hitThisRound = false;
+
+  void incrementScore() {
+    score++;
+    hitThisRound = true;
+  }
+
+  void incrementMisses() {
+    misses++;
+  }
+
+  void resetHitThisRound() {
+    hitThisRound = false;
+  }
+
+  void incrementAirballs() {
+    airballs++;
+    incrementMisses();
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -64,140 +65,262 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final Player player1 = Player("Player 1");
+  final Player player2 = Player("Player 2");
+  final Player player3 = Player("Player 3");
+  final Player player4 = Player("Player 4");
 
-  void _incrementCounter() {
+  List<Cup> team1Cups = List.generate(10, (index) => Cup(index));
+  List<Cup> team2Cups = List.generate(10, (index) => Cup(index));
+
+  bool isTeamOneTurn = true;
+
+  Future<void> _showPlayerSelectionDialog(int cupIndex) async {
+    List<Player> currentPlayers =
+        isTeamOneTurn ? [player1, player2] : [player3, player4];
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Player'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: currentPlayers.map((player) {
+                return ElevatedButton(
+                  child: Text(player.name),
+                  onPressed: () {
+                    _incrementPlayerScore(player);
+                    _hideCup(cupIndex);
+                    Navigator.of(context).pop();
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _incrementPlayerScore(Player player) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      player.incrementScore();
     });
   }
 
-  _new_button_becher(int index) {
-    return Visibility(
-        child: FloatingActionButton.large(
-            backgroundColor: const Color(0xFFFFFF), //schwarzer Hintergrund
-            onPressed: _incrementCounter,
-            tooltip: 'Becher ' + index.toString(),
-            child: Icon(Icons.panorama_fish_eye_rounded,
-                color: Colors.red, size: 90.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(45),
-            )));
+  void _incrementPlayerMisses() {
+    setState(() {
+      List<Player> currentPlayers =
+          isTeamOneTurn ? [player1, player2] : [player3, player4];
+      for (var player in currentPlayers) {
+        player.incrementMisses();
+      }
+    });
   }
 
-  _new_button_airball(int index) {
+  void _hideCup(int index) {
+    setState(() {
+      if (isTeamOneTurn) {
+        team1Cups[index].isVisible = false;
+      } else {
+        team2Cups[index].isVisible = false;
+      }
+    });
+  }
+
+  void _endTurn() {
+    setState(() {
+      List<Player> currentPlayers =
+          isTeamOneTurn ? [player1, player2] : [player3, player4];
+
+      for (var player in currentPlayers) {
+        if (!player.hitThisRound) {
+          player.incrementMisses();
+        }
+        player.resetHitThisRound();
+      }
+
+      // Switch turn to the other team
+      isTeamOneTurn = !isTeamOneTurn;
+    });
+  }
+
+   _new_button_airball(int index) {
     return Visibility(
         child: FloatingActionButton.extended(
-            onPressed: () {},
+            onPressed: _showAirballPlayerSelectionDialog,
             tooltip: 'Airball',
-            label: Text('Airball'),
-            icon: Icon(Icons.air_rounded)));
+            label: const Text('Airball'),
+            icon: const Icon(Icons.air_rounded)));
+  }
+
+  Future<void> _showAirballPlayerSelectionDialog() async {
+    List<Player> currentPlayers =
+        isTeamOneTurn ? [player1, player2] : [player3, player4];
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Player'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: currentPlayers.map((player) {
+                return ElevatedButton(
+                  child: Text(player.name),
+                  onPressed: () {
+                    _incrementPlayerAirballs(player);
+                    Navigator.of(context).pop();
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _incrementPlayerAirballs(Player player) {
+    setState(() {
+      player.incrementAirballs();
+      print("Airball for ${player.name} total: ${player.airballs}");
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Colors.amber,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.start,
-
           children: <Widget>[
-            Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [_new_button_airball(10)]),
-            SizedBox(height: 50),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _new_button_becher(6),
-              _new_button_becher(7),
-              _new_button_becher(8),
-              _new_button_becher(9)
+              _new_button_airball(10)
             ]),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _new_button_becher(3),
-              _new_button_becher(4),
-              _new_button_becher(5)
-            ]),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [_new_button_becher(1), _new_button_becher(2)]),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [_new_button_becher(0)]),
-            SizedBox(height: 50),
-            const Text('So viele Becher habe ich getroffen:',
-                style: TextStyle(color: Colors.white)),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  isTeamOneTurn
+                      ? team1Cups[6].widget(() => _showPlayerSelectionDialog(6))
+                      : team2Cups[6].widget(() => _showPlayerSelectionDialog(6)),
+                  isTeamOneTurn
+                      ? team1Cups[7].widget(() => _showPlayerSelectionDialog(7))
+                      : team2Cups[7].widget(() => _showPlayerSelectionDialog(7)),
+                  isTeamOneTurn
+                      ? team1Cups[8].widget(() => _showPlayerSelectionDialog(8))
+                      : team2Cups[8].widget(() => _showPlayerSelectionDialog(8)),
+                  isTeamOneTurn
+                      ? team1Cups[9].widget(() => _showPlayerSelectionDialog(9))
+                      : team2Cups[9].widget(() => _showPlayerSelectionDialog(9)),
+                ]),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  isTeamOneTurn
+                      ? team1Cups[3].widget(() => _showPlayerSelectionDialog(3))
+                      : team2Cups[3].widget(() => _showPlayerSelectionDialog(3)),
+                  isTeamOneTurn
+                      ? team1Cups[4].widget(() => _showPlayerSelectionDialog(4))
+                      : team2Cups[4].widget(() => _showPlayerSelectionDialog(4)),
+                  isTeamOneTurn
+                      ? team1Cups[5].widget(() => _showPlayerSelectionDialog(5))
+                      : team2Cups[5].widget(() => _showPlayerSelectionDialog(5)),
+                ]),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  isTeamOneTurn
+                      ? team1Cups[1].widget(() => _showPlayerSelectionDialog(1))
+                      : team2Cups[1].widget(() => _showPlayerSelectionDialog(1)),
+                  isTeamOneTurn
+                      ? team1Cups[2].widget(() => _showPlayerSelectionDialog(2))
+                      : team2Cups[2].widget(() => _showPlayerSelectionDialog(2)),
+                ]),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  isTeamOneTurn
+                      ? team1Cups[0].widget(() => _showPlayerSelectionDialog(0))
+                      : team2Cups[0].widget(() => _showPlayerSelectionDialog(0)),
+                ]),
+              ],
+            ),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              '${player1.name} Score: ${player1.score} Misses: ${player1.misses}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(
+              '${player2.name} Score: ${player2.score} Misses: ${player2.misses}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(
+              '${player3.name} Score: ${player3.score} Misses: ${player3.misses}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(
+              '${player4.name} Score: ${player4.score} Misses: ${player4.misses}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(
+              'Current Team: ${isTeamOneTurn ? "Team 1" : "Team 2"}',
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
           ],
         ),
       ),
-
-      //floatingActionButtonLocation: FloatingActionButtonLocation.centerTop,
-
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(left: 20),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.black,
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
             FloatingActionButton(
-              onPressed: _incrementCounter,
+              onPressed: () {},
               tooltip: 'Increment',
               child: const Icon(Icons.scatter_plot_outlined),
             ),
-            SizedBox(width: 10),
             FloatingActionButton.extended(
-                onPressed: () {},
+                onPressed: _incrementPlayerMisses,
                 tooltip: 'Kein Becher wurde diese Runde getroffen.',
-                label: Text('Nix getroffen'),
-                icon: Icon(Icons.clear_rounded)),
-            Expanded(child: Container()),
+                label: const Text('Kein Treffer'),
+                icon: const Icon(Icons.clear_rounded)),
             FloatingActionButton.extended(
-                onPressed: () {},
-                tooltip:
-                    'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
-                label: Text('Zug beenden'),
-                icon: Icon(Icons.check_rounded)),
+                onPressed: _endTurn,
+                tooltip: 'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
+                label: const Text('Zugende'),
+                icon: const Icon(Icons.check_rounded)),
           ],
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
       backgroundColor: Colors.black,
+    );
+  }
+}
+
+class Cup {
+  final int index;
+  bool isVisible;
+
+  Cup(this.index) : isVisible = true;
+
+  Widget widget(VoidCallback onTap) {
+    return Visibility(
+      visible: isVisible,
+      maintainSize: true,
+      maintainAnimation: true,
+      maintainState: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.all(10.0),
+          width: 50.0,
+          height: 50.0,
+          decoration: const BoxDecoration(
+            color: Colors.red,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
     );
   }
 }
