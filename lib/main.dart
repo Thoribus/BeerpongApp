@@ -38,12 +38,41 @@ class HomeScreen extends StatelessWidget {
           children: <Widget>[
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Neues Spiel')),
-                );
+                showDialog(
+                  context: context,
+                  builder: (context) => const NewGameDialog(team: 1)).then((result) {
+                  if (result != null) {
+                    // Start the game with the entered player names
+                    String player1Name = result[0];
+                    String player2Name = result[1];
+                    showDialog(
+                        context: context,
+                        builder: (context) => const NewGameDialog(team: 2)).then((result) {
+                      if (result != null) {
+                        // Start the game with the entered player names
+                        String player3Name = result[0];
+                        String player4Name = result[1];
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MyHomePage(
+                              title: 'Beer Pong',
+                              players: [
+                                Player(player1Name),
+                                Player(player2Name),
+                                Player(player3Name),
+                                Player(player4Name),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    });
+                    // Start the game with the entered player names
+                  }
+                });
               },
-              child: const Text('Neues Spiel'),
+              child: Text('Neues Spiel'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -101,20 +130,73 @@ class Player {
   }
 }
 
+class NewGameDialog extends StatefulWidget {
+  const NewGameDialog({super.key, required this.team});
+
+  final int team;
+
+  @override
+  _NewGameDialogState createState() => _NewGameDialogState();
+}
+
+class _NewGameDialogState extends State<NewGameDialog> {
+  final TextEditingController _player1Controller = TextEditingController();
+  final TextEditingController _player2Controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Enter Player Names for Team ${widget.team}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _player1Controller,
+            decoration: InputDecoration(labelText: 'Player 1'),
+          ),
+          TextField(
+            controller: _player2Controller,
+            decoration: InputDecoration(labelText: 'Player 2'),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            // Pass the entered names back to the previous screen
+            Navigator.of(context).pop([
+              _player1Controller.text,
+              _player2Controller.text,
+            ]);
+          },
+          child: Text('Start Game'),
+        ),
+      ],
+    );
+  }
+}
+
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.players});
 
   final String title;
+  final List<Player> players;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final Player player1 = Player("Player 1");
-  final Player player2 = Player("Player 2");
-  final Player player3 = Player("Player 3");
-  final Player player4 = Player("Player 4");
+  late Player player1 = Player(widget.players[0].name);
+  late Player player2 = Player(widget.players[1].name);
+  late Player player3 = Player(widget.players[2].name);
+  late Player player4 = Player(widget.players[3].name);
 
   List<Cup> team1Cups = List.generate(10, (index) => Cup(index));
   List<Cup> team2Cups = List.generate(10, (index) => Cup(index));
@@ -193,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-   _newButtonAirball() {
+  _newButtonAirball() {
     return Visibility(
         child: FloatingActionButton.extended(
             heroTag: "airball",
@@ -237,14 +319,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-    void _checkGameEnd() {
+  void _checkGameEnd() {
     bool teamOneAllHit = team1Cups.every((cup) => !cup.isVisible);
     bool teamTwoAllHit = team2Cups.every((cup) => !cup.isVisible);
 
     if (teamOneAllHit) {
       _showGameEndDialog([player1, player2]);
-    }
-    else if (teamTwoAllHit) {
+    } else if (teamTwoAllHit) {
       _showGameEndDialog([player3, player4]);
     }
   }
@@ -297,40 +378,50 @@ class _MyHomePageState extends State<MyHomePage> {
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   isTeamOneTurn
                       ? team1Cups[6].widget(() => _showPlayerSelectionDialog(6))
-                      : team2Cups[6].widget(() => _showPlayerSelectionDialog(6)),
+                      : team2Cups[6]
+                          .widget(() => _showPlayerSelectionDialog(6)),
                   isTeamOneTurn
                       ? team1Cups[7].widget(() => _showPlayerSelectionDialog(7))
-                      : team2Cups[7].widget(() => _showPlayerSelectionDialog(7)),
+                      : team2Cups[7]
+                          .widget(() => _showPlayerSelectionDialog(7)),
                   isTeamOneTurn
                       ? team1Cups[8].widget(() => _showPlayerSelectionDialog(8))
-                      : team2Cups[8].widget(() => _showPlayerSelectionDialog(8)),
+                      : team2Cups[8]
+                          .widget(() => _showPlayerSelectionDialog(8)),
                   isTeamOneTurn
                       ? team1Cups[9].widget(() => _showPlayerSelectionDialog(9))
-                      : team2Cups[9].widget(() => _showPlayerSelectionDialog(9)),
+                      : team2Cups[9]
+                          .widget(() => _showPlayerSelectionDialog(9)),
                 ]),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   isTeamOneTurn
                       ? team1Cups[3].widget(() => _showPlayerSelectionDialog(3))
-                      : team2Cups[3].widget(() => _showPlayerSelectionDialog(3)),
+                      : team2Cups[3]
+                          .widget(() => _showPlayerSelectionDialog(3)),
                   isTeamOneTurn
                       ? team1Cups[4].widget(() => _showPlayerSelectionDialog(4))
-                      : team2Cups[4].widget(() => _showPlayerSelectionDialog(4)),
+                      : team2Cups[4]
+                          .widget(() => _showPlayerSelectionDialog(4)),
                   isTeamOneTurn
                       ? team1Cups[5].widget(() => _showPlayerSelectionDialog(5))
-                      : team2Cups[5].widget(() => _showPlayerSelectionDialog(5)),
+                      : team2Cups[5]
+                          .widget(() => _showPlayerSelectionDialog(5)),
                 ]),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   isTeamOneTurn
                       ? team1Cups[1].widget(() => _showPlayerSelectionDialog(1))
-                      : team2Cups[1].widget(() => _showPlayerSelectionDialog(1)),
+                      : team2Cups[1]
+                          .widget(() => _showPlayerSelectionDialog(1)),
                   isTeamOneTurn
                       ? team1Cups[2].widget(() => _showPlayerSelectionDialog(2))
-                      : team2Cups[2].widget(() => _showPlayerSelectionDialog(2)),
+                      : team2Cups[2]
+                          .widget(() => _showPlayerSelectionDialog(2)),
                 ]),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   isTeamOneTurn
                       ? team1Cups[0].widget(() => _showPlayerSelectionDialog(0))
-                      : team2Cups[0].widget(() => _showPlayerSelectionDialog(0)),
+                      : team2Cups[0]
+                          .widget(() => _showPlayerSelectionDialog(0)),
                 ]),
               ],
             ),
@@ -377,7 +468,8 @@ class _MyHomePageState extends State<MyHomePage> {
             FloatingActionButton.extended(
                 heroTag: "end",
                 onPressed: _endTurn,
-                tooltip: 'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
+                tooltip:
+                    'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
                 label: const Text('Zugende'),
                 icon: const Icon(Icons.check_rounded)),
           ],
