@@ -12,13 +12,60 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        buttonTheme: const ButtonThemeData(
+        buttonTheme: ButtonThemeData(
           buttonColor: Colors.white,
           textTheme: ButtonTextTheme.primary,
         ),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Beerpong App'),
+      home: const HomeScreen(), // Set HomeScreen as the initial route
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home Screen'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MyHomePage(title: 'Neues Spiel')),
+                );
+              },
+              child: const Text('Neues Spiel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to Statistik screen
+              },
+              child: const Text('Statistik'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to Freundesliste screen
+              },
+              child: const Text('Freundesliste'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to Einstellungen screen
+              },
+              child: const Text('Einstellungen'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -146,9 +193,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-   _newButtonAirball(int index) {
+   _newButtonAirball() {
     return Visibility(
         child: FloatingActionButton.extended(
+            heroTag: "airball",
             onPressed: _showAirballPlayerSelectionDialog,
             tooltip: 'Airball',
             label: const Text('Airball'),
@@ -241,7 +289,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _newButtonAirball(10)
+              _newButtonAirball(),
             ]),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -315,16 +363,19 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             FloatingActionButton(
+              heroTag: "increment",
               onPressed: () {},
               tooltip: 'Increment',
               child: const Icon(Icons.scatter_plot_outlined),
             ),
             FloatingActionButton.extended(
+                heroTag: "miss",
                 onPressed: _incrementPlayerMisses,
                 tooltip: 'Kein Becher wurde diese Runde getroffen.',
                 label: const Text('Kein Treffer'),
                 icon: const Icon(Icons.clear_rounded)),
             FloatingActionButton.extended(
+                heroTag: "end",
                 onPressed: _endTurn,
                 tooltip: 'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
                 label: const Text('Zugende'),
