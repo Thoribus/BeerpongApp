@@ -51,7 +51,6 @@ class Player {
 
   void incrementAirballs() {
     airballs++;
-    incrementMisses();
   }
 }
 
