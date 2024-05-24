@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart'; // Importing necessary Flutter package
-import '../models/player.dart'; // Importing Player model
-import '../widgets/new_game_dialog.dart'; // Importing NewGameDialog widget
-import 'game_screen.dart'; // Importing game screen
+import 'package:flutter/material.dart';
+import '../models/player.dart';
+import '../widgets/new_game_dialog.dart';
+import 'game_screen.dart';
 
-// HomeScreen is a stateless widget that represents the home screen of the application.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -11,72 +10,67 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Screen'), // AppBar with title 'Home Screen'
+        title: const Text('Home Screen'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Button to start a new game
             ElevatedButton(
-              onPressed: () {
-                // Show dialog to enter player names for team 1
-                showDialog(
+              onPressed: () async {
+                // Show dialog for team 1 and cast the result to List<String>
+                final team1Result = await showDialog<List<String>>(
                   context: context,
-                  builder: (context) => const NewGameDialog(team: 1)).then((result) {
-                  if (result != null) {
-                    // Start the game with the entered player names for team 1
-                    String player1Name = result[0];
-                    String player2Name = result[1];
-                    // Show dialog to enter player names for team 2
-                    showDialog(
-                        context: context,
-                        builder: (context) => const NewGameDialog(team: 2)).then((result) {
-                      if (result != null) {
-                        // Start the game with the entered player names for team 2
-                        String player3Name = result[0];
-                        String player4Name = result[1];
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => GameScreen(
-                              title: 'Beer Pong',
-                              players: [
-                                Player(player1Name),
-                                Player(player2Name),
-                                Player(player3Name),
-                                Player(player4Name),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                    });
+                  builder: (context) => const NewGameDialog(team: 1),
+                );
+
+                if (team1Result != null) {
+                  final players1 =
+                      team1Result.map((name) => Player(name)).toList();
+
+                  // Show dialog for team 2 and cast the result to List<String>
+                  final team2Result = await showDialog<List<String>>(
+                    context: context,
+                    builder: (context) => const NewGameDialog(team: 2),
+                  );
+
+                  if (team2Result != null) {
+                    final players2 =
+                        team2Result.map((name) => Player(name)).toList();
+
+                    // Navigate to the game screen with both teams' players
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GameScreen(
+                          title: 'Beer Pong',
+                          players1: players1,
+                          players2: players2,
+                        ),
+                      ),
+                    );
                   }
-                });
+                }
               },
-              child: const Text('Neues Spiel'), // Button label 'Neues Spiel'
+              child: const Text('Neues Spiel'),
             ),
-            // Button to navigate to Statistik screen
             ElevatedButton(
               onPressed: () {
                 // Navigate to Statistik screen
               },
-              child: const Text('Statistik'), // Button label 'Statistik'
+              child: const Text('Statistik'),
             ),
-            // Button to navigate to Freundesliste screen
             ElevatedButton(
               onPressed: () {
                 // Navigate to Freundesliste screen
               },
-              child: const Text('Freundesliste'), // Button label 'Freundesliste'
+              child: const Text('Freundesliste'),
             ),
-            // Button to navigate to Einstellungen screen
             ElevatedButton(
               onPressed: () {
                 // Navigate to Einstellungen screen
               },
-              child: const Text('Einstellungen'), // Button label 'Einstellungen'
+              child: const Text('Einstellungen'),
             ),
           ],
         ),

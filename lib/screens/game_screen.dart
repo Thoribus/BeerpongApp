@@ -4,10 +4,11 @@ import '../models/player.dart';
 
 // GameScreen is a stateful widget that represents the main page of the application.
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, required this.title, required this.players});
+  const GameScreen({super.key, required this.title, required this.players1, required this.players2});
 
   final String title; // The title of the page
-  final List<Player> players; // List of players participating in the game
+  final List<Player> players1; // List of players in Team 1 participating in the game
+  final List<Player> players2; // List of players in Team 2 participating in the game
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -16,10 +17,8 @@ class GameScreen extends StatefulWidget {
 // _GameScreenState is the state for GameScreen, managing its state and behavior.
 class _GameScreenState extends State<GameScreen> {
   // Initializing players based on the provided list of players
-  late Player player1 = Player(widget.players[0].name);
-  late Player player2 = Player(widget.players[1].name);
-  late Player player3 = Player(widget.players[2].name);
-  late Player player4 = Player(widget.players[3].name);
+  late List<Player> team1Players = widget.players1;
+  late List<Player> team2Players = widget.players2;
 
   // Initializing cups for both teams
   List<Cup> team1Cups = List.generate(10, (index) => Cup(index));
@@ -27,10 +26,19 @@ class _GameScreenState extends State<GameScreen> {
 
   bool isTeamOneTurn = true; // Boolean to track whose turn it is
 
+  late List<Player> currentPlayers; // List of players for the current turn
+  late List<Cup> currentCups; // List of cups for the current turn
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize the current players and cups
+    currentPlayers = isTeamOneTurn ? team1Players : team2Players;
+    currentCups = isTeamOneTurn ? team2Cups : team1Cups;
+  }
+
   // Function to show player selection dialog
   Future<void> _showPlayerSelectionDialog(int cupIndex) async {
-    List<Player> currentPlayers =
-        isTeamOneTurn ? [player1, player2] : [player3, player4];
 
     return showDialog<void>(
       context: context,
@@ -102,8 +110,6 @@ class _GameScreenState extends State<GameScreen> {
   // Function to increment the player's misses
   void _incrementPlayerMisses() {
     setState(() {
-      List<Player> currentPlayers =
-          isTeamOneTurn ? [player1, player2] : [player3, player4];
       for (var player in currentPlayers) {
         player.incrementMisses();
       }
@@ -113,20 +119,13 @@ class _GameScreenState extends State<GameScreen> {
   // Function to hide a cup when it is hit
   void _hideCup(int index) {
     setState(() {
-      if (isTeamOneTurn) {
-        team1Cups[index].isVisible = false;
-      } else {
-        team2Cups[index].isVisible = false;
-      }
+      currentCups[index].isVisible = false;
     });
   }
 
   // Function to end the turn
   void _endTurn() {
     setState(() {
-      List<Player> currentPlayers =
-          isTeamOneTurn ? [player1, player2] : [player3, player4];
-
       for (var player in currentPlayers) {
         if (!player.hitThisRound) {
           player.incrementMisses();
@@ -136,6 +135,7 @@ class _GameScreenState extends State<GameScreen> {
 
       // Switch turn to the other team
       isTeamOneTurn = !isTeamOneTurn;
+      currentPlayers = isTeamOneTurn ? team1Players : team2Players;
     });
   }
 
@@ -152,9 +152,6 @@ class _GameScreenState extends State<GameScreen> {
 
   // Function to show the airball player selection dialog
   Future<void> _showAirballPlayerSelectionDialog() async {
-    List<Player> currentPlayers =
-        isTeamOneTurn ? [player1, player2] : [player3, player4];
-
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -188,13 +185,10 @@ class _GameScreenState extends State<GameScreen> {
 
   // Function to check if the game has ended
   void _checkGameEnd() {
-    bool teamOneAllHit = team1Cups.every((cup) => !cup.isVisible);
-    bool teamTwoAllHit = team2Cups.every((cup) => !cup.isVisible);
+    bool teamAllHit = currentCups.every((cup) => !cup.isVisible);
 
-    if (teamOneAllHit) {
-      _showGameEndDialog([player1, player2]);
-    } else if (teamTwoAllHit) {
-      _showGameEndDialog([player3, player4]);
+    if (teamAllHit) {
+      _showGameEndDialog(currentPlayers);
     }
   }
 
@@ -247,72 +241,32 @@ class _GameScreenState extends State<GameScreen> {
               children: [
                 // Rows of cups for both teams, displayed conditionally based on whose turn it is
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  isTeamOneTurn
-                      ? team1Cups[6].widget(() => _showPlayerSelectionDialog(6))
-                      : team2Cups[6]
-                          .widget(() => _showPlayerSelectionDialog(6)),
-                  isTeamOneTurn
-                      ? team1Cups[7].widget(() => _showPlayerSelectionDialog(7))
-                      : team2Cups[7]
-                          .widget(() => _showPlayerSelectionDialog(7)),
-                  isTeamOneTurn
-                      ? team1Cups[8].widget(() => _showPlayerSelectionDialog(8))
-                      : team2Cups[8]
-                          .widget(() => _showPlayerSelectionDialog(8)),
-                  isTeamOneTurn
-                      ? team1Cups[9].widget(() => _showPlayerSelectionDialog(9))
-                      : team2Cups[9]
-                          .widget(() => _showPlayerSelectionDialog(9)),
+                  currentCups[6].widget(() => _showPlayerSelectionDialog(6)),
+                  currentCups[7].widget(() => _showPlayerSelectionDialog(7)),
+                  currentCups[8].widget(() => _showPlayerSelectionDialog(8)),
+                  currentCups[9].widget(() => _showPlayerSelectionDialog(9)),
                 ]),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  isTeamOneTurn
-                      ? team1Cups[3].widget(() => _showPlayerSelectionDialog(3))
-                      : team2Cups[3]
-                          .widget(() => _showPlayerSelectionDialog(3)),
-                  isTeamOneTurn
-                      ? team1Cups[4].widget(() => _showPlayerSelectionDialog(4))
-                      : team2Cups[4]
-                          .widget(() => _showPlayerSelectionDialog(4)),
-                  isTeamOneTurn
-                      ? team1Cups[5].widget(() => _showPlayerSelectionDialog(5))
-                      : team2Cups[5]
-                          .widget(() => _showPlayerSelectionDialog(5)),
+                  currentCups[3].widget(() => _showPlayerSelectionDialog(3)),
+                  currentCups[4].widget(() => _showPlayerSelectionDialog(4)),
+                  currentCups[5].widget(() => _showPlayerSelectionDialog(5)),
                 ]),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  isTeamOneTurn
-                      ? team1Cups[1].widget(() => _showPlayerSelectionDialog(1))
-                      : team2Cups[1]
-                          .widget(() => _showPlayerSelectionDialog(1)),
-                  isTeamOneTurn
-                      ? team1Cups[2].widget(() => _showPlayerSelectionDialog(2))
-                      : team2Cups[2]
-                          .widget(() => _showPlayerSelectionDialog(2)),
+                  currentCups[1].widget(() => _showPlayerSelectionDialog(1)),
+                  currentCups[2].widget(() => _showPlayerSelectionDialog(2)),
                 ]),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  isTeamOneTurn
-                      ? team1Cups[0].widget(() => _showPlayerSelectionDialog(0))
-                      : team2Cups[0]
-                          .widget(() => _showPlayerSelectionDialog(0)),
+                  currentCups[0].widget(() => _showPlayerSelectionDialog(0)),
                 ]),
               ],
             ),
             // Displaying the scores and misses of each player
-            Text(
-              '${player1.name} Score: ${player1.score} Misses: ${player1.misses}',
+           ...currentPlayers.map((player) {
+            return Text(
+              '${player.name} Score: ${player.score} Misses: ${player.misses}',
               style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Text(
-              '${player2.name} Score: ${player2.score} Misses: ${player2.misses}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Text(
-              '${player3.name} Score: ${player3.score} Misses: ${player3.misses}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Text(
-              '${player4.name} Score: ${player4.score} Misses: ${player4.misses}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+            );
+          }),
             // Displaying the current team
             Text(
               'Current Team: ${isTeamOneTurn ? "Team 1" : "Team 2"}',
