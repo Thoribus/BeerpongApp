@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        buttonTheme: ButtonThemeData(
+        buttonTheme: const ButtonThemeData(
           buttonColor: Colors.white,
           textTheme: ButtonTextTheme.primary,
         ),
@@ -89,9 +89,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 return ElevatedButton(
                   child: Text(player.name),
                   onPressed: () {
-                    _incrementPlayerScore(player);
                     _hideCup(cupIndex);
                     Navigator.of(context).pop();
+                    _incrementPlayerScore(player);
                   },
                 );
               }).toList(),
@@ -105,6 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _incrementPlayerScore(Player player) {
     setState(() {
       player.incrementScore();
+      _checkGameEnd();
     });
   }
 
@@ -145,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-   _new_button_airball(int index) {
+   _newButtonAirball(int index) {
     return Visibility(
         child: FloatingActionButton.extended(
             onPressed: _showAirballPlayerSelectionDialog,
@@ -188,6 +189,46 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+    void _checkGameEnd() {
+    bool teamOneAllHit = team1Cups.every((cup) => !cup.isVisible);
+    bool teamTwoAllHit = team2Cups.every((cup) => !cup.isVisible);
+
+    if (teamOneAllHit) {
+      _showGameEndDialog([player1, player2]);
+    }
+    else if (teamTwoAllHit) {
+      _showGameEndDialog([player3, player4]);
+    }
+  }
+
+  Future<void> _showGameEndDialog(List<Player> players) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Game Over'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('${players[0].name} and ${players[1].name} won!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Optionally, you can reset the game here.
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _new_button_airball(10)
+              _newButtonAirball(10)
             ]),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
