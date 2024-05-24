@@ -231,6 +231,41 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<void> _confirmEndTurn() async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false, // User must tap button!
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Confirm End Turn'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: const <Widget>[
+              Text('Are you sure you want to end your turn?'),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+          TextButton(
+            child: const Text('End Turn'),
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+              // Call the method to end the turn here
+              _endTurn();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
   void _incrementPlayerScore(Player player) {
     setState(() {
       player.incrementScore();
@@ -467,7 +502,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 icon: const Icon(Icons.clear_rounded)),
             FloatingActionButton.extended(
                 heroTag: "end",
-                onPressed: _endTurn,
+                onPressed: _confirmEndTurn,
                 tooltip:
                     'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
                 label: const Text('Zugende'),
