@@ -22,7 +22,7 @@ class _NewGameDialogState extends State<NewGameDialog> {
   void initState() {
     super.initState();
     // Initialize the controllers for the default number of players (2 players)
-    _controllers.addAll(List.generate(2, (_) => TextEditingController()));
+    _controllers.addAll(List.generate(_numPlayers, (_) => TextEditingController()));
   }
 
   @override

@@ -163,8 +163,8 @@ class _GameScreenState extends State<GameScreen> {
                 return ElevatedButton(
                   child: Text(player.name),
                   onPressed: () {
-                    _incrementPlayerAirballs(player);
                     Navigator.of(context).pop();
+                    _incrementPlayerAirballs(player);
                   },
                 );
               }).toList(),
@@ -180,8 +180,40 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       player.incrementAirballs();
       print("Airball for ${player.name} total: ${player.airballs}");
+      int teamAirballs = currentPlayers.fold(0, (sum, player) => sum + player.airballs);
+      if (teamAirballs % 3 == 0){
+        _showAirballDialog(teamAirballs);
+      }
     });
   }
+
+    // Function to show the airball dialog
+  Future<void> _showAirballDialog(int airballs) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Airball Milestone'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Total airballs: $airballs'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Shots...'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   // Function to check if the game has ended
   void _checkGameEnd() {
