@@ -1,96 +1,28 @@
 import 'package:flutter/material.dart';
+import '../screens/home_screen.dart'; // Import the home screen from the screens directory
 
+// The main function is the entry point of the Flutter application.
 void main() {
-  runApp(const BeerPongApp());
+  runApp(const MyApp()); // Run the app and pass an instance of MyApp to it.
 }
 
-class BeerPongApp extends StatelessWidget {
-  const BeerPongApp({super.key});
+// MyApp is a stateless widget that represents the application.
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
+  // The build method describes the part of the user interface represented by this widget.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Beer Pong'),
+      title: 'Beerpong App', // The title of the application
+      theme: ThemeData(
+        buttonTheme: const ButtonThemeData(
+          buttonColor: Colors.white, // Default button color
+          textTheme: ButtonTextTheme.primary, // Default button text theme
         ),
-        body: const BeerPongTable(),
+        useMaterial3: true, // Use Material Design 3
       ),
-    );
-  }
-}
-
-class BeerPongTable extends StatefulWidget {
-  const BeerPongTable({super.key});
-
-  @override
-  _BeerPongTableState createState() => _BeerPongTableState();
-}
-
-class _BeerPongTableState extends State<BeerPongTable> {
-  List<Cup> cups = [];
-
-  @override
-  void initState() {
-    super.initState();
-    // Generate cups for the pyramid
-    for (int row = 3; row >= 0; row--) {
-      for (int col = 0; col <= row; col++) {
-        cups.add(Cup(row * 4 + col));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          for (int row = 3; row >= 0; row--)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                for (int col = 0; col <= row; col++)
-                  GestureDetector(
-                    onTap: () {
-                      print(row * (row + 1) ~/ 2 + col);
-                      setState(() {
-                        int cupIndex = row * (row + 1) ~/ 2 + col;
-                        cups[cupIndex].isVisible = false;
-                      });
-                    },
-                    child: cups[row * (row + 1) ~/ 2 + col].widget,
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class Cup {
-  final int index;
-  bool isVisible;
-
-  Cup(this.index) : isVisible = true;
-
-  // Define a getter for the cup widget
-  Widget get widget {
-    return Visibility(
-      visible: isVisible,
-      maintainSize: true,
-      maintainAnimation: true,
-      maintainState: true,
-      child: Container(
-        width: 50.0,
-        height: 50.0,
-        decoration: const BoxDecoration(
-          color: Colors.red, // Cup color
-          shape: BoxShape.circle,
-        ),
-      ),
+      home: const HomeScreen(), // Set HomeScreen as the initial route
     );
   }
 }
