@@ -51,8 +51,8 @@ class _GameScreenState extends State<GameScreen> {
                 return ElevatedButton(
                   child: Text(player.name),
                   onPressed: () {
-                    _hideCup(cupIndex);
                     Navigator.of(context).pop();
+                    _hideCup(cupIndex);
                     _incrementPlayerScore(player);
                   },
                 );
@@ -119,8 +119,45 @@ class _GameScreenState extends State<GameScreen> {
   // Function to hide a cup when it is hit
   void _hideCup(int index) {
     setState(() {
+      _checkBitchCup(index);
       currentCups[index].isVisible = false;
     });
+  }
+
+  void _checkBitchCup(int index) {
+    print(index);
+    bool bitchCup = currentCups.every((cup) => cup.isVisible);
+    print(bitchCup);
+    if (currentCups.every((cup) => cup.isVisible) && index == 4) {
+      _showBitchCupDialog();
+    }
+  }
+
+     // Function to show the airball dialog
+  Future<void> _showBitchCupDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Bitchcup!'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Bitchcup getroffen!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Hosen runter!'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Function to end the turn
