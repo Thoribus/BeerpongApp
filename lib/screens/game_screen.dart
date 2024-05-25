@@ -173,6 +173,7 @@ class _GameScreenState extends State<GameScreen> {
       // Switch turn to the other team
       isTeamOneTurn = !isTeamOneTurn;
       currentPlayers = isTeamOneTurn ? team1Players : team2Players;
+      currentCups = isTeamOneTurn ? team2Cups : team1Cups;
     });
   }
 

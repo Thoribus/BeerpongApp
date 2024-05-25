@@ -19,8 +19,8 @@ class Cup {
         onTap: onTap, // The function to call when the cup is tapped
         child: Container(
           margin: const EdgeInsets.all(10.0), // Margin around the cup
-          width: 50.0, // Width of the cup
-          height: 50.0, // Height of the cup
+          width: 60.0, // Width of the cup
+          height: 60.0, // Height of the cup
           decoration: const BoxDecoration(
             color: Colors.red, // Color of the cup
             shape: BoxShape.circle, // Shape of the cup

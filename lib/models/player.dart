@@ -31,6 +31,7 @@ class Player {
 
   // Method to increment the player's airballs
   void incrementAirballs() {
+    misses++; // Increase the misses count by 1
     airballs++; // Increase the airballs count by 1
   }
 }
