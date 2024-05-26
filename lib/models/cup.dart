@@ -9,6 +9,14 @@ class Cup {
 
   // Constructor initializing the cup's index and setting it as visible by default
   Cup(this.index) : isVisible = true;
+  
+    // Method to create a clone of the cup
+  Cup clone() {
+    return Cup(index)
+      ..isVisible = isVisible
+      ..color = color
+      ..key = GlobalKey();
+  }
 
   // Method to create a widget representing the cup
   Widget widget(VoidCallback onTap) {

@@ -46,6 +46,9 @@ class _GameScreenState extends State<GameScreen> {
   List<GameStatistics> gameStatisticsList = []; // List to store game statistics
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
+  // Stack to keep track of the previous states
+  List<Map<String, dynamic>> _actionStack = [];
+
   @override
   void initState() {
     super.initState();
@@ -55,11 +58,14 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void toggleRearranged() {
+    _saveCurrentState();
     remainingCups = currentCups
         .where((cup) => cup.isVisible && cup.color == Colors.red)
         .toList();
     setState(() {
-      isTeamOneTurn ? isRearranged1=!isRearranged1 : isRearranged2=!isRearranged2;
+      isTeamOneTurn
+          ? isRearranged1 = !isRearranged1
+          : isRearranged2 = !isRearranged2;
       isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
   }
@@ -78,6 +84,7 @@ class _GameScreenState extends State<GameScreen> {
                   child: Text(player.name),
                   onPressed: () {
                     Navigator.of(context).pop();
+                    _saveCurrentState();
                     _addCupToPlayer(player, cupIndex);
                     _handleCupHit(cupIndex);
                     _incrementPlayerScore(player);
@@ -117,6 +124,7 @@ class _GameScreenState extends State<GameScreen> {
               child: const Text('End Turn'),
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
+                _saveCurrentState();
                 _endTurn(); // End the turn
               },
             ),
@@ -401,6 +409,7 @@ class _GameScreenState extends State<GameScreen> {
                   child: Text(player.name),
                   onPressed: () {
                     Navigator.of(context).pop();
+                    _saveCurrentState();
                     _incrementPlayerAirballs(player);
                   },
                 );
@@ -451,6 +460,38 @@ class _GameScreenState extends State<GameScreen> {
 
     setState(() {
       gameStatisticsList.add(stats);
+    });
+  }
+
+  void _saveCurrentState() {
+    _actionStack.add({
+      'team1Cups': team1Cups.map((cup) => cup.clone()).toList(),
+      'team2Cups': team2Cups.map((cup) => cup.clone()).toList(),
+      'team1Players': team1Players.map((player) => player.clone()).toList(),
+      'team2Players': team2Players.map((player) => player.clone()).toList(),
+      'isTeamOneTurn': isTeamOneTurn,
+      'isRearranged1': isRearranged1,
+      'isRearranged2': isRearranged2,
+    });
+    print(_actionStack.length);
+    print(_actionStack.last);
+  }
+
+  void _undoLastAction() {
+    if (_actionStack.isEmpty) return;
+
+    final lastState = _actionStack.removeLast();
+    setState(() {
+      team1Cups = lastState['team1Cups'].cast<Cup>();
+      team2Cups = lastState['team2Cups'].cast<Cup>();
+      team1Players = lastState['team1Players'].cast<Player>();
+      team2Players = lastState['team2Players'].cast<Player>();
+      isTeamOneTurn = lastState['isTeamOneTurn'];
+      isRearranged1 = lastState['isRearranged1'];
+      isRearranged2 = lastState['isRearranged2'];
+      currentPlayers = isTeamOneTurn ? team1Players : team2Players;
+      currentCups = isTeamOneTurn ? team2Cups : team1Cups;
+      isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
   }
 
@@ -596,16 +637,16 @@ class _GameScreenState extends State<GameScreen> {
           children: <Widget>[
             FloatingActionButton(
               heroTag: "increment",
-              onPressed: () => _checkProximity(4),
+              onPressed: _undoLastAction,
               tooltip: 'Increment',
               child: const Icon(Icons.scatter_plot_outlined),
             ),
             FloatingActionButton.extended(
-                heroTag: "miss",
+                heroTag: "rearrange",
                 onPressed: toggleRearranged,
-                tooltip: 'Kein Becher wurde diese Runde getroffen.',
-                label: const Text('Kein Treffer'),
-                icon: const Icon(Icons.clear_rounded)),
+                tooltip: 'Verbleibende Becker umstellen.',
+                label: const Text('Umstellen'),
+                icon: const Icon(Icons.scatter_plot_outlined)),
             FloatingActionButton.extended(
                 heroTag: "end",
                 onPressed: _confirmEndTurn,

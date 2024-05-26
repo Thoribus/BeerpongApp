@@ -5,7 +5,7 @@ class Player {
   int misses; // The number of misses by the player
   int airballs; // The number of airballs by the player
   bool hitThisRound; // Whether the player has hit a cup this round
-  List<int> cupsHit = []; // List of cup indices hit by the player
+  List<int> cupsHit; // List of cup indices hit by the player
 
   // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
   Player({
@@ -13,8 +13,20 @@ class Player {
     this.score = 0,
     this.misses = 0,
     this.airballs = 0,
+    this.cupsHit = const [],
     this.hitThisRound = false,
   });
+
+  Player clone() {
+    return Player(
+      name: name,
+      score: score,
+      cupsHit: cupsHit,
+      hitThisRound: hitThisRound,
+      misses: misses,
+      airballs: airballs,
+    );
+  }
 
   // Method to increment the player's score
   void incrementScore() {
