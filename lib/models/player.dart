@@ -8,11 +8,13 @@ class Player {
   List<int> cupsHit = []; // List of cup indices hit by the player
 
   // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
-  Player(this.name)
-      : score = 0,
-        misses = 0,
-        airballs = 0,
-        hitThisRound = false;
+  Player({
+    required this.name,
+    this.score = 0,
+    this.misses = 0,
+    this.airballs = 0,
+    this.hitThisRound = false,
+  });
 
   // Method to increment the player's score
   void incrementScore() {

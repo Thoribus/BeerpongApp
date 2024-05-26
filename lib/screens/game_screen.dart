@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
+import '../models/game_statistics.dart';
 import 'dart:math';
+import '../database_helper.dart';
 
 // GameScreen is a stateful widget that represents the main page of the application.
 class GameScreen extends StatefulWidget {
@@ -12,8 +14,10 @@ class GameScreen extends StatefulWidget {
       required this.players2});
 
   final String title; // The title of the page
-  final List<Player> players1; // List of players in Team 1 participating in the game
-  final List<Player> players2; // List of players in Team 2 participating in the game
+  final List<Player>
+      players1; // List of players in Team 1 participating in the game
+  final List<Player>
+      players2; // List of players in Team 2 participating in the game
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -30,10 +34,14 @@ class _GameScreenState extends State<GameScreen> {
   List<Cup> team2Cups = List.generate(10, (index) => Cup(index));
 
   bool isTeamOneTurn = true; // Boolean to track whose turn it is
-  bool isRearranged = false; // Boolean to track if the cups have been rearranged
+  bool isRearranged =
+      false; // Boolean to track if the cups have been rearranged
 
   late List<Player> currentPlayers; // List of players for the current turn
   late List<Cup> currentCups; // List of cups for the current turn
+
+  List<GameStatistics> gameStatisticsList = []; // List to store game statistics
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   @override
   void initState() {
@@ -113,15 +121,6 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  // Function to increment the player's misses
-  void _incrementPlayerMisses() {
-    setState(() {
-      for (var player in currentPlayers) {
-        player.incrementMisses();
-      }
-    });
-  }
-
   void _addCupToPlayer(Player player, int cupIndex) {
     setState(() {
       player.hitCup(cupIndex);
@@ -142,12 +141,12 @@ class _GameScreenState extends State<GameScreen> {
 
   // Function to check the special condition for "Bitchcup"
   void _checkBitchCup(int index) {
-  // Check if every cup is visible and red, and the index is 4 (the Bitchcup index)
-  if (currentCups.every((cup) => cup.isVisible && cup.color == Colors.red) && index == 4) {
-    _showBitchCupDialog();
+    // Check if every cup is visible and red, and the index is 4 (the Bitchcup index)
+    if (currentCups.every((cup) => cup.isVisible && cup.color == Colors.red) &&
+        index == 4) {
+      _showBitchCupDialog();
+    }
   }
-}
-
 
   // Function to show the "Bitchcup" dialog
   Future<void> _showBitchCupDialog() async {
@@ -199,7 +198,8 @@ class _GameScreenState extends State<GameScreen> {
 
   // Function to calculate the distance between two points
   double _calculateDistance(Offset position1, Offset position2) {
-    return sqrt(pow(position1.dx - position2.dx, 2) + pow(position1.dy - position2.dy, 2));
+    return sqrt(pow(position1.dx - position2.dx, 2) +
+        pow(position1.dy - position2.dy, 2));
   }
 
   // Function to check the proximity of cups
@@ -211,8 +211,12 @@ class _GameScreenState extends State<GameScreen> {
       if (i == index) continue;
       if (currentCups[i].isVisible && currentCups[index].isVisible) {
         // Get the positions of the cups
-        final renderBox1 = currentCups[i].key.currentContext?.findRenderObject() as RenderBox?;
-        final renderBox2 = currentCups[index].key.currentContext?.findRenderObject() as RenderBox?;
+        final renderBox1 =
+            currentCups[i].key.currentContext?.findRenderObject() as RenderBox?;
+        final renderBox2 = currentCups[index]
+            .key
+            .currentContext
+            ?.findRenderObject() as RenderBox?;
 
         if (renderBox1 != null && renderBox2 != null) {
           Offset position1 = renderBox1.localToGlobal(Offset.zero);
@@ -230,22 +234,9 @@ class _GameScreenState extends State<GameScreen> {
     print(hitCups);
     for (var player in currentPlayers) {
       if (player.cupsHit.contains(index)) {
-        player.incrementScoreBy(hitCups/2 - 1);
+        player.incrementScoreBy(hitCups / 2 - 1);
       }
     }
-  }
-
-  // Function to create the "Airball" button
-  _newButtonAirball() {
-    return Visibility(
-      child: FloatingActionButton.extended(
-        heroTag: "airball",
-        onPressed: _showAirballPlayerSelectionDialog,
-        tooltip: 'Airball',
-        label: const Text('Airball'),
-        icon: const Icon(Icons.air_rounded),
-      ),
-    );
   }
 
   // Function to show the airball player selection dialog
@@ -278,11 +269,69 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       player.incrementAirballs();
       print("Airball for ${player.name} total: ${player.airballs}");
-      int teamAirballs = currentPlayers.fold(0, (sum, player) => sum + player.airballs);
+      int teamAirballs =
+          currentPlayers.fold(0, (sum, player) => sum + player.airballs);
       if (teamAirballs % 3 == 0) {
         _showAirballDialog(teamAirballs);
       }
     });
+  }
+
+  // Function to check if the game has ended
+  void _checkGameEnd() async {
+    bool teamAllHit =
+        currentCups.every((cup) => !cup.isVisible || cup.color == Colors.green);
+
+    if (teamAllHit) {
+      _saveGameStatistics();
+      _showGameEndDialog(currentPlayers);
+    }
+  }
+
+  void _saveGameStatistics() async {
+    String winningTeam =
+        team1Cups.every((cup) => !cup.isVisible) ? "Team 2" : "Team 1";
+
+    GameStatistics stats = GameStatistics(
+      date: DateTime.now(),
+      team1Players: List.from(team1Players),
+      team2Players: List.from(team2Players),
+      winningTeam: winningTeam,
+    );
+
+    await _dbHelper.insertGame(stats);
+
+    setState(() {
+      gameStatisticsList.add(stats);
+    });
+  }
+
+  // Function to show the game end dialog
+  Future<void> _showGameEndDialog(List<Player> players) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Game Over'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('${players[0].name} and ${players[1].name} won!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Function to show the airball dialog
@@ -312,44 +361,6 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  // Function to check if the game has ended
-  void _checkGameEnd() {
-    bool teamAllHit = currentCups.every((cup) => !cup.isVisible);
-
-    if (teamAllHit) {
-      _showGameEndDialog(currentPlayers);
-    }
-  }
-
-  // Function to show the game end dialog
-  Future<void> _showGameEndDialog(List<Player> players) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // User must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Game Over'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('${players[0].name} and ${players[1].name} won!'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Optionally, you can reset the game here.
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   // The build method describes the part of the user interface represented by this widget.
   @override
   Widget build(BuildContext context) {
@@ -363,7 +374,13 @@ class _GameScreenState extends State<GameScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _newButtonAirball(),
+              FloatingActionButton.extended(
+                heroTag: "airball",
+                onPressed: _showAirballPlayerSelectionDialog,
+                tooltip: 'Airball',
+                label: const Text('Airball'),
+                icon: const Icon(Icons.air_rounded),
+              ),
             ]),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -424,7 +441,8 @@ class _GameScreenState extends State<GameScreen> {
             FloatingActionButton.extended(
                 heroTag: "end",
                 onPressed: _confirmEndTurn,
-                tooltip: 'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
+                tooltip:
+                    'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
                 label: const Text('Zugende'),
                 icon: const Icon(Icons.check_rounded)),
           ],
