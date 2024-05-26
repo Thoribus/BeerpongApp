@@ -34,11 +34,14 @@ class _GameScreenState extends State<GameScreen> {
   List<Cup> team2Cups = List.generate(10, (index) => Cup(index));
 
   bool isTeamOneTurn = true; // Boolean to track whose turn it is
-  bool isRearranged =
+  bool isRearranged1 =
       false; // Boolean to track if the cups have been rearranged
+  bool isRearranged2 = false;
+  bool isRearranged = false;
 
   late List<Player> currentPlayers; // List of players for the current turn
   late List<Cup> currentCups; // List of cups for the current turn
+  List<Cup> remainingCups = [];
 
   List<GameStatistics> gameStatisticsList = []; // List to store game statistics
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -49,6 +52,16 @@ class _GameScreenState extends State<GameScreen> {
     // Initialize the current players and cups
     currentPlayers = isTeamOneTurn ? team1Players : team2Players;
     currentCups = isTeamOneTurn ? team2Cups : team1Cups;
+  }
+
+  void toggleRearranged() {
+    remainingCups = currentCups
+        .where((cup) => cup.isVisible && cup.color == Colors.red)
+        .toList();
+    setState(() {
+      isTeamOneTurn ? isRearranged1=!isRearranged1 : isRearranged2=!isRearranged2;
+      isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
+    });
   }
 
   // Function to show player selection dialog
@@ -193,7 +206,142 @@ class _GameScreenState extends State<GameScreen> {
       isTeamOneTurn = !isTeamOneTurn;
       currentPlayers = isTeamOneTurn ? team1Players : team2Players;
       currentCups = isTeamOneTurn ? team2Cups : team1Cups;
+      isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
+  }
+
+  Column _buildCups(List<Cup> cups) {
+    switch (cups.length) {
+      case 6:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Rows of cups for both teams, displayed conditionally based on whose turn it is
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(0, 3).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(3, 5).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(5, 6).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+          ],
+        );
+      case 5:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Rows of cups for both teams, displayed conditionally based on whose turn it is
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(0, 3).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(3, 5).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+          ],
+        );
+      case 4:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Rows of cups for both teams, displayed conditionally based on whose turn it is
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(0, 1).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(1, 3).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(3, 4).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+          ],
+        );
+      case 3:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Rows of cups for both teams, displayed conditionally based on whose turn it is
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(0, 2).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(2, 3).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+          ],
+        );
+      case 2:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Rows of cups for both teams, displayed conditionally based on whose turn it is
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(0, 1).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(1, 2).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+          ],
+        );
+      case 1:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Rows of cups for both teams, displayed conditionally based on whose turn it is
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(0, 1).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+          ],
+        );
+      default:
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Rows of cups for both teams, displayed conditionally based on whose turn it is
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(0, 3).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(3, 4).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              ...cups.sublist(4, 6).map((cup) {
+                return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+              }),
+            ]),
+          ],
+        );
+    }
   }
 
   // Function to calculate the distance between two points
@@ -382,30 +530,50 @@ class _GameScreenState extends State<GameScreen> {
                 icon: const Icon(Icons.air_rounded),
               ),
             ]),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Rows of cups for both teams, displayed conditionally based on whose turn it is
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  currentCups[6].widget(() => _showPlayerSelectionDialog(6)),
-                  currentCups[7].widget(() => _showPlayerSelectionDialog(7)),
-                  currentCups[8].widget(() => _showPlayerSelectionDialog(8)),
-                  currentCups[9].widget(() => _showPlayerSelectionDialog(9)),
-                ]),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  currentCups[3].widget(() => _showPlayerSelectionDialog(3)),
-                  currentCups[4].widget(() => _showPlayerSelectionDialog(4)),
-                  currentCups[5].widget(() => _showPlayerSelectionDialog(5)),
-                ]),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  currentCups[1].widget(() => _showPlayerSelectionDialog(1)),
-                  currentCups[2].widget(() => _showPlayerSelectionDialog(2)),
-                ]),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  currentCups[0].widget(() => _showPlayerSelectionDialog(0)),
-                ]),
-              ],
-            ),
+            isRearranged
+                ? _buildCups(remainingCups)
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Rows of cups for both teams, displayed conditionally based on whose turn it is
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            currentCups[6]
+                                .widget(() => _showPlayerSelectionDialog(6)),
+                            currentCups[7]
+                                .widget(() => _showPlayerSelectionDialog(7)),
+                            currentCups[8]
+                                .widget(() => _showPlayerSelectionDialog(8)),
+                            currentCups[9]
+                                .widget(() => _showPlayerSelectionDialog(9)),
+                          ]),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            currentCups[3]
+                                .widget(() => _showPlayerSelectionDialog(3)),
+                            currentCups[4]
+                                .widget(() => _showPlayerSelectionDialog(4)),
+                            currentCups[5]
+                                .widget(() => _showPlayerSelectionDialog(5)),
+                          ]),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            currentCups[1]
+                                .widget(() => _showPlayerSelectionDialog(1)),
+                            currentCups[2]
+                                .widget(() => _showPlayerSelectionDialog(2)),
+                          ]),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            currentCups[0]
+                                .widget(() => _showPlayerSelectionDialog(0)),
+                          ]),
+                    ],
+                  ),
             // Displaying the scores and misses of each player
             ...currentPlayers.map((player) {
               return Text(
@@ -434,7 +602,7 @@ class _GameScreenState extends State<GameScreen> {
             ),
             FloatingActionButton.extended(
                 heroTag: "miss",
-                onPressed: () => {isRearranged = !isRearranged},
+                onPressed: toggleRearranged,
                 tooltip: 'Kein Becher wurde diese Runde getroffen.',
                 label: const Text('Kein Treffer'),
                 icon: const Icon(Icons.clear_rounded)),
