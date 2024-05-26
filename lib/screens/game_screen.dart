@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/beerpong_icons_icons.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
 
 // GameScreen is a stateful widget that represents the main page of the application.
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, required this.title, required this.players1, required this.players2});
+  const GameScreen(
+      {super.key,
+      required this.title,
+      required this.players1,
+      required this.players2});
 
   final String title; // The title of the page
-  final List<Player> players1; // List of players in Team 1 participating in the game
-  final List<Player> players2; // List of players in Team 2 participating in the game
+  final List<Player>
+      players1; // List of players in Team 1 participating in the game
+  final List<Player>
+      players2; // List of players in Team 2 participating in the game
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -39,7 +46,6 @@ class _GameScreenState extends State<GameScreen> {
 
   // Function to show player selection dialog
   Future<void> _showPlayerSelectionDialog(int cupIndex) async {
-
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -133,7 +139,7 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-     // Function to show the airball dialog
+  // Function to show the airball dialog
   Future<void> _showBitchCupDialog() async {
     return showDialog<void>(
       context: context,
@@ -185,7 +191,7 @@ class _GameScreenState extends State<GameScreen> {
             onPressed: _showAirballPlayerSelectionDialog,
             tooltip: 'Airball',
             label: const Text('Airball'),
-            icon: const Icon(Icons.air_rounded)));
+            icon: Icon(BeerpongIcons.airball, size: 45)));
   }
 
   // Function to show the airball player selection dialog
@@ -218,14 +224,15 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       player.incrementAirballs();
       print("Airball for ${player.name} total: ${player.airballs}");
-      int teamAirballs = currentPlayers.fold(0, (sum, player) => sum + player.airballs);
-      if (teamAirballs % 3 == 0){
+      int teamAirballs =
+          currentPlayers.fold(0, (sum, player) => sum + player.airballs);
+      if (teamAirballs % 3 == 0) {
         _showAirballDialog(teamAirballs);
       }
     });
   }
 
-    // Function to show the airball dialog
+  // Function to show the airball dialog
   Future<void> _showAirballDialog(int airballs) async {
     return showDialog<void>(
       context: context,
@@ -251,7 +258,6 @@ class _GameScreenState extends State<GameScreen> {
       },
     );
   }
-
 
   // Function to check if the game has ended
   void _checkGameEnd() {
@@ -331,12 +337,12 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
             // Displaying the scores and misses of each player
-           ...currentPlayers.map((player) {
-            return Text(
-              '${player.name} Score: ${player.score} Misses: ${player.misses}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            );
-          }),
+            ...currentPlayers.map((player) {
+              return Text(
+                '${player.name} Score: ${player.score} Misses: ${player.misses}',
+                style: Theme.of(context).textTheme.headlineSmall,
+              );
+            }),
             // Displaying the current team
             Text(
               'Current Team: ${isTeamOneTurn ? "Team 1" : "Team 2"}',
@@ -354,7 +360,10 @@ class _GameScreenState extends State<GameScreen> {
               heroTag: "increment",
               onPressed: () {},
               tooltip: 'Increment',
-              child: const Icon(Icons.scatter_plot_outlined),
+              child: const Icon(
+                BeerpongIcons.umstellen,
+                size: 45,
+              ),
             ),
             FloatingActionButton.extended(
                 heroTag: "miss",
