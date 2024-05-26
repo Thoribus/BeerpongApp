@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 class Cup {
   final int index; // The index of the cup
   bool isVisible; // Visibility status of the cup
+  GlobalKey key = GlobalKey(); // Key to identify the cup widget
+  Color color = Colors.red; // Color of the cup
 
   // Constructor initializing the cup's index and setting it as visible by default
   Cup(this.index) : isVisible = true;
@@ -18,11 +20,12 @@ class Cup {
       child: GestureDetector(
         onTap: onTap, // The function to call when the cup is tapped
         child: Container(
+          key: key, // Key to identify the cup widget
           margin: const EdgeInsets.all(10.0), // Margin around the cup
           width: 60.0, // Width of the cup
           height: 60.0, // Height of the cup
-          decoration: const BoxDecoration(
-            color: Colors.red, // Color of the cup
+          decoration: BoxDecoration(
+            color: color, // Color of the cup
             shape: BoxShape.circle, // Shape of the cup
           ),
         ),

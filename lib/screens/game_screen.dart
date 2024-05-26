@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
+import 'dart:math';
 
 // GameScreen is a stateful widget that represents the main page of the application.
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, required this.title, required this.players1, required this.players2});
+  const GameScreen(
+      {super.key,
+      required this.title,
+      required this.players1,
+      required this.players2});
 
   final String title; // The title of the page
   final List<Player> players1; // List of players in Team 1 participating in the game
@@ -25,6 +30,7 @@ class _GameScreenState extends State<GameScreen> {
   List<Cup> team2Cups = List.generate(10, (index) => Cup(index));
 
   bool isTeamOneTurn = true; // Boolean to track whose turn it is
+  bool isRearranged = false; // Boolean to track if the cups have been rearranged
 
   late List<Player> currentPlayers; // List of players for the current turn
   late List<Cup> currentCups; // List of cups for the current turn
@@ -39,7 +45,6 @@ class _GameScreenState extends State<GameScreen> {
 
   // Function to show player selection dialog
   Future<void> _showPlayerSelectionDialog(int cupIndex) async {
-
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -52,7 +57,8 @@ class _GameScreenState extends State<GameScreen> {
                   child: Text(player.name),
                   onPressed: () {
                     Navigator.of(context).pop();
-                    _hideCup(cupIndex);
+                    _addCupToPlayer(player, cupIndex);
+                    _handleCupHit(cupIndex);
                     _incrementPlayerScore(player);
                   },
                 );
@@ -116,24 +122,34 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  // Function to hide a cup when it is hit
-  void _hideCup(int index) {
+  void _addCupToPlayer(Player player, int cupIndex) {
     setState(() {
-      _checkBitchCup(index);
-      currentCups[index].isVisible = false;
+      player.hitCup(cupIndex);
     });
   }
 
-  void _checkBitchCup(int index) {
-    print(index);
-    bool bitchCup = currentCups.every((cup) => cup.isVisible);
-    print(bitchCup);
-    if (currentCups.every((cup) => cup.isVisible) && index == 4) {
-      _showBitchCupDialog();
-    }
+  // Function to handle a cup being hit
+  void _handleCupHit(int index) {
+    setState(() {
+      if (currentCups[index].color == Colors.green) {
+        _checkProximity(index);
+      } else {
+        _checkBitchCup(index);
+        currentCups[index].color = Colors.green;
+      }
+    });
   }
 
-     // Function to show the airball dialog
+  // Function to check the special condition for "Bitchcup"
+  void _checkBitchCup(int index) {
+  // Check if every cup is visible and red, and the index is 4 (the Bitchcup index)
+  if (currentCups.every((cup) => cup.isVisible && cup.color == Colors.red) && index == 4) {
+    _showBitchCupDialog();
+  }
+}
+
+
+  // Function to show the "Bitchcup" dialog
   Future<void> _showBitchCupDialog() async {
     return showDialog<void>(
       context: context,
@@ -170,6 +186,10 @@ class _GameScreenState extends State<GameScreen> {
         player.resetHitThisRound();
       }
 
+      for (var cup in currentCups) {
+        if (cup.color == Colors.green) cup.isVisible = false;
+      }
+
       // Switch turn to the other team
       isTeamOneTurn = !isTeamOneTurn;
       currentPlayers = isTeamOneTurn ? team1Players : team2Players;
@@ -177,15 +197,55 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  // Function to calculate the distance between two points
+  double _calculateDistance(Offset position1, Offset position2) {
+    return sqrt(pow(position1.dx - position2.dx, 2) + pow(position1.dy - position2.dy, 2));
+  }
+
+  // Function to check the proximity of cups
+  void _checkProximity(int index) {
+    const double proximityThreshold = 100.0; // Adjust as needed
+    double hitCups = 0.0;
+
+    for (int i = 0; i < currentCups.length; i++) {
+      if (i == index) continue;
+      if (currentCups[i].isVisible && currentCups[index].isVisible) {
+        // Get the positions of the cups
+        final renderBox1 = currentCups[i].key.currentContext?.findRenderObject() as RenderBox?;
+        final renderBox2 = currentCups[index].key.currentContext?.findRenderObject() as RenderBox?;
+
+        if (renderBox1 != null && renderBox2 != null) {
+          Offset position1 = renderBox1.localToGlobal(Offset.zero);
+          Offset position2 = renderBox2.localToGlobal(Offset.zero);
+
+          double distance = _calculateDistance(position1, position2);
+          if (distance < proximityThreshold) {
+            hitCups++;
+            currentCups[i].color = Colors.green;
+          }
+        }
+      }
+    }
+    currentCups[index].color = Colors.red;
+    print(hitCups);
+    for (var player in currentPlayers) {
+      if (player.cupsHit.contains(index)) {
+        player.incrementScoreBy(hitCups/2 - 1);
+      }
+    }
+  }
+
   // Function to create the "Airball" button
   _newButtonAirball() {
     return Visibility(
-        child: FloatingActionButton.extended(
-            heroTag: "airball",
-            onPressed: _showAirballPlayerSelectionDialog,
-            tooltip: 'Airball',
-            label: const Text('Airball'),
-            icon: const Icon(Icons.air_rounded)));
+      child: FloatingActionButton.extended(
+        heroTag: "airball",
+        onPressed: _showAirballPlayerSelectionDialog,
+        tooltip: 'Airball',
+        label: const Text('Airball'),
+        icon: const Icon(Icons.air_rounded),
+      ),
+    );
   }
 
   // Function to show the airball player selection dialog
@@ -219,13 +279,13 @@ class _GameScreenState extends State<GameScreen> {
       player.incrementAirballs();
       print("Airball for ${player.name} total: ${player.airballs}");
       int teamAirballs = currentPlayers.fold(0, (sum, player) => sum + player.airballs);
-      if (teamAirballs % 3 == 0){
+      if (teamAirballs % 3 == 0) {
         _showAirballDialog(teamAirballs);
       }
     });
   }
 
-    // Function to show the airball dialog
+  // Function to show the airball dialog
   Future<void> _showAirballDialog(int airballs) async {
     return showDialog<void>(
       context: context,
@@ -251,7 +311,6 @@ class _GameScreenState extends State<GameScreen> {
       },
     );
   }
-
 
   // Function to check if the game has ended
   void _checkGameEnd() {
@@ -331,12 +390,12 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
             // Displaying the scores and misses of each player
-           ...currentPlayers.map((player) {
-            return Text(
-              '${player.name} Score: ${player.score} Misses: ${player.misses}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            );
-          }),
+            ...currentPlayers.map((player) {
+              return Text(
+                '${player.name} Score: ${player.score} Misses: ${player.misses}',
+                style: Theme.of(context).textTheme.headlineSmall,
+              );
+            }),
             // Displaying the current team
             Text(
               'Current Team: ${isTeamOneTurn ? "Team 1" : "Team 2"}',
@@ -352,21 +411,20 @@ class _GameScreenState extends State<GameScreen> {
           children: <Widget>[
             FloatingActionButton(
               heroTag: "increment",
-              onPressed: () {},
+              onPressed: () => _checkProximity(4),
               tooltip: 'Increment',
               child: const Icon(Icons.scatter_plot_outlined),
             ),
             FloatingActionButton.extended(
                 heroTag: "miss",
-                onPressed: _incrementPlayerMisses,
+                onPressed: () => {isRearranged = !isRearranged},
                 tooltip: 'Kein Becher wurde diese Runde getroffen.',
                 label: const Text('Kein Treffer'),
                 icon: const Icon(Icons.clear_rounded)),
             FloatingActionButton.extended(
                 heroTag: "end",
                 onPressed: _confirmEndTurn,
-                tooltip:
-                    'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
+                tooltip: 'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
                 label: const Text('Zugende'),
                 icon: const Icon(Icons.check_rounded)),
           ],
