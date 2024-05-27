@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/beerpong_icons_icons.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
 import '../models/game_statistics.dart';
@@ -523,6 +524,7 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+
   // Function to show the airball dialog
   Future<void> _showAirballDialog(int airballs) async {
     return showDialog<void>(
@@ -639,7 +641,10 @@ class _GameScreenState extends State<GameScreen> {
               heroTag: "increment",
               onPressed: _undoLastAction,
               tooltip: 'Increment',
-              child: const Icon(Icons.scatter_plot_outlined),
+              child: const Icon(
+                BeerpongIcons.umstellen,
+                size: 45,
+              ),
             ),
             FloatingActionButton.extended(
                 heroTag: "rearrange",
