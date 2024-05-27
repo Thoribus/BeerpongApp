@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'models/player.dart';
 import 'models/game_statistics.dart';
+import 'models/user.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -22,15 +23,23 @@ class DatabaseHelper {
     final path = join(await getDatabasesPath(), 'game_statistics.db');
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('ALTER TABLE players ADD COLUMN team_id INTEGER');
+    if (oldVersion < 3) {
+      await db.execute('''CREATE TABLE user (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        totalScore REAL,
+        totalMisses INTEGER,
+        totalAirballs INTEGER,
+        wins INTEGER,
+        losses INTEGER,
+      )''');
     }
   }
 
@@ -55,6 +64,51 @@ class DatabaseHelper {
         FOREIGN KEY (game_id) REFERENCES game_statistics (id)
       )
     ''');
+  }
+
+  Future<int> insertUser(User user) async {
+    final db = await database;
+    int userId = await db.insert('user', {
+      'username': user.username,
+      'totalScore': user.totalScore,
+      'totalMisses': user.totalMisses,
+      'totalAirballs': user.totalAirballs,
+      'wins': user.wins,
+      'losses': user.losses,
+    });
+
+    return userId;
+  }
+
+  Future<List<User>> retrieveUsers() async {
+    final db = await database;
+    final List<Map<String, dynamic>> users = await db.query('user');
+
+    List<User> userList = users.map((userMap) {
+      return User(
+        id: userMap['id'].toString(),
+        username: userMap['username'],
+        totalScore: userMap['totalScore'],
+        totalMisses: userMap['totalMisses'],
+        totalAirballs: userMap['totalAirballs'],
+        wins: userMap['wins'],
+        losses: userMap['losses'],
+      );
+    }).toList();
+
+    return userList;
+  }
+
+  Future<void> updateUser(User user) async {
+    final db = await database;
+    await db.update("user", {
+      'username': user.username,
+      'totalScore': user.totalScore,
+      'totalMisses': user.totalMisses,
+      'totalAirballs': user.totalAirballs,
+      'wins': user.wins,
+      'losses': user.losses,
+    }, where: 'id = ?', whereArgs: [user.id]);
   }
 
   Future<int> insertGame(GameStatistics game) async {
