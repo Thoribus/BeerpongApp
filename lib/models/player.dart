@@ -1,22 +1,41 @@
 // Class representing a player in the game
 class Player {
   final String name; // The name of the player
-  int score; // The score of the player
+  double score; // The score of the player
   int misses; // The number of misses by the player
   int airballs; // The number of airballs by the player
   bool hitThisRound; // Whether the player has hit a cup this round
+  List<int> cupsHit = []; // List of cup indices hit by the player
 
   // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
-  Player(this.name)
-      : score = 0,
-        misses = 0,
-        airballs = 0,
-        hitThisRound = false;
+  Player({
+    required this.name,
+    this.score = 0,
+    this.misses = 0,
+    this.airballs = 0,
+    cupsHit,
+    this.hitThisRound = false,
+  }) : cupsHit = cupsHit ?? [];
+
+  Player clone() {
+    return Player(
+      name: name,
+      score: score,
+      hitThisRound: hitThisRound,
+      cupsHit: List<int>.from(cupsHit),
+      misses: misses,
+      airballs: airballs,
+    );
+  }
 
   // Method to increment the player's score
   void incrementScore() {
     score++; // Increase the score by 1
     hitThisRound = true; // Mark that the player hit a cup this round
+  }
+
+  void incrementScoreBy(double points) {
+    score += points;
   }
 
   // Method to increment the player's misses
@@ -33,5 +52,9 @@ class Player {
   void incrementAirballs() {
     misses++; // Increase the misses count by 1
     airballs++; // Increase the airballs count by 1
+  }
+
+  void hitCup(int cupIndex) {
+    cupsHit.add(cupIndex);
   }
 }
