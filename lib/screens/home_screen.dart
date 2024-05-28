@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/screens/statistics_screen.dart';
 import '../models/player.dart';
 import '../widgets/new_game_dialog.dart';
 import 'game_screen.dart';
@@ -67,10 +68,9 @@ class HomeScreen extends StatelessWidget {
                                   team: 1), // Using the new PlayerInputDialog
                             );
 
-                            if (team1Result != null) {
-                              final players1 = team1Result
-                                  .map((name) => Player(name))
-                                  .toList();
+                if (team1Result != null) {
+                  final players1 =
+                      team1Result.map((name) => Player(name: name)).toList();
 
                               // Show dialog for team 2 and cast the result to List<String>
                               final team2Result =
@@ -79,11 +79,9 @@ class HomeScreen extends StatelessWidget {
                                 builder: (context) => NewGameDialog(
                                     team: 2), // Using the new PlayerInputDialog
                               );
-
-                              if (team2Result != null) {
-                                final players2 = team2Result
-                                    .map((name) => Player(name))
-                                    .toList();
+                  if (team2Result != null) {
+                    final players2 =
+                        team2Result.map((name) => Player(name: name)).toList();
 
                                 // Navigate to the game screen with both teams' players
                                 Navigator.push(
@@ -110,6 +108,13 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   onPressed: () {
                     // Navigate to Statistik screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StatisticsScreen(
+                        ),
+                      ),
+                    );
                   },
                   icon: Icons.bar_chart,
                   label: 'Statistik',

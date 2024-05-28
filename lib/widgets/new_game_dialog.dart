@@ -13,7 +13,7 @@ class NewGameDialog extends StatefulWidget {
 
 class _NewGameDialogState extends State<NewGameDialog> {
   // Define a variable to keep track of the number of players
-  int _numPlayers = 2;
+  final int _numPlayers = 2;
 
   // Create a list of TextEditingController objects to manage player name inputs
   final List<TextEditingController> _controllers = [];
