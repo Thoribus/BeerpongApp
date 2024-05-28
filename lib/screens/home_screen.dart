@@ -63,8 +63,8 @@ class HomeScreen extends StatelessWidget {
                             // Show dialog for team 1 and cast the result to List<String>
                             final team1Result = await showDialog<List<String>>(
                               context: context,
-                              builder: (context) =>
-                                  const NewGameDialog(team: 1),
+                              builder: (context) => NewGameDialog(
+                                  team: 1), // Using the new PlayerInputDialog
                             );
 
                             if (team1Result != null) {
@@ -76,8 +76,8 @@ class HomeScreen extends StatelessWidget {
                               final team2Result =
                                   await showDialog<List<String>>(
                                 context: context,
-                                builder: (context) =>
-                                    const NewGameDialog(team: 2),
+                                builder: (context) => NewGameDialog(
+                                    team: 2), // Using the new PlayerInputDialog
                               );
 
                               if (team2Result != null) {
