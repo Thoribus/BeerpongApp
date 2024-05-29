@@ -6,6 +6,7 @@ class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _StatisticsScreenState createState() => _StatisticsScreenState();
 }
 
