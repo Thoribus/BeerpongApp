@@ -60,13 +60,23 @@ class _GameScreenState extends State<GameScreen> {
 
   void toggleRearranged() {
     _saveCurrentState();
-    remainingCups = currentCups
-        .where((cup) => cup.isVisible && cup.color == Colors.red)
-        .toList();
+
     setState(() {
-      isTeamOneTurn
-          ? isRearranged1 = !isRearranged1
-          : isRearranged2 = !isRearranged2;
+      if (isTeamOneTurn) {
+        if (!isRearranged1) {
+          remainingCups = currentCups
+              .where((cup) => cup.isVisible && cup.color == Colors.red)
+              .toList();
+          isRearranged1 = true;
+        }
+      } else {
+        if (!isRearranged2) {
+          remainingCups = currentCups
+              .where((cup) => cup.isVisible && cup.color == Colors.red)
+              .toList();
+          isRearranged2 = true;
+        }
+      }
       isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
   }

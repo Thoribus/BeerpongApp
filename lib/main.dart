@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'Beerpong App', // The title of the application
       theme: ThemeData(
         buttonTheme: const ButtonThemeData(
-          buttonColor: Colors.white, // Default button color
+          buttonColor: Colors.white, // Default button colorr
           textTheme: ButtonTextTheme.primary, // Default button text theme
         ),
         useMaterial3: true, // Use Material Design 3
