@@ -42,7 +42,8 @@ class _GameScreenState extends State<GameScreen> {
 
   late List<Player> currentPlayers; // List of players for the current turn
   late List<Cup> currentCups; // List of cups for the current turn
-  List<Cup> remainingCups = [];
+  List<Cup> remainingCups1 = [];
+  List<Cup> remainingCups2 = [];
 
   List<GameStatistics> gameStatisticsList = []; // List to store game statistics
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -64,14 +65,14 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       if (isTeamOneTurn) {
         if (!isRearranged1) {
-          remainingCups = currentCups
+          remainingCups1 = currentCups
               .where((cup) => cup.isVisible && cup.color == Colors.red)
               .toList();
           isRearranged1 = true;
         }
       } else {
         if (!isRearranged2) {
-          remainingCups = currentCups
+          remainingCups2 = currentCups
               .where((cup) => cup.isVisible && cup.color == Colors.red)
               .toList();
           isRearranged2 = true;
@@ -584,7 +585,7 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ]),
             isRearranged
-                ? _buildCups(remainingCups)
+                ? (isTeamOneTurn ? _buildCups(remainingCups1) : _buildCups(remainingCups2))
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
