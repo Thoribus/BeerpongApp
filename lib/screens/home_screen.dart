@@ -5,14 +5,14 @@ import '../widgets/new_game_dialog.dart';
 import 'game_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize:
-            Size.fromHeight(kToolbarHeight + 20), // Adjust height as needed
+            const Size.fromHeight(kToolbarHeight + 20), // Adjust height as needed
         child: CustomAppBar(),
       ),
       body: Container(
@@ -34,7 +34,7 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.amber.withOpacity(0.2),
                         spreadRadius: 2,
                         blurRadius: 5,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -103,7 +103,7 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 20), // Add some spacing between the elements
+                const SizedBox(height: 20), // Add some spacing between the elements
                 _buildElevatedButton(
                   context: context,
                   onPressed: () {
@@ -152,7 +152,7 @@ Widget _buildElevatedButton({
 }) {
   return Container(
     width: MediaQuery.of(context).size.width * 0.75,
-    margin: EdgeInsets.symmetric(vertical: 10),
+    margin: const EdgeInsets.symmetric(vertical: 10),
     decoration: BoxDecoration(
       border: Border.all(color: Colors.amber, width: 3.0),
       borderRadius: BorderRadius.circular(15.0),
@@ -173,7 +173,7 @@ Widget _buildElevatedButton({
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(label),
           ],
         ),
@@ -188,7 +188,7 @@ class CustomAppBar extends StatelessWidget {
     return Container(
       color: Colors.amber.withOpacity(0.5), // Amber color with low opacity
       child: AppBar(
-        title: Text('Beerpong App'),
+        title: const Text('Beerpong App'),
         backgroundColor:
             Colors.transparent, // Make app bar background transparent
         elevation: 3, // Remove elevation
