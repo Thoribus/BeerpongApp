@@ -4,18 +4,18 @@ import 'package:flutter/material.dart';
 class Cup {
   final int index; // The index of the cup
   bool isVisible; // Visibility status of the cup
-  GlobalKey key = GlobalKey(); // Key to identify the cup widget
-  Color color = Colors.red; // Color of the cup
+  GlobalKey key; // Key to identify the cup widget
+  Color color;
 
   // Constructor initializing the cup's index and setting it as visible by default
-  Cup(this.index) : isVisible = true;
+  Cup({required this.index, this.color = Colors.red, isVisible, key}) : isVisible = true, key = GlobalKey();
   
     // Method to create a clone of the cup
   Cup clone() {
-    return Cup(index)
-      ..isVisible = isVisible
-      ..color = color
-      ..key = GlobalKey();
+    return Cup(index : index,
+      isVisible : isVisible,
+      color : color,
+      key : GlobalKey());
   }
 
   // Method to create a widget representing the cup
