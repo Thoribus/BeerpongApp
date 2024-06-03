@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/beerpong_icons_icons.dart';
+import 'package:beerpongapp/beerpong_icons_icons.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
 import '../models/game_statistics.dart';

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/statistics_screen.dart';
+import 'package:beerpongapp/screens/selection_screen.dart';
+import 'package:beerpongapp/screens/statistics_screen.dart';
 import '../models/player.dart';
 import '../widgets/new_game_dialog.dart';
 import 'game_screen.dart';
@@ -11,8 +12,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize:
-            const Size.fromHeight(kToolbarHeight + 20), // Adjust height as needed
+        preferredSize: const Size.fromHeight(
+            kToolbarHeight + 20), // Adjust height as needed
         child: CustomAppBar(),
       ),
       body: Container(
@@ -68,9 +69,10 @@ class HomeScreen extends StatelessWidget {
                                   const NewGameDialog(team: 1),
                             );
 
-                if (team1Result != null) {
-                  final players1 =
-                      team1Result.map((name) => Player(name: name)).toList();
+                            if (team1Result != null) {
+                              final players1 = team1Result
+                                  .map((name) => Player(name: name))
+                                  .toList();
 
                               // Show dialog for team 2 and cast the result to List<String>
                               final team2Result =
@@ -79,9 +81,10 @@ class HomeScreen extends StatelessWidget {
                                 builder: (context) =>
                                     const NewGameDialog(team: 2),
                               );
-                  if (team2Result != null) {
-                    final players2 =
-                        team2Result.map((name) => Player(name: name)).toList();
+                              if (team2Result != null) {
+                                final players2 = team2Result
+                                    .map((name) => Player(name: name))
+                                    .toList();
 
                                 // Navigate to the game screen with both teams' players
                                 Navigator.push(
@@ -103,7 +106,8 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20), // Add some spacing between the elements
+                const SizedBox(
+                    height: 20), // Add some spacing between the elements
                 _buildElevatedButton(
                   context: context,
                   onPressed: () {
@@ -111,8 +115,7 @@ class HomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const StatisticsScreen(
-                        ),
+                        builder: (context) => const StatisticsScreen(),
                       ),
                     );
                   },
@@ -121,8 +124,19 @@ class HomeScreen extends StatelessWidget {
                 ),
                 _buildElevatedButton(
                   context: context,
-                  onPressed: () {
-                    // Navigate to Freundesliste screen
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => SelectionScreen()),
+                    );
+
+                    // Handle the result from GameSetupScreen if needed
+                    if (result != null) {
+                      print('Players: ${result['players']}');
+                      print('Game Mode: ${result['gameMode']}');
+                      print('Special Rules: ${result['specialRules']}');
+                    }
                   },
                   icon: Icons.people_alt_rounded,
                   label: 'Freundesliste',
