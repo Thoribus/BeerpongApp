@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_application_1/screens/game_screen.dart';
-import 'package:flutter_application_1/models/player.dart';
+import 'package:beerpongapp/screens/game_screen.dart';
+import 'package:beerpongapp/models/player.dart';
 
 void main() {
   group('GameScreen Widget Tests', () {
