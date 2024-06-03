@@ -32,7 +32,8 @@ jobs:
           -keystore build/app/outputs/bundle/release/signingKey.jks \
           -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
           -keypass ${{ secrets.KEY_PASSWORD }} \
-          build/app/outputs/bundle/release/app-release.aab ${{ secrets.KEY_ALIAS }}
+          -alias ${{ secrets.KEY_ALIAS }} \
+          build/app/outputs/bundle/release/app-release.aab
 
     - name: Deploy to Play Store
       uses: r0adkll/upload-google-play@v1.0.18
