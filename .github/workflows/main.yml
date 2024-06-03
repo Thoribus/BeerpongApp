@@ -23,23 +23,23 @@ jobs:
     - name: Build AAB
       run: flutter build appbundle --release
 
-    - name: Decode keystore
-      run: echo "${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}" | base64 --decode > build/app/outputs/bundle/release/signingKey.jks
-
-    - name: Sign AAB
-      run: |
-        jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 \
-          -keystore build/app/outputs/bundle/release/signingKey.jks \
-          -storepass ${{ secrets.KEYSTORE_PASSWORD }} \
-          -keypass ${{ secrets.KEY_PASSWORD }} \
-          build/app/outputs/bundle/release/app-release.aab ${{ secrets.KEY_ALIAS }}
+    - name: Sign App Bundle
+      uses: Tlaster/android-sign@v1   
+      id: sign_app
+      with:
+        releaseDirectory: build/app/outputs/bundle/release/
+        signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_FILE_BASE64 }}
+        alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}         
+        output: build/release/signed
+        keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}             
+        keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
     - name: Deploy to Play Store
       uses: r0adkll/upload-google-play@v1.0.18
       with:
         serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         packageName: com.tecbreak.beerpongapp
-        releaseFiles: ${{steps.sign_app.outputs.signedReleaseFile}}        
+        releaseFiles: build/release/signed/*.aab       
         mappingFile: ./build/app/outputs/mapping/release/mapping.txt
         track: internal
         inAppUpdatePriority: 5
