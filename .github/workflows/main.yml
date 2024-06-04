@@ -36,7 +36,7 @@ jobs:
     - name: Deploy to Play Store
       uses: r0adkll/upload-google-play@v1.0.18
       with:
-        serviceAccountJson: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        serviceAccountJson: beerpong-companion-5cd2b8a53ec3.json
         packageName: com.tecbreak.beerpongapp
         releaseFiles: ${{steps.sign_app.outputs.signedReleaseFile}}        
         mappingFile: ./build/app/outputs/mapping/release/mapping.txt
