@@ -61,44 +61,12 @@ class HomeScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
-                          onPressed: () async {
-                            // Show dialog for team 1 and cast the result to List<String>
-                            final team1Result = await showDialog<List<String>>(
-                              context: context,
-                              builder: (context) =>
-                                  const NewGameDialog(team: 1),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SelectionScreen()),
                             );
-
-                            if (team1Result != null) {
-                              final players1 = team1Result
-                                  .map((name) => Player(name: name))
-                                  .toList();
-
-                              // Show dialog for team 2 and cast the result to List<String>
-                              final team2Result =
-                                  await showDialog<List<String>>(
-                                context: context,
-                                builder: (context) =>
-                                    const NewGameDialog(team: 2),
-                              );
-                              if (team2Result != null) {
-                                final players2 = team2Result
-                                    .map((name) => Player(name: name))
-                                    .toList();
-
-                                // Navigate to the game screen with both teams' players
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => GameScreen(
-                                      title: 'Beer Pong',
-                                      players1: players1,
-                                      players2: players2,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
                           },
                           child: const Text('Neues Spiel'),
                         ),
@@ -124,19 +92,12 @@ class HomeScreen extends StatelessWidget {
                 ),
                 _buildElevatedButton(
                   context: context,
-                  onPressed: () async {
-                    final result = await Navigator.push(
+                  onPressed: () {
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => SelectionScreen()),
                     );
-
-                    // Handle the result from GameSetupScreen if needed
-                    if (result != null) {
-                      print('Players: ${result['players']}');
-                      print('Game Mode: ${result['gameMode']}');
-                      print('Special Rules: ${result['specialRules']}');
-                    }
                   },
                   icon: Icons.people_alt_rounded,
                   label: 'Freundesliste',
