@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
-import '../models/player.dart';
-import '../widgets/new_game_dialog.dart';
-import 'game_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -93,11 +90,7 @@ class HomeScreen extends StatelessWidget {
                 _buildElevatedButton(
                   context: context,
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => SelectionScreen()),
-                    );
+                    // Navigate to Freundesliste screen 
                   },
                   icon: Icons.people_alt_rounded,
                   label: 'Freundesliste',

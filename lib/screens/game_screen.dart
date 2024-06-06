@@ -185,7 +185,8 @@ class _GameScreenState extends State<GameScreen> {
   // Function to check the special condition for "Bitchcup"
   void _checkBitchCup(int index) {
     // Check if every cup is visible and red, and the index is 4 (the Bitchcup index)
-    if (currentCups.every((cup) => cup.isVisible && cup.color == currentTeamColor) &&
+    if (currentCups
+            .every((cup) => cup.isVisible && cup.color == currentTeamColor) &&
         index == 4) {
       _showBitchCupDialog();
     }
@@ -666,17 +667,14 @@ class _GameScreenState extends State<GameScreen> {
               heroTag: "increment",
               onPressed: _undoLastAction,
               tooltip: 'Increment',
-              child: const Icon(
-                BeerpongIcons.umstellen,
-                size: 45,
-              ),
+              child: const Icon(Icons.scatter_plot_outlined),
             ),
             FloatingActionButton.extended(
                 heroTag: "rearrange",
                 onPressed: toggleRearranged,
                 tooltip: 'Verbleibende Becker umstellen.',
                 label: const Text('Umstellen'),
-                icon: const Icon(Icons.scatter_plot_outlined)),
+                icon: const Icon(BeerpongIcons.umstellen, size: 35)),
             FloatingActionButton.extended(
                 heroTag: "end",
                 onPressed: _confirmEndTurn,
