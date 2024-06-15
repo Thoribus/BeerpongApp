@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/firestoreservice.dart';
 
 class AccountScreen extends StatefulWidget {
   @override
@@ -7,32 +10,18 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  final _formKey = GlobalKey<FormState>();
-  String? _username;
-  String? _existingUsername;
+  User? user;
 
   @override
   void initState() {
     super.initState();
-    _loadUsername();
-  }
-
-  Future<void> _loadUsername() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _existingUsername = prefs.getString('username');
-    });
-  }
-
-  void _createAccount() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      // Here you would typically send the data to your backend or save it locally
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Account created for $_username')),
-      );
-      await prefs.setString("username", _username!);
+    final auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      FirestoreService().getUser(currentUser.uid).then((value) {
+        setState(() {
+          user = value;
+        });
+      });
     }
   }
 
@@ -40,54 +29,57 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Account'),
+        title: const Text('Account'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: _existingUsername == null
-              ? <Widget>[
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: <Widget>[
-                        TextFormField(
-                          decoration: InputDecoration(labelText: 'Username'),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your username';
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            _username = value;
-                          },
-                        ),
-                        SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: _createAccount,
-                          child: Text('Create Account'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                ]
-              : <Widget>[
-                  Text('Welcome, $_existingUsername!'),
-                  SizedBox(height: 20),
-                  Text(
-                    'Your Stats',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  // Here you would typically fetch and display the user's stats
-                  // For now, just showing a placeholder
-                  Text('Games Played: 10'),
-                  Text('Games Won: 5'),
-                  Text('Total Points: 50'),
-                ],
-        ),
+      body: Center(
+        child: StreamBuilder(
+            stream: auth.FirebaseAuth.instance.authStateChanges(),
+            builder:
+                (BuildContext context, AsyncSnapshot<auth.User?> snapshot) {
+              if (snapshot.connectionState == ConnectionState.active) {
+                if (snapshot.hasData) {
+                  return Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      Text('Signed in as ${snapshot.data?.displayName}'),
+                      Text("User ID: ${snapshot.data?.uid}"),
+                      Text("Total Score: ${user?.totalScore}"),
+                      Text("Total Misses: ${user?.totalMisses}"),
+                      Text("Total Airballs: ${user?.totalAirballs}"),
+                      Text("Cups Hit: ${user?.cupsHit}"),
+                      Text("Wins: ${user?.wins}"),
+                      Text("Losses: ${user?.losses}"),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await GoogleSignIn().signOut();
+                          auth.FirebaseAuth.instance.signOut();
+                        },
+                        child: const Text('Sign out'),
+                      ),
+                    ],
+                  );
+                } else {
+                  return ElevatedButton(
+                    onPressed: () async {
+                      auth.User? authUser = await FirestoreService().signInWithGoogle();
+                      final User user = User(
+                        id: authUser!.uid,
+                        username: authUser.displayName!,
+                      );
+                      if (await FirestoreService().getUser(user.id) == null) {
+                        FirestoreService().addUser(user);
+                      }
+                    },
+                    child: const Text('Sign in with Google'),
+                  );
+                }
+              } else {
+                return const CircularProgressIndicator();
+              }
+            }),
       ),
     );
   }
+
 }
