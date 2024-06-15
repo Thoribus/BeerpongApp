@@ -64,7 +64,7 @@ class _GameScreenState extends State<GameScreen> {
         List.generate(10, (index) => Cup(index: index, color: team1Color));
     team2Cups =
         List.generate(10, (index) => Cup(index: index, color: team2Color));
-    currentPlayers = isTeamOneTurn ? team1Players : team2Players;
+    currentPlayers = rotatePlayers(isTeamOneTurn ? team1Players : team2Players);
     currentCups = isTeamOneTurn ? team1Cups : team2Cups;
     currentTeamColor = isTeamOneTurn ? team1Color : team2Color;
   }
@@ -185,7 +185,8 @@ class _GameScreenState extends State<GameScreen> {
   // Function to check the special condition for "Bitchcup"
   void _checkBitchCup(int index) {
     // Check if every cup is visible and red, and the index is 4 (the Bitchcup index)
-    if (currentCups.every((cup) => cup.isVisible && cup.color == currentTeamColor) &&
+    if (currentCups
+            .every((cup) => cup.isVisible && cup.color == currentTeamColor) &&
         index == 4) {
       _showBitchCupDialog();
     }
@@ -233,13 +234,29 @@ class _GameScreenState extends State<GameScreen> {
         if (cup.color == Colors.green) cup.isVisible = false;
       }
 
+
       // Switch turn to the other team
       isTeamOneTurn = !isTeamOneTurn;
+      currentPlayers = rotatePlayers(isTeamOneTurn ? team1Players : team2Players);
       currentTeamColor = isTeamOneTurn ? team1Color : team2Color;
-      currentPlayers = isTeamOneTurn ? team1Players : team2Players;
       currentCups = isTeamOneTurn ? team1Cups : team2Cups;
       isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
+  }
+
+    List<Player> rotatePlayers(List<Player> players) {
+    // Ensure there are at least two players to rotate
+    if (players.length <= 2) return players;
+
+    print(players);
+    
+    Player player1 = players.removeAt(0);
+    Player player2 = players.removeAt(0);
+    players.add(player1);
+    players.add(player2);
+    print(players.sublist(0, 2));
+
+    return players.sublist(0, 2);
   }
 
   Column _buildCups(List<Cup> cups) {
@@ -666,17 +683,14 @@ class _GameScreenState extends State<GameScreen> {
               heroTag: "increment",
               onPressed: _undoLastAction,
               tooltip: 'Increment',
-              child: const Icon(
-                BeerpongIcons.umstellen,
-                size: 45,
-              ),
+              child: const Icon(Icons.scatter_plot_outlined),
             ),
             FloatingActionButton.extended(
                 heroTag: "rearrange",
                 onPressed: toggleRearranged,
                 tooltip: 'Verbleibende Becker umstellen.',
                 label: const Text('Umstellen'),
-                icon: const Icon(Icons.scatter_plot_outlined)),
+                icon: const Icon(BeerpongIcons.umstellen, size: 35)),
             FloatingActionButton.extended(
                 heroTag: "end",
                 onPressed: _confirmEndTurn,

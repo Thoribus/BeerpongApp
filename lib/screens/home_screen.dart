@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
-import '../models/player.dart';
-import '../widgets/new_game_dialog.dart';
-import 'game_screen.dart';
+import 'package:beerpongapp/screens/account_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -61,44 +59,12 @@ class HomeScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
-                          onPressed: () async {
-                            // Show dialog for team 1 and cast the result to List<String>
-                            final team1Result = await showDialog<List<String>>(
-                              context: context,
-                              builder: (context) => NewGameDialog(
-                                  team: 1), // Using the new PlayerInputDialog
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SelectionScreen()),
                             );
-
-                            if (team1Result != null) {
-                              final players1 = team1Result
-                                  .map((name) => Player(name: name))
-                                  .toList();
-
-                              // Show dialog for team 2 and cast the result to List<String>
-                              final team2Result =
-                                  await showDialog<List<String>>(
-                                context: context,
-                                builder: (context) => NewGameDialog(
-                                    team: 2), // Using the new PlayerInputDialog
-                              );
-                              if (team2Result != null) {
-                                final players2 = team2Result
-                                    .map((name) => Player(name: name))
-                                    .toList();
-
-                                // Navigate to the game screen with both teams' players
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => GameScreen(
-                                      title: 'Beer Pong',
-                                      players1: players1,
-                                      players2: players2,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
                           },
                           child: const Text('Neues Spiel'),
                         ),
@@ -124,19 +90,8 @@ class HomeScreen extends StatelessWidget {
                 ),
                 _buildElevatedButton(
                   context: context,
-                  onPressed: () async {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => SelectionScreen()),
-                    );
-
-                    // Handle the result from GameSetupScreen if needed
-                    if (result != null) {
-                      print('Players: ${result['players']}');
-                      print('Game Mode: ${result['gameMode']}');
-                      print('Special Rules: ${result['specialRules']}');
-                    }
+                  onPressed: () {
+                    // Navigate to Freundesliste screen
                   },
                   icon: Icons.people_alt_rounded,
                   label: 'Freundesliste',
@@ -145,6 +100,12 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   onPressed: () {
                     // Navigate to Einstellungen screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AccountScreen(),
+                      ),
+                    );
                   },
                   icon: Icons.settings,
                   label: 'Einstellungen',
