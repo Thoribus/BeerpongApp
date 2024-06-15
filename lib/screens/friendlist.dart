@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
@@ -26,17 +25,17 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Friends List'),
+        title: const Text('Friends List'),
       ),
       body: FutureBuilder<List<User>>(
         future: _friends,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No friends found.'));
+            return const Center(child: Text('No friends found.'));
           } else {
             List<User> friends = snapshot.data!;
             return ListView.builder(

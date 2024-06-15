@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
 import 'package:beerpongapp/screens/account_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:beerpongapp/models/user.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,8 +10,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(
             kToolbarHeight + 20), // Adjust height as needed
         child: CustomAppBar(),
       ),
