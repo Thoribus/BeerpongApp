@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
 import 'package:beerpongapp/screens/account_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:beerpongapp/models/user.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -90,7 +94,8 @@ class HomeScreen extends StatelessWidget {
                 ),
                 _buildElevatedButton(
                   context: context,
-                  onPressed: () {
+                  onPressed: () async {
+                    User? user = await getUser('123');
                     // Navigate to Freundesliste screen
                   },
                   icon: Icons.people_alt_rounded,
@@ -110,6 +115,72 @@ class HomeScreen extends StatelessWidget {
                   icon: Icons.settings,
                   label: 'Einstellungen',
                 ),
+                StreamBuilder(
+                    stream: auth.FirebaseAuth.instance.authStateChanges(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<auth.User?> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.active) {
+                        if (snapshot.hasData) {
+                          return Column(
+                            children: [
+                              const SizedBox(height: 20),
+                              Text(
+                                  'Signed in as ${snapshot.data?.displayName}'),
+                              const SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  await GoogleSignIn().signOut();
+                                  auth.FirebaseAuth.instance.signOut();
+                                },
+                                child: const Text('Sign out'),
+                              ),
+                            ],
+                          );
+                        } else {
+                          return ElevatedButton(
+                            onPressed: () {
+                              signInWithGoogle();
+                            },
+                            child: const Text('Sign in with Google'),
+                          );
+                        }
+                      } else {
+                        return const CircularProgressIndicator();
+                      }
+                    }),
+                StreamBuilder(
+                    stream: auth.FirebaseAuth.instance.authStateChanges(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<auth.User?> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.active) {
+                        if (snapshot.hasData) {
+                          return Column(
+                            children: [
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final User user = User(
+                                    id: snapshot.data!.uid,
+                                    username: snapshot.data!.displayName!,
+                                  );
+                                  print(user);
+                                  addUser(user);
+                                },
+                                child: const Text('Create User in DB'),
+                              ),
+                            ],
+                          );
+                        } else {
+                          return ElevatedButton(
+                            onPressed: () {
+                              signInWithGoogle();
+                            },
+                            child: const Text('Sign in with Google'),
+                          );
+                        }
+                      } else {
+                        return const CircularProgressIndicator();
+                      }
+                    }),
               ],
             ),
           ),
@@ -155,6 +226,85 @@ Widget _buildElevatedButton({
       ),
     ),
   );
+}
+
+signInWithGoogle() async {
+  final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+  final GoogleSignInAuthentication? googleAuth =
+      await googleUser?.authentication;
+  final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
+    accessToken: googleAuth?.accessToken,
+    idToken: googleAuth?.idToken,
+  );
+  auth.UserCredential user =
+      await auth.FirebaseAuth.instance.signInWithCredential(credential);
+  print(user.user?.uid);
+}
+
+Future<void> addUser(User user) async {
+  try {
+    print(user.id + user.username);
+    final FirebaseFirestore _db = FirebaseFirestore.instance;
+    await _db.collection('users').doc(user.id).set({
+      'username': user.username,
+      'totalScore': user.totalScore,
+      'totalMisses': user.totalMisses,
+      'totalAirballs': user.totalAirballs,
+      'cupsHit': user.cupsHit,
+      'wins': user.wins,
+      'losses': user.losses,
+    });
+  } catch (e) {
+    print('Error adding user: $e');
+  }
+}
+
+Future<void> updateUser(User user) async {
+  try {
+    final FirebaseFirestore _db = FirebaseFirestore.instance;
+    await _db.collection('users').doc(user.id).update({
+      'username': user.username,
+      'totalScore': user.totalScore,
+      'totalMisses': user.totalMisses,
+      'totalAirballs': user.totalAirballs,
+      'cupsHit': user.cupsHit,
+      'wins': user.wins,
+      'losses': user.losses,
+    });
+  } catch (e) {
+    print('Error updating user: $e');
+  }
+}
+
+Future<void> deleteUser(User user) async {
+  try {
+    final FirebaseFirestore _db = FirebaseFirestore.instance;
+    await _db.collection('users').doc(user.id).delete();
+  } catch (e) {
+    print('Error deleting user: $e');
+  }
+}
+
+Future<User?> getUser(String id) async {
+  try {
+    final FirebaseFirestore _db = FirebaseFirestore.instance;
+    final DocumentSnapshot doc = await _db.collection('users').doc(id).get();
+    if (doc.exists) {
+      return User(
+        id: doc.id,
+        username: doc['username'],
+        totalScore: doc['totalScore'],
+        totalMisses: doc['totalMisses'],
+        totalAirballs: doc['totalAirballs'],
+        cupsHit: doc['cupsHit'],
+        wins: doc['wins'],
+        losses: doc['losses'],
+      );
+    }
+  } catch (e) {
+    print('Error getting user: $e');
+  }
+  return null;
 }
 
 class CustomAppBar extends StatelessWidget {
