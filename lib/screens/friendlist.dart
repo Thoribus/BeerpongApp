@@ -4,7 +4,6 @@ import '../models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
 
 class FriendsListScreen extends StatefulWidget {
-
   const FriendsListScreen({super.key});
 
   @override
@@ -13,12 +12,65 @@ class FriendsListScreen extends StatefulWidget {
 
 class _FriendsListScreenState extends State<FriendsListScreen> {
   late Future<List<User>> _friends;
+  late auth.User? user;
 
   @override
   void initState() {
     super.initState();
-    final auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
-    _friends = FirestoreService().getFriends(currentUser!.uid);
+    user = auth.FirebaseAuth.instance.currentUser;
+    _friends = FirestoreService().getFriends(user!.uid);
+  }
+
+  Future<void> _showAddFriendDialog(BuildContext context) async {
+    final TextEditingController _controller = TextEditingController();
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible:
+          true, // User can dismiss the dialog by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Friend'),
+          content: TextField(
+            controller: _controller,
+            decoration:
+                const InputDecoration(hintText: 'Enter friend\'s ID'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Add'),
+              onPressed: () {
+                final String friendId = _controller.text.trim();
+                if (friendId.isNotEmpty) {
+                  _addFriend(context, friendId);
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addFriend(BuildContext context, String friendId) async {
+    try {
+      await FirestoreService().addFriend(user!.uid, friendId);
+      setState(() {
+        _friends = FirestoreService().getFriends(user!.uid);
+      });
+    } catch (e) {
+      print('Error adding friend: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding friend: $e')),
+      );
+    }
   }
 
   @override
@@ -50,6 +102,10 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
             );
           }
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddFriendDialog(context),
+        child: const Icon(Icons.add),
       ),
     );
   }
