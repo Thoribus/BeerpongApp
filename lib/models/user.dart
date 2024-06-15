@@ -7,6 +7,7 @@ class User {
   List<int> cupsHit;
   int wins;
   int losses;
+  List<String> friends;
 
   User({
     required this.id,
@@ -17,6 +18,7 @@ class User {
     this.cupsHit = const [],
     this.wins = 0,
     this.losses = 0,
+    this.friends = const [],
   });
 
 }
