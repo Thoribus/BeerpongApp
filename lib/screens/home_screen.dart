@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/screens/account_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -90,7 +91,7 @@ class HomeScreen extends StatelessWidget {
                 _buildElevatedButton(
                   context: context,
                   onPressed: () {
-                    // Navigate to Freundesliste screen 
+                    // Navigate to Freundesliste screen
                   },
                   icon: Icons.people_alt_rounded,
                   label: 'Freundesliste',
@@ -99,6 +100,12 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   onPressed: () {
                     // Navigate to Einstellungen screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AccountScreen(),
+                      ),
+                    );
                   },
                   icon: Icons.settings,
                   label: 'Einstellungen',
