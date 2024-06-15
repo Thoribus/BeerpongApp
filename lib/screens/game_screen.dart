@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/beerpong_icons_icons.dart';
+import 'package:beerpongapp/beerpong_icons_icons.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
 import '../models/game_statistics.dart';
@@ -30,9 +30,12 @@ class _GameScreenState extends State<GameScreen> {
   late List<Player> team1Players = widget.players1;
   late List<Player> team2Players = widget.players2;
 
+  Color team1Color = Colors.blue; // Color for Team 1
+  Color team2Color = Colors.red; // Color for Team 2
+
   // Initializing cups for both teams
-  List<Cup> team1Cups = List.generate(10, (index) => Cup(index));
-  List<Cup> team2Cups = List.generate(10, (index) => Cup(index));
+  List<Cup> team1Cups = [];
+  List<Cup> team2Cups = [];
 
   bool isTeamOneTurn = true; // Boolean to track whose turn it is
   bool isRearranged1 =
@@ -40,9 +43,11 @@ class _GameScreenState extends State<GameScreen> {
   bool isRearranged2 = false;
   bool isRearranged = false;
 
+  late Color currentTeamColor; // Color for the current team
   late List<Player> currentPlayers; // List of players for the current turn
   late List<Cup> currentCups; // List of cups for the current turn
-  List<Cup> remainingCups = [];
+  List<Cup> remainingCups1 = [];
+  List<Cup> remainingCups2 = [];
 
   List<GameStatistics> gameStatisticsList = []; // List to store game statistics
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -54,19 +59,35 @@ class _GameScreenState extends State<GameScreen> {
   void initState() {
     super.initState();
     // Initialize the current players and cups
-    currentPlayers = isTeamOneTurn ? team1Players : team2Players;
-    currentCups = isTeamOneTurn ? team2Cups : team1Cups;
+
+    team1Cups =
+        List.generate(10, (index) => Cup(index: index, color: team1Color));
+    team2Cups =
+        List.generate(10, (index) => Cup(index: index, color: team2Color));
+    currentPlayers = rotatePlayers(isTeamOneTurn ? team1Players : team2Players);
+    currentCups = isTeamOneTurn ? team1Cups : team2Cups;
+    currentTeamColor = isTeamOneTurn ? team1Color : team2Color;
   }
 
   void toggleRearranged() {
     _saveCurrentState();
-    remainingCups = currentCups
-        .where((cup) => cup.isVisible && cup.color == Colors.red)
-        .toList();
+
     setState(() {
-      isTeamOneTurn
-          ? isRearranged1 = !isRearranged1
-          : isRearranged2 = !isRearranged2;
+      if (isTeamOneTurn) {
+        if (!isRearranged1) {
+          remainingCups1 = currentCups
+              .where((cup) => cup.isVisible && cup.color == team1Color)
+              .toList();
+          isRearranged1 = true;
+        }
+      } else {
+        if (!isRearranged2) {
+          remainingCups2 = currentCups
+              .where((cup) => cup.isVisible && cup.color == team2Color)
+              .toList();
+          isRearranged2 = true;
+        }
+      }
       isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
   }
@@ -89,6 +110,7 @@ class _GameScreenState extends State<GameScreen> {
                     _addCupToPlayer(player, cupIndex);
                     _handleCupHit(cupIndex);
                     _incrementPlayerScore(player);
+                    _checkGameEnd(player); // Check if the game has ended
                   },
                 );
               }).toList(),
@@ -139,7 +161,6 @@ class _GameScreenState extends State<GameScreen> {
   void _incrementPlayerScore(Player player) {
     setState(() {
       player.incrementScore();
-      _checkGameEnd(); // Check if the game has ended
     });
   }
 
@@ -164,7 +185,8 @@ class _GameScreenState extends State<GameScreen> {
   // Function to check the special condition for "Bitchcup"
   void _checkBitchCup(int index) {
     // Check if every cup is visible and red, and the index is 4 (the Bitchcup index)
-    if (currentCups.every((cup) => cup.isVisible && cup.color == Colors.red) &&
+    if (currentCups
+            .every((cup) => cup.isVisible && cup.color == currentTeamColor) &&
         index == 4) {
       _showBitchCupDialog();
     }
@@ -205,18 +227,36 @@ class _GameScreenState extends State<GameScreen> {
           player.incrementMisses();
         }
         player.resetHitThisRound();
+        player.incrementThrows();
       }
 
       for (var cup in currentCups) {
         if (cup.color == Colors.green) cup.isVisible = false;
       }
 
+
       // Switch turn to the other team
       isTeamOneTurn = !isTeamOneTurn;
-      currentPlayers = isTeamOneTurn ? team1Players : team2Players;
-      currentCups = isTeamOneTurn ? team2Cups : team1Cups;
+      currentPlayers = rotatePlayers(isTeamOneTurn ? team1Players : team2Players);
+      currentTeamColor = isTeamOneTurn ? team1Color : team2Color;
+      currentCups = isTeamOneTurn ? team1Cups : team2Cups;
       isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
+  }
+
+    List<Player> rotatePlayers(List<Player> players) {
+    // Ensure there are at least two players to rotate
+    if (players.length <= 2) return players;
+
+    print(players);
+    
+    Player player1 = players.removeAt(0);
+    Player player2 = players.removeAt(0);
+    players.add(player1);
+    players.add(player2);
+    print(players.sublist(0, 2));
+
+    return players.sublist(0, 2);
   }
 
   Column _buildCups(List<Cup> cups) {
@@ -387,7 +427,7 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
     }
-    currentCups[index].color = Colors.red;
+    currentCups[index].color = currentTeamColor;
     print(hitCups);
     for (var player in currentPlayers) {
       if (player.cupsHit.contains(index)) {
@@ -436,11 +476,12 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // Function to check if the game has ended
-  void _checkGameEnd() async {
+  void _checkGameEnd(player) async {
     bool teamAllHit =
         currentCups.every((cup) => !cup.isVisible || cup.color == Colors.green);
 
     if (teamAllHit) {
+      _setPlayerHitLastCup(player);
       _saveGameStatistics();
       _showGameEndDialog(currentPlayers);
     }
@@ -524,7 +565,6 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-
   // Function to show the airball dialog
   Future<void> _showAirballDialog(int airballs) async {
     return showDialog<void>(
@@ -570,11 +610,13 @@ class _GameScreenState extends State<GameScreen> {
                 onPressed: _showAirballPlayerSelectionDialog,
                 tooltip: 'Airball',
                 label: const Text('Airball'),
-                icon: const Icon(Icons.air_rounded),
+                icon: const Icon(BeerpongIcons.airball, size: 45),
               ),
             ]),
             isRearranged
-                ? _buildCups(remainingCups)
+                ? (isTeamOneTurn
+                    ? _buildCups(remainingCups1)
+                    : _buildCups(remainingCups2))
                 : Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -620,13 +662,13 @@ class _GameScreenState extends State<GameScreen> {
             // Displaying the scores and misses of each player
             ...currentPlayers.map((player) {
               return Text(
-                '${player.name} Score: ${player.score} Misses: ${player.misses}',
+                '${player.name} Score: ${player.score} Misses: ${player.misses} Throws: ${player.throws}',
                 style: Theme.of(context).textTheme.headlineSmall,
               );
             }),
             // Displaying the current team
             Text(
-              'Current Team: ${isTeamOneTurn ? "Team 1" : "Team 2"}',
+              'Current Team: ${isTeamOneTurn ? "Team Blue" : "Team Red"}',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
           ],
@@ -641,17 +683,14 @@ class _GameScreenState extends State<GameScreen> {
               heroTag: "increment",
               onPressed: _undoLastAction,
               tooltip: 'Increment',
-              child: const Icon(
-                BeerpongIcons.umstellen,
-                size: 45,
-              ),
+              child: const Icon(Icons.scatter_plot_outlined),
             ),
             FloatingActionButton.extended(
                 heroTag: "rearrange",
                 onPressed: toggleRearranged,
                 tooltip: 'Verbleibende Becker umstellen.',
                 label: const Text('Umstellen'),
-                icon: const Icon(Icons.scatter_plot_outlined)),
+                icon: const Icon(BeerpongIcons.umstellen, size: 35)),
             FloatingActionButton.extended(
                 heroTag: "end",
                 onPressed: _confirmEndTurn,
@@ -664,5 +703,12 @@ class _GameScreenState extends State<GameScreen> {
       ),
       backgroundColor: Colors.black,
     );
+  }
+
+  void _setPlayerHitLastCup(player) {
+    setState(() {
+      player.hitLastCup();
+      print("Player ${player.name} hit last cup!");
+    });
   }
 }

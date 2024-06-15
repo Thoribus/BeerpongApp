@@ -2,15 +2,18 @@
 class Player {
   final String name; // The name of the player
   double score; // The score of the player
+  int throws;
   int misses; // The number of misses by the player
   int airballs; // The number of airballs by the player
   bool hitThisRound; // Whether the player has hit a cup this round
   List<int> cupsHit = []; // List of cup indices hit by the player
+  bool lastCupHit = false;
 
   // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
   Player({
     required this.name,
     this.score = 0,
+    this.throws = 0,
     this.misses = 0,
     this.airballs = 0,
     cupsHit,
@@ -21,6 +24,7 @@ class Player {
     return Player(
       name: name,
       score: score,
+      throws: throws,
       hitThisRound: hitThisRound,
       cupsHit: List<int>.from(cupsHit),
       misses: misses,
@@ -41,6 +45,14 @@ class Player {
   // Method to increment the player's misses
   void incrementMisses() {
     misses++; // Increase the misses count by 1
+  }
+
+  void incrementThrows() {
+    throws++;
+  }
+
+  void hitLastCup() {
+    lastCupHit = true;
   }
 
   // Method to reset the hitThisRound flag

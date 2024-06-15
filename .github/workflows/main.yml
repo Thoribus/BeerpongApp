@@ -1,0 +1,45 @@
+name: Build and Deploy to Google Play
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable' # 'dev', 'alpha', default to: 'stable'
+        flutter-version-file: pubspec.yaml
+
+    - name: Flutter Pub Get
+      run: flutter pub get
+
+    - name: Build AAB
+      run: flutter build appbundle --release
+
+    - name: Sign App Bundle
+      uses: r0adkll/sign-android-release@v1   
+      id: sign_app
+      with:
+        releaseDirectory: build/app/outputs/bundle/release/
+        signingKeyBase64: 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
+        alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}         
+        keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}             
+        keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+
+    - name: Deploy to Play Store
+      uses: r0adkll/upload-google-play@v1.0.18
+      with:
+        serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        packageName: com.tecbreak.beerpongapp
+        releaseName: "1.0.1"
+        releaseFiles: ${{steps.sign_app.outputs.signedReleaseFile}}        
+        mappingFile: ./build/app/outputs/mapping/release/mapping.txt
+        track: internal
+        inAppUpdatePriority: 5

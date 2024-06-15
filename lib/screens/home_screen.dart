@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/statistics_screen.dart';
-import '../models/player.dart';
-import '../widgets/new_game_dialog.dart';
-import 'game_screen.dart';
+import 'package:beerpongapp/screens/selection_screen.dart';
+import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/screens/account_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize:
-            Size.fromHeight(kToolbarHeight + 20), // Adjust height as needed
+        preferredSize: const Size.fromHeight(
+            kToolbarHeight + 20), // Adjust height as needed
         child: CustomAppBar(),
       ),
       body: Container(
@@ -34,7 +33,7 @@ class HomeScreen extends StatelessWidget {
                         color: Colors.amber.withOpacity(0.2),
                         spreadRadius: 2,
                         blurRadius: 5,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -60,42 +59,12 @@ class HomeScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
-                          onPressed: () async {
-                            // Show dialog for team 1 and cast the result to List<String>
-                            final team1Result = await showDialog<List<String>>(
-                              context: context,
-                              builder: (context) => NewGameDialog(
-                                  team: 1), // Using the new PlayerInputDialog
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SelectionScreen()),
                             );
-
-                if (team1Result != null) {
-                  final players1 =
-                      team1Result.map((name) => Player(name: name)).toList();
-
-                              // Show dialog for team 2 and cast the result to List<String>
-                              final team2Result =
-                                  await showDialog<List<String>>(
-                                context: context,
-                                builder: (context) => NewGameDialog(
-                                    team: 2), // Using the new PlayerInputDialog
-                              );
-                  if (team2Result != null) {
-                    final players2 =
-                        team2Result.map((name) => Player(name: name)).toList();
-
-                                // Navigate to the game screen with both teams' players
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => GameScreen(
-                                      title: 'Beer Pong',
-                                      players1: players1,
-                                      players2: players2,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
                           },
                           child: const Text('Neues Spiel'),
                         ),
@@ -103,7 +72,8 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 20), // Add some spacing between the elements
+                const SizedBox(
+                    height: 20), // Add some spacing between the elements
                 _buildElevatedButton(
                   context: context,
                   onPressed: () {
@@ -111,8 +81,7 @@ class HomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const StatisticsScreen(
-                        ),
+                        builder: (context) => const StatisticsScreen(),
                       ),
                     );
                   },
@@ -131,6 +100,12 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   onPressed: () {
                     // Navigate to Einstellungen screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AccountScreen(),
+                      ),
+                    );
                   },
                   icon: Icons.settings,
                   label: 'Einstellungen',
@@ -152,7 +127,7 @@ Widget _buildElevatedButton({
 }) {
   return Container(
     width: MediaQuery.of(context).size.width * 0.75,
-    margin: EdgeInsets.symmetric(vertical: 10),
+    margin: const EdgeInsets.symmetric(vertical: 10),
     decoration: BoxDecoration(
       border: Border.all(color: Colors.amber, width: 3.0),
       borderRadius: BorderRadius.circular(15.0),
@@ -173,7 +148,7 @@ Widget _buildElevatedButton({
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(label),
           ],
         ),
@@ -188,7 +163,7 @@ class CustomAppBar extends StatelessWidget {
     return Container(
       color: Colors.amber.withOpacity(0.5), // Amber color with low opacity
       child: AppBar(
-        title: Text('Beerpong App'),
+        title: const Text('Beerpong App'),
         backgroundColor:
             Colors.transparent, // Make app bar background transparent
         elevation: 3, // Remove elevation
