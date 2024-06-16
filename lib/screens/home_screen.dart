@@ -1,6 +1,8 @@
+import 'package:beerpongapp/screens/friendlist.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/screens/account_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,9 +10,9 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(
-            kToolbarHeight + 20), // Adjust height as needed
+      appBar: const PreferredSize(
+        preferredSize:
+            Size.fromHeight(kToolbarHeight + 20), // Adjust height as needed
         child: CustomAppBar(),
       ),
       body: Container(
@@ -90,7 +92,13 @@ class HomeScreen extends StatelessWidget {
                 _buildElevatedButton(
                   context: context,
                   onPressed: () {
-                    // Navigate to Freundesliste screen 
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FriendsListScreen(),
+                      ),
+                    );
+                    // Navigate to Freundesliste screen
                   },
                   icon: Icons.people_alt_rounded,
                   label: 'Freundesliste',
@@ -102,6 +110,20 @@ class HomeScreen extends StatelessWidget {
                   },
                   icon: Icons.settings,
                   label: 'Einstellungen',
+                ),
+                _buildElevatedButton(
+                  context: context,
+                  onPressed: () {
+                    // Navigate to Einstellungen screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AccountScreen(),
+                      ),
+                    );
+                  },
+                  icon: Icons.account_circle_rounded,
+                  label: 'Account',
                 ),
               ],
             ),
@@ -129,7 +151,7 @@ Widget _buildElevatedButton({
           color: Colors.amber.withOpacity(0.7),
           spreadRadius: 2,
           blurRadius: 5,
-          offset: Offset(0, 3),
+          offset: const Offset(0, 3),
         ),
       ],
     ),
@@ -151,30 +173,35 @@ Widget _buildElevatedButton({
 }
 
 class CustomAppBar extends StatelessWidget {
+  const CustomAppBar({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.amber.withOpacity(0.5), // Amber color with low opacity
+      color: Colors.amber.withOpacity(0.75), // Amber color with low opacity
       child: AppBar(
-        title: const Text('Beerpong App'),
-        backgroundColor:
-            Colors.transparent, // Make app bar background transparent
-        elevation: 3, // Remove elevation
+        title: const Text(
+          'BeerPong!',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.amber.withOpacity(0.75),
         leading: IconButton(
-          icon: Icon(Icons.menu),
+          icon: const Icon(Icons.menu),
           onPressed: () {
             print('Menu Icon Pressed');
           },
         ),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.sports_bar_rounded),
+            icon: const Icon(Icons.sports_bar_rounded),
             onPressed: () {
               print('Beer Icon Pressed');
             },
           ),
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings),
             onPressed: () {
               print('Settings Icon Pressed');
             },
