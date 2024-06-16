@@ -5,14 +5,16 @@ import '../models/player.dart';
 import '../models/game_statistics.dart';
 import 'dart:math';
 import '../database_helper.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
 // GameScreen is a stateful widget that represents the main page of the application.
 class GameScreen extends StatefulWidget {
-  const GameScreen(
-      {super.key,
-      required this.title,
-      required this.players1,
-      required this.players2});
+  const GameScreen({
+    super.key,
+    required this.title,
+    required this.players1,
+    required this.players2,
+  });
 
   final String title; // The title of the page
   final List<Player>
@@ -29,6 +31,8 @@ class _GameScreenState extends State<GameScreen> {
   // Initializing players based on the provided list of players
   late List<Player> team1Players = widget.players1;
   late List<Player> team2Players = widget.players2;
+
+  List<bool> selectedRules = [true, false, true];
 
   Color team1Color = Colors.blue; // Color for Team 1
   Color team2Color = Colors.red; // Color for Team 2
@@ -55,10 +59,21 @@ class _GameScreenState extends State<GameScreen> {
   // Stack to keep track of the previous states
   List<Map<String, dynamic>> _actionStack = [];
 
+  PageController _pageController = PageController();
+  int _currentPage = 0;
+
   @override
   void initState() {
     super.initState();
     // Initialize the current players and cups
+    _pageController.addListener(() {
+      int page = _pageController.page?.round() ?? 0;
+      if (_currentPage != page) {
+        setState(() {
+          _currentPage = page;
+        });
+      }
+    });
 
     team1Cups =
         List.generate(10, (index) => Cup(index: index, color: team1Color));
@@ -67,6 +82,12 @@ class _GameScreenState extends State<GameScreen> {
     currentPlayers = rotatePlayers(isTeamOneTurn ? team1Players : team2Players);
     currentCups = isTeamOneTurn ? team1Cups : team2Cups;
     currentTeamColor = isTeamOneTurn ? team1Color : team2Color;
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void toggleRearranged() {
@@ -399,6 +420,12 @@ class _GameScreenState extends State<GameScreen> {
         pow(position1.dy - position2.dy, 2));
   }
 
+  // Function to calculate hit rate as a ratio from throws and hits
+  double _calculateHitRate(double score, int throws) {
+    if (throws == 0) return 0.0;
+    return (score / throws) * 100;
+  }
+
   // Function to check the proximity of cups
   void _checkProximity(int index) {
     const double proximityThreshold = 100.0; // Adjust as needed
@@ -595,147 +622,340 @@ class _GameScreenState extends State<GameScreen> {
   // The build method describes the part of the user interface represented by this widget.
   @override
   Widget build(BuildContext context) {
+    Color teamColor = isTeamOneTurn ? Colors.blue : Colors.red;
+
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
-            'Current Game',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        title: const Text(
+          'Current Game',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.amber.withOpacity(0.75),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.scatter_plot_outlined),
+            onPressed: () {
+              print('Beer Icon Pressed');
+            },
           ),
-          centerTitle: true,
-          backgroundColor: Colors.amber.withOpacity(0.75),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.scatter_plot_outlined),
-              onPressed: () {
-                print('Beer Icon Pressed');
-              },
-            )
-          ]),
-      body: Stack(
+        ],
+      ),
+      body: Column(
         children: [
-          // Gradient rectangle shape in the background
-          Positioned(
-            top:
-                165.0, // Adjust this value to set the top padding under the Airball button
-            left: 16.0,
-            right: 16.0,
-            bottom: 16.0,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16.0),
-                gradient: LinearGradient(
-                  colors: [Colors.brown.shade700, Colors.brown.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 4.0,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: _currentPage == 0
+                    ? null
+                    : () {
+                        _pageController.jumpToPage(0);
+                      },
+                child: Text(
+                  'View Table',
+                  style: TextStyle(
+                    color: _currentPage == 0 ? Colors.amber : Colors.white,
+                  ),
                 ),
               ),
-            ),
+              const VerticalDivider(
+                color: Colors.white,
+                width: 20,
+                thickness: 2,
+                indent: 5,
+                endIndent: 5,
+              ),
+              TextButton(
+                onPressed: _currentPage == 1
+                    ? null
+                    : () {
+                        _pageController.jumpToPage(1);
+                      },
+                child: Text(
+                  'View Game Stats',
+                  style: TextStyle(
+                    color: _currentPage == 1 ? Colors.amber : Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
-          // Main content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              scrollDirection: Axis.horizontal,
+              children: [
+                // First Page: Current Game State
+                Stack(
                   children: [
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('View Table'),
+                    // Gradient rectangle shape in the background
+                    Positioned(
+                      top: 90.0,
+                      left: 16.0,
+                      right: 16.0,
+                      bottom: 16.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16.0),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.brown.shade700,
+                              Colors.brown.shade400
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 4.0,
+                          ),
+                        ),
+                      ),
                     ),
-                    const VerticalDivider(
-                      color: Colors.white,
-                      width: 20,
-                      thickness: 2,
-                      indent: 5,
-                      endIndent: 5,
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('View Game Stats'),
+                    // Main content
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              FloatingActionButton.extended(
+                                backgroundColor: Colors.amber,
+                                heroTag: "airball",
+                                onPressed: _showAirballPlayerSelectionDialog,
+                                tooltip: 'Airball',
+                                label: const Text('Airball'),
+                                icon:
+                                    const Icon(BeerpongIcons.airball, size: 45),
+                              ),
+                            ],
+                          ),
+                          isRearranged
+                              ? (isTeamOneTurn
+                                  ? _buildCups(remainingCups1)
+                                  : _buildCups(remainingCups2))
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(height: 20),
+                                    // Rows of cups for both teams, displayed conditionally based on whose turn it is
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        currentCups[6].widget(() =>
+                                            _showPlayerSelectionDialog(6)),
+                                        currentCups[7].widget(() =>
+                                            _showPlayerSelectionDialog(7)),
+                                        currentCups[8].widget(() =>
+                                            _showPlayerSelectionDialog(8)),
+                                        currentCups[9].widget(() =>
+                                            _showPlayerSelectionDialog(9)),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        currentCups[3].widget(() =>
+                                            _showPlayerSelectionDialog(3)),
+                                        currentCups[4].widget(() =>
+                                            _showPlayerSelectionDialog(4)),
+                                        currentCups[5].widget(() =>
+                                            _showPlayerSelectionDialog(5)),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        currentCups[1].widget(() =>
+                                            _showPlayerSelectionDialog(1)),
+                                        currentCups[2].widget(() =>
+                                            _showPlayerSelectionDialog(2)),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        currentCups[0].widget(() =>
+                                            _showPlayerSelectionDialog(0)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                          const SizedBox(height: 40),
+                          // Add three round buttons here
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (selectedRules[0])
+                                FloatingActionButton(
+                                  onPressed: () {},
+                                  backgroundColor: Colors.amber,
+                                  heroTag: "Deathcup",
+                                  child:
+                                      const Icon(BeerpongIcons.skull, size: 35),
+                                  shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.only(
+                                          topRight: Radius.circular(20),
+                                          bottomLeft: Radius.circular(100),
+                                          bottomRight: Radius.circular(100),
+                                          topLeft: Radius.circular(100))),
+                                ),
+                              if (selectedRules[0])
+                                FloatingActionButton(
+                                  backgroundColor: Colors.amber,
+                                  heroTag: "Island",
+                                  onPressed: () {
+                                    print('Button 2 Pressed');
+                                  },
+                                  child: const Icon(BeerpongIcons.palmtree,
+                                      size: 45),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 40),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  FloatingActionButton.extended(
-                    heroTag: "airball",
-                    onPressed: _showAirballPlayerSelectionDialog,
-                    tooltip: 'Airball',
-                    label: const Text('Airball'),
-                    icon: const Icon(BeerpongIcons.airball, size: 45),
-                  ),
-                ]),
-                isRearranged
-                    ? (isTeamOneTurn
-                        ? _buildCups(remainingCups1)
-                        : _buildCups(remainingCups2))
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                // Second Page: DataTable and Radial Bar Chart
+                Container(
+                  color: Colors.black,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 20),
-                          // Rows of cups for both teams, displayed conditionally based on whose turn it is
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                currentCups[6].widget(
-                                    () => _showPlayerSelectionDialog(6)),
-                                currentCups[7].widget(
-                                    () => _showPlayerSelectionDialog(7)),
-                                currentCups[8].widget(
-                                    () => _showPlayerSelectionDialog(8)),
-                                currentCups[9].widget(
-                                    () => _showPlayerSelectionDialog(9)),
-                              ]),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                currentCups[3].widget(
-                                    () => _showPlayerSelectionDialog(3)),
-                                currentCups[4].widget(
-                                    () => _showPlayerSelectionDialog(4)),
-                                currentCups[5].widget(
-                                    () => _showPlayerSelectionDialog(5)),
-                              ]),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                currentCups[1].widget(
-                                    () => _showPlayerSelectionDialog(1)),
-                                currentCups[2].widget(
-                                    () => _showPlayerSelectionDialog(2)),
-                              ]),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                currentCups[0].widget(
-                                    () => _showPlayerSelectionDialog(0)),
-                              ]),
+                          Text(
+                            'Team Statistic',
+                            style: TextStyle(
+                              color: Colors.amber,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Divider(
+                            color: Colors.amber,
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 10),
+                          DataTable(
+                            columns: const [
+                              DataColumn(
+                                  label: Text('Player',
+                                      style: TextStyle(color: Colors.white))),
+                              DataColumn(
+                                  label: Text('S',
+                                      style: TextStyle(color: Colors.white))),
+                              DataColumn(
+                                  label: Text('M',
+                                      style: TextStyle(color: Colors.white))),
+                              DataColumn(
+                                  label: Text('T',
+                                      style: TextStyle(color: Colors.white))),
+                              DataColumn(
+                                  label: Text('A',
+                                      style: TextStyle(color: Colors.white))),
+                            ],
+                            rows: currentPlayers.map((player) {
+                              return DataRow(cells: [
+                                DataCell(Row(
+                                  children: [
+                                    Icon(Icons.person, color: teamColor),
+                                    const SizedBox(width: 8),
+                                    Text(player.name,
+                                        style: const TextStyle(
+                                            color: Colors.white)),
+                                  ],
+                                )),
+                                DataCell(Text('${player.score}',
+                                    style: TextStyle(color: Colors.white))),
+                                DataCell(Text('${player.misses}',
+                                    style: TextStyle(color: Colors.white))),
+                                DataCell(Text('${player.throws}',
+                                    style: TextStyle(color: Colors.white))),
+                                DataCell(Text('${player.airballs}',
+                                    style: TextStyle(
+                                        color: Colors.white))), // Empty column
+                              ]);
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 50),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Hit Rate (%)',
+                                style: TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Divider(
+                                color: Colors.amber,
+                                thickness: 1,
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                height: 200,
+                                child: GridView.builder(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                  ),
+                                  itemCount: currentPlayers.length,
+                                  itemBuilder: (context, index) {
+                                    final player = currentPlayers[index];
+                                    final hitRate = _calculateHitRate(
+                                        player.score, player.throws);
+                                    return Column(
+                                      children: [
+                                        Text(
+                                          player.name,
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        Expanded(
+                                          child: CircularPercentIndicator(
+                                            radius: 50.0,
+                                            lineWidth: 10.0,
+                                            animation: true,
+                                            percent: hitRate /
+                                                1000, // 1000 when percent bigger than 100 gives error in buildung the chart
+                                            center: Text(
+                                              "${hitRate.toStringAsFixed(1)}%",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14.0,
+                                                  color: teamColor),
+                                            ),
+                                            circularStrokeCap:
+                                                CircularStrokeCap.round,
+                                            progressColor: teamColor,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                // Displaying the scores and misses of each player
-                ...currentPlayers.map((player) {
-                  return Text(
-                    '${player.name} Score: ${player.score} Misses: ${player.misses} Throws: ${player.throws}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(color: Colors.white),
-                  );
-                }),
-                // Displaying the current team
-                Text(
-                  'Current Team: ${isTeamOneTurn ? "Team Blue" : "Team Red"}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(color: Colors.white),
-                ),
+                    ),
+                  ),
+                )
               ],
             ),
           ),
@@ -747,18 +967,21 @@ class _GameScreenState extends State<GameScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             FloatingActionButton(
+              backgroundColor: Colors.amber,
               heroTag: "increment",
               onPressed: _undoLastAction,
               tooltip: 'Increment',
               child: const Icon(Icons.undo),
             ),
             FloatingActionButton.extended(
+                backgroundColor: Colors.amber,
                 heroTag: "rearrange",
                 onPressed: toggleRearranged,
                 tooltip: 'Verbleibende Becker umstellen.',
                 label: const Text('Umstellen'),
                 icon: const Icon(BeerpongIcons.umstellen, size: 35)),
             FloatingActionButton.extended(
+                backgroundColor: Colors.amber,
                 heroTag: "end",
                 onPressed: _confirmEndTurn,
                 tooltip:
