@@ -69,7 +69,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
             ? Center(
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber.withOpacity(0.7),
+                    backgroundColor: Colors.amber.withOpacity(0.75),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),

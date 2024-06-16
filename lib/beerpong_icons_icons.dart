@@ -11,7 +11,11 @@
 ///      fonts:
 ///       - asset: fonts/BeerpongIcons.ttf
 ///
-/// 
+///
+/// * RPG Awesome, Copyright (c) 2014, Daniela Howe
+///         Author:    Daniela Howe & Ivan Montiel
+///         License:   SIL (http://scripts.sil.org/OFL)
+///         Homepage:  http://nagoshiashumari.github.io/Rpg-Awesome/
 ///
 import 'package:flutter/widgets.dart';
 
@@ -21,7 +25,14 @@ class BeerpongIcons {
   static const _kFontFam = 'BeerpongIcons';
   static const String? _kFontPkg = null;
 
-  static const IconData umstellen = IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData airball = IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData newgame = IconData(0xe802, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData umstellen =
+      IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData airball =
+      IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData newgame =
+      IconData(0xe802, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData palmtree =
+      IconData(0xea56, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData skull =
+      IconData(0xeaa1, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }
