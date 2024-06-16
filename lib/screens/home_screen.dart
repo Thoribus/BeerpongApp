@@ -11,8 +11,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(
-            kToolbarHeight + 20), // Adjust height as needed
+        preferredSize:
+            Size.fromHeight(kToolbarHeight + 20), // Adjust height as needed
         child: CustomAppBar(),
       ),
       body: Container(
@@ -178,12 +178,15 @@ class CustomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.amber.withOpacity(0.5), // Amber color with low opacity
+      color: Colors.amber.withOpacity(0.75), // Amber color with low opacity
       child: AppBar(
-        title: const Text('Beerpong App'),
-        backgroundColor:
-            Colors.transparent, // Make app bar background transparent
-        elevation: 3, // Remove elevation
+        title: const Text(
+          'BeerPong!',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.amber.withOpacity(0.75),
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: () {
