@@ -8,23 +8,26 @@ class Cup {
   Color color;
 
   // Constructor initializing the cup's index and setting it as visible by default
-  Cup({required this.index, this.color = Colors.red, isVisible, key}) : isVisible = true, key = GlobalKey();
-  
-    // Method to create a clone of the cup
+  Cup({required this.index, this.color = Colors.red, isVisible, key})
+      : isVisible = true,
+        key = GlobalKey();
+
+  // Method to create a clone of the cup
   Cup clone() {
-    return Cup(index : index,
-      isVisible : isVisible,
-      color : color,
-      key : GlobalKey());
+    return Cup(
+        index: index, isVisible: isVisible, color: color, key: GlobalKey());
   }
 
   // Method to create a widget representing the cup
   Widget widget(VoidCallback onTap) {
     return Visibility(
       visible: isVisible, // Determines whether the cup is visible
-      maintainSize: true, // Maintains the size of the widget even when it's not visible
-      maintainAnimation: true, // Maintains the animation state when visibility changes
-      maintainState: true, // Maintains the state of the widget when visibility changes
+      maintainSize:
+          true, // Maintains the size of the widget even when it's not visible
+      maintainAnimation:
+          true, // Maintains the animation state when visibility changes
+      maintainState:
+          true, // Maintains the state of the widget when visibility changes
       child: GestureDetector(
         onTap: onTap, // The function to call when the cup is tapped
         child: Container(
@@ -33,6 +36,7 @@ class Cup {
           width: 60.0, // Width of the cup
           height: 60.0, // Height of the cup
           decoration: BoxDecoration(
+            border: Border.all(color: Colors.white, width: 2),
             color: color, // Color of the cup
             shape: BoxShape.circle, // Shape of the cup
           ),
