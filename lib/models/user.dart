@@ -4,6 +4,7 @@ class User {
   double totalScore;
   int totalMisses;
   int totalAirballs;
+  int totalThrows;
   List<int> cupsHit;
   int wins;
   int losses;
@@ -15,6 +16,7 @@ class User {
     this.totalScore = 0,
     this.totalMisses = 0,
     this.totalAirballs = 0,
+    this.totalThrows = 0,
     this.cupsHit = const [],
     this.wins = 0,
     this.losses = 0,

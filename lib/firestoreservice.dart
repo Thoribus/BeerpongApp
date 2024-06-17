@@ -8,18 +8,45 @@ class FirestoreService {
 
   Future<List<User>> getFriends(String userId) async {
     try {
-      DocumentSnapshot userDoc = await _db.collection('users').doc(userId).get();
+      DocumentSnapshot userDoc =
+          await _db.collection('users').doc(userId).get();
       List<String> friendIds = List<String>.from(userDoc['friends']);
-      
+
       List<User> friends = [];
       for (String friendId in friendIds) {
-        DocumentSnapshot friendDoc = await _db.collection('users').doc(friendId).get();
+        DocumentSnapshot friendDoc =
+            await _db.collection('users').doc(friendId).get();
         Map<String, dynamic> data = friendDoc.data() as Map<String, dynamic>;
-        friends.add(User(id: friendDoc.id, username: data['username'], totalScore: data['totalScore'], totalMisses: data['totalMisses'], totalAirballs: data['totalAirballs'], cupsHit: List<int>.from(data['cupsHit']), wins: data['wins'], losses: data['losses']));
+        friends.add(User(
+            id: friendDoc.id,
+            username: data['username'],
+            totalScore: data['totalScore'],
+            totalMisses: data['totalMisses'],
+            totalThrows: data['totalThrows'],
+            totalAirballs: data['totalAirballs'],
+            cupsHit: List<int>.from(data['cupsHit']),
+            wins: data['wins'],
+            losses: data['losses']));
       }
       return friends;
     } catch (e) {
       print('Error fetching friends: $e');
+      throw e;
+    }
+  }
+
+  Future<void> addFriend(String userId, String friendId) async {
+    try {
+      DocumentReference userDoc = _db.collection('users').doc(userId);
+      await userDoc.update({
+        'friends': FieldValue.arrayUnion([friendId])
+      });
+      DocumentReference friendDoc = _db.collection('users').doc(friendId);
+      await friendDoc.update({
+        'friends': FieldValue.arrayUnion([userId])
+      });
+    } catch (e) {
+      print('Error adding friend: $e');
       throw e;
     }
   }
@@ -46,6 +73,7 @@ class FirestoreService {
         'totalScore': user.totalScore,
         'totalMisses': user.totalMisses,
         'totalAirballs': user.totalAirballs,
+        'totalThrows': user.totalThrows,
         'cupsHit': user.cupsHit,
         'wins': user.wins,
         'losses': user.losses,
@@ -64,6 +92,7 @@ class FirestoreService {
         'totalScore': user.totalScore,
         'totalMisses': user.totalMisses,
         'totalAirballs': user.totalAirballs,
+        'totalThrows': user.totalThrows,
         'cupsHit': user.cupsHit,
         'wins': user.wins,
         'losses': user.losses,
@@ -94,6 +123,7 @@ class FirestoreService {
           totalScore: doc['totalScore'],
           totalMisses: doc['totalMisses'],
           totalAirballs: doc['totalAirballs'],
+          totalThrows: doc['totalThrows'],
           cupsHit: List<int>.from(doc['cupsHit']),
           wins: doc['wins'],
           losses: doc['losses'],
