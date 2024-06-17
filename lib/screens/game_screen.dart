@@ -16,6 +16,7 @@ class GameScreen extends StatefulWidget {
     required this.title,
     required this.players1,
     required this.players2,
+    required this.selectedRules,
   });
 
   final String title; // The title of the page
@@ -23,6 +24,7 @@ class GameScreen extends StatefulWidget {
       players1; // List of players in Team 1 participating in the game
   final List<Player>
       players2; // List of players in Team 2 participating in the game
+  final Map<String, bool> selectedRules; // Map of selected special rules
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -33,8 +35,7 @@ class _GameScreenState extends State<GameScreen> {
   // Initializing players based on the provided list of players
   late List<Player> team1Players = widget.players1;
   late List<Player> team2Players = widget.players2;
-
-  List<bool> selectedRules = [true, false, true];
+  late Map<String, bool> selectedRules = widget.selectedRules;
 
   Color team1Color = Colors.blue; // Color for Team 1
   Color team2Color = Colors.red; // Color for Team 2
@@ -819,7 +820,8 @@ class _GameScreenState extends State<GameScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              if (selectedRules[0])
+                              if (selectedRules["Deathcup"] != null &&
+                                  selectedRules["Deathcup"]!)
                                 FloatingActionButton(
                                   onPressed: () {},
                                   backgroundColor: Colors.amber,
@@ -833,7 +835,8 @@ class _GameScreenState extends State<GameScreen> {
                                   child:
                                       const Icon(BeerpongIcons.skull, size: 35),
                                 ),
-                              if (selectedRules[0])
+                              if (selectedRules["Island"] != null &&
+                                  selectedRules["Island"]!)
                                 FloatingActionButton(
                                   backgroundColor: Colors.amber,
                                   heroTag: "Island",

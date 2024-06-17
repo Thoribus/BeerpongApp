@@ -15,6 +15,11 @@ class _SelectionScreenState extends State<SelectionScreen> {
   List<String> gameModes = ['Single Game', 'Tournament'];
   List<String> specialRules = ['Bitchcup', 'Island', 'Rearrange'];
   List<bool> selectedRules = [false, false, false];
+  Map<String, bool> selectedRulesMap = {
+    'Bitchcup': false,
+    'Island': false,
+    'Rearrange': false,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -280,6 +285,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
                 title: 'Beer Pong',
                 players1: players1,
                 players2: players2,
+                selectedRules: selectedRulesMap,
               ),
             ),
           );
