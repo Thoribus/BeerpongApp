@@ -1,3 +1,4 @@
+import 'package:beerpongapp/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import '../models/cup.dart';
@@ -6,6 +7,7 @@ import '../models/game_statistics.dart';
 import 'dart:math';
 import '../database_helper.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import '../models/user.dart';
 
 // GameScreen is a stateful widget that represents the main page of the application.
 class GameScreen extends StatefulWidget {
@@ -515,15 +517,38 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _saveGameStatistics() async {
-    String winningTeam =
-        team1Cups.every((cup) => !cup.isVisible) ? "Team 2" : "Team 1";
+    bool blueTeamWin = team1Cups.every((cup) => !cup.isVisible) ? false : true;
+
+    void updatePlayers(Player player) {
+      if (player.user != null) {
+        User updatedUser = player.user!;
+        if (blueTeamWin) {
+          updatedUser.wins++;
+        } else {
+          updatedUser.losses++;
+        }
+        updatedUser.totalAirballs += player.airballs;
+        updatedUser.totalMisses += player.misses;
+        updatedUser.totalThrows += player.throws;
+        updatedUser.totalScore += player.score;
+        updatedUser.cupsHit.addAll(player.cupsHit);
+        FirestoreService().updateUser(updatedUser);
+      }
+    }
 
     GameStatistics stats = GameStatistics(
       date: DateTime.now(),
       team1Players: List.from(team1Players),
       team2Players: List.from(team2Players),
-      winningTeam: winningTeam,
+      winningTeam: blueTeamWin ? "Team 2" : "Team 1",
     );
+
+    for (var player in team1Players) {
+      updatePlayers(player);
+    }
+    for (var player in team2Players) {
+      updatePlayers(player);
+    }
 
     await _dbHelper.insertGame(stats);
 
@@ -799,14 +824,14 @@ class _GameScreenState extends State<GameScreen> {
                                   onPressed: () {},
                                   backgroundColor: Colors.amber,
                                   heroTag: "Deathcup",
-                                  child:
-                                      const Icon(BeerpongIcons.skull, size: 35),
                                   shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.only(
                                           topRight: Radius.circular(20),
                                           bottomLeft: Radius.circular(100),
                                           bottomRight: Radius.circular(100),
                                           topLeft: Radius.circular(100))),
+                                  child:
+                                      const Icon(BeerpongIcons.skull, size: 35),
                                 ),
                               if (selectedRules[0])
                                 FloatingActionButton(
@@ -834,7 +859,7 @@ class _GameScreenState extends State<GameScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Team Statistic',
                             style: TextStyle(
                               color: Colors.amber,
@@ -892,7 +917,7 @@ class _GameScreenState extends State<GameScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Hit Rate (%)',
                                 style: TextStyle(
                                   color: Colors.amber,
