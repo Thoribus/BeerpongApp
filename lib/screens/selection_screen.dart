@@ -13,10 +13,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
   List<Player> players2 = [];
   String selectedGameMode = 'Single Game';
   List<String> gameModes = ['Single Game', 'Tournament'];
-  List<String> specialRules = ['Bitchcup', 'Island', 'Rearrange'];
-  List<bool> selectedRules = [false, false, false];
   Map<String, bool> selectedRulesMap = {
-    'Bitchcup': false,
+    'Deathcup': false,
     'Island': false,
     'Rearrange': false,
   };
@@ -250,18 +248,19 @@ class _SelectionScreenState extends State<SelectionScreen> {
         const SizedBox(height: 10),
         ListView.builder(
           shrinkWrap: true,
-          itemCount: specialRules.length,
+          itemCount: selectedRulesMap.length,
           itemBuilder: (context, index) {
             return ListTile(
               title: Text(
-                specialRules[index],
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                selectedRulesMap.keys.elementAt(index),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
               trailing: Switch(
-                value: selectedRules[index],
+                value: selectedRulesMap.values.elementAt(index),
                 onChanged: (bool value) {
                   setState(() {
-                    selectedRules[index] = value;
+                    selectedRulesMap[selectedRulesMap.keys.elementAt(index)] =
+                        value;
                   });
                 },
                 activeColor: Colors.amber,

@@ -145,6 +145,39 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+   // Function to show player selection dialog
+  _showDeathcupSelectionDialog() {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Player'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: currentPlayers.map((player) {
+                return ElevatedButton(
+                  child: Text(player.name),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _saveCurrentState();
+                    for (var cup in currentCups) {
+                      if (cup.color == currentTeamColor) {
+                        _addCupToPlayer(player, cup.index);
+                        _handleCupHit(cup.index);
+                        _incrementPlayerScore(player);
+                      }
+                    }
+                    _checkGameEnd(player); // Check if the game has ended
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // Function to confirm ending the turn
   Future<void> _confirmEndTurn() async {
     return showDialog<void>(
@@ -823,7 +856,7 @@ class _GameScreenState extends State<GameScreen> {
                               if (selectedRules["Deathcup"] != null &&
                                   selectedRules["Deathcup"]!)
                                 FloatingActionButton(
-                                  onPressed: () {},
+                                  onPressed: _showDeathcupSelectionDialog,
                                   backgroundColor: Colors.amber,
                                   heroTag: "Deathcup",
                                   shape: const RoundedRectangleBorder(
