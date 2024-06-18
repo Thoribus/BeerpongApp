@@ -22,7 +22,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Future<void> _showAddFriendDialog(BuildContext context) async {
-    final TextEditingController _controller = TextEditingController();
+    final TextEditingController controller = TextEditingController();
 
     return showDialog<void>(
       context: context,
@@ -32,7 +32,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
         return AlertDialog(
           title: const Text('Add Friend'),
           content: TextField(
-            controller: _controller,
+            controller: controller,
             decoration:
                 const InputDecoration(hintText: 'Enter friend\'s ID'),
           ),
@@ -46,7 +46,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
             TextButton(
               child: const Text('Add'),
               onPressed: () {
-                final String friendId = _controller.text.trim();
+                final String friendId = controller.text.trim();
                 if (friendId.isNotEmpty) {
                   _addFriend(context, friendId);
                   Navigator.of(context).pop();

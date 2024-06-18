@@ -938,13 +938,13 @@ class _GameScreenState extends State<GameScreen> {
                                   ],
                                 )),
                                 DataCell(Text('${player.score}',
-                                    style: TextStyle(color: Colors.white))),
+                                    style: const TextStyle(color: Colors.white))),
                                 DataCell(Text('${player.misses}',
-                                    style: TextStyle(color: Colors.white))),
+                                    style: const TextStyle(color: Colors.white))),
                                 DataCell(Text('${player.throws}',
-                                    style: TextStyle(color: Colors.white))),
+                                    style: const TextStyle(color: Colors.white))),
                                 DataCell(Text('${player.airballs}',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                         color: Colors.white))), // Empty column
                               ]);
                             }).toList(),

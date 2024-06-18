@@ -9,10 +9,10 @@ class NewGameDialog extends StatefulWidget {
   final List<String> initialNames;
 
   const NewGameDialog({
-    Key? key,
+    super.key,
     required this.team,
     required this.initialNames,
-  }) : super(key: key);
+  });
 
   @override
   _NewGameDialogState createState() => _NewGameDialogState();
@@ -177,11 +177,11 @@ class _NewGameDialogState extends State<NewGameDialog> {
                             ),
                           ),
                         ),
-                        style: TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Colors.black),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.person),
+                      icon: const Icon(Icons.person),
                       onPressed: () => selectFromFriendList(index),
                     ),
                   ],
