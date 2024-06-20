@@ -22,6 +22,7 @@ class FirestoreService {
             username: data['username'],
             totalScore: data['totalScore'],
             totalMisses: data['totalMisses'],
+            totalThrows: data['totalThrows'],
             totalAirballs: data['totalAirballs'],
             cupsHit: List<int>.from(data['cupsHit']),
             wins: data['wins'],
@@ -30,7 +31,7 @@ class FirestoreService {
       return friends;
     } catch (e) {
       print('Error fetching friends: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -46,7 +47,7 @@ class FirestoreService {
       });
     } catch (e) {
       print('Error adding friend: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -72,6 +73,7 @@ class FirestoreService {
         'totalScore': user.totalScore,
         'totalMisses': user.totalMisses,
         'totalAirballs': user.totalAirballs,
+        'totalThrows': user.totalThrows,
         'cupsHit': user.cupsHit,
         'wins': user.wins,
         'losses': user.losses,
@@ -90,6 +92,7 @@ class FirestoreService {
         'totalScore': user.totalScore,
         'totalMisses': user.totalMisses,
         'totalAirballs': user.totalAirballs,
+        'totalThrows': user.totalThrows,
         'cupsHit': user.cupsHit,
         'wins': user.wins,
         'losses': user.losses,
@@ -120,6 +123,7 @@ class FirestoreService {
           totalScore: doc['totalScore'],
           totalMisses: doc['totalMisses'],
           totalAirballs: doc['totalAirballs'],
+          totalThrows: doc['totalThrows'],
           cupsHit: List<int>.from(doc['cupsHit']),
           wins: doc['wins'],
           losses: doc['losses'],
