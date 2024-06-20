@@ -31,7 +31,7 @@ class FirestoreService {
       return friends;
     } catch (e) {
       print('Error fetching friends: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -47,7 +47,7 @@ class FirestoreService {
       });
     } catch (e) {
       print('Error adding friend: $e');
-      throw e;
+      rethrow;
     }
   }
 

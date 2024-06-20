@@ -4,6 +4,8 @@ import 'package:beerpongapp/widgets/new_game_dialog.dart';
 import '../models/player.dart';
 
 class SelectionScreen extends StatefulWidget {
+  const SelectionScreen({super.key});
+
   @override
   _SelectionScreenState createState() => _SelectionScreenState();
 }
@@ -13,10 +15,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
   List<Player> players2 = [];
   String selectedGameMode = 'Single Game';
   List<String> gameModes = ['Single Game', 'Tournament'];
-  List<String> specialRules = ['Bitchcup', 'Island', 'Rearrange'];
-  List<bool> selectedRules = [false, false, false];
   Map<String, bool> selectedRulesMap = {
-    'Bitchcup': false,
+    'Deathcup': false,
     'Island': false,
     'Rearrange': false,
   };
@@ -134,7 +134,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
             : Colors.red.withOpacity(0.7),
         borderRadius: BorderRadius.circular(12.0),
       ),
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -148,9 +148,9 @@ class _SelectionScreenState extends State<SelectionScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   children: [
-                    Icon(Icons.person, size: 20, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text(player.name, style: TextStyle(color: Colors.white)),
+                    const Icon(Icons.person, size: 20, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(player.name, style: const TextStyle(color: Colors.white)),
                   ],
                 ),
               )),
@@ -202,7 +202,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
           thickness: 1,
         ),
         const SizedBox(height: 10),
-        Container(
+        SizedBox(
           width: double.infinity,
           child: ToggleButtons(
             borderRadius: BorderRadius.circular(8.0),
@@ -226,7 +226,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
   Widget _buildToggleButton(String mode) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Text(mode, style: TextStyle(color: Colors.white)),
+      child: Text(mode, style: const TextStyle(color: Colors.white)),
     );
   }
 
@@ -250,18 +250,19 @@ class _SelectionScreenState extends State<SelectionScreen> {
         const SizedBox(height: 10),
         ListView.builder(
           shrinkWrap: true,
-          itemCount: specialRules.length,
+          itemCount: selectedRulesMap.length,
           itemBuilder: (context, index) {
             return ListTile(
               title: Text(
-                specialRules[index],
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                selectedRulesMap.keys.elementAt(index),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
               trailing: Switch(
-                value: selectedRules[index],
+                value: selectedRulesMap.values.elementAt(index),
                 onChanged: (bool value) {
                   setState(() {
-                    selectedRules[index] = value;
+                    selectedRulesMap[selectedRulesMap.keys.elementAt(index)] =
+                        value;
                   });
                 },
                 activeColor: Colors.amber,

@@ -5,6 +5,8 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
 
 class AccountScreen extends StatefulWidget {
+  const AccountScreen({super.key});
+
   @override
   _AccountScreenState createState() => _AccountScreenState();
 }

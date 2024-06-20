@@ -10,6 +10,7 @@ class Player {
   bool hitThisRound; // Whether the player has hit a cup this round
   List<int> cupsHit = []; // List of cup indices hit by the player
   bool lastCupHit = false;
+  bool islandShotUsed = false;
   User? user;
 
   // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
@@ -21,19 +22,19 @@ class Player {
     this.airballs = 0,
     cupsHit,
     this.hitThisRound = false,
+    this.islandShotUsed = false,
     this.user,
   }) : cupsHit = cupsHit ?? [];
 
   Player clone() {
-    return Player(
-      name: name,
-      score: score,
-      throws: throws,
-      hitThisRound: hitThisRound,
-      cupsHit: List<int>.from(cupsHit),
-      misses: misses,
-      airballs: airballs,
-    );
+    return Player(name: name, user: user)
+      ..score = score
+      ..misses = misses
+      ..throws = throws
+      ..airballs = airballs
+      ..hitThisRound = hitThisRound
+      ..islandShotUsed = islandShotUsed
+      ..cupsHit = List.from(cupsHit);
   }
 
   // Method to increment the player's score
