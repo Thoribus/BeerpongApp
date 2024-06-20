@@ -8,6 +8,7 @@ import 'dart:math';
 import '../database_helper.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import '../models/user.dart';
+import '../models/team.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({
@@ -28,25 +29,14 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late List<Player> team1Players = widget.players1;
-  late List<Player> team2Players = widget.players2;
   late Map<String, bool> selectedRules = widget.selectedRules;
 
-  final Color team1Color = Colors.blue;
-  final Color team2Color = Colors.red;
+  late Team team1;
+  late Team team2;
+  late Team currentTeam;
 
-  List<Cup> team1Cups = [];
-  List<Cup> team2Cups = [];
   bool isTeamOneTurn = true;
-  bool isRearranged1 = false;
-  bool isRearranged2 = false;
-  bool isRearranged = false;
-
-  late Color currentTeamColor;
-  late List<Player> currentPlayers;
-  late List<Cup> currentCups;
-  List<Cup> remainingCups1 = [];
-  List<Cup> remainingCups2 = [];
+  bool islandShotActive = false;
 
   List<GameStatistics> gameStatisticsList = [];
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -68,13 +58,18 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _initializeGame() {
-    team1Cups =
-        List.generate(10, (index) => Cup(index: index, color: team1Color));
-    team2Cups =
-        List.generate(10, (index) => Cup(index: index, color: team2Color));
-    currentPlayers = rotatePlayers(isTeamOneTurn ? team1Players : team2Players);
-    currentCups = isTeamOneTurn ? team1Cups : team2Cups;
-    currentTeamColor = isTeamOneTurn ? team1Color : team2Color;
+    team1 = Team(
+      color: Colors.blue,
+      players: widget.players1,
+      cups: List.generate(10, (index) => Cup(index: index, color: Colors.blue)),
+    );
+    team2 = Team(
+      color: Colors.red,
+      players: widget.players2,
+      cups: List.generate(10, (index) => Cup(index: index, color: Colors.red)),
+    );
+    currentTeam = isTeamOneTurn ? team1 : team2;
+    currentTeam.currentPlayers = currentTeam.rotatePlayers();
   }
 
   void _handlePageChange() {
@@ -86,11 +81,11 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  Future<void> _showSelectionDialog(
-      String title, List<Player> players, Function(Player) onSelected) async {
+  Future<void> _showSelectionDialog(BuildContext context, String title,
+      List<Player> players, Function(Player) onSelected) async {
     return showDialog<void>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text(title),
           content: SingleChildScrollView(
@@ -99,7 +94,7 @@ class _GameScreenState extends State<GameScreen> {
                 return ElevatedButton(
                   child: Text(player.name),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(dialogContext).pop();
                     onSelected(player);
                   },
                 );
@@ -111,10 +106,12 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Future<void> _showPlayerSelectionDialog(int cupIndex) async {
+  Future<void> _showPlayerSelectionDialog(
+      BuildContext context, int cupIndex) async {
     await _showSelectionDialog(
+      context,
       'Select Player',
-      currentPlayers,
+      currentTeam.players,
       (player) {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
@@ -125,14 +122,15 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Future<void> _showDeathcupSelectionDialog() async {
+  Future<void> _showDeathcupSelectionDialog(BuildContext context) async {
     await _showSelectionDialog(
+      context,
       'Select Player',
-      currentPlayers,
+      currentTeam.currentPlayers,
       (player) {
         _saveCurrentState();
-        for (var cup in currentCups) {
-          if (cup.color == currentTeamColor) {
+        for (var cup in currentTeam.cups) {
+          if (cup.color == currentTeam.color) {
             _addCupToPlayer(player, cup.index);
             _handleCupHit(cup.index);
             _incrementPlayerScore(player);
@@ -143,11 +141,11 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Future<void> _confirmEndTurn() async {
+  Future<void> _confirmEndTurn(BuildContext context) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Confirm End Turn'),
           content: const SingleChildScrollView(
@@ -160,12 +158,12 @@ class _GameScreenState extends State<GameScreen> {
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
             ),
             TextButton(
               child: const Text('End Turn'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
                 _saveCurrentState();
                 _endTurn();
               },
@@ -190,18 +188,20 @@ class _GameScreenState extends State<GameScreen> {
 
   void _handleCupHit(int index) {
     setState(() {
-      if (currentCups.firstWhere((cup) => cup.index == index).color == Colors.green) {
+      if (currentTeam.cups.firstWhere((cup) => cup.index == index).color ==
+          Colors.green) {
         _checkProximity(index);
       } else {
         _checkBitchCup(index);
-        currentCups.firstWhere((cup) => cup.index == index).color = Colors.green;
+        currentTeam.cups.firstWhere((cup) => cup.index == index).color =
+            Colors.green;
       }
     });
   }
 
   void _checkBitchCup(int index) {
-    if (currentCups
-            .every((cup) => cup.isVisible && cup.color == currentTeamColor) &&
+    if (currentTeam.cups
+            .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
         index == 4) {
       _showBitchCupDialog();
     }
@@ -210,7 +210,7 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> _showBitchCupDialog() async {
     return showDialog<void>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Bitchcup!'),
           content: const SingleChildScrollView(
@@ -223,7 +223,7 @@ class _GameScreenState extends State<GameScreen> {
           actions: <Widget>[
             TextButton(
               child: const Text('Hosen runter!'),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
             ),
           ],
         );
@@ -233,7 +233,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _endTurn() {
     setState(() {
-      for (var player in currentPlayers) {
+      for (var player in currentTeam.currentPlayers) {
         if (!player.hitThisRound) {
           player.incrementMisses();
         }
@@ -241,28 +241,14 @@ class _GameScreenState extends State<GameScreen> {
         player.incrementThrows();
       }
 
-      for (var cup in currentCups) {
+      for (var cup in currentTeam.cups) {
         if (cup.color == Colors.green) cup.isVisible = false;
       }
 
       isTeamOneTurn = !isTeamOneTurn;
-      currentPlayers =
-          rotatePlayers(isTeamOneTurn ? team1Players : team2Players);
-      currentTeamColor = isTeamOneTurn ? team1Color : team2Color;
-      currentCups = isTeamOneTurn ? team1Cups : team2Cups;
-      isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
+      currentTeam = isTeamOneTurn ? team1 : team2;
+      currentTeam.currentPlayers = currentTeam.rotatePlayers();
     });
-  }
-
-  List<Player> rotatePlayers(List<Player> players) {
-    if (players.length <= 2) return players;
-
-    Player player1 = players.removeAt(0);
-    Player player2 = players.removeAt(0);
-    players.add(player1);
-    players.add(player2);
-
-    return players.sublist(0, 2);
   }
 
   Column _buildCups(List<Cup> cups, bool isRearranged) {
@@ -277,10 +263,10 @@ class _GameScreenState extends State<GameScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildCupRow(currentCups.sublist(6, 10)),
-        _buildCupRow(currentCups.sublist(3, 6)),
-        _buildCupRow(currentCups.sublist(1, 3)),
-        _buildCupRow(currentCups.sublist(0, 1)),
+        _buildCupRow(currentTeam.cups.sublist(6, 10)),
+        _buildCupRow(currentTeam.cups.sublist(3, 6)),
+        _buildCupRow(currentTeam.cups.sublist(1, 3)),
+        _buildCupRow(currentTeam.cups.sublist(0, 1)),
       ],
     );
   }
@@ -309,13 +295,8 @@ class _GameScreenState extends State<GameScreen> {
       case 2:
         cupRows.add(_buildCupRow(cups.sublist(0, 2)));
         break;
-      case 1:
-        cupRows.add(_buildCupRow(cups.sublist(0, 1)));
-        break;
       default:
-        cupRows.add(_buildCupRow(cups.sublist(0, 3)));
-        cupRows.add(_buildCupRow(cups.sublist(3, 4)));
-        cupRows.add(_buildCupRow(cups.sublist(4, 6)));
+        cupRows.add(_buildCupRow(cups.sublist(0, 1)));
         break;
     }
 
@@ -329,7 +310,9 @@ class _GameScreenState extends State<GameScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: cups.map((cup) {
-        return cup.widget(() => _showPlayerSelectionDialog(cup.index));
+        return cup.widget(() => islandShotActive
+            ? _handleIslandShot(cup.index)
+            : _showPlayerSelectionDialog(context, cup.index));
       }).toList(),
     );
   }
@@ -348,14 +331,12 @@ class _GameScreenState extends State<GameScreen> {
     const double proximityThreshold = 100.0;
     double hitCups = 0.0;
 
-    for (int i = 0; i < currentCups.length; i++) {
+    for (int i = 0; i < currentTeam.cups.length; i++) {
       if (i == index) continue;
-      if (currentCups[i].isVisible && currentCups[index].isVisible) {
-        final renderBox1 =
-            currentCups[i].key.currentContext?.findRenderObject() as RenderBox?;
-        final renderBox2 = currentCups[index]
-            .key
-            .currentContext
+      if (currentTeam.cups[i].isVisible && currentTeam.cups[index].isVisible) {
+        final renderBox1 = currentTeam.cups[i].key.currentContext
+            ?.findRenderObject() as RenderBox?;
+        final renderBox2 = currentTeam.cups[index].key.currentContext
             ?.findRenderObject() as RenderBox?;
 
         if (renderBox1 != null && renderBox2 != null) {
@@ -365,23 +346,24 @@ class _GameScreenState extends State<GameScreen> {
           double distance = _calculateDistance(position1, position2);
           if (distance < proximityThreshold) {
             hitCups++;
-            currentCups[i].color = Colors.green;
+            currentTeam.cups[i].color = Colors.green;
           }
         }
       }
     }
-    currentCups[index].color = currentTeamColor;
-    for (var player in currentPlayers) {
+    currentTeam.cups[index].color = currentTeam.color;
+    for (var player in currentTeam.currentPlayers) {
       if (player.cupsHit.contains(index)) {
         player.incrementScoreBy(hitCups / 2 - 1);
       }
     }
   }
 
-  Future<void> _showAirballPlayerSelectionDialog() async {
+  Future<void> _showAirballPlayerSelectionDialog(BuildContext context) async {
     await _showSelectionDialog(
+      context,
       'Select Player',
-      currentPlayers,
+      currentTeam.currentPlayers,
       (player) {
         _saveCurrentState();
         _incrementPlayerAirballs(player);
@@ -392,27 +374,27 @@ class _GameScreenState extends State<GameScreen> {
   void _incrementPlayerAirballs(Player player) {
     setState(() {
       player.incrementAirballs();
-      int teamAirballs =
-          currentPlayers.fold(0, (sum, player) => sum + player.airballs);
+      int teamAirballs = currentTeam.currentPlayers
+          .fold(0, (sum, player) => sum + player.airballs);
       if (teamAirballs % 3 == 0) {
-        _showAirballDialog(teamAirballs);
+        _showAirballDialog(context, teamAirballs);
       }
     });
   }
 
   void _checkGameEnd(Player player) async {
-    bool teamAllHit =
-        currentCups.every((cup) => !cup.isVisible || cup.color == Colors.green);
+    bool teamAllHit = currentTeam.cups
+        .every((cup) => !cup.isVisible || cup.color == Colors.green);
 
     if (teamAllHit) {
       _setPlayerHitLastCup(player);
       await _saveGameStatistics();
-      _showGameEndDialog(currentPlayers);
+      _showGameEndDialog(context, currentTeam.currentPlayers);
     }
   }
 
   Future<void> _saveGameStatistics() async {
-    bool blueTeamWin = team1Cups.every((cup) => !cup.isVisible) ? false : true;
+    bool blueTeamWin = team1.cups.every((cup) => !cup.isVisible) ? false : true;
 
     void updatePlayers(Player player) {
       if (player.user != null) {
@@ -433,15 +415,15 @@ class _GameScreenState extends State<GameScreen> {
 
     GameStatistics stats = GameStatistics(
       date: DateTime.now(),
-      team1Players: List.from(team1Players),
-      team2Players: List.from(team2Players),
+      team1Players: List.from(team1.players),
+      team2Players: List.from(team2.players),
       winningTeam: blueTeamWin ? "Team 2" : "Team 1",
     );
 
-    for (var player in team1Players) {
+    for (var player in team1.players) {
       updatePlayers(player);
     }
-    for (var player in team2Players) {
+    for (var player in team2.players) {
       updatePlayers(player);
     }
 
@@ -454,13 +436,13 @@ class _GameScreenState extends State<GameScreen> {
 
   void _saveCurrentState() {
     _actionStack.add({
-      'team1Cups': team1Cups.map((cup) => cup.clone()).toList(),
-      'team2Cups': team2Cups.map((cup) => cup.clone()).toList(),
-      'team1Players': team1Players.map((player) => player.clone()).toList(),
-      'team2Players': team2Players.map((player) => player.clone()).toList(),
+      'team1Cups': team1.cups.map((cup) => cup.clone()).toList(),
+      'team2Cups': team2.cups.map((cup) => cup.clone()).toList(),
+      'team1Players': team1.players.map((player) => player.clone()).toList(),
+      'team2Players': team2.players.map((player) => player.clone()).toList(),
       'isTeamOneTurn': isTeamOneTurn,
-      'isRearranged1': isRearranged1,
-      'isRearranged2': isRearranged2,
+      'isRearranged1': team1.isRearranged,
+      'isRearranged2': team2.isRearranged,
     });
   }
 
@@ -469,24 +451,23 @@ class _GameScreenState extends State<GameScreen> {
 
     final lastState = _actionStack.removeLast();
     setState(() {
-      team1Cups = lastState['team1Cups'].cast<Cup>();
-      team2Cups = lastState['team2Cups'].cast<Cup>();
-      team1Players = lastState['team1Players'].cast<Player>();
-      team2Players = lastState['team2Players'].cast<Player>();
+      team1.cups = lastState['team1Cups'].cast<Cup>();
+      team2.cups = lastState['team2Cups'].cast<Cup>();
+      team1.players = lastState['team1Players'].cast<Player>();
+      team2.players = lastState['team2Players'].cast<Player>();
       isTeamOneTurn = lastState['isTeamOneTurn'];
-      isRearranged1 = lastState['isRearranged1'];
-      isRearranged2 = lastState['isRearranged2'];
-      currentPlayers = isTeamOneTurn ? team1Players : team2Players;
-      currentCups = isTeamOneTurn ? team1Cups : team2Cups;
-      isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
+      team1.isRearranged = lastState['isRearranged1'];
+      team2.isRearranged = lastState['isRearranged2'];
+      currentTeam = isTeamOneTurn ? team1 : team2;
     });
   }
 
-  Future<void> _showGameEndDialog(List<Player> players) async {
+  Future<void> _showGameEndDialog(
+      BuildContext context, List<Player> players) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Game Over'),
           content: SingleChildScrollView(
@@ -499,7 +480,7 @@ class _GameScreenState extends State<GameScreen> {
           actions: <Widget>[
             TextButton(
               child: const Text('OK'),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
             ),
           ],
         );
@@ -507,10 +488,10 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Future<void> _showAirballDialog(int airballs) async {
+  Future<void> _showAirballDialog(BuildContext context, int airballs) async {
     return showDialog<void>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Airball Milestone'),
           content: SingleChildScrollView(
@@ -523,7 +504,7 @@ class _GameScreenState extends State<GameScreen> {
           actions: <Widget>[
             TextButton(
               child: const Text('Shots...'),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
             ),
           ],
         );
@@ -642,18 +623,16 @@ class _GameScreenState extends State<GameScreen> {
                   FloatingActionButton.extended(
                     backgroundColor: Colors.amber,
                     heroTag: "airball",
-                    onPressed: _showAirballPlayerSelectionDialog,
+                    onPressed: () => _showAirballPlayerSelectionDialog(context),
                     tooltip: 'Airball',
                     label: const Text('Airball'),
                     icon: const Icon(BeerpongIcons.airball, size: 45),
                   ),
                 ],
               ),
-              isRearranged
-                  ? (isTeamOneTurn
-                      ? _buildCups(remainingCups1, true)
-                      : _buildCups(remainingCups2, true))
-                  : _buildCups(currentCups, false),
+              currentTeam.isRearranged
+                  ? _buildCups(currentTeam.remainingCups, true)
+                  : _buildCups(currentTeam.cups, false),
               const SizedBox(height: 40),
               _buildSpecialRulesButtons(),
             ],
@@ -669,7 +648,7 @@ class _GameScreenState extends State<GameScreen> {
       children: [
         if (selectedRules["Deathcup"] == true)
           FloatingActionButton(
-            onPressed: _showDeathcupSelectionDialog,
+            onPressed: () => _showDeathcupSelectionDialog(context),
             backgroundColor: Colors.amber,
             heroTag: "Deathcup",
             shape: const RoundedRectangleBorder(
@@ -680,12 +659,12 @@ class _GameScreenState extends State<GameScreen> {
                     topLeft: Radius.circular(100))),
             child: const Icon(BeerpongIcons.skull, size: 35),
           ),
-        if (selectedRules["Island"] == true)
+        if (selectedRules["Island"] == true && currentTeam.canIslandShot)
           FloatingActionButton(
             backgroundColor: Colors.amber,
             heroTag: "Island",
             onPressed: () {
-              print('Button 2 Pressed');
+              _highlightIslandCups();
             },
             child: const Icon(BeerpongIcons.palmtree, size: 45),
           ),
@@ -729,7 +708,7 @@ class _GameScreenState extends State<GameScreen> {
                   DataColumn(
                       label: Text('A', style: TextStyle(color: Colors.white))),
                 ],
-                rows: currentPlayers.map((player) {
+                rows: currentTeam.currentPlayers.map((player) {
                   return DataRow(cells: [
                     DataCell(Row(
                       children: [
@@ -784,9 +763,9 @@ class _GameScreenState extends State<GameScreen> {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
-            itemCount: currentPlayers.length,
+            itemCount: currentTeam.currentPlayers.length,
             itemBuilder: (context, index) {
-              final player = currentPlayers[index];
+              final player = currentTeam.currentPlayers[index];
               final hitRate = _calculateHitRate(player.score, player.throws);
               return Column(
                 children: [
@@ -842,7 +821,7 @@ class _GameScreenState extends State<GameScreen> {
           FloatingActionButton.extended(
             backgroundColor: Colors.amber,
             heroTag: "end",
-            onPressed: _confirmEndTurn,
+            onPressed: () => _confirmEndTurn(context),
             tooltip:
                 'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
             label: const Text('Zugende'),
@@ -860,44 +839,30 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void toggleRearranged() {
-    if (currentCups.where((cup) => cup.isVisible).length > 6) {
-      _showRearrangeErrorDialog();
+    if (currentTeam.cups.where((cup) => cup.isVisible).length > 6) {
+      _showRearrangeErrorDialog(context);
       return;
     }
 
     _saveCurrentState();
 
     setState(() {
-      if (isTeamOneTurn) {
-        if (!isRearranged1) {
-          remainingCups1 = currentCups
-              .where((cup) => cup.isVisible && cup.color == team1Color)
-              .toList();
-          remainingCups1 = _assignSpecificIndices(remainingCups1);
-          currentCups = remainingCups1;
-          team1Cups = remainingCups1;
-          isRearranged1 = true;
-        }
-      } else {
-        if (!isRearranged2) {
-          remainingCups2 = currentCups
-              .where((cup) => cup.isVisible && cup.color == team2Color)
-              .toList();
-          remainingCups2 = _assignSpecificIndices(remainingCups2);
-          currentCups = remainingCups2;
-          team2Cups = remainingCups2;
-          isRearranged2 = true;
-        }
+      if (!currentTeam.isRearranged) {
+        currentTeam.remainingCups = currentTeam.cups
+            .where((cup) => cup.isVisible && cup.color == currentTeam.color)
+            .toList();
+        currentTeam.remainingCups = _assignSpecificIndices(currentTeam.remainingCups);
+        currentTeam.cups = currentTeam.remainingCups;
+        currentTeam.isRearranged = true;
       }
-      isRearranged = isTeamOneTurn ? isRearranged1 : isRearranged2;
     });
   }
 
-    // Function to show the rearrange error dialog
-  Future<void> _showRearrangeErrorDialog() async {
+  // Function to show the rearrange error dialog
+  Future<void> _showRearrangeErrorDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Rearrange Error'),
           content: const SingleChildScrollView(
@@ -911,7 +876,7 @@ class _GameScreenState extends State<GameScreen> {
             TextButton(
               child: const Text('OK'),
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
               },
             ),
           ],
@@ -951,5 +916,68 @@ class _GameScreenState extends State<GameScreen> {
           Cup(index: newIndices[i], color: cups[i].color, isVisible: true);
     }
     return cups;
+  }
+
+  void _highlightIslandCups() {
+    setState(() {
+      islandShotActive = true;
+      for (var cup in currentTeam.cups) {
+        if (_isIslandCup(cup)) {
+          cup.color = Colors.yellow;
+        }
+      }
+    });
+  }
+
+  bool _isIslandCup(Cup cup) {
+    const double proximityThreshold = 100.0;
+    int closeCupsCount = 0;
+
+    for (var otherCup in currentTeam.cups) {
+      if (cup.index != otherCup.index && otherCup.isVisible && cup.isVisible) {
+        final renderBox1 =
+            cup.key.currentContext?.findRenderObject() as RenderBox?;
+        final renderBox2 =
+            otherCup.key.currentContext?.findRenderObject() as RenderBox?;
+
+        if (renderBox1 != null && renderBox2 != null) {
+          Offset position1 = renderBox1.localToGlobal(Offset.zero);
+          Offset position2 = renderBox2.localToGlobal(Offset.zero);
+
+          double distance = _calculateDistance(position1, position2);
+          if (distance < proximityThreshold) {
+            closeCupsCount++;
+          }
+        }
+      }
+    }
+    return closeCupsCount == 0;
+  }
+
+  Future<void> _handleIslandShot(int cupIndex) async {
+    await _showSelectionDialog(
+      context,
+      'Select Player and Shot Result',
+      currentTeam.currentPlayers
+          .where((player) => player.islandShotUsed == false)
+          .toList(),
+      (player) {
+        _saveCurrentState();
+        _addCupToPlayer(player, cupIndex);
+        _incrementPlayerScore(player);
+        _handleCupHit(cupIndex);
+        _incrementPlayerScore(player);
+        _handleCupHit(currentTeam.cups.firstWhere((cup) => cup.index != cupIndex && cup.color == currentTeam.color).index);
+
+        setState(() {
+          player.islandShotUsed = true;
+          if (currentTeam.currentPlayers
+              .every((player) => player.islandShotUsed == true)) {
+                currentTeam.canIslandShot = false;
+              }
+          islandShotActive = false;
+        });
+      },
+    );
   }
 }
