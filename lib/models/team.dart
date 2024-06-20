@@ -3,12 +3,12 @@ import 'cup.dart';
 import 'player.dart';
 
 class Team {
-  final Color color;
+  final Color color; 
   List<Player> players;
   List<Player> currentPlayers = [];
   List<Cup> cups;
   List<Cup> remainingCups;
-  bool isRearranged;
+  bool isRearranged = false;
   bool canIslandShot = true;
 
   Team({
@@ -30,5 +30,10 @@ class Team {
     players.add(player2);
 
     return players.sublist(0, 2);
+  }
+
+  @override
+  String toString() {
+    return 'Team: ${players.map((player) => player.name).join(', ')}';
   }
 }

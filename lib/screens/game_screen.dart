@@ -514,7 +514,6 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Color teamColor = isTeamOneTurn ? Colors.blue : Colors.red;
 
     return Scaffold(
       appBar: AppBar(
@@ -578,7 +577,7 @@ class _GameScreenState extends State<GameScreen> {
               scrollDirection: Axis.horizontal,
               children: [
                 _buildCurrentGamePage(),
-                _buildGameStatsPage(teamColor),
+                _buildGameStatsPage(currentTeam.color),
               ],
             ),
           ),
@@ -902,7 +901,7 @@ class _GameScreenState extends State<GameScreen> {
         newIndices = [7, 8, 4];
         break;
       case 2:
-        newIndices = [7, 3];
+        newIndices = [7, 4];
         break;
       case 1:
         newIndices = [7];

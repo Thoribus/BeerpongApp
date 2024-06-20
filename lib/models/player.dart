@@ -27,15 +27,14 @@ class Player {
   }) : cupsHit = cupsHit ?? [];
 
   Player clone() {
-    return Player(
-      name: name,
-      score: score,
-      throws: throws,
-      hitThisRound: hitThisRound,
-      cupsHit: List<int>.from(cupsHit),
-      misses: misses,
-      airballs: airballs,
-    );
+    return Player(name: name, user: user)
+      ..score = score
+      ..misses = misses
+      ..throws = throws
+      ..airballs = airballs
+      ..hitThisRound = hitThisRound
+      ..islandShotUsed = islandShotUsed
+      ..cupsHit = List.from(cupsHit);
   }
 
   // Method to increment the player's score
