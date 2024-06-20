@@ -7,11 +7,13 @@ import '../models/player.dart';
 class NewGameDialog extends StatefulWidget {
   final int team;
   final List<String> initialNames;
+  final int numPlayers;
 
   const NewGameDialog({
     super.key,
     required this.team,
     required this.initialNames,
+    required this.numPlayers,
   });
 
   @override
@@ -21,17 +23,39 @@ class NewGameDialog extends StatefulWidget {
 class _NewGameDialogState extends State<NewGameDialog> {
   final List<TextEditingController> _controllers = [];
   late List<User> _friends;
+  late int _numPlayers;
   final Map<int, User> _friendMap = {};
 
   @override
   void initState() {
     super.initState();
+
+    _numPlayers = widget.numPlayers;
+
     if (widget.initialNames.isNotEmpty) {
       _controllers.addAll(
           widget.initialNames.map((name) => TextEditingController(text: name)));
     } else {
-      _controllers.addAll(List.generate(2, (_) => TextEditingController()));
+      _controllers
+          .addAll(List.generate(_numPlayers, (_) => TextEditingController()));
     }
+  }
+
+  void _updatePlayerFields(int count) {
+    setState(() {
+      _numPlayers = count;
+
+      // Add new controllers if needed
+      if (_controllers.length < count) {
+        _controllers.addAll(List.generate(
+            count - _controllers.length, (_) => TextEditingController()));
+      }
+
+      // Remove excess controllers if needed
+      if (_controllers.length > count) {
+        _controllers.removeRange(count, _controllers.length);
+      }
+    });
   }
 
   @override
@@ -40,17 +64,6 @@ class _NewGameDialogState extends State<NewGameDialog> {
       controller.dispose();
     }
     super.dispose();
-  }
-
-  void _updatePlayerFields(int count) {
-    setState(() {
-      if (count > _controllers.length) {
-        _controllers.addAll(List.generate(
-            count - _controllers.length, (_) => TextEditingController()));
-      } else if (count < _controllers.length) {
-        _controllers.removeRange(count, _controllers.length);
-      }
-    });
   }
 
   Future<void> selectFromFriendList(int index) async {
@@ -102,93 +115,55 @@ class _NewGameDialogState extends State<NewGameDialog> {
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.amber.withOpacity(0.2),
-                labelText: 'Number of Players',
-                labelStyle: const TextStyle(color: Colors.amber),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: const BorderSide(
-                    color: Colors.amber,
-                    width: 2.0,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: const BorderSide(
-                    color: Colors.amber,
-                    width: 2.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: const BorderSide(
-                    color: Colors.amber,
-                    width: 2.0,
-                  ),
-                ),
-              ),
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.black),
-              onChanged: (value) {
-                int? count = int.tryParse(value);
-                if (count != null && count > 0) {
-                  _updatePlayerFields(count);
-                }
-              },
-            ),
-            const SizedBox(height: 16.0),
-            ..._controllers.map((controller) {
-              int index = _controllers.indexOf(controller);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: controller,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.amber.withOpacity(0.2),
-                          labelText: 'Player ${index + 1}',
-                          labelStyle: const TextStyle(color: Colors.amber),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: const BorderSide(
-                              color: Colors.amber,
-                              width: 2.0,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: const BorderSide(
-                              color: Colors.amber,
-                              width: 2.0,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                            borderSide: const BorderSide(
-                              color: Colors.amber,
-                              width: 2.0,
-                            ),
+          children: List.generate(_numPlayers, (index) {
+            if (index >= _controllers.length) {
+              _controllers.add(TextEditingController());
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controllers[index],
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.amber.withOpacity(0.2),
+                        labelText: 'Player ${index + 1}',
+                        labelStyle: const TextStyle(color: Colors.amber),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
                           ),
                         ),
-                        style: const TextStyle(color: Colors.black),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
                       ),
+                      style: const TextStyle(color: Colors.black),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.person),
-                      onPressed: () => selectFromFriendList(index),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.person),
+                    onPressed: () => selectFromFriendList(index),
+                  ),
+                ],
+              ),
+            );
+          }),
         ),
       ),
       actions: <Widget>[
@@ -201,11 +176,14 @@ class _NewGameDialogState extends State<NewGameDialog> {
         TextButton(
           child: const Text('SAVE'),
           onPressed: () {
-            final List<Player> names = _controllers
-                .map((controller) => Player(
-                    name: controller.text.trim(),
-                    user: _friendMap[_controllers.indexOf(controller)]))
-                .toList();
+            final List<Player> names =
+                _controllers.take(_numPlayers).map((controller) {
+              int index = _controllers.indexOf(controller);
+              return Player(
+                name: controller.text.trim(),
+                user: _friendMap[index],
+              );
+            }).toList();
             Navigator.of(context).pop(names);
           },
         ),

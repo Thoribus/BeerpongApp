@@ -107,14 +107,6 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   onPressed: () {
                     // Navigate to Einstellungen screen
-                  },
-                  icon: Icons.settings,
-                  label: 'Einstellungen',
-                ),
-                _buildElevatedButton(
-                  context: context,
-                  onPressed: () {
-                    // Navigate to Einstellungen screen
                     Navigator.push(
                       context,
                       MaterialPageRoute(

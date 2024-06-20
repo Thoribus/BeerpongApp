@@ -514,7 +514,6 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -804,9 +803,9 @@ class _GameScreenState extends State<GameScreen> {
         children: <Widget>[
           FloatingActionButton(
             backgroundColor: Colors.amber,
-            heroTag: "increment",
+            heroTag: "undo",
             onPressed: _undoLastAction,
-            tooltip: 'Increment',
+            tooltip: 'Rückgängig',
             child: const Icon(Icons.undo),
           ),
           FloatingActionButton.extended(
@@ -850,7 +849,8 @@ class _GameScreenState extends State<GameScreen> {
         currentTeam.remainingCups = currentTeam.cups
             .where((cup) => cup.isVisible && cup.color == currentTeam.color)
             .toList();
-        currentTeam.remainingCups = _assignSpecificIndices(currentTeam.remainingCups);
+        currentTeam.remainingCups =
+            _assignSpecificIndices(currentTeam.remainingCups);
         currentTeam.cups = currentTeam.remainingCups;
         currentTeam.isRearranged = true;
       }
@@ -966,14 +966,17 @@ class _GameScreenState extends State<GameScreen> {
         _incrementPlayerScore(player);
         _handleCupHit(cupIndex);
         _incrementPlayerScore(player);
-        _handleCupHit(currentTeam.cups.firstWhere((cup) => cup.index != cupIndex && cup.color == currentTeam.color).index);
+        _handleCupHit(currentTeam.cups
+            .firstWhere((cup) =>
+                cup.index != cupIndex && cup.color == currentTeam.color)
+            .index);
 
         setState(() {
           player.islandShotUsed = true;
           if (currentTeam.currentPlayers
               .every((player) => player.islandShotUsed == true)) {
-                currentTeam.canIslandShot = false;
-              }
+            currentTeam.canIslandShot = false;
+          }
           islandShotActive = false;
         });
       },
