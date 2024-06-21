@@ -45,6 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
     for (String key in keys) {
       await prefs.remove(key);
     }
+    setState(() {
+      _hasSavedGame = false;
+    });
   }
 
   Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
@@ -63,9 +66,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             TextButton(
               child: const Text('Start New Game'),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                _clearSavedGame();
+                await _clearSavedGame();
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => SelectionScreen()),

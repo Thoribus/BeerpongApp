@@ -21,6 +21,10 @@ class _SelectionScreenState extends State<SelectionScreen> {
     'Rearrange': false,
   };
 
+  bool get canStartGame {
+    return players1.isNotEmpty && players2.isNotEmpty && players1.every((p) => p.name.isNotEmpty) && players2.every((p) => p.name.isNotEmpty);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -278,21 +282,23 @@ class _SelectionScreenState extends State<SelectionScreen> {
   Widget _buildStartGameButton() {
     return Center(
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GameScreen(
-                title: 'Beer Pong',
-                players1: players1,
-                players2: players2,
-                selectedRules: selectedRulesMap,
-              ),
-            ),
-          );
-        },
+        onPressed: canStartGame
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameScreen(
+                      title: 'Beer Pong',
+                      players1: players1,
+                      players2: players2,
+                      selectedRules: selectedRulesMap,
+                    ),
+                  ),
+                );
+              }
+            : () {},
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.amber,
+          backgroundColor: canStartGame ? Colors.amber : Colors.grey,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
