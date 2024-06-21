@@ -23,4 +23,35 @@ class User {
     this.friends = const [],
   });
 
+  // Method to encode User instance to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'totalScore': totalScore,
+      'totalMisses': totalMisses,
+      'totalAirballs': totalAirballs,
+      'totalThrows': totalThrows,
+      'cupsHit': cupsHit,
+      'wins': wins,
+      'losses': losses,
+      'friends': friends,
+    };
+  }
+
+  // Method to decode User instance from JSON
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'],
+      username: json['username'],
+      totalScore: json['totalScore'],
+      totalMisses: json['totalMisses'],
+      totalAirballs: json['totalAirballs'],
+      totalThrows: json['totalThrows'],
+      cupsHit: List<int>.from(json['cupsHit']),
+      wins: json['wins'],
+      losses: json['losses'],
+      friends: List<String>.from(json['friends']),
+    );
+  }
 }

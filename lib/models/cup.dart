@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 // Class representing a cup in the game
@@ -9,8 +10,8 @@ class Cup {
 
   // Constructor initializing the cup's index and setting it as visible by default
   Cup({required this.index, this.color = Colors.red, isVisible, key})
-      : isVisible = true,
-        key = GlobalKey();
+      : isVisible = isVisible ?? true,
+        key = key ?? GlobalKey();
 
   // Method to create a clone of the cup
   Cup clone() {
@@ -43,5 +44,35 @@ class Cup {
         ),
       ),
     );
+  }
+
+  // Method to encode Cup instance to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'index': index,
+      'isVisible': isVisible,
+      'color': color.value, // Encode the color as an integer value
+    };
+  }
+
+  // Method to decode Cup instance from JSON
+  factory Cup.fromJson(Map<String, dynamic> json) {
+    return Cup(
+      index: json['index'],
+      isVisible: json['isVisible'],
+      color: Color(json['color']), // Decode the color from an integer value
+    );
+  }
+
+  // Method to encode a list of Cup instances to JSON string
+  static String encodeList(List<Cup> cups) {
+    return json.encode(cups.map((cup) => cup.toJson()).toList());
+  }
+
+  // Method to decode a list of Cup instances from JSON string
+  static List<Cup> decodeList(String jsonString) {
+    return (json.decode(jsonString) as List<dynamic>)
+        .map((json) => Cup.fromJson(json))
+        .toList();
   }
 }
