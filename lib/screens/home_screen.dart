@@ -166,6 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             players1: [],
                             players2: [],
                             selectedRules: {},
+                            startingTeam: true,
                           ),
                         ),
                       );

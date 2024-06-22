@@ -21,8 +21,13 @@ class _SelectionScreenState extends State<SelectionScreen> {
     'Rearrange': false,
   };
 
+  String startingTeam = 'Team Blue'; // Add this line
+
   bool get canStartGame {
-    return players1.isNotEmpty && players2.isNotEmpty && players1.every((p) => p.name.isNotEmpty) && players2.every((p) => p.name.isNotEmpty);
+    return players1.isNotEmpty &&
+        players2.isNotEmpty &&
+        players1.every((p) => p.name.isNotEmpty) &&
+        players2.every((p) => p.name.isNotEmpty);
   }
 
   @override
@@ -49,6 +54,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
               _buildGameModeSelection(),
               const SizedBox(height: 20),
               _buildSpecialRulesSelection(),
+              const SizedBox(height: 20),
+              _buildStartingTeamSelection(), // Add this line
               const SizedBox(height: 20),
               _buildStartGameButton(),
             ],
@@ -84,7 +91,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
                   ),
                   onPressed: () async {
                     await _showTeamDialog(team: 1);
@@ -116,8 +124,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 24),
                       ),
                       child: const Text('Edit Players',
                           style: TextStyle(color: Colors.black)),
@@ -154,7 +162,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
                   children: [
                     const Icon(Icons.person, size: 20, color: Colors.white),
                     const SizedBox(width: 8),
-                    Text(player.name, style: const TextStyle(color: Colors.white)),
+                    Text(player.name,
+                        style: const TextStyle(color: Colors.white)),
                   ],
                 ),
               )),
@@ -279,6 +288,44 @@ class _SelectionScreenState extends State<SelectionScreen> {
     );
   }
 
+  Widget _buildStartingTeamSelection() {
+    List<String> teams = ['Team Blue', 'Team Red'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Starting Team',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 5),
+        const Divider(
+          color: Colors.amber,
+          thickness: 1,
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: ToggleButtons(
+            borderRadius: BorderRadius.circular(8.0),
+            selectedColor: Colors.black,
+            fillColor: Colors.amber,
+            onPressed: (int newIndex) {
+              setState(() {
+                startingTeam = teams[newIndex];
+              });
+            },
+            isSelected: teams.map((team) => team == startingTeam).toList(),
+            children: teams.map((team) => _buildToggleButton(team)).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildStartGameButton() {
     return Center(
       child: ElevatedButton(
@@ -292,6 +339,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
                       players1: players1,
                       players2: players2,
                       selectedRules: selectedRulesMap,
+                      startingTeam: startingTeam == "Team Blue" ? true : false, // Pass starting team
                     ),
                   ),
                 );

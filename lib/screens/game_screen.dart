@@ -18,12 +18,14 @@ class GameScreen extends StatefulWidget {
     required this.players1,
     required this.players2,
     required this.selectedRules,
+    required this.startingTeam,
   });
 
   final String title;
   final List<Player> players1;
   final List<Player> players2;
   final Map<String, bool> selectedRules;
+  final bool startingTeam;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -36,7 +38,7 @@ class _GameScreenState extends State<GameScreen> {
   late Team team2;
   late Team currentTeam;
 
-  bool isTeamOneTurn = true;
+  late bool isTeamOneTurn = widget.startingTeam;
   bool islandShotActive = false;
 
   List<GameStatistics> gameStatisticsList = [];
@@ -50,7 +52,6 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeGame();
     _loadGameFuture = _loadGameState();
     _pageController.addListener(_handlePageChange);
   }
@@ -66,6 +67,7 @@ class _GameScreenState extends State<GameScreen> {
       players: widget.players2,
       cups: List.generate(10, (index) => Cup(index: index, color: Colors.red)),
     );
+    
     currentTeam = isTeamOneTurn ? team1 : team2;
     currentTeam.currentPlayers = currentTeam.rotatePlayers();
   }
@@ -1039,7 +1041,7 @@ class _GameScreenState extends State<GameScreen> {
     String? team2Players = prefs.getString('team2Players');
     bool team2IsRearranged = prefs.getBool('team2IsRearranged') ?? false;
 
-    bool isTeamOneTurn = prefs.getBool('isTeamOneTurn') ?? true;
+    bool? isTeamOneTurn = prefs.getBool('isTeamOneTurn');
     bool islandShotActive = prefs.getBool('islandShotActive') ?? false;
 
     setState(() {
@@ -1075,9 +1077,9 @@ class _GameScreenState extends State<GameScreen> {
         );
       }
 
-      this.isTeamOneTurn = isTeamOneTurn;
+      if (isTeamOneTurn != null) this.isTeamOneTurn = isTeamOneTurn;
       this.islandShotActive = islandShotActive;
-      currentTeam = isTeamOneTurn ? team1 : team2;
+      currentTeam = this.isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
     });
   }
