@@ -605,7 +605,7 @@ class _GameScreenState extends State<GameScreen> {
                     scrollDirection: Axis.horizontal,
                     children: [
                       _buildCurrentGamePage(),
-                      _buildGameStatsPage(teamColor),
+                      _buildGameStatsPage(currentTeam.color),
                     ],
                   ),
                 ),
@@ -799,7 +799,7 @@ class _GameScreenState extends State<GameScreen> {
               final hitRate = _calculateHitRate(player.score, player.throws);
               return Column(
                 children: [
-                  Text(player.name, style: TextStyle(color: Colors.white)),
+                  Text(player.name, style: const TextStyle(color: Colors.white)),
                   Expanded(
                     child: CircularPercentIndicator(
                       radius: 50.0,

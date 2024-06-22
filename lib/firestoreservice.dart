@@ -2,31 +2,40 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/material.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // Convert Firestore Document to User model
+  User _userFromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return User(
+      id: doc.id,
+      username: data['username'],
+      totalScore: data['totalScore'],
+      totalMisses: data['totalMisses'],
+      totalAirballs: data['totalAirballs'],
+      totalThrows: data['totalThrows'],
+      cupsHit: List<int>.from(data['cupsHit']),
+      wins: data['wins'],
+      losses: data['losses'],
+      friends: List<String>.from(data['friends']),
+      icon: IconData(data['icon'], fontFamily: 'MaterialIcons'),
+      iconColor: Color(data['iconColor']),
+    );
+  }
+
+  // Fetch friends of a user
   Future<List<User>> getFriends(String userId) async {
     try {
-      DocumentSnapshot userDoc =
-          await _db.collection('users').doc(userId).get();
+      DocumentSnapshot userDoc = await _db.collection('users').doc(userId).get();
       List<String> friendIds = List<String>.from(userDoc['friends']);
 
       List<User> friends = [];
       for (String friendId in friendIds) {
-        DocumentSnapshot friendDoc =
-            await _db.collection('users').doc(friendId).get();
-        Map<String, dynamic> data = friendDoc.data() as Map<String, dynamic>;
-        friends.add(User(
-            id: friendDoc.id,
-            username: data['username'],
-            totalScore: data['totalScore'],
-            totalMisses: data['totalMisses'],
-            totalThrows: data['totalThrows'],
-            totalAirballs: data['totalAirballs'],
-            cupsHit: List<int>.from(data['cupsHit']),
-            wins: data['wins'],
-            losses: data['losses']));
+        DocumentSnapshot friendDoc = await _db.collection('users').doc(friendId).get();
+        friends.add(_userFromFirestore(friendDoc));
       }
       return friends;
     } catch (e) {
@@ -35,15 +44,19 @@ class FirestoreService {
     }
   }
 
+  // Add a friend to a user's friend list
   Future<void> addFriend(String userId, String friendId) async {
     try {
       DocumentReference userDoc = _db.collection('users').doc(userId);
-      await userDoc.update({
-        'friends': FieldValue.arrayUnion([friendId])
-      });
       DocumentReference friendDoc = _db.collection('users').doc(friendId);
-      await friendDoc.update({
-        'friends': FieldValue.arrayUnion([userId])
+
+      await _db.runTransaction((transaction) async {
+        transaction.update(userDoc, {
+          'friends': FieldValue.arrayUnion([friendId])
+        });
+        transaction.update(friendDoc, {
+          'friends': FieldValue.arrayUnion([userId])
+        });
       });
     } catch (e) {
       print('Error adding friend: $e');
@@ -51,87 +64,68 @@ class FirestoreService {
     }
   }
 
+  // Sign in with Google and return the authenticated user
   Future<auth.User?> signInWithGoogle() async {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-    final GoogleSignInAuthentication? googleAuth =
-        await googleUser?.authentication;
-    final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
-    auth.UserCredential user =
-        await auth.FirebaseAuth.instance.signInWithCredential(credential);
-    print(user.user?.uid);
-    return user.user;
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        return null; // The user canceled the sign-in
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      auth.UserCredential userCredential = await auth.FirebaseAuth.instance.signInWithCredential(credential);
+      return userCredential.user;
+    } catch (e) {
+      print('Error during Google Sign-In: $e');
+      rethrow;
+    }
   }
 
+  // Add a new user to Firestore
   Future<void> addUser(User user) async {
     try {
-      final FirebaseFirestore db = FirebaseFirestore.instance;
-      await db.collection('users').doc(user.id).set({
-        'username': user.username,
-        'totalScore': user.totalScore,
-        'totalMisses': user.totalMisses,
-        'totalAirballs': user.totalAirballs,
-        'totalThrows': user.totalThrows,
-        'cupsHit': user.cupsHit,
-        'wins': user.wins,
-        'losses': user.losses,
-        'friends': user.friends,
-      });
+      await _db.collection('users').doc(user.id).set(user.toJson());
     } catch (e) {
       print('Error adding user: $e');
+      rethrow;
     }
   }
 
+  // Update an existing user in Firestore
   Future<void> updateUser(User user) async {
     try {
-      final FirebaseFirestore db = FirebaseFirestore.instance;
-      await db.collection('users').doc(user.id).update({
-        'username': user.username,
-        'totalScore': user.totalScore,
-        'totalMisses': user.totalMisses,
-        'totalAirballs': user.totalAirballs,
-        'totalThrows': user.totalThrows,
-        'cupsHit': user.cupsHit,
-        'wins': user.wins,
-        'losses': user.losses,
-        'friends': user.friends,
-      });
+      await _db.collection('users').doc(user.id).update(user.toJson());
     } catch (e) {
       print('Error updating user: $e');
+      rethrow;
     }
   }
 
-  Future<void> deleteUser(User user) async {
+  // Delete a user from Firestore
+  Future<void> deleteUser(String userId) async {
     try {
-      final FirebaseFirestore db = FirebaseFirestore.instance;
-      await db.collection('users').doc(user.id).delete();
+      await _db.collection('users').doc(userId).delete();
     } catch (e) {
       print('Error deleting user: $e');
+      rethrow;
     }
   }
 
-  Future<User?> getUser(String id) async {
+  // Fetch a user from Firestore
+  Future<User?> getUser(String userId) async {
     try {
-      final FirebaseFirestore db = FirebaseFirestore.instance;
-      final DocumentSnapshot doc = await db.collection('users').doc(id).get();
+      DocumentSnapshot doc = await _db.collection('users').doc(userId).get();
       if (doc.exists) {
-        return User(
-          id: doc.id,
-          username: doc['username'],
-          totalScore: doc['totalScore'],
-          totalMisses: doc['totalMisses'],
-          totalAirballs: doc['totalAirballs'],
-          totalThrows: doc['totalThrows'],
-          cupsHit: List<int>.from(doc['cupsHit']),
-          wins: doc['wins'],
-          losses: doc['losses'],
-          friends: List<String>.from(doc['friends']),
-        );
+        return _userFromFirestore(doc);
       }
     } catch (e) {
       print('Error getting user: $e');
+      rethrow;
     }
     return null;
   }

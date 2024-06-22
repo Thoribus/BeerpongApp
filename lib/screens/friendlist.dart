@@ -96,8 +96,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                 User friend = friends[index];
                 return ListTile(
                   leading: GestureDetector(
-                    onTap: () => _showIconPicker(context, friend),
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                       radius: 30,
                       backgroundColor:
                           Colors.blue, // Replace with dynamic color
@@ -110,11 +109,11 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                   ),
                   title: Text(
                     friend.username,
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(
                     'Total Score: ${friend.totalScore}',
-                    style: TextStyle(color: Colors.grey),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 );
               },
@@ -128,68 +127,4 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
       ),
     );
   }
-
-  void _showIconPicker(BuildContext context, User friend) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          height: 200,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Select Icon and Color for ${friend.username}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                  ),
-                  itemCount: _iconList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    IconData icon = _iconList[index];
-                    return GestureDetector(
-                      onTap: () {
-                        // Implement logic to save icon and color for friend
-                        Navigator.pop(context);
-                      },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor:
-                            Colors.blue, // Replace with dynamic color
-                        child: Icon(icon, color: Colors.white),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  final List<IconData> _iconList = [
-    Icons.person,
-    Icons.favorite,
-    Icons.star,
-    Icons.directions_bike,
-    Icons.ac_unit,
-    Icons.airplanemode_active,
-    Icons.access_alarm,
-    Icons.book,
-    Icons.brush,
-    Icons.cake,
-  ];
 }
