@@ -533,8 +533,6 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Color teamColor = isTeamOneTurn ? Colors.blue : Colors.red;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -837,9 +835,9 @@ class _GameScreenState extends State<GameScreen> {
         children: <Widget>[
           FloatingActionButton(
             backgroundColor: Colors.amber,
-            heroTag: "increment",
+            heroTag: "undo",
             onPressed: _undoLastAction,
-            tooltip: 'Increment',
+            tooltip: 'Rückgängig',
             child: const Icon(Icons.undo),
           ),
           FloatingActionButton.extended(

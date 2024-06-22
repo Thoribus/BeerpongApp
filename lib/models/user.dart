@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class User {
   final String id;
   String username;
@@ -9,6 +11,8 @@ class User {
   int wins;
   int losses;
   List<String> friends;
+  final IconData icon;
+  final Color iconColor;
 
   User({
     required this.id,
@@ -21,6 +25,8 @@ class User {
     this.wins = 0,
     this.losses = 0,
     this.friends = const [],
+    this.icon = Icons.person, // Default icon if not provided
+    this.iconColor = Colors.blue, // Default color if not provided
   });
 
   // Method to encode User instance to JSON

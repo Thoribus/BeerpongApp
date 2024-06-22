@@ -13,6 +13,7 @@ class SelectionScreen extends StatefulWidget {
 class _SelectionScreenState extends State<SelectionScreen> {
   List<Player> players1 = [];
   List<Player> players2 = [];
+  int _numPlayers = 2; // Default number of players
   String selectedGameMode = 'Single Game';
   List<String> gameModes = ['Single Game', 'Tournament'];
   Map<String, bool> selectedRulesMap = {
@@ -81,6 +82,35 @@ class _SelectionScreenState extends State<SelectionScreen> {
         const Divider(
           color: Colors.amber,
           thickness: 1,
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Number of Players:',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+            Expanded(
+              child: Slider(
+                value: _numPlayers.toDouble(),
+                min: 1,
+                max: 4,
+                divisions: 3,
+                activeColor: Colors.amber,
+                label: '$_numPlayers',
+                onChanged: (double value) {
+                  setState(() {
+                    _numPlayers = value.toInt();
+                  });
+                },
+              ),
+            ),
+            Text(
+              '$_numPlayers',
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         (players1.isEmpty && players2.isEmpty)
@@ -182,8 +212,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
 
     final teamResult = await showDialog<List<Player>>(
       context: context,
-      builder: (context) =>
-          NewGameDialog(team: team, initialNames: initialNames),
+      builder: (context) => NewGameDialog(
+          team: team, initialNames: initialNames, numPlayers: _numPlayers),
     );
 
     if (teamResult != null) {
