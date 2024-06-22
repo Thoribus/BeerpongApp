@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'user.dart';
 
 // Class representing a player in the game
@@ -73,5 +74,51 @@ class Player {
 
   void hitCup(int cupIndex) {
     cupsHit.add(cupIndex);
+  }
+
+  // Method to encode Player instance to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'score': score,
+      'throws': throws,
+      'misses': misses,
+      'airballs': airballs,
+      'hitThisRound': hitThisRound,
+      'cupsHit': cupsHit,
+      'lastCupHit': lastCupHit,
+      'islandShotUsed': islandShotUsed,
+      'user': user?.toJson(), // Assuming User class has a toJson() method
+    };
+  }
+
+  // Method to decode Player instance from JSON
+  factory Player.fromJson(Map<String, dynamic> json) {
+    return Player(
+      name: json['name'],
+      score: json['score'],
+      throws: json['throws'],
+      misses: json['misses'],
+      airballs: json['airballs'],
+      cupsHit: List<int>.from(json['cupsHit']),
+      hitThisRound: json['hitThisRound'],
+      islandShotUsed: json['islandShotUsed'],
+      user: json['user'] != null ? User.fromJson(json['user']) : null,
+    )
+      ..lastCupHit = json['lastCupHit'];
+  }
+
+  // Method to encode a list of Player instances to JSON
+  static String encodeList(List<Player> players) {
+    return json.encode(
+      players.map<Map<String, dynamic>>((player) => player.toJson()).toList(),
+    );
+  }
+
+  // Method to decode a list of Player instances from JSON
+  static List<Player> decodeList(String players) {
+    return (json.decode(players) as List<dynamic>)
+        .map<Player>((item) => Player.fromJson(item))
+        .toList();
   }
 }
