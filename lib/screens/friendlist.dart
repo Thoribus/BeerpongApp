@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:clipboard/clipboard.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
 import '../models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
 
@@ -30,9 +33,37 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Friend'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Enter friend\'s ID'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(hintText: 'Enter friend\'s ID'),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () {
+                  FlutterClipboard.copy(user!.uid).then((value) =>
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Copied to Clipboard'))));
+                },
+                child: Text(
+                  'Your ID: ${user!.uid}',
+                  style: const TextStyle(color: Colors.blue),
+                ),
+              ),
+              const SizedBox(height: 10),
+              QrImageView(
+                version: QrVersions.auto,
+                data: user!.uid,
+                size: 300.0,
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _scanQRCode,
+                child: const Text('Scan QR Code'),
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
@@ -71,12 +102,33 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
     }
   }
 
+  Future<void> _scanQRCode() async {
+    try {
+      var result = await BarcodeScanner.scan();
+      if (result.type == ResultType.Barcode) {
+        _addFriend(context, result.rawContent);
+        Navigator.of(context).pop();  // Close the dialog after scanning
+      }
+    } catch (e) {
+      print('Error scanning QR code: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error scanning QR code: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Friends List'),
         backgroundColor: Colors.amber,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: _scanQRCode,
+          ),
+        ],
       ),
       backgroundColor: Colors.black,
       body: FutureBuilder<List<User>>(
@@ -95,17 +147,10 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
               itemBuilder: (context, index) {
                 User friend = friends[index];
                 return ListTile(
-                  leading: GestureDetector(
-                    child: const CircleAvatar(
-                      radius: 30,
-                      backgroundColor:
-                          Colors.blue, // Replace with dynamic color
-                      child: Icon(
-                        Icons.person,
-                        size: 30,
-                        color: Colors.white,
-                      ),
-                    ),
+                  leading: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: friend.iconColor,
+                    child: Icon(friend.icon, size: 30, color: Colors.white),
                   ),
                   title: Text(
                     friend.username,
