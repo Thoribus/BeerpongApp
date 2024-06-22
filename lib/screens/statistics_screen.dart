@@ -1,12 +1,11 @@
+import 'package:beerpongapp/firestoreservice.dart';
 import 'package:flutter/material.dart';
-import '../database_helper.dart';
 import '../models/game_statistics.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _StatisticsScreenState createState() => _StatisticsScreenState();
 }
 
@@ -20,8 +19,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Future<void> _retrieveGames() async {
-    final databaseHelper = DatabaseHelper.instance;
-    games = await databaseHelper.retrieveGames();
+    games = await FirestoreService().retrieveGames();
     setState(() {});
   }
 
@@ -56,6 +54,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         return AlertDialog(
           title: const Text('Game Details'),
           content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Date: ${game.date.toString()}'),
               Text('Winning Team: ${game.winningTeam}'),

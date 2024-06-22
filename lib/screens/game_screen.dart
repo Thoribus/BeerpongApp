@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
-import '../models/game_statistics.dart';
 import 'dart:math';
-import '../database_helper.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import '../models/user.dart';
 import '../models/team.dart';
@@ -41,8 +39,6 @@ class _GameScreenState extends State<GameScreen> {
   late bool isTeamOneTurn = widget.startingTeam;
   bool islandShotActive = false;
 
-  List<GameStatistics> gameStatisticsList = [];
-  final DatabaseHelper _dbHelper = DatabaseHelper();
   final List<Map<String, dynamic>> _actionStack = [];
   final PageController _pageController = PageController();
   int _currentPage = 0;
@@ -54,22 +50,6 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     _loadGameFuture = _loadGameState();
     _pageController.addListener(_handlePageChange);
-  }
-
-  void _initializeGame() {
-    team1 = Team(
-      color: Colors.blue,
-      players: widget.players1,
-      cups: List.generate(10, (index) => Cup(index: index, color: Colors.blue)),
-    );
-    team2 = Team(
-      color: Colors.red,
-      players: widget.players2,
-      cups: List.generate(10, (index) => Cup(index: index, color: Colors.red)),
-    );
-    
-    currentTeam = isTeamOneTurn ? team1 : team2;
-    currentTeam.currentPlayers = currentTeam.rotatePlayers();
   }
 
   @override
@@ -432,13 +412,6 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
-    GameStatistics stats = GameStatistics(
-      date: DateTime.now(),
-      team1Players: List.from(team1.players),
-      team2Players: List.from(team2.players),
-      winningTeam: blueTeamWin ? "Team 2" : "Team 1",
-    );
-
     for (var player in team1.players) {
       updatePlayers(player);
     }
@@ -446,11 +419,13 @@ class _GameScreenState extends State<GameScreen> {
       updatePlayers(player);
     }
 
-    await _dbHelper.insertGame(stats);
-
-    setState(() {
-      gameStatisticsList.add(stats);
-    });
+    FirestoreService().saveGame(
+      team1: team1.players,
+      team2: team2.players,
+      selectedRules: selectedRules,
+      startingTeam: isTeamOneTurn ? "Team 1" : "Team 2",
+      winner: blueTeamWin ? "Team 1" : "Team 2",
+    );
   }
 
   void _saveCurrentState() {
@@ -492,7 +467,9 @@ class _GameScreenState extends State<GameScreen> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('${players[0].name} and ${players[1].name} won!'),
+                ...players
+                    .map((player) => Text(
+                        player.name)),
               ],
             ),
           ),

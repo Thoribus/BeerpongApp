@@ -1,11 +1,59 @@
+import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/models/player.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  Future<void> saveGame({
+    required List<Player> team1,
+    required List<Player> team2,
+    required Map<String, bool> selectedRules,
+    required String startingTeam,
+    required String winner,
+  }) async {
+    try {
+      List<String> participants = [
+        ...team1.map((player) => player.user != null ? player.user!.id : ""),
+        ...team2.map((player) => player.user != null ? player.user!.id : "")
+      ];
+      await _db.collection('games').add({
+        'team1': team1.map((player) => player.toJson()).toList(),
+        'team2': team2.map((player) => player.toJson()).toList(),
+        'winner': winner,
+        'timestamp': FieldValue.serverTimestamp(),
+        'participants': participants,
+      });
+    } catch (e) {
+      print('Error saving game: $e');
+    }
+  }
+
+  Future<List<GameStatistics>> retrieveGames() async {
+    final user = auth.FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return [];
+    }
+    print(user.uid);
+
+    try {
+      QuerySnapshot snapshot = await _db.collection('games')
+          .where('participants', arrayContains: user.uid)
+          .get();
+      print(snapshot.docs.first.data() as Map<String, dynamic>);
+      return snapshot.docs.map((doc) {
+        return GameStatistics.fromFirestore(doc.data() as Map<String, dynamic>);
+      }).toList();
+    } catch (e) {
+      print('Error retrieving games: $e');
+      return [];
+    }
+  }
 
   // Convert Firestore Document to User model
   User _userFromFirestore(DocumentSnapshot doc) {
@@ -29,12 +77,14 @@ class FirestoreService {
   // Fetch friends of a user
   Future<List<User>> getFriends(String userId) async {
     try {
-      DocumentSnapshot userDoc = await _db.collection('users').doc(userId).get();
+      DocumentSnapshot userDoc =
+          await _db.collection('users').doc(userId).get();
       List<String> friendIds = List<String>.from(userDoc['friends']);
 
       List<User> friends = [];
       for (String friendId in friendIds) {
-        DocumentSnapshot friendDoc = await _db.collection('users').doc(friendId).get();
+        DocumentSnapshot friendDoc =
+            await _db.collection('users').doc(friendId).get();
         friends.add(_userFromFirestore(friendDoc));
       }
       return friends;
@@ -72,13 +122,15 @@ class FirestoreService {
         return null; // The user canceled the sign-in
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      auth.UserCredential userCredential = await auth.FirebaseAuth.instance.signInWithCredential(credential);
+      auth.UserCredential userCredential =
+          await auth.FirebaseAuth.instance.signInWithCredential(credential);
       return userCredential.user;
     } catch (e) {
       print('Error during Google Sign-In: $e');
