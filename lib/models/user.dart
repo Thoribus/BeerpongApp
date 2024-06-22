@@ -29,6 +29,12 @@ class User {
     this.iconColor = Colors.blue, // Default color if not provided
   });
 
+  double get winRate {
+    int totalGames = wins + losses;
+    if (totalGames == 0) return 0.0;
+    return wins / totalGames;
+  }
+  
   // Method to encode User instance to JSON
   Map<String, dynamic> toJson() {
     return {

@@ -9,11 +9,26 @@ import 'package:beerpongapp/models/player.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  User mapPlayerToUser(Player player, bool isWinner) {
+    return User(
+      id: player.user!.id,
+      username: player.user!.username,
+      totalScore: player.user!.totalScore += player.score,
+      totalMisses: player.user!.totalMisses += player.misses,
+      totalAirballs: player.user!.totalAirballs += player.airballs,
+      totalThrows: player.user!.totalThrows += player.throws,
+      cupsHit: player.user!.cupsHit += player.cupsHit,
+      wins: player.user!.wins += isWinner ? 1 : 0,
+      losses: player.user!.losses += isWinner ? 0 : 1,
+      friends: player.user!.friends,
+      icon: player.user!.icon,
+      iconColor: player.user!.iconColor,
+    );
+  }
+
   Future<void> saveGame({
     required List<Player> team1,
     required List<Player> team2,
-    required Map<String, bool> selectedRules,
-    required String startingTeam,
     required String winner,
   }) async {
     try {
@@ -28,6 +43,19 @@ class FirestoreService {
         'timestamp': FieldValue.serverTimestamp(),
         'participants': participants,
       });
+
+      for (Player player in team1) {
+        if (player.user != null) {
+          User user = mapPlayerToUser(player, winner == 'Team 1');
+          await updateUser(user);
+        }
+      }
+      for (Player player in team2) {
+        if (player.user != null) {
+          User user = mapPlayerToUser(player, winner == 'Team 2');
+          await updateUser(user);
+        }
+      }
     } catch (e) {
       print('Error saving game: $e');
     }
@@ -42,7 +70,8 @@ class FirestoreService {
     print(user.uid);
 
     try {
-      QuerySnapshot snapshot = await _db.collection('games')
+      QuerySnapshot snapshot = await _db
+          .collection('games')
           .where('participants', arrayContains: user.uid)
           .get();
       print(snapshot.docs.first.data() as Map<String, dynamic>);

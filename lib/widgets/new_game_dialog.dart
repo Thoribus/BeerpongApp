@@ -41,23 +41,6 @@ class _NewGameDialogState extends State<NewGameDialog> {
     }
   }
 
-  void _updatePlayerFields(int count) {
-    setState(() {
-      _numPlayers = count;
-
-      // Add new controllers if needed
-      if (_controllers.length < count) {
-        _controllers.addAll(List.generate(
-            count - _controllers.length, (_) => TextEditingController()));
-      }
-
-      // Remove excess controllers if needed
-      if (_controllers.length > count) {
-        _controllers.removeRange(count, _controllers.length);
-      }
-    });
-  }
-
   @override
   void dispose() {
     for (var controller in _controllers) {
