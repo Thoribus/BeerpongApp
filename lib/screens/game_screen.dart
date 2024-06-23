@@ -67,7 +67,7 @@ class _GameScreenState extends State<GameScreen> {
       players: widget.players2,
       cups: List.generate(10, (index) => Cup(index: index, color: Colors.red)),
     );
-    
+
     currentTeam = isTeamOneTurn ? team1 : team2;
     currentTeam.currentPlayers = currentTeam.rotatePlayers();
   }
@@ -605,7 +605,7 @@ class _GameScreenState extends State<GameScreen> {
                     scrollDirection: Axis.horizontal,
                     children: [
                       _buildCurrentGamePage(),
-                      _buildGameStatsPage(teamColor),
+                      _buildGameStatsPage(currentTeam.color),
                     ],
                   ),
                 ),

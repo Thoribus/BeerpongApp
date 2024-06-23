@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
+import 'base_screen.dart';
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({Key? key}) : super(key: key);
@@ -74,10 +75,6 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friends List'),
-        backgroundColor: Colors.amber,
-      ),
       backgroundColor: Colors.black,
       body: FutureBuilder<List<User>>(
         future: _friends,

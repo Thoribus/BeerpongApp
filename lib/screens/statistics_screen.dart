@@ -1,9 +1,10 @@
+import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import '../database_helper.dart';
 import '../models/game_statistics.dart';
 import 'package:intl/intl.dart';
 import '../models/player.dart';
-import '../screens/game_screen.dart';
+import 'base_screen.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -31,15 +32,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Statistics',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.amber,
-      ),
       backgroundColor: Colors.black,
       body: Center(
         child: ListView.builder(
@@ -129,15 +121,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
                       children: [
+                        const Icon(Icons.person, size: 20, color: Colors.white),
+                        const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            player.name,
-                            style: TextStyle(
-                              color: Colors.grey[300],
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: Text(player.name,
+                              style: const TextStyle(color: Colors.white)),
                         ),
                         Text(
                           '${player.cupsHit.length}',
@@ -157,15 +145,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
                       children: [
+                        const Icon(BeerpongIcons.medal,
+                            size: 20, color: Colors.amber),
+                        const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            player.name,
-                            style: TextStyle(
-                              color: Colors.grey[300],
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: Text(player.name,
+                              style: const TextStyle(color: Colors.white)),
                         ),
                         Text(
                           '${player.cupsHit.length}',
