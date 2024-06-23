@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
+import 'base_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
+
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({Key? key}) : super(key: key);
@@ -140,16 +142,6 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friends List'),
-        backgroundColor: Colors.amber,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: _scanQRCode,
-          ),
-        ],
-      ),
       backgroundColor: Colors.black,
       body: Column(
         children: [

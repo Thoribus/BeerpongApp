@@ -16,8 +16,11 @@
 ///         Author:    Daniela Howe & Ivan Montiel
 ///         License:   SIL (http://scripts.sil.org/OFL)
 ///         Homepage:  http://nagoshiashumari.github.io/Rpg-Awesome/
+/// * Font Awesome 5, Copyright (C) 2016 by Dave Gandy
+///         Author:    Dave Gandy
+///         License:   SIL (https://github.com/FortAwesome/Font-Awesome/blob/master/LICENSE.txt)
+///         Homepage:  http://fortawesome.github.com/Font-Awesome/
 ///
-library;
 import 'package:flutter/widgets.dart';
 
 class BeerpongIcons {
@@ -36,4 +39,6 @@ class BeerpongIcons {
       IconData(0xea56, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData skull =
       IconData(0xeaa1, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData medal =
+      IconData(0xf5a2, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

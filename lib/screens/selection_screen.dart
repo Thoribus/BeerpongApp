@@ -41,7 +41,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.amber.withOpacity(0.75),
+        backgroundColor: Colors.amber,
       ),
       body: Container(
         color: Colors.black,
