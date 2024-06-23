@@ -5,7 +5,7 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
 
 class AccountScreen extends StatefulWidget {
-  const AccountScreen({Key? key}) : super(key: key);
+  const AccountScreen({super.key});
 
   @override
   _AccountScreenState createState() => _AccountScreenState();
@@ -27,6 +27,12 @@ class _AccountScreenState extends State<AccountScreen> {
         });
       });
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (user != null) FirestoreService().updateUser(user!);
   }
 
   @override
@@ -59,8 +65,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            '${snapshot.data?.displayName ?? ''}',
-                            style: TextStyle(
+                            snapshot.data?.displayName ?? '',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -76,8 +82,8 @@ class _AccountScreenState extends State<AccountScreen> {
                           child: DataTable(
                             columnSpacing: 16,
                             headingRowHeight: 40,
-                            dataRowHeight: 32,
-                            columns: [
+                            dataRowMinHeight: 32,
+                            columns: const [
                               DataColumn(
                                 label: Text(
                                   'Attribute',
@@ -100,21 +106,21 @@ class _AccountScreenState extends State<AccountScreen> {
                             rows: [
                               _buildDataRow('User ID', user!.id),
                               _buildDataRow(
-                                  'Total Score', '${user!.totalScore ?? ''}'),
+                                  'Total Score', '${user!.totalScore}'),
                               _buildDataRow(
-                                  'Total Misses', '${user!.totalMisses ?? ''}'),
+                                  'Total Misses', '${user!.totalMisses}'),
                               _buildDataRow('Total Airballs',
-                                  '${user!.totalAirballs ?? ''}'),
+                                  '${user!.totalAirballs}'),
                               _buildDataRow(
-                                  'Cups Hit', '${user!.cupsHit ?? ''}'),
-                              _buildDataRow('Wins', '${user!.wins ?? ''}'),
-                              _buildDataRow('Losses', '${user!.losses ?? ''}'),
+                                  'Cups Hit', '${user!.cupsHit}'),
+                              _buildDataRow('Wins', '${user!.wins}'),
+                              _buildDataRow('Losses', '${user!.losses}'),
                             ],
                           ),
                         ),
                       )
                     else
-                      Expanded(
+                      const Expanded(
                         child: Center(
                           child: Text(
                             'User data not available',
@@ -170,13 +176,13 @@ class _AccountScreenState extends State<AccountScreen> {
         DataCell(
           Text(
             attribute,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
         ),
         DataCell(
           Text(
             value,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       ],
@@ -187,13 +193,13 @@ class _AccountScreenState extends State<AccountScreen> {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Container(
+        return SizedBox(
           height: 200,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Select Icon and Color',
                   style: TextStyle(
@@ -204,7 +210,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
               Expanded(
                 child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 4,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
@@ -216,6 +222,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       onTap: () {
                         setState(() {
                           selectedIcon = icon;
+                          user!.icon = icon;
                         });
                         Navigator.pop(context);
                       },

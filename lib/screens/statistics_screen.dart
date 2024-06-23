@@ -1,6 +1,6 @@
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/firestoreservice.dart';
 import 'package:flutter/material.dart';
-import '../database_helper.dart';
 import '../models/game_statistics.dart';
 import 'package:intl/intl.dart';
 import '../models/player.dart';
@@ -10,7 +10,6 @@ class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _StatisticsScreenState createState() => _StatisticsScreenState();
 }
 
@@ -24,8 +23,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Future<void> _retrieveGames() async {
-    final databaseHelper = DatabaseHelper.instance;
-    games = await databaseHelper.retrieveGames();
+    games = await FirestoreService().retrieveGames();
     setState(() {});
   }
 

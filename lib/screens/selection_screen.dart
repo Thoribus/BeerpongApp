@@ -19,7 +19,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
   Map<String, bool> selectedRulesMap = {
     'Deathcup': false,
     'Island': false,
-    'Rearrange': false,
+    'Nachwurf': false,
   };
 
   String startingTeam = 'Team Blue'; // Add this line

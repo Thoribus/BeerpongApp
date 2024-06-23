@@ -11,8 +11,8 @@ class User {
   int wins;
   int losses;
   List<String> friends;
-  final IconData icon;
-  final Color iconColor;
+  IconData icon;
+  Color iconColor;
 
   User({
     required this.id,
@@ -29,6 +29,12 @@ class User {
     this.iconColor = Colors.blue, // Default color if not provided
   });
 
+  double get winRate {
+    int totalGames = wins + losses;
+    if (totalGames == 0) return 0.0;
+    return wins / totalGames;
+  }
+  
   // Method to encode User instance to JSON
   Map<String, dynamic> toJson() {
     return {
@@ -42,6 +48,8 @@ class User {
       'wins': wins,
       'losses': losses,
       'friends': friends,
+      'icon': icon.codePoint, // Encode icon as an integer
+      'iconColor': iconColor.value, // Encode color as an integer
     };
   }
 
@@ -58,6 +66,8 @@ class User {
       wins: json['wins'],
       losses: json['losses'],
       friends: List<String>.from(json['friends']),
+      icon: IconData(json['icon'], fontFamily: 'MaterialIcons'), // Decode icon from integer
+      iconColor: Color(json['iconColor']), // Decode color from integer
     );
   }
 }
