@@ -32,7 +32,6 @@ class GameStatistics {
   });
 
   factory GameStatistics.fromFirestore(Map<String, dynamic> data) {
-    print("Hello");
     return GameStatistics(
       date: (data['timestamp'] as Timestamp).toDate(),
       winningTeam: data['winner'],

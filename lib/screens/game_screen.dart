@@ -244,6 +244,7 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
     }
+    print(cup.index.toString() + " " + closeCupsCount.toString());
     return closeCupsCount == 0;
   }
 
@@ -528,48 +529,50 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _checkGameEnd(Player player) async {
-  bool teamAllHit = currentTeam.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
+    bool teamAllHit = currentTeam.cups
+        .every((cup) => !cup.isVisible || cup.color == Colors.green);
 
-  if (teamAllHit) {
-    if (selectedRules['Nachwurf'] == true) {
-      bool enemyTurn = await _handleNachwurf();
-      if (enemyTurn) {
-        return; // If the enemy hits a cup, cancel the last cup hit and don't end the game
+    if (teamAllHit) {
+      if (selectedRules['Nachwurf'] == true) {
+        bool enemyTurn = await _handleNachwurf();
+        if (enemyTurn) {
+          return; // If the enemy hits a cup, cancel the last cup hit and don't end the game
+        }
       }
+
+      _setPlayerHitLastCup(player);
+      await _clearGameState();
+      await _saveGameStatistics();
+      _showGameEndDialog(context, currentTeam.players);
     }
-    
-    _setPlayerHitLastCup(player);
-    await _clearGameState();
-    await _saveGameStatistics();
-    _showGameEndDialog(context, currentTeam.players);
   }
-}
 
-Future<bool> _handleNachwurf() async {
-  Team enemyTeam = currentTeam == team1 ? team2 : team1;
-  bool enemyHit = false;
+  Future<bool> _handleNachwurf() async {
+    Team enemyTeam = currentTeam == team1 ? team2 : team1;
+    bool enemyHit = false;
 
-  await _showSelectionDialog(
-    context,
-    'Enemy Team\'s Last Turn',
-    enemyTeam.players,
-    (player) {
-      _saveCurrentState();
-      enemyHit = true;
-      _removeLastCupHit();
-    },
-  );
+    await _showSelectionDialog(
+      context,
+      'Enemy Team\'s Last Turn',
+      enemyTeam.players,
+      (player) {
+        _saveCurrentState();
+        enemyHit = true;
+        _removeLastCupHit();
+      },
+    );
 
-  return enemyHit;
-}
+    return enemyHit;
+  }
 
-void _removeLastCupHit() {
-  setState(() {
-    Cup lastCup = currentTeam.cups.lastWhere((cup) => cup.color == Colors.green);
-    lastCup.color = currentTeam.color;
-    lastCup.isVisible = true;
-  });
-}
+  void _removeLastCupHit() {
+    setState(() {
+      Cup lastCup =
+          currentTeam.cups.lastWhere((cup) => cup.color == Colors.green);
+      lastCup.color = currentTeam.color;
+      lastCup.isVisible = true;
+    });
+  }
 
   Future<void> _showGameEndDialog(
       BuildContext context, List<Player> players) async {
@@ -890,15 +893,23 @@ void _removeLastCupHit() {
                     topLeft: Radius.circular(100))),
             child: const Icon(BeerpongIcons.skull, size: 35),
           ),
-        if (selectedRules["Island"] == true && currentTeam.canIslandShot)
-          FloatingActionButton(
-            backgroundColor: Colors.amber,
+        Visibility(
+          visible: selectedRules["Island"] == true,
+          child: FloatingActionButton(
+            backgroundColor:
+                currentTeam.cups.any((element) => element.isVisible && _isIslandCup(element))
+                    ? Colors.amber
+                    : Colors.grey,
             heroTag: "Island",
-            onPressed: () {
-              _highlightIslandCups();
-            },
+            onPressed:
+                currentTeam.canIslandShot
+                    ? () {
+                        _highlightIslandCups();
+                      }
+                    : () {}, // Disable the button if the conditions are not met
             child: const Icon(BeerpongIcons.palmtree, size: 45),
           ),
+        )
       ],
     );
   }
@@ -1063,5 +1074,4 @@ void _removeLastCupHit() {
       ),
     );
   }
-
 }
