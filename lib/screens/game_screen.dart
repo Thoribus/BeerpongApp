@@ -9,6 +9,7 @@ import '../database_helper.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import '../models/user.dart';
 import '../models/team.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({
@@ -17,12 +18,14 @@ class GameScreen extends StatefulWidget {
     required this.players1,
     required this.players2,
     required this.selectedRules,
+    required this.startingTeam,
   });
 
   final String title;
   final List<Player> players1;
   final List<Player> players2;
   final Map<String, bool> selectedRules;
+  final bool startingTeam;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -35,7 +38,7 @@ class _GameScreenState extends State<GameScreen> {
   late Team team2;
   late Team currentTeam;
 
-  bool isTeamOneTurn = true;
+  late bool isTeamOneTurn = widget.startingTeam;
   bool islandShotActive = false;
 
   List<GameStatistics> gameStatisticsList = [];
@@ -44,17 +47,13 @@ class _GameScreenState extends State<GameScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  late Future<void> _loadGameFuture;
+
   @override
   void initState() {
     super.initState();
-    _initializeGame();
+    _loadGameFuture = _loadGameState();
     _pageController.addListener(_handlePageChange);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
   void _initializeGame() {
@@ -68,8 +67,16 @@ class _GameScreenState extends State<GameScreen> {
       players: widget.players2,
       cups: List.generate(10, (index) => Cup(index: index, color: Colors.red)),
     );
+    
     currentTeam = isTeamOneTurn ? team1 : team2;
     currentTeam.currentPlayers = currentTeam.rotatePlayers();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _saveGameState();
+    _pageController.dispose();
   }
 
   void _handlePageChange() {
@@ -319,7 +326,7 @@ class _GameScreenState extends State<GameScreen> {
 
   double _calculateDistance(Offset position1, Offset position2) {
     return sqrt(pow(position1.dx - position2.dx, 2) +
-        pow(position1.dy - position2.dy, 2));
+        pow(position2.dy - position1.dy, 2));
   }
 
   double _calculateHitRate(double score, int throws) {
@@ -388,9 +395,21 @@ class _GameScreenState extends State<GameScreen> {
 
     if (teamAllHit) {
       _setPlayerHitLastCup(player);
+      await _clearGameState();
       await _saveGameStatistics();
       _showGameEndDialog(context, currentTeam.currentPlayers);
     }
+  }
+
+  Future<void> _clearGameState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('team1Cups');
+    await prefs.remove('team2Cups');
+    await prefs.remove('team1Players');
+    await prefs.remove('team2Players');
+    await prefs.remove('isTeamOneTurn');
+    await prefs.remove('isRearranged1');
+    await prefs.remove('isRearranged2');
   }
 
   Future<void> _saveGameStatistics() async {
@@ -530,57 +549,70 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(
-                onPressed: _currentPage == 0
-                    ? null
-                    : () {
-                        _pageController.jumpToPage(0);
-                      },
-                child: Text(
-                  'View Table',
-                  style: TextStyle(
-                    color: _currentPage == 0 ? Colors.amber : Colors.white,
-                  ),
-                ),
-              ),
-              const VerticalDivider(
-                color: Colors.white,
-                width: 20,
-                thickness: 2,
-                indent: 5,
-                endIndent: 5,
-              ),
-              TextButton(
-                onPressed: _currentPage == 1
-                    ? null
-                    : () {
-                        _pageController.jumpToPage(1);
-                      },
-                child: Text(
-                  'View Game Stats',
-                  style: TextStyle(
-                    color: _currentPage == 1 ? Colors.amber : Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              scrollDirection: Axis.horizontal,
+      body: FutureBuilder<void>(
+        future: _loadGameFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            return Column(
               children: [
-                _buildCurrentGamePage(),
-                _buildGameStatsPage(currentTeam.color),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: _currentPage == 0
+                          ? null
+                          : () {
+                              _pageController.jumpToPage(0);
+                            },
+                      child: Text(
+                        'View Table',
+                        style: TextStyle(
+                          color:
+                              _currentPage == 0 ? Colors.amber : Colors.white,
+                        ),
+                      ),
+                    ),
+                    const VerticalDivider(
+                      color: Colors.white,
+                      width: 20,
+                      thickness: 2,
+                      indent: 5,
+                      endIndent: 5,
+                    ),
+                    TextButton(
+                      onPressed: _currentPage == 1
+                          ? null
+                          : () {
+                              _pageController.jumpToPage(1);
+                            },
+                      child: Text(
+                        'View Game Stats',
+                        style: TextStyle(
+                          color:
+                              _currentPage == 1 ? Colors.amber : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      _buildCurrentGamePage(),
+                      _buildGameStatsPage(teamColor),
+                    ],
+                  ),
+                ),
               ],
-            ),
-          ),
-        ],
+            );
+          }
+        },
       ),
       bottomNavigationBar: _buildBottomAppBar(),
       backgroundColor: Colors.black,
@@ -857,7 +889,6 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  // Function to show the rearrange error dialog
   Future<void> _showRearrangeErrorDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
@@ -884,7 +915,6 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-// Helper method to assign specific indices based on the new layout
   List<Cup> _assignSpecificIndices(List<Cup> cups) {
     List<int> newIndices = [];
     switch (cups.length) {
@@ -901,7 +931,7 @@ class _GameScreenState extends State<GameScreen> {
         newIndices = [7, 8, 4];
         break;
       case 2:
-        newIndices = [7, 4];
+        newIndices = [7, 3];
         break;
       case 1:
         newIndices = [7];
@@ -981,5 +1011,74 @@ class _GameScreenState extends State<GameScreen> {
         });
       },
     );
+  }
+
+  Future<void> _saveGameState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    prefs.setString('team1Cups', Cup.encodeList(team1.cups));
+    prefs.setString('team1Players', Player.encodeList(team1.players));
+    prefs.setBool('team1IsRearranged', team1.isRearranged);
+
+    prefs.setString('team2Cups', Cup.encodeList(team2.cups));
+    prefs.setString('team2Players', Player.encodeList(team2.players));
+    prefs.setBool('team2IsRearranged', team2.isRearranged);
+
+    prefs.setBool('isTeamOneTurn', isTeamOneTurn);
+    prefs.setBool('islandShotActive', islandShotActive);
+  }
+
+  Future<void> _loadGameState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String? team1Cups = prefs.getString('team1Cups');
+    String? team1Players = prefs.getString('team1Players');
+    bool team1IsRearranged = prefs.getBool('team1IsRearranged') ?? false;
+
+    String? team2Cups = prefs.getString('team2Cups');
+    String? team2Players = prefs.getString('team2Players');
+    bool team2IsRearranged = prefs.getBool('team2IsRearranged') ?? false;
+
+    bool? isTeamOneTurn = prefs.getBool('isTeamOneTurn');
+    bool islandShotActive = prefs.getBool('islandShotActive') ?? false;
+
+    setState(() {
+      if (team1Cups != null && team1Players != null) {
+        team1 = Team(
+          color: Colors.blue,
+          players: Player.decodeList(team1Players),
+          cups: Cup.decodeList(team1Cups),
+        );
+        team1.isRearranged = team1IsRearranged;
+      } else {
+        team1 = Team(
+          color: Colors.blue,
+          players: widget.players1,
+          cups: List.generate(
+              10, (index) => Cup(index: index, color: Colors.blue)),
+        );
+      }
+
+      if (team2Cups != null && team2Players != null) {
+        team2 = Team(
+          color: Colors.red,
+          players: Player.decodeList(team2Players),
+          cups: Cup.decodeList(team2Cups),
+        );
+        team2.isRearranged = team2IsRearranged;
+      } else {
+        team2 = Team(
+          color: Colors.red,
+          players: widget.players2,
+          cups: List.generate(
+              10, (index) => Cup(index: index, color: Colors.red)),
+        );
+      }
+
+      if (isTeamOneTurn != null) this.isTeamOneTurn = isTeamOneTurn;
+      this.islandShotActive = islandShotActive;
+      currentTeam = this.isTeamOneTurn ? team1 : team2;
+      currentTeam.currentPlayers = currentTeam.rotatePlayers();
+    });
   }
 }
