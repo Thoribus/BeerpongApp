@@ -1,56 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import '../firestoreservice.dart';
+import '../models/user.dart';
+import '../models/player.dart';
 
 class NewGameDialog extends StatefulWidget {
   final int team;
   final List<String> initialNames;
+  final int numPlayers;
 
   const NewGameDialog({
-    Key? key,
+    super.key,
     required this.team,
     required this.initialNames,
-  }) : super(key: key);
+    required this.numPlayers,
+  });
 
   @override
-  _NewGameDialogState createState() => _NewGameDialogState();
+  NewGameDialogState createState() => NewGameDialogState();
 }
 
-class _NewGameDialogState extends State<NewGameDialog> {
-  // Create a list of TextEditingController objects to manage player name inputs
+class NewGameDialogState extends State<NewGameDialog> {
   final List<TextEditingController> _controllers = [];
+  late List<User> _friends;
+  late int _numPlayers;
+  final Map<int, User> _friendMap = {};
 
   @override
   void initState() {
     super.initState();
-    // Initialize the controllers with initial names if provided
+
+    _numPlayers = widget.numPlayers;
+
     if (widget.initialNames.isNotEmpty) {
       _controllers.addAll(
           widget.initialNames.map((name) => TextEditingController(text: name)));
     } else {
-      // Initialize with default number of players (2 players)
-      _controllers.addAll(List.generate(2, (_) => TextEditingController()));
+      _controllers
+          .addAll(List.generate(_numPlayers, (_) => TextEditingController()));
     }
   }
 
   @override
   void dispose() {
-    // Dispose of all controllers when the widget is disposed to free up resources
     for (var controller in _controllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  // Method to update the number of player input fields based on the count
-  void _updatePlayerFields(int count) {
-    setState(() {
-      // If the new count is greater, add more controllers
-      if (count > _controllers.length) {
-        _controllers.addAll(List.generate(
-            count - _controllers.length, (_) => TextEditingController()));
-      }
-      // If the new count is less, remove excess controllers
-      else if (count < _controllers.length) {
-        _controllers.removeRange(count, _controllers.length);
+  Future<void> selectFromFriendList(int index) async {
+    auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
+    User? user = await FirestoreService().getUser(currentUser!.uid);
+    _friends = await FirestoreService().getFriends(user!.id);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose a player'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                ListTile(
+                  title: Text(user.username),
+                  onTap: () {
+                    Navigator.of(context).pop(user);
+                  },
+                ),
+                ..._friends.map((friend) => ListTile(
+                      title: Text(friend.username),
+                      onTap: () {
+                        Navigator.of(context).pop(friend);
+                      },
+                    )),
+              ],
+            ),
+          ),
+        );
+      },
+    ).then((selectedPlayer) {
+      if (selectedPlayer != null) {
+        setState(() {
+          _controllers[index].text = selectedPlayer.username;
+          _friendMap[index] = selectedPlayer;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Selected player: $selectedPlayer')),
+        );
       }
     });
   }
@@ -62,99 +98,75 @@ class _NewGameDialogState extends State<NewGameDialog> {
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.amber.withOpacity(0.2),
-                labelText: 'Number of Players',
-                labelStyle: TextStyle(color: Colors.amber),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide(
-                    color: Colors.amber,
-                    width: 2.0,
+          children: List.generate(_numPlayers, (index) {
+            if (index >= _controllers.length) {
+              _controllers.add(TextEditingController());
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controllers[index],
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.amber.withOpacity(0.2),
+                        labelText: 'Player ${index + 1}',
+                        labelStyle: const TextStyle(color: Colors.amber),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                    ),
                   ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide(
-                    color: Colors.amber,
-                    width: 2.0,
+                  IconButton(
+                    icon: const Icon(Icons.person),
+                    onPressed: () => selectFromFriendList(index),
                   ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: BorderSide(
-                    color: Colors.amber,
-                    width: 2.0,
-                  ),
-                ),
+                ],
               ),
-              keyboardType: TextInputType.number,
-              style: TextStyle(color: Colors.black),
-              onChanged: (value) {
-                // Update the player fields based on the entered number
-                int? count = int.tryParse(value);
-                if (count != null && count > 0) {
-                  _updatePlayerFields(count);
-                }
-              },
-            ),
-            const SizedBox(height: 16.0),
-            ..._controllers.map((controller) {
-              int index = _controllers.indexOf(controller) + 1;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.amber.withOpacity(0.2),
-                    labelText: 'Player $index',
-                    labelStyle: TextStyle(color: Colors.amber),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(
-                        color: Colors.amber,
-                        width: 2.0,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(
-                        color: Colors.amber,
-                        width: 2.0,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                      borderSide: BorderSide(
-                        color: Colors.amber,
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.black),
-                ),
-              );
-            }).toList(),
-          ],
+            );
+          }),
         ),
       ),
       actions: <Widget>[
         TextButton(
-          child: Text('CANCEL'),
+          child: const Text('CANCEL'),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         TextButton(
-          child: Text('SAVE'),
+          child: const Text('SAVE'),
           onPressed: () {
-            final List<String> names = _controllers
-                .map((controller) => controller.text.trim())
-                .toList();
+            final List<Player> names =
+                _controllers.take(_numPlayers).map((controller) {
+              int index = _controllers.indexOf(controller);
+              return Player(
+                name: controller.text.trim(),
+                user: _friendMap[index],
+              );
+            }).toList();
             Navigator.of(context).pop(names);
           },
         ),

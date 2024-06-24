@@ -4,44 +4,73 @@ import 'package:beerpongapp/widgets/new_game_dialog.dart';
 import '../models/player.dart';
 
 class SelectionScreen extends StatefulWidget {
+  final VoidCallback onReturn;
+
+  const SelectionScreen({super.key, required this.onReturn});
+
   @override
-  _SelectionScreenState createState() => _SelectionScreenState();
+  SelectionScreenState createState() => SelectionScreenState();
 }
 
-class _SelectionScreenState extends State<SelectionScreen> {
+class SelectionScreenState extends State<SelectionScreen> {
   List<Player> players1 = [];
   List<Player> players2 = [];
+  int _numPlayers = 2; // Default number of players
   String selectedGameMode = 'Single Game';
   List<String> gameModes = ['Single Game', 'Tournament'];
-  List<String> specialRules = ['Bitchcup', 'Island', 'Rearrange'];
-  List<bool> selectedRules = [false, false, false];
+  Map<String, bool> selectedRulesMap = {
+    'Deathcup': false,
+    'Island': false,
+    'Nachwurf': false,
+  };
+
+  String startingTeam = 'Team Blue'; // Add this line
+
+  bool get canStartGame {
+    return players1.isNotEmpty &&
+        players2.isNotEmpty &&
+        players1.every((p) => p.name.isNotEmpty) &&
+        players2.every((p) => p.name.isNotEmpty);
+  }
+
+  void _onPopInvoked(bool didPop) {
+    // Call the callback function before popping the screen
+    widget.onReturn();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Game Setup',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+    return PopScope(
+      onPopInvoked: _onPopInvoked,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Game Setup',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.amber,
         ),
-        centerTitle: true,
-        backgroundColor: Colors.amber.withOpacity(0.75),
-      ),
-      body: Container(
-        color: Colors.black,
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPlayersSelection(),
-            const SizedBox(height: 20),
-            _buildGameModeSelection(),
-            const SizedBox(height: 20),
-            _buildSpecialRulesSelection(),
-            const SizedBox(height: 20),
-            _buildStartGameButton(),
-          ],
+        body: Container(
+          color: Colors.black,
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPlayersSelection(),
+                const SizedBox(height: 20),
+                _buildGameModeSelection(),
+                const SizedBox(height: 20),
+                _buildSpecialRulesSelection(),
+                const SizedBox(height: 20),
+                _buildStartingTeamSelection(), // Add this line
+                const SizedBox(height: 20),
+                _buildStartGameButton(),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -51,7 +80,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Select Players',
           style: TextStyle(
             fontSize: 18,
@@ -65,6 +94,35 @@ class _SelectionScreenState extends State<SelectionScreen> {
           thickness: 1,
         ),
         const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Number of Players:',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+            Expanded(
+              child: Slider(
+                value: _numPlayers.toDouble(),
+                min: 1,
+                max: 4,
+                divisions: 3,
+                activeColor: Colors.amber,
+                label: '$_numPlayers',
+                onChanged: (double value) {
+                  setState(() {
+                    _numPlayers = value.toInt();
+                  });
+                },
+              ),
+            ),
+            Text(
+              '$_numPlayers',
+              style: const TextStyle(fontSize: 16, color: Colors.white),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         (players1.isEmpty && players2.isEmpty)
             ? Center(
                 child: ElevatedButton.icon(
@@ -73,13 +131,14 @@ class _SelectionScreenState extends State<SelectionScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
                   ),
                   onPressed: () async {
                     await _showTeamDialog(team: 1);
                     await _showTeamDialog(team: 2);
                   },
-                  icon: Icon(Icons.add, size: 24, color: Colors.black),
+                  icon: const Icon(Icons.add, size: 24, color: Colors.black),
                   label: const Text('Add Players',
                       style: TextStyle(fontSize: 16, color: Colors.black)),
                 ),
@@ -100,16 +159,16 @@ class _SelectionScreenState extends State<SelectionScreen> {
                         await _showTeamDialog(team: 1);
                         await _showTeamDialog(team: 2);
                       },
-                      child: Text('Edit Players',
-                          style: TextStyle(color: Colors.black)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amber.withOpacity(0.7),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0),
                         ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 24),
                       ),
+                      child: const Text('Edit Players',
+                          style: TextStyle(color: Colors.black)),
                     ),
                   ),
                 ],
@@ -127,29 +186,27 @@ class _SelectionScreenState extends State<SelectionScreen> {
             : Colors.red.withOpacity(0.7),
         borderRadius: BorderRadius.circular(12.0),
       ),
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(teamName,
-              style: TextStyle(
+              style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
           const SizedBox(height: 8),
-          ...players
-              .map((player) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Icon(Icons.person, size: 20, color: Colors.white),
-                        SizedBox(width: 8),
-                        Text(player.name,
-                            style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ))
-              .toList(),
+          ...players.map((player) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person, size: 20, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(player.name,
+                        style: const TextStyle(color: Colors.white)),
+                  ],
+                ),
+              )),
         ],
       ),
     );
@@ -163,18 +220,18 @@ class _SelectionScreenState extends State<SelectionScreen> {
       initialNames = players2.map((player) => player.name).toList();
     }
 
-    final teamResult = await showDialog<List<String>>(
+    final teamResult = await showDialog<List<Player>>(
       context: context,
-      builder: (context) =>
-          NewGameDialog(team: team, initialNames: initialNames),
+      builder: (context) => NewGameDialog(
+          team: team, initialNames: initialNames, numPlayers: _numPlayers),
     );
 
     if (teamResult != null) {
       setState(() {
         if (team == 1) {
-          players1 = teamResult.map((name) => Player(name: name)).toList();
+          players1 = teamResult;
         } else if (team == 2) {
-          players2 = teamResult.map((name) => Player(name: name)).toList();
+          players2 = teamResult;
         }
       });
     }
@@ -184,7 +241,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Select Game Mode',
           style: TextStyle(
             fontSize: 22,
@@ -198,14 +255,12 @@ class _SelectionScreenState extends State<SelectionScreen> {
           thickness: 1,
         ),
         const SizedBox(height: 10),
-        Container(
+        SizedBox(
           width: double.infinity,
           child: ToggleButtons(
             borderRadius: BorderRadius.circular(8.0),
             selectedColor: Colors.black,
             fillColor: Colors.amber,
-            children:
-                gameModes.map((mode) => _buildToggleButton(mode)).toList(),
             onPressed: (int newIndex) {
               setState(() {
                 selectedGameMode = gameModes[newIndex];
@@ -213,6 +268,8 @@ class _SelectionScreenState extends State<SelectionScreen> {
             },
             isSelected:
                 gameModes.map((mode) => mode == selectedGameMode).toList(),
+            children:
+                gameModes.map((mode) => _buildToggleButton(mode)).toList(),
           ),
         ),
       ],
@@ -222,7 +279,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
   Widget _buildToggleButton(String mode) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Text(mode, style: TextStyle(color: Colors.white)),
+      child: Text(mode, style: const TextStyle(color: Colors.white)),
     );
   }
 
@@ -230,7 +287,7 @@ class _SelectionScreenState extends State<SelectionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Select Special Rules',
           style: TextStyle(
             fontSize: 22,
@@ -246,18 +303,19 @@ class _SelectionScreenState extends State<SelectionScreen> {
         const SizedBox(height: 10),
         ListView.builder(
           shrinkWrap: true,
-          itemCount: specialRules.length,
+          itemCount: selectedRulesMap.length,
           itemBuilder: (context, index) {
             return ListTile(
               title: Text(
-                specialRules[index],
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                selectedRulesMap.keys.elementAt(index),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
               trailing: Switch(
-                value: selectedRules[index],
+                value: selectedRulesMap.values.elementAt(index),
                 onChanged: (bool value) {
                   setState(() {
-                    selectedRules[index] = value;
+                    selectedRulesMap[selectedRulesMap.keys.elementAt(index)] =
+                        value;
                   });
                 },
                 activeColor: Colors.amber,
@@ -270,30 +328,72 @@ class _SelectionScreenState extends State<SelectionScreen> {
     );
   }
 
+  Widget _buildStartingTeamSelection() {
+    List<String> teams = ['Team Blue', 'Team Red'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Starting Team',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 5),
+        const Divider(
+          color: Colors.amber,
+          thickness: 1,
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: ToggleButtons(
+            borderRadius: BorderRadius.circular(8.0),
+            selectedColor: Colors.black,
+            fillColor: Colors.amber,
+            onPressed: (int newIndex) {
+              setState(() {
+                startingTeam = teams[newIndex];
+              });
+            },
+            isSelected: teams.map((team) => team == startingTeam).toList(),
+            children: teams.map((team) => _buildToggleButton(team)).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildStartGameButton() {
     return Center(
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GameScreen(
-                title: 'Beer Pong',
-                players1: players1,
-                players2: players2,
-              ),
-            ),
-          );
-        },
-        child: const Text('Start Game',
-            style: TextStyle(fontSize: 18, color: Colors.black)),
+        onPressed: canStartGame
+            ? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameScreen(
+                      title: 'Beer Pong',
+                      players1: players1,
+                      players2: players2,
+                      selectedRules: selectedRulesMap,
+                      startingTeam: startingTeam == "Team Blue" ? true : false, // Pass starting team
+                    ),
+                  ),
+                );
+              }
+            : () {},
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.amber,
-          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+          backgroundColor: canStartGame ? Colors.amber : Colors.grey,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
         ),
+        child: const Text('Start Game',
+            style: TextStyle(fontSize: 18, color: Colors.black)),
       ),
     );
   }
