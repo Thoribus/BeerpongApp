@@ -32,14 +32,14 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/', // Set initial route
       routes: {
-        '/': (context) => BaseScreen(
-            child: HomeScreen(), selectedIndex: 2), // Example initial screen
+        '/': (context) => const BaseScreen(
+            selectedIndex: 2, child: HomeScreen()), // Example initial screen
         '/friendlist': (context) =>
-            BaseScreen(child: FriendsListScreen(), selectedIndex: 1),
+            const BaseScreen(selectedIndex: 1, child: FriendsListScreen()),
         '/statistics': (context) =>
-            BaseScreen(child: StatisticsScreen(), selectedIndex: 3),
+            const BaseScreen(selectedIndex: 3, child: StatisticsScreen()),
         '/account': (context) =>
-            BaseScreen(child: AccountScreen(), selectedIndex: 4),
+            const BaseScreen(selectedIndex: 4, child: AccountScreen()),
         // Add routes for all screens you want to navigate to
       },
     );

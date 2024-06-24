@@ -8,10 +8,10 @@ class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 
   @override
-  _AccountScreenState createState() => _AccountScreenState();
+  AccountScreenState createState() => AccountScreenState();
 }
 
-class _AccountScreenState extends State<AccountScreen> {
+class AccountScreenState extends State<AccountScreen> {
   User? user;
   IconData? selectedIcon = Icons.person;
   Color? selectedColor = Colors.blue;

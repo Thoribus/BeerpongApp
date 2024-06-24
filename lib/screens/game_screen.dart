@@ -35,6 +35,8 @@ class _GameScreenState extends State<GameScreen> {
   late Team team2;
   late Team currentTeam;
 
+  bool gameEnded = false;
+
   late bool isTeamOneTurn = widget.startingTeam;
   bool islandShotActive = false;
 
@@ -54,7 +56,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void dispose() {
     super.dispose();
-    _saveGameState();
+    if (!gameEnded) _saveGameState();
     _pageController.dispose();
   }
 
@@ -539,10 +541,14 @@ class _GameScreenState extends State<GameScreen> {
           return; // If the enemy hits a cup, cancel the last cup hit and don't end the game
         }
       }
-
+      setState(() {
+        gameEnded = true;
+      
+      });
       _setPlayerHitLastCup(player);
       await _clearGameState();
       await _saveGameStatistics();
+      
       _showGameEndDialog(context, currentTeam.players);
     }
   }
@@ -601,7 +607,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _saveGameStatistics() async {
-    bool blueTeamWin = team1.cups.every((cup) => !cup.isVisible) ? false : true;
+    bool blueTeamWin = team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green) ? false : true;
 
     FirestoreService().saveGame(
       team1: team1.players,
@@ -632,7 +638,7 @@ class _GameScreenState extends State<GameScreen> {
         future: _loadGameFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {

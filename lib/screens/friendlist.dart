@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../models/user.dart';
 import 'package:beerpongapp/firestoreservice.dart';
-import 'base_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 
 
 class FriendsListScreen extends StatefulWidget {
-  const FriendsListScreen({Key? key}) : super(key: key);
+  const FriendsListScreen({super.key});
 
   @override
-  _FriendsListScreenState createState() => _FriendsListScreenState();
+  FriendsListScreenState createState() => FriendsListScreenState();
 }
 
-class _FriendsListScreenState extends State<FriendsListScreen> {
+class FriendsListScreenState extends State<FriendsListScreen> {
   late Future<List<User>> _friends;
   late Future<User?> _userFuture;
   late auth.User? authUser;
@@ -113,6 +112,7 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
   Future<void> _scanQRCode() async {
     try {
       var result = await BarcodeScanner.scan();
+      if (!mounted) return;
       if (result.type == ResultType.Barcode) {
         _addFriend(context, result.rawContent);
         Navigator.of(context).pop(); // Close the dialog after scanning

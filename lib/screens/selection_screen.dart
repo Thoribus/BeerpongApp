@@ -4,13 +4,15 @@ import 'package:beerpongapp/widgets/new_game_dialog.dart';
 import '../models/player.dart';
 
 class SelectionScreen extends StatefulWidget {
-  const SelectionScreen({super.key});
+  final VoidCallback onReturn;
+
+  const SelectionScreen({super.key, required this.onReturn});
 
   @override
-  _SelectionScreenState createState() => _SelectionScreenState();
+  SelectionScreenState createState() => SelectionScreenState();
 }
 
-class _SelectionScreenState extends State<SelectionScreen> {
+class SelectionScreenState extends State<SelectionScreen> {
   List<Player> players1 = [];
   List<Player> players2 = [];
   int _numPlayers = 2; // Default number of players
@@ -31,35 +33,43 @@ class _SelectionScreenState extends State<SelectionScreen> {
         players2.every((p) => p.name.isNotEmpty);
   }
 
+  void _onPopInvoked(bool didPop) {
+    // Call the callback function before popping the screen
+    widget.onReturn();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Game Setup',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+    return PopScope(
+      onPopInvoked: _onPopInvoked,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Game Setup',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.amber,
         ),
-        centerTitle: true,
-        backgroundColor: Colors.amber,
-      ),
-      body: Container(
-        color: Colors.black,
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildPlayersSelection(),
-              const SizedBox(height: 20),
-              _buildGameModeSelection(),
-              const SizedBox(height: 20),
-              _buildSpecialRulesSelection(),
-              const SizedBox(height: 20),
-              _buildStartingTeamSelection(), // Add this line
-              const SizedBox(height: 20),
-              _buildStartGameButton(),
-            ],
+        body: Container(
+          color: Colors.black,
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPlayersSelection(),
+                const SizedBox(height: 20),
+                _buildGameModeSelection(),
+                const SizedBox(height: 20),
+                _buildSpecialRulesSelection(),
+                const SizedBox(height: 20),
+                _buildStartingTeamSelection(), // Add this line
+                const SizedBox(height: 20),
+                _buildStartGameButton(),
+              ],
+            ),
           ),
         ),
       ),

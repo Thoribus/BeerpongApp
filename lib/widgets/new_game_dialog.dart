@@ -17,10 +17,10 @@ class NewGameDialog extends StatefulWidget {
   });
 
   @override
-  _NewGameDialogState createState() => _NewGameDialogState();
+  NewGameDialogState createState() => NewGameDialogState();
 }
 
-class _NewGameDialogState extends State<NewGameDialog> {
+class NewGameDialogState extends State<NewGameDialog> {
   final List<TextEditingController> _controllers = [];
   late List<User> _friends;
   late int _numPlayers;
