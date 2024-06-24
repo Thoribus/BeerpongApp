@@ -4,13 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   bool _hasSavedGame = false;
 
@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen>
     // Initialize animation controller and animation
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 1),
+      duration: const Duration(seconds: 1),
     )..repeat(reverse: true);
     _animation = Tween(begin: 2.0, end: 15.0).animate(_animationController);
 
@@ -37,6 +37,12 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  @override
+  didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    print(_hasSavedGame);
   }
 
   Future<void> _checkSavedGame() async {
@@ -90,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen>
                 await _clearSavedGame();
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SelectionScreen()),
+                  MaterialPageRoute(builder: (context) => SelectionScreen(onReturn: _onReturnFromNextScreen,)),
                 );
               },
             ),
@@ -102,9 +108,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildWelcomeText() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       alignment: Alignment.center,
-      child: Text(
+      child: const Text(
         'Welcome, X!', // Display username retrieved from user.dart
         style: TextStyle(
           color: Colors.white,
@@ -117,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildGameButton(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20.0),
         border: Border.all(color: Colors.amber, width: 3.0),
@@ -141,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20.0),
@@ -151,8 +157,8 @@ class _HomeScreenState extends State<HomeScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 16),
+                const Padding(
+                  padding: EdgeInsets.only(left: 16),
                   child: Text(
                     'New Game',
                     style: TextStyle(
@@ -165,8 +171,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber.withOpacity(0.8),
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                    shape: RoundedRectangleBorder(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.only(
                         bottomRight: Radius.circular(20.0),
                       ),
@@ -179,11 +185,11 @@ class _HomeScreenState extends State<HomeScreen>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => SelectionScreen()),
+                            builder: (context) => SelectionScreen(onReturn: _onReturnFromNextScreen,)),
                       );
                     }
                   },
-                  child: Icon(Icons.add),
+                  child: const Icon(Icons.add),
                 ),
               ],
             ),
@@ -191,6 +197,10 @@ class _HomeScreenState extends State<HomeScreen>
         ],
       ),
     );
+  }
+
+  void _onReturnFromNextScreen() {
+    _checkSavedGame();
   }
 
   @override

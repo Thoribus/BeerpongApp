@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/screens/friendlist.dart';
-import 'package:beerpongapp/screens/statistics_screen.dart';
-import 'package:beerpongapp/screens/account_screen.dart';
-import 'package:beerpongapp/screens/home_screen.dart';
 
 class BaseScreen extends StatefulWidget {
   final Widget child;
   final int selectedIndex;
 
-  const BaseScreen({required this.child, required this.selectedIndex, Key? key})
-      : super(key: key);
+  const BaseScreen({required this.child, required this.selectedIndex, super.key});
 
   @override
-  _BaseScreenState createState() => _BaseScreenState();
+  BaseScreenState createState() => BaseScreenState();
 }
 
-class _BaseScreenState extends State<BaseScreen> {
+class BaseScreenState extends State<BaseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +20,7 @@ class _BaseScreenState extends State<BaseScreen> {
         backgroundColor: Colors.amber, // Amber background color for app bar
         title: Text(
           _getAppBarTitle(widget.selectedIndex),
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black, // Text color of the app bar title
           ),
@@ -41,7 +36,7 @@ class _BaseScreenState extends State<BaseScreen> {
           primaryColor:
               Colors.amber, // Active color of the BottomNavigationBar icons
           textTheme: Theme.of(context).textTheme.copyWith(
-                caption: TextStyle(
+                bodySmall: const TextStyle(
                     color: Colors
                         .grey), // Inactive color of the BottomNavigationBar icons
               ),
