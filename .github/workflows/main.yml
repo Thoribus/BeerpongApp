@@ -21,7 +21,7 @@ jobs:
       run: flutter pub get
 
     - name: Build AAB
-      run: flutter build appbundle --release
+      run: flutter build appbundle --release --no-tree-shake-icons
 
     - name: Sign App Bundle
       uses: r0adkll/sign-android-release@v1   
