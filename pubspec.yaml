@@ -32,6 +32,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: 1.1.6
   percent_indicator: ^4.2.2  # Check for the latest version on pub.dev
 
 
@@ -83,6 +84,7 @@ flutter:
     - assets/beerpong.jpg
     - assets/animals_beerpong.jpg
     - assets/freinds-playing-beerpong-together.jpg
+    - assets/amber_fullscreen_home.svg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
