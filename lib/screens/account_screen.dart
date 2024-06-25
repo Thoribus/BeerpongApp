@@ -24,6 +24,8 @@ class AccountScreenState extends State<AccountScreen> {
       FirestoreService().getUser(currentUser.uid).then((value) {
         setState(() {
           user = value;
+          selectedIcon = user?.icon ?? Icons.person;
+          selectedColor = user?.iconColor ?? Colors.blue;
         });
       });
     }
@@ -194,7 +196,7 @@ class AccountScreenState extends State<AccountScreen> {
       context: context,
       builder: (BuildContext context) {
         return SizedBox(
-          height: 200,
+          height: 400,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -224,13 +226,52 @@ class AccountScreenState extends State<AccountScreen> {
                           selectedIcon = icon;
                           user!.icon = icon;
                         });
-                        Navigator.pop(context);
                       },
                       child: CircleAvatar(
                         radius: 20,
                         backgroundColor:
                             selectedIcon == icon ? Colors.amber : Colors.grey,
                         child: Icon(icon, color: Colors.white),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Select Background Color',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                  ),
+                  itemCount: _colorList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    Color color = _colorList[index];
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedColor = color;
+                          user!.iconColor = color;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor:
+                            selectedColor == color ? Colors.amber : color,
+                        child: selectedColor == color
+                            ? const Icon(Icons.check, color: Colors.white)
+                            : null,
                       ),
                     );
                   },
@@ -254,5 +295,16 @@ class AccountScreenState extends State<AccountScreen> {
     Icons.book,
     Icons.brush,
     Icons.cake,
+  ];
+
+  final List<Color> _colorList = [
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.yellow,
+    Colors.orange,
+    Colors.purple,
+    Colors.brown,
+    Colors.cyan,
   ];
 }

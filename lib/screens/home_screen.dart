@@ -39,12 +39,6 @@ class HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
-  @override
-  didUpdateWidget(HomeScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    print(_hasSavedGame);
-  }
-
   Future<void> _checkSavedGame() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool hasSavedGame =
