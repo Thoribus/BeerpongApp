@@ -543,12 +543,11 @@ class _GameScreenState extends State<GameScreen> {
       }
       setState(() {
         gameEnded = true;
-      
       });
       _setPlayerHitLastCup(player);
       await _clearGameState();
       await _saveGameStatistics();
-      
+
       _showGameEndDialog(context, currentTeam.players);
     }
   }
@@ -607,7 +606,10 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _saveGameStatistics() async {
-    bool blueTeamWin = team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green) ? false : true;
+    bool blueTeamWin =
+        team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green)
+            ? false
+            : true;
 
     FirestoreService().saveGame(
       team1: team1.players,
@@ -902,18 +904,17 @@ class _GameScreenState extends State<GameScreen> {
         Visibility(
           visible: selectedRules["Island"] == true,
           child: FloatingActionButton(
-            backgroundColor:
-                currentTeam.cups.any((element) => element.isVisible && _isIslandCup(element))
-                    ? Colors.amber
-                    : Colors.grey,
+            backgroundColor: currentTeam.cups.any(
+                    (element) => element.isVisible && _isIslandCup(element))
+                ? Colors.amber
+                : Colors.grey,
             heroTag: "Island",
-            onPressed:
-                currentTeam.canIslandShot
-                    ? () {
-                        _highlightIslandCups();
-                      }
-                    : () {}, // Disable the button if the conditions are not met
-            child: const Icon(BeerpongIcons.palmtree, size: 45),
+            onPressed: currentTeam.canIslandShot
+                ? () {
+                    _highlightIslandCups();
+                  }
+                : () {}, // Disable the button if the conditions are not met
+            child: const Icon(BeerpongIcons.palm_tree, size: 45),
           ),
         )
       ],

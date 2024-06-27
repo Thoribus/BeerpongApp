@@ -85,6 +85,7 @@ flutter:
     - assets/animals_beerpong.jpg
     - assets/freinds-playing-beerpong-together.jpg
     - assets/amber_fullscreen_home.svg
+    - assets/two_cats.svg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
