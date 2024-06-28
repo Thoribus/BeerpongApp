@@ -40,6 +40,33 @@ class SelectionScreenState extends State<SelectionScreen> {
     widget.onReturn();
   }
 
+  void _showInfoDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.amber,
+          title: Text(
+            'Select ' + title,
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold, // Make the title text bold
+            ),
+          ),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Back'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -92,12 +119,30 @@ class SelectionScreenState extends State<SelectionScreen> {
                     title: 'Players',
                     imagePath: 'assets/two_cats.svg',
                     content: _buildPlayersSelection(),
+                    infoMessage: 'Select the players for your game.' +
+                        '\n' +
+                        '' +
+                        '\n' +
+                        'Add at least one player per team. You can add friends or custom players to each team.' +
+                        '\n' +
+                        '' +
+                        '\n' +
+                        'Statistics will only be saved when accounts are selected!',
                   ),
                 if (selectedSection == 'All' || selectedSection == 'Game Mode')
                   _buildBracketSection(
                     title: 'Game Mode',
                     imagePath: 'assets/two_cats.svg',
                     content: _buildGameModeSelection(),
+                    infoMessage: 'Choose the game mode you want to play.' +
+                        '\n' +
+                        '' +
+                        '\n' +
+                        'A single game creates a match between two players/teams.' +
+                        '\n' +
+                        '' +
+                        '\n' +
+                        'A tournament creates a  several matcheas between multiple players/teams.',
                   ),
                 if (selectedSection == 'All' ||
                     selectedSection == 'Special Rules')
@@ -105,6 +150,25 @@ class SelectionScreenState extends State<SelectionScreen> {
                     title: 'Special Rules',
                     imagePath: 'assets/two_cats.svg',
                     content: _buildSpecialRulesSelection(),
+                    infoMessage: 'Select any special rules for your game.' +
+                        '\n' +
+                        '' +
+                        '\n' +
+                        'DEATHCUP.' +
+                        '\n' +
+                        'When a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.' +
+                        '\n' +
+                        'The team that hits the deathcup automatically wins!' +
+                        '\n' +
+                        '' +
+                        '\n' +
+                        'ISLAND.' +
+                        '\n' +
+                        'A player can declare an island-shot (once per game) when a single cup has no surrounding cups.' +
+                        '\n' +
+                        'When an ISLAND is hit, an additional cup is cleared from the field!' +
+                        '\n' +
+                        '',
                   ),
                 if (selectedSection == 'All' ||
                     selectedSection == 'Starting Team')
@@ -112,6 +176,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                     title: 'Starting Team',
                     imagePath: 'assets/two_cats.svg',
                     content: _buildStartingTeamSelection(),
+                    infoMessage: 'Choose which team starts the game.',
                   ),
                 const SizedBox(height: 20),
                 _buildStartGameButton(),
@@ -159,17 +224,41 @@ class SelectionScreenState extends State<SelectionScreen> {
     required String title,
     required String imagePath,
     required Widget content,
+    required String infoMessage,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFF0AE1D),
-          ),
+        Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFF0AE1D),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                _showInfoDialog(title, infoMessage);
+              },
+              child: Container(
+                width: 15,
+                height: 15,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFF0AE1D),
+                ),
+                child: const Icon(
+                  Icons.info,
+                  color: Colors.black,
+                  size: 14,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         Container(
