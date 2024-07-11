@@ -1,4 +1,6 @@
 import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/screens/base_screen.dart';
+import 'package:beerpongapp/screens/statistics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import '../models/cup.dart';
@@ -105,7 +107,7 @@ class _GameScreenState extends State<GameScreen> {
         _addCupToPlayer(player, cupIndex);
         _handleCupHit(cupIndex);
         _incrementPlayerScore(player);
-        _checkGameEnd(player);
+        _checkGameEnd(player, cupIndex);
       },
     );
   }
@@ -124,7 +126,7 @@ class _GameScreenState extends State<GameScreen> {
             _incrementPlayerScore(player);
           }
         }
-        _checkGameEnd(player);
+        _checkGameEnd(player, currentTeam.cups.first.index);
       },
     );
   }
@@ -246,7 +248,6 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
     }
-    print(cup.index.toString() + " " + closeCupsCount.toString());
     return closeCupsCount == 0;
   }
 
@@ -297,6 +298,14 @@ class _GameScreenState extends State<GameScreen> {
       isTeamOneTurn = !isTeamOneTurn;
       currentTeam = isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
+
+      // Ensure the layout is built before checking for island cups
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          currentTeam.canIslandShot = currentTeam.cups
+              .any((cup) => cup.isVisible && _isIslandCup(cup));
+        });
+      });
     });
   }
 
@@ -488,6 +497,14 @@ class _GameScreenState extends State<GameScreen> {
       this.islandShotActive = islandShotActive;
       currentTeam = this.isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
+
+      // Ensure the layout is built before checking for island cups
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          currentTeam.canIslandShot = currentTeam.cups
+              .any((cup) => cup.isVisible && _isIslandCup(cup));
+        });
+      });
     });
   }
 
@@ -527,16 +544,24 @@ class _GameScreenState extends State<GameScreen> {
       team1.isRearranged = lastState['isRearranged1'];
       team2.isRearranged = lastState['isRearranged2'];
       currentTeam = isTeamOneTurn ? team1 : team2;
+
+      // Ensure the layout is built before checking for island cups
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          currentTeam.canIslandShot = currentTeam.cups
+              .any((cup) => cup.isVisible && _isIslandCup(cup));
+        });
+      });
     });
   }
 
-  void _checkGameEnd(Player player) async {
+  void _checkGameEnd(Player player, int cupIndex) async {
     bool teamAllHit = currentTeam.cups
         .every((cup) => !cup.isVisible || cup.color == Colors.green);
 
     if (teamAllHit) {
       if (selectedRules['Nachwurf'] == true) {
-        bool enemyTurn = await _handleNachwurf();
+        bool enemyTurn = await _handleNachwurf(cupIndex);
         if (enemyTurn) {
           return; // If the enemy hits a cup, cancel the last cup hit and don't end the game
         }
@@ -552,7 +577,7 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  Future<bool> _handleNachwurf() async {
+  Future<bool> _handleNachwurf(int cupIndex) async {
     Team enemyTeam = currentTeam == team1 ? team2 : team1;
     bool enemyHit = false;
 
@@ -561,21 +586,24 @@ class _GameScreenState extends State<GameScreen> {
       'Enemy Team\'s Last Turn',
       enemyTeam.players,
       (player) {
+        setState(() {
+          player.defended++;
+        });
         _saveCurrentState();
         enemyHit = true;
-        _removeLastCupHit();
+        _removeLastCupHit(cupIndex);
       },
     );
 
     return enemyHit;
   }
 
-  void _removeLastCupHit() {
+  void _removeLastCupHit(int cupIndex) {
     setState(() {
-      Cup lastCup =
-          currentTeam.cups.lastWhere((cup) => cup.color == Colors.green);
-      lastCup.color = currentTeam.color;
-      lastCup.isVisible = true;
+      currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).color =
+          currentTeam.color;
+      currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).isVisible =
+          true;
     });
   }
 
@@ -590,14 +618,24 @@ class _GameScreenState extends State<GameScreen> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                ...players.map((player) => Text(player.name)),
+                ...players.map((player) => Text("${player.name} ")),
+                const Text("have won the game!"),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('OK'),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BaseScreen(
+                        selectedIndex: 3, child: StatisticsScreen()),
+                  ),
+                );
+              },
             ),
           ],
         );
@@ -909,7 +947,9 @@ class _GameScreenState extends State<GameScreen> {
                 ? Colors.amber
                 : Colors.grey,
             heroTag: "Island",
-            onPressed: currentTeam.canIslandShot
+            onPressed: currentTeam.canIslandShot &&
+                    currentTeam.cups.any(
+                        (element) => element.isVisible && _isIslandCup(element))
                 ? () {
                     _highlightIslandCups();
                   }

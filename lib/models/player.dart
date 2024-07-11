@@ -12,6 +12,7 @@ class Player {
   List<int> cupsHit = []; // List of cup indices hit by the player
   bool lastCupHit = false;
   bool islandShotUsed = false;
+  int defended;
   User? user;
 
   // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
@@ -21,6 +22,7 @@ class Player {
     this.throws = 0,
     this.misses = 0,
     this.airballs = 0,
+    this.defended = 0,
     cupsHit,
     this.hitThisRound = false,
     this.islandShotUsed = false,
@@ -33,6 +35,7 @@ class Player {
       ..misses = misses
       ..throws = throws
       ..airballs = airballs
+      ..defended = defended
       ..hitThisRound = hitThisRound
       ..islandShotUsed = islandShotUsed
       ..cupsHit = List.from(cupsHit);
