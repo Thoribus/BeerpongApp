@@ -954,7 +954,7 @@ class _GameScreenState extends State<GameScreen> {
                     _highlightIslandCups();
                   }
                 : () {}, // Disable the button if the conditions are not met
-            child: const Icon(BeerpongIcons.palmtree, size: 45),
+            child: const Icon(BeerpongIcons.palm_tree, size: 45),
           ),
         )
       ],

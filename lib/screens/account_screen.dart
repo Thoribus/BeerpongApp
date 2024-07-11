@@ -1,3 +1,4 @@
+import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
@@ -61,7 +62,7 @@ class AccountScreenState extends State<AccountScreen> {
                             backgroundColor: selectedColor,
                             child: Icon(
                               selectedIcon,
-                              size: 50,
+                              size: 80,
                               color: Colors.white,
                             ),
                           ),
@@ -111,10 +112,9 @@ class AccountScreenState extends State<AccountScreen> {
                                   'Total Score', '${user!.totalScore}'),
                               _buildDataRow(
                                   'Total Misses', '${user!.totalMisses}'),
-                              _buildDataRow('Total Airballs',
-                                  '${user!.totalAirballs}'),
                               _buildDataRow(
-                                  'Cups Hit', '${user!.cupsHit}'),
+                                  'Total Airballs', '${user!.totalAirballs}'),
+                              _buildDataRow('Cups Hit', '${user!.cupsHit}'),
                               _buildDataRow('Wins', '${user!.wins}'),
                               _buildDataRow('Losses', '${user!.losses}'),
                             ],
@@ -285,16 +285,12 @@ class AccountScreenState extends State<AccountScreen> {
   }
 
   final List<IconData> _iconList = [
-    Icons.person,
-    Icons.favorite,
-    Icons.star,
-    Icons.directions_bike,
-    Icons.ac_unit,
-    Icons.airplanemode_active,
-    Icons.access_alarm,
-    Icons.book,
-    Icons.brush,
-    Icons.cake,
+    BeerpongIcons.bunny_avatar,
+    BeerpongIcons.cat_avatar,
+    BeerpongIcons.dog_avatar,
+    BeerpongIcons.racoon_avatar,
+    BeerpongIcons.eagle_avatar,
+    BeerpongIcons.frog_avatar,
   ];
 
   final List<Color> _colorList = [

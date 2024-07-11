@@ -4,7 +4,8 @@ class BaseScreen extends StatefulWidget {
   final Widget child;
   final int selectedIndex;
 
-  const BaseScreen({required this.child, required this.selectedIndex, super.key});
+  const BaseScreen(
+      {required this.child, required this.selectedIndex, super.key});
 
   @override
   BaseScreenState createState() => BaseScreenState();
@@ -17,7 +18,8 @@ class BaseScreenState extends State<BaseScreen> {
       appBar: AppBar(
         automaticallyImplyLeading:
             false, // Prevents the back button from appearing
-        backgroundColor: Colors.amber, // Amber background color for app bar
+        backgroundColor:
+            Color(0xFFF0AE1D), // Amber background color for app bar
         title: Text(
           _getAppBarTitle(widget.selectedIndex),
           style: const TextStyle(
@@ -33,8 +35,8 @@ class BaseScreenState extends State<BaseScreen> {
           // Override the bottom navigation bar theme
           canvasColor:
               Colors.black, // Background color of the BottomNavigationBar
-          primaryColor:
-              Colors.amber, // Active color of the BottomNavigationBar icons
+          primaryColor: Color(
+              0xFFF0AE1D), // Active color of the BottomNavigationBar icons
           textTheme: Theme.of(context).textTheme.copyWith(
                 bodySmall: const TextStyle(
                     color: Colors
@@ -69,7 +71,7 @@ class BaseScreenState extends State<BaseScreen> {
             ),
           ],
           currentIndex: widget.selectedIndex,
-          selectedItemColor: Colors.amber,
+          selectedItemColor: Color(0xFFF0AE1D), // R 240 G 174 B 29
           onTap: _onItemTapped,
           showUnselectedLabels: true,
         ),
@@ -78,7 +80,7 @@ class BaseScreenState extends State<BaseScreen> {
   }
 
   Color _getIconColor(int index) {
-    return widget.selectedIndex == index ? Colors.amber : Colors.grey;
+    return widget.selectedIndex == index ? Color(0xFFF0AE1D) : Colors.grey;
   }
 
   String _getAppBarTitle(int index) {
@@ -88,7 +90,7 @@ class BaseScreenState extends State<BaseScreen> {
       case 1:
         return 'Friendlist';
       case 2:
-        return 'Beerpong!';
+        return '';
       case 3:
         return 'Statistics';
       case 4:
