@@ -5,7 +5,7 @@ import 'package:beerpongapp/firestoreservice.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
-
+import 'compare_stats_screen.dart';
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
@@ -139,6 +139,19 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     }
   }
 
+  void _showComparisonScreen(User friend) {
+    _userFuture.then((currentUser) {
+      if (currentUser != null) {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ComparisonScreen(
+            currentUser: currentUser,
+            friend: friend,
+          ),
+        ));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -234,6 +247,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                   'Total Score: ${friend.totalScore}',
                   style: const TextStyle(color: Colors.grey),
                 ),
+                onTap: () => _showComparisonScreen(friend),
               );
             },
           );
