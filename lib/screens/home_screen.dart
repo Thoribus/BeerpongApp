@@ -127,9 +127,9 @@ class HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
         color:
-            Color.fromRGBO(27, 26, 26, 1), // Set the background color to black
+            const Color.fromRGBO(27, 26, 26, 1), // Set the background color to black
         borderRadius: BorderRadius.circular(20.0),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black,
             blurRadius: 10,

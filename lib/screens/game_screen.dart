@@ -159,7 +159,7 @@ class _GameScreenState extends State<GameScreen> {
   void _checkBitchCup(int index) {
     if (currentTeam.cups
             .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
-        index == 4) {
+        index == 4 && currentTeam.cups.length == 10) {
       _showBitchCupDialog();
     }
   }
@@ -774,8 +774,10 @@ class _GameScreenState extends State<GameScreen> {
         cupRows.add(_buildCupRow(cups.sublist(5, 6)));
         break;
       case 5:
-        cupRows.add(_buildCupRow(cups.sublist(0, 3)));
-        cupRows.add(_buildCupRow(cups.sublist(3, 5)));
+        cupRows.add(_buildCupRow(cups.sublist(0, 1)));
+        cupRows.add(_buildCupRow(cups.sublist(1, 3)));
+        cupRows.add(_buildCupRow(cups.sublist(3, 4)));
+        cupRows.add(_buildCupRow(cups.sublist(4, 5)));
         break;
       case 4:
         cupRows.add(_buildCupRow(cups.sublist(0, 1)));
