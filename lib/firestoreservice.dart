@@ -17,6 +17,9 @@ class FirestoreService {
       totalMisses: player.user!.totalMisses += player.misses,
       totalAirballs: player.user!.totalAirballs += player.airballs,
       totalThrows: player.user!.totalThrows += player.throws,
+      onFire: player.user!.onFire += player.onFire,
+      defended: player.user!.defended += player.defended,
+      hitLastCup: player.user!.hitLastCup += player.lastCupHit ? 1 : 0,
       cupsHit: player.user!.cupsHit += player.cupsHit,
       wins: player.user!.wins += isWinner ? 1 : 0,
       losses: player.user!.losses += isWinner ? 0 : 1,
@@ -90,18 +93,22 @@ class FirestoreService {
     return User(
       id: doc.id,
       username: data['username'],
-      totalScore: data['totalScore'],
-      totalMisses: data['totalMisses'],
-      totalAirballs: data['totalAirballs'],
-      totalThrows: data['totalThrows'],
-      cupsHit: List<int>.from(data['cupsHit']),
-      wins: data['wins'],
-      losses: data['losses'],
-      friends: List<String>.from(data['friends']),
+      totalScore: data['totalScore'] ?? 0.0,
+      totalMisses: data['totalMisses'] ?? 0,
+      totalAirballs: data['totalAirballs'] ?? 0,
+      totalThrows: data['totalThrows'] ?? 0,
+      onFire: data['onFire'] ?? 0,
+      defended: data['defended'] ?? 0,
+      hitLastCup: data['hitLastCup'] ?? 0,
+      cupsHit: List<int>.from(data['cupsHit'] ?? []),
+      wins: data['wins'] ?? 0,
+      losses: data['losses'] ?? 0,
+      friends: List<String>.from(data['friends'] ?? []),
       icon: IconData(data['icon'], fontFamily: 'MaterialIcons'),
       iconColor: Color(data['iconColor']),
     );
   }
+
 
   // Fetch friends of a user
   Future<List<User>> getFriends(String userId) async {
@@ -180,7 +187,24 @@ class FirestoreService {
   // Update an existing user in Firestore
   Future<void> updateUser(User user) async {
     try {
-      await _db.collection('users').doc(user.id).update(user.toJson());
+      DocumentReference docRef = _db.collection('users').doc(user.id);
+      DocumentSnapshot docSnapshot = await docRef.get();
+
+      if (!docSnapshot.exists) {
+        await addUser(user);
+      } else {
+        Map<String, dynamic> data = user.toJson();
+        Map<String, dynamic> existingData = docSnapshot.data() as Map<String, dynamic>;
+
+        // Add missing fields with their default values
+        data.forEach((key, value) {
+          if (!existingData.containsKey(key)) {
+            existingData[key] = value;
+          }
+        });
+
+        await docRef.update(existingData);
+      }
     } catch (e) {
       print('Error updating user: $e');
       rethrow;

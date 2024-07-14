@@ -7,6 +7,9 @@ class User {
   int totalMisses;
   int totalAirballs;
   int totalThrows;
+  int onFire;
+  int defended;
+  int hitLastCup;
   List<int> cupsHit;
   int wins;
   int losses;
@@ -21,6 +24,9 @@ class User {
     this.totalMisses = 0,
     this.totalAirballs = 0,
     this.totalThrows = 0,
+    this.onFire = 0,
+    this.defended = 0,
+    this.hitLastCup = 0,
     this.cupsHit = const [],
     this.wins = 0,
     this.losses = 0,
@@ -44,6 +50,9 @@ class User {
       'totalMisses': totalMisses,
       'totalAirballs': totalAirballs,
       'totalThrows': totalThrows,
+      'onFire': onFire,
+      'defended': defended,
+      'hitLastCup': hitLastCup,
       'cupsHit': cupsHit,
       'wins': wins,
       'losses': losses,
@@ -62,6 +71,9 @@ class User {
       totalMisses: json['totalMisses'],
       totalAirballs: json['totalAirballs'],
       totalThrows: json['totalThrows'],
+      onFire: json['onFire'],
+      defended: json['defended'],
+      hitLastCup: json['hitLastCup'],
       cupsHit: List<int>.from(json['cupsHit']),
       wins: json['wins'],
       losses: json['losses'],

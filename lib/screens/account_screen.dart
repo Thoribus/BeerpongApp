@@ -1,3 +1,4 @@
+import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:google_sign_in/google_sign_in.dart';
@@ -24,6 +25,8 @@ class AccountScreenState extends State<AccountScreen> {
       FirestoreService().getUser(currentUser.uid).then((value) {
         setState(() {
           user = value;
+          selectedIcon = user?.icon ?? Icons.person;
+          selectedColor = user?.iconColor ?? Colors.blue;
         });
       });
     }
@@ -59,7 +62,7 @@ class AccountScreenState extends State<AccountScreen> {
                             backgroundColor: selectedColor,
                             child: Icon(
                               selectedIcon,
-                              size: 50,
+                              size: 80,
                               color: Colors.white,
                             ),
                           ),
@@ -109,10 +112,9 @@ class AccountScreenState extends State<AccountScreen> {
                                   'Total Score', '${user!.totalScore}'),
                               _buildDataRow(
                                   'Total Misses', '${user!.totalMisses}'),
-                              _buildDataRow('Total Airballs',
-                                  '${user!.totalAirballs}'),
                               _buildDataRow(
-                                  'Cups Hit', '${user!.cupsHit}'),
+                                  'Total Airballs', '${user!.totalAirballs}'),
+                              _buildDataRow('Cups Hit', '${user!.cupsHit}'),
                               _buildDataRow('Wins', '${user!.wins}'),
                               _buildDataRow('Losses', '${user!.losses}'),
                             ],
@@ -194,7 +196,7 @@ class AccountScreenState extends State<AccountScreen> {
       context: context,
       builder: (BuildContext context) {
         return SizedBox(
-          height: 200,
+          height: 400,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -224,13 +226,52 @@ class AccountScreenState extends State<AccountScreen> {
                           selectedIcon = icon;
                           user!.icon = icon;
                         });
-                        Navigator.pop(context);
                       },
                       child: CircleAvatar(
                         radius: 20,
                         backgroundColor:
                             selectedIcon == icon ? Colors.amber : Colors.grey,
                         child: Icon(icon, color: Colors.white),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Select Background Color',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                  ),
+                  itemCount: _colorList.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    Color color = _colorList[index];
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedColor = color;
+                          user!.iconColor = color;
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor:
+                            selectedColor == color ? Colors.amber : color,
+                        child: selectedColor == color
+                            ? const Icon(Icons.check, color: Colors.white)
+                            : null,
                       ),
                     );
                   },
@@ -244,15 +285,22 @@ class AccountScreenState extends State<AccountScreen> {
   }
 
   final List<IconData> _iconList = [
-    Icons.person,
-    Icons.favorite,
-    Icons.star,
-    Icons.directions_bike,
-    Icons.ac_unit,
-    Icons.airplanemode_active,
-    Icons.access_alarm,
-    Icons.book,
-    Icons.brush,
-    Icons.cake,
+    BeerpongIcons.bunny_avatar,
+    BeerpongIcons.cat_avatar,
+    BeerpongIcons.dog_avatar,
+    BeerpongIcons.racoon_avatar,
+    BeerpongIcons.eagle_avatar,
+    BeerpongIcons.frog_avatar,
+  ];
+
+  final List<Color> _colorList = [
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.yellow,
+    Colors.orange,
+    Colors.purple,
+    Colors.brown,
+    Colors.cyan,
   ];
 }

@@ -8,10 +8,13 @@ class Player {
   int throws;
   int misses; // The number of misses by the player
   int airballs; // The number of airballs by the player
-  bool hitThisRound; // Whether the player has hit a cup this round
+  int hitThisRound; // Whether the player has hit a cup this round
   List<int> cupsHit = []; // List of cup indices hit by the player
   bool lastCupHit = false;
   bool islandShotUsed = false;
+  int defended;
+  int consecuteiveHits;
+  int onFire;
   User? user;
 
   // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
@@ -21,8 +24,11 @@ class Player {
     this.throws = 0,
     this.misses = 0,
     this.airballs = 0,
+    this.defended = 0,
+    this.consecuteiveHits = 0,
     cupsHit,
-    this.hitThisRound = false,
+    this.hitThisRound = 0,
+    this.onFire = 0,
     this.islandShotUsed = false,
     this.user,
   }) : cupsHit = cupsHit ?? [];
@@ -33,15 +39,20 @@ class Player {
       ..misses = misses
       ..throws = throws
       ..airballs = airballs
+      ..defended = defended
+      ..onFire = onFire
       ..hitThisRound = hitThisRound
       ..islandShotUsed = islandShotUsed
+      ..lastCupHit = lastCupHit
+      ..consecuteiveHits = consecuteiveHits
       ..cupsHit = List.from(cupsHit);
   }
 
   // Method to increment the player's score
   void incrementScore() {
     score++; // Increase the score by 1
-    hitThisRound = true; // Mark that the player hit a cup this round
+    hitThisRound++; // Mark that the player hit a cup this round
+    consecuteiveHits++;
   }
 
   void incrementScoreBy(double points) {
@@ -51,6 +62,7 @@ class Player {
   // Method to increment the player's misses
   void incrementMisses() {
     misses++; // Increase the misses count by 1
+    consecuteiveHits = 0;
   }
 
   void incrementThrows() {
@@ -63,7 +75,16 @@ class Player {
 
   // Method to reset the hitThisRound flag
   void resetHitThisRound() {
-    hitThisRound = false; // Reset the flag to false
+    hitThisRound = 0; // Reset the flag to false
+  }
+
+  bool isOnFire() {
+    if (consecuteiveHits == 3) {
+      onFire++;
+      consecuteiveHits = 0;
+      return true;
+    }
+    return false;
   }
 
   // Method to increment the player's airballs
@@ -88,6 +109,9 @@ class Player {
       'cupsHit': cupsHit,
       'lastCupHit': lastCupHit,
       'islandShotUsed': islandShotUsed,
+      'defended': defended,
+      'consecuteiveHits': consecuteiveHits,
+      'onFire': onFire,
       'user': user?.toJson(), // Assuming User class has a toJson() method
     };
   }
@@ -103,6 +127,9 @@ class Player {
       cupsHit: List<int>.from(json['cupsHit']),
       hitThisRound: json['hitThisRound'],
       islandShotUsed: json['islandShotUsed'],
+      defended: json['defended'],
+      consecuteiveHits: json['consecuteiveHits'],
+      onFire: json['onFire'],
       user: json['user'] != null ? User.fromJson(json['user']) : null,
     )
       ..lastCupHit = json['lastCupHit'];

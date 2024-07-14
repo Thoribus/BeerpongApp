@@ -32,6 +32,10 @@ class Team {
     return players.sublist(0, 2);
   }
 
+  bool ballsBack() {
+    return currentPlayers.map((player) => player.hitThisRound).reduce((a, b) => a + b) == 2;
+  }
+
   @override
   String toString() {
     return 'Team: ${players.map((player) => player.name).join(', ')}';

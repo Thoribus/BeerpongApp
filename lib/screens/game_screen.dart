@@ -1,4 +1,6 @@
 import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/screens/base_screen.dart';
+import 'package:beerpongapp/screens/statistics_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import '../models/cup.dart';
@@ -104,8 +106,11 @@ class _GameScreenState extends State<GameScreen> {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
         _handleCupHit(cupIndex);
+        player.incrementThrows();
         _incrementPlayerScore(player);
-        _checkGameEnd(player);
+        _checkBallsBack();
+        _ckeckOnFire(player);
+        _checkGameEnd(player, cupIndex);
       },
     );
   }
@@ -124,7 +129,72 @@ class _GameScreenState extends State<GameScreen> {
             _incrementPlayerScore(player);
           }
         }
-        _checkGameEnd(player);
+        _checkGameEnd(player, currentTeam.cups.first.index);
+      },
+    );
+  }
+
+  void _ckeckOnFire(Player player) {
+    if (player.isOnFire()) {
+      _showOnFireDialog();
+    }
+  }
+
+  Future<void> _showOnFireDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('On Fire!'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Three consecutive hits!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _checkBallsBack() {
+    if (currentTeam.ballsBack()) {
+      setState(() {
+        for (var player in currentTeam.currentPlayers) {
+          player.resetHitThisRound();
+        }
+      });
+      _showBallsBackDialog();
+    }
+  }
+
+  Future<void> _showBallsBackDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Balls Back!'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('All players hit this round!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
+        );
       },
     );
   }
@@ -157,7 +227,8 @@ class _GameScreenState extends State<GameScreen> {
   void _checkBitchCup(int index) {
     if (currentTeam.cups
             .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
-        index == 4) {
+        index == 4 &&
+        currentTeam.cups.length == 10) {
       _showBitchCupDialog();
     }
   }
@@ -246,7 +317,6 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
     }
-    print(cup.index.toString() + " " + closeCupsCount.toString());
     return closeCupsCount == 0;
   }
 
@@ -283,11 +353,11 @@ class _GameScreenState extends State<GameScreen> {
   void _endTurn() {
     setState(() {
       for (var player in currentTeam.currentPlayers) {
-        if (!player.hitThisRound) {
+        if (player.hitThisRound == 0) {
           player.incrementMisses();
+          player.incrementThrows();
         }
         player.resetHitThisRound();
-        player.incrementThrows();
       }
 
       for (var cup in currentTeam.cups) {
@@ -297,6 +367,14 @@ class _GameScreenState extends State<GameScreen> {
       isTeamOneTurn = !isTeamOneTurn;
       currentTeam = isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
+
+      // Ensure the layout is built before checking for island cups
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
+        });
+      });
     });
   }
 
@@ -488,6 +566,14 @@ class _GameScreenState extends State<GameScreen> {
       this.islandShotActive = islandShotActive;
       currentTeam = this.isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
+
+      // Ensure the layout is built before checking for island cups
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
+        });
+      });
     });
   }
 
@@ -527,33 +613,41 @@ class _GameScreenState extends State<GameScreen> {
       team1.isRearranged = lastState['isRearranged1'];
       team2.isRearranged = lastState['isRearranged2'];
       currentTeam = isTeamOneTurn ? team1 : team2;
+
+      // Ensure the layout is built before checking for island cups
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
+        });
+      });
     });
   }
 
-  void _checkGameEnd(Player player) async {
+  void _checkGameEnd(Player player, int cupIndex) async {
     bool teamAllHit = currentTeam.cups
         .every((cup) => !cup.isVisible || cup.color == Colors.green);
 
     if (teamAllHit) {
       if (selectedRules['Nachwurf'] == true) {
-        bool enemyTurn = await _handleNachwurf();
+        bool enemyTurn = await _handleNachwurf(cupIndex);
         if (enemyTurn) {
           return; // If the enemy hits a cup, cancel the last cup hit and don't end the game
         }
       }
       setState(() {
         gameEnded = true;
-      
       });
+
       _setPlayerHitLastCup(player);
       await _clearGameState();
       await _saveGameStatistics();
-      
+
       _showGameEndDialog(context, currentTeam.players);
     }
   }
 
-  Future<bool> _handleNachwurf() async {
+  Future<bool> _handleNachwurf(int cupIndex) async {
     Team enemyTeam = currentTeam == team1 ? team2 : team1;
     bool enemyHit = false;
 
@@ -562,21 +656,27 @@ class _GameScreenState extends State<GameScreen> {
       'Enemy Team\'s Last Turn',
       enemyTeam.players,
       (player) {
+        setState(() {
+          player.defended++;
+        });
         _saveCurrentState();
         enemyHit = true;
-        _removeLastCupHit();
+        _removeLastCupHit(cupIndex);
       },
     );
 
     return enemyHit;
   }
 
-  void _removeLastCupHit() {
+  void _removeLastCupHit(int cupIndex) {
     setState(() {
-      Cup lastCup =
-          currentTeam.cups.lastWhere((cup) => cup.color == Colors.green);
-      lastCup.color = currentTeam.color;
-      lastCup.isVisible = true;
+      for (var player in currentTeam.players) {
+        player.lastCupHit = false;
+      }
+      currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).color =
+          currentTeam.color;
+      currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).isVisible =
+          true;
     });
   }
 
@@ -591,14 +691,24 @@ class _GameScreenState extends State<GameScreen> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                ...players.map((player) => Text(player.name)),
+                ...players.map((player) => Text("${player.name} ")),
+                const Text("have won the game!"),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('OK'),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BaseScreen(
+                        selectedIndex: 3, child: StatisticsScreen()),
+                  ),
+                );
+              },
             ),
           ],
         );
@@ -607,7 +717,10 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _saveGameStatistics() async {
-    bool blueTeamWin = team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green) ? false : true;
+    bool blueTeamWin =
+        team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green)
+            ? false
+            : true;
 
     FirestoreService().saveGame(
       team1: team1.players,
@@ -734,8 +847,10 @@ class _GameScreenState extends State<GameScreen> {
         cupRows.add(_buildCupRow(cups.sublist(5, 6)));
         break;
       case 5:
-        cupRows.add(_buildCupRow(cups.sublist(0, 3)));
-        cupRows.add(_buildCupRow(cups.sublist(3, 5)));
+        cupRows.add(_buildCupRow(cups.sublist(0, 1)));
+        cupRows.add(_buildCupRow(cups.sublist(1, 3)));
+        cupRows.add(_buildCupRow(cups.sublist(3, 4)));
+        cupRows.add(_buildCupRow(cups.sublist(4, 5)));
         break;
       case 4:
         cupRows.add(_buildCupRow(cups.sublist(0, 1)));
@@ -902,18 +1017,19 @@ class _GameScreenState extends State<GameScreen> {
         Visibility(
           visible: selectedRules["Island"] == true,
           child: FloatingActionButton(
-            backgroundColor:
-                currentTeam.cups.any((element) => element.isVisible && _isIslandCup(element))
-                    ? Colors.amber
-                    : Colors.grey,
+            backgroundColor: currentTeam.cups.any(
+                    (element) => element.isVisible && _isIslandCup(element))
+                ? Colors.amber
+                : Colors.grey,
             heroTag: "Island",
-            onPressed:
-                currentTeam.canIslandShot
-                    ? () {
-                        _highlightIslandCups();
-                      }
-                    : () {}, // Disable the button if the conditions are not met
-            child: const Icon(BeerpongIcons.palmtree, size: 45),
+            onPressed: currentTeam.canIslandShot &&
+                    currentTeam.cups.any(
+                        (element) => element.isVisible && _isIslandCup(element))
+                ? () {
+                    _highlightIslandCups();
+                  }
+                : () {}, // Disable the button if the conditions are not met
+            child: const Icon(BeerpongIcons.palm_tree, size: 45),
           ),
         )
       ],
