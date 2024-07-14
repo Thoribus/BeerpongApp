@@ -26,7 +26,7 @@ class SelectionScreenState extends State<SelectionScreen> {
   };
 
   String startingTeam = 'Team Blue'; // Add this line
-  String selectedSection = 'All Brackets';
+  String selectedSection = 'All'; // Default to 'All' when the screen is built
 
   bool get canStartGame {
     return players1.isNotEmpty &&
@@ -132,7 +132,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                 if (selectedSection == 'All' || selectedSection == 'Game Mode')
                   _buildBracketSection(
                     title: 'Game Mode',
-                    imagePath: 'assets/two_cats.svg',
+                    imagePath: 'assets/racoon_winner.svg',
                     content: _buildGameModeSelection(),
                     infoMessage: 'Choose the game mode you want to play.' +
                         '\n' +
@@ -148,7 +148,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                     selectedSection == 'Special Rules')
                   _buildBracketSection(
                     title: 'Special Rules',
-                    imagePath: 'assets/two_cats.svg',
+                    imagePath: 'assets/frog_island.svg',
                     content: _buildSpecialRulesSelection(),
                     infoMessage: 'Select any special rules for your game.' +
                         '\n' +
@@ -174,7 +174,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                     selectedSection == 'Starting Team')
                   _buildBracketSection(
                     title: 'Starting Team',
-                    imagePath: 'assets/two_cats.svg',
+                    imagePath: 'assets/cat_boxing.svg',
                     content: _buildStartingTeamSelection(),
                     infoMessage: 'Choose which team starts the game.',
                   ),
@@ -267,16 +267,23 @@ class SelectionScreenState extends State<SelectionScreen> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           padding: const EdgeInsets.all(16.0),
-          child: Row(
+          child: Column(
             children: [
-              SvgPicture.asset(
-                imagePath,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
+              Row(
+                children: [
+                  SvgPicture.asset(
+                    imagePath,
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: content),
+                ],
               ),
-              const SizedBox(width: 10),
-              Expanded(child: content),
+              const SizedBox(height: 20),
+              if (title == 'Players')
+                _buildTeamsSection(), // Add this line to conditionally display the team columns under the "Players" section.
             ],
           ),
         ),
@@ -319,56 +326,70 @@ class SelectionScreenState extends State<SelectionScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        (players1.isEmpty && players2.isEmpty)
-            ? Center(
-                child: ElevatedButton.icon(
+        if (players1.isEmpty && players2.isEmpty)
+          Center(
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber.withOpacity(0.75),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              ),
+              onPressed: () async {
+                await _showTeamDialog(team: 1);
+                await _showTeamDialog(team: 2);
+              },
+              icon: const Icon(Icons.add, size: 24, color: Colors.black),
+              label: const Text('Add Players',
+                  style: TextStyle(fontSize: 16, color: Colors.black)),
+            ),
+          )
+        else
+          Column(
+            children: [
+              const SizedBox(height: 10),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await _showTeamDialog(team: 1);
+                    await _showTeamDialog(team: 2);
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber.withOpacity(0.75),
+                    backgroundColor: Colors.amber.withOpacity(0.7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                   ),
-                  onPressed: () async {
-                    await _showTeamDialog(team: 1);
-                    await _showTeamDialog(team: 2);
-                  },
-                  icon: const Icon(Icons.add, size: 24, color: Colors.black),
-                  label: const Text('Add Players',
-                      style: TextStyle(fontSize: 16, color: Colors.black)),
+                  child: const Text('Edit Players',
+                      style: TextStyle(color: Colors.black)),
                 ),
-              )
-            : Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildTeamColumn(players1, 'Team Blue:'),
-                      _buildTeamColumn(players2, 'Team Red:'),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await _showTeamDialog(team: 1);
-                        await _showTeamDialog(team: 2);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.withOpacity(0.7),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 24),
-                      ),
-                      child: const Text('Edit Players',
-                          style: TextStyle(color: Colors.black)),
-                    ),
-                  ),
-                ],
               ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTeamsSection() {
+    return Column(
+      children: [
+        if (players1.isNotEmpty || players2.isNotEmpty)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: _buildTeamColumn(players1, 'Team Blue:'),
+              ),
+              const SizedBox(width: 10), // Small space between the columns
+              Expanded(
+                child: _buildTeamColumn(players2, 'Team Red:'),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -385,11 +406,16 @@ class SelectionScreenState extends State<SelectionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(teamName,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+          Text(
+            teamName,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            overflow:
+                TextOverflow.ellipsis, // Ensures the text doesn't overflow
+          ),
           const SizedBox(height: 8),
           ...players.map((player) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
@@ -397,9 +423,15 @@ class SelectionScreenState extends State<SelectionScreen> {
                   children: [
                     const Icon(Icons.person, color: Colors.white),
                     const SizedBox(width: 8),
-                    Text(player.name,
+                    Expanded(
+                      child: Text(
+                        player.name,
                         style:
-                            const TextStyle(fontSize: 16, color: Colors.white)),
+                            const TextStyle(fontSize: 16, color: Colors.white),
+                        overflow: TextOverflow
+                            .ellipsis, // Ensures the text doesn't overflow
+                      ),
+                    ),
                   ],
                 ),
               )),
@@ -524,7 +556,7 @@ class SelectionScreenState extends State<SelectionScreen> {
           child: ToggleButtons(
             borderRadius: BorderRadius.circular(8.0),
             selectedColor: Colors.black,
-            fillColor: Colors.amber,
+            fillColor: startingTeam == 'Team Blue' ? Colors.blue : Colors.red,
             onPressed: (int newIndex) {
               setState(() {
                 startingTeam = teams[newIndex];

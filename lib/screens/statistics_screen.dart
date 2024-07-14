@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:beerpongapp/firestoreservice.dart';
 import '../models/game_statistics.dart';
 import '../models/player.dart';
+import 'dart:math';
+import 'package:fl_chart/fl_chart.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -155,8 +157,8 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              ...players
-                  .map((player) => _buildPlayerRow(player, player == topPlayer)),
+              ...players.map(
+                  (player) => _buildPlayerRow(player, player == topPlayer)),
             ],
           ),
         ),
@@ -166,7 +168,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           width: 20,
         ),
         Icon(
-          isWinningTeam ? Icons.flag : Icons.close,
+          isWinningTeam ? Icons.close : Icons.flag,
           color: teamColor,
         ),
       ],
@@ -210,10 +212,36 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 }
 
-class GameDetailsPage extends StatelessWidget {
+class GameDetailsPage extends StatefulWidget {
   final GameStatistics game;
 
-  const GameDetailsPage({super.key, required this.game});
+  const GameDetailsPage({Key? key, required this.game}) : super(key: key);
+
+  @override
+  _GameDetailsPageState createState() => _GameDetailsPageState();
+}
+
+class _GameDetailsPageState extends State<GameDetailsPage> {
+  late PageController _pageController;
+  int _currentPage = 0;
+  bool _showTeam1Stats = true; // Track which team stats to show
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!.round();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -227,11 +255,86 @@ class GameDetailsPage extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.amber,
       ),
-      body: _buildGameStatsPage(game),
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _showTeam1Stats = true;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _showTeam1Stats ? Colors.blue : Colors.grey,
+                ),
+                child: Text('Team 1'),
+              ),
+              const SizedBox(width: 20),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _showTeam1Stats = false;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: !_showTeam1Stats ? Colors.red : Colors.grey,
+                ),
+                child: Text('Team 2'),
+              ),
+            ],
+          ),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              scrollDirection: Axis.horizontal,
+              children: [
+                _buildTeamStatsPage(widget.game),
+                _buildGameStatsPage(widget.game),
+              ],
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.black,
+    );
+  }
+
+  Widget _buildTeamStatsPage(GameStatistics game) {
+    List<Player> players =
+        _showTeam1Stats ? game.team1Players : game.team2Players;
+
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _showTeam1Stats ? 'Team 1 Stats' : 'Team 2 Stats',
+              style: TextStyle(
+                color: _showTeam1Stats ? Colors.blue : Colors.red,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Divider(
+              color: Colors.amber,
+              thickness: 1,
+            ),
+            const SizedBox(height: 10),
+            _buildDummyBarChart(), // Dummy bar chart
+            const SizedBox(height: 20),
+            _buildPlayerStats(players),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildGameStatsPage(GameStatistics game) {
+    // Replace with your game stats page implementation if needed
     return Container(
       color: Colors.black,
       child: SingleChildScrollView(
@@ -241,7 +344,7 @@ class GameDetailsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Team Statistics',
+                'Game Statistics',
                 style: TextStyle(
                   color: Colors.amber,
                   fontSize: 18,
@@ -253,10 +356,7 @@ class GameDetailsPage extends StatelessWidget {
                 thickness: 1,
               ),
               const SizedBox(height: 10),
-              _buildTeamStatsTable('Team 1', Colors.blue, game.team1Players),
-              const SizedBox(height: 20),
-              _buildTeamStatsTable('Team 2', Colors.red, game.team2Players),
-              const SizedBox(height: 50),
+              // Add additional game stats widgets as needed
             ],
           ),
         ),
@@ -264,59 +364,84 @@ class GameDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamStatsTable(
-      String teamName, Color teamColor, List<Player> players) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          teamName,
-          style: TextStyle(
-            color: teamColor,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+  Widget _buildDummyBarChart() {
+    List<Player> players =
+        _showTeam1Stats ? widget.game.team1Players : widget.game.team2Players;
+
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(8),
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          barTouchData: BarTouchData(enabled: false),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: SideTitles(
+              showTitles: true,
+              getTextStyles: (context, value) =>
+                  const TextStyle(color: Colors.white),
+              margin: 20,
+              getTitles: (double value) {
+                return players[value.toInt()]
+                    .name
+                    .substring(0, min(5, players[value.toInt()].name.length));
+              },
+            ),
+            leftTitles: SideTitles(showTitles: false),
           ),
-        ),
-        DataTable(
-          columns: const [
-            DataColumn(
-              label: Text('Player', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('S', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('M', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('T', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('A', style: TextStyle(color: Colors.white)),
+          borderData: FlBorderData(
+            show: false,
+          ),
+          barGroups: [
+            BarChartGroupData(
+              x: 0,
+              barRods: [
+                BarChartRodData(
+                  y: players[0].score.toDouble(),
+                  //color: Colors.blue,
+                ),
+              ],
             ),
           ],
-          rows: players.map((player) {
-            return DataRow(cells: [
-              DataCell(Row(
-                children: [
-                  Icon(Icons.person, color: teamColor),
-                  const SizedBox(width: 8),
-                  Text(player.name,
-                      style: const TextStyle(color: Colors.white)),
-                ],
-              )),
-              DataCell(Text('${player.score}',
-                  style: const TextStyle(color: Colors.white))),
-              DataCell(Text('${player.misses}',
-                  style: const TextStyle(color: Colors.white))),
-              DataCell(Text('${player.throws}',
-                  style: const TextStyle(color: Colors.white))),
-              DataCell(Text('${player.airballs}',
-                  style: const TextStyle(color: Colors.white))),
-            ]);
-          }).toList(),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildPlayerStats(List<Player> players) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: players.map((player) => _buildPlayerRow(player)).toList(),
+    );
+  }
+
+  Widget _buildPlayerRow(Player player) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(
+            Icons.person,
+            color: _showTeam1Stats ? Colors.blue : Colors.red,
+          ),
+          SizedBox(width: 8),
+          Text(
+            player.name,
+            style: TextStyle(color: Colors.white),
+          ),
+          Spacer(),
+          Text(
+            'Score: ${player.score}',
+            style: TextStyle(color: Colors.white),
+          ),
+          SizedBox(width: 16),
+          Text(
+            'Misses: ${player.misses}',
+            style: TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
     );
   }
 }

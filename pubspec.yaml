@@ -50,6 +50,7 @@ dependencies:
   qr_flutter: ^4.0.0
   barcode_scan2: ^4.1.6
   clipboard: ^0.1.3
+  fl_chart: ^0.40.0
 
 dev_dependencies:
   flutter_launcher_icons: "^0.13.1"
@@ -86,6 +87,9 @@ flutter:
     - assets/freinds-playing-beerpong-together.jpg
     - assets/amber_fullscreen_home.svg
     - assets/two_cats.svg
+    - assets/cat_boxing.svg
+    - assets/frog_island.svg
+    - assets/racoon_winner.svg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
