@@ -106,7 +106,10 @@ class _GameScreenState extends State<GameScreen> {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
         _handleCupHit(cupIndex);
+        player.incrementThrows();
         _incrementPlayerScore(player);
+        _checkBallsBack();
+        _ckeckOnFire(player);
         _checkGameEnd(player, cupIndex);
       },
     );
@@ -127,6 +130,71 @@ class _GameScreenState extends State<GameScreen> {
           }
         }
         _checkGameEnd(player, currentTeam.cups.first.index);
+      },
+    );
+  }
+
+  void _ckeckOnFire(Player player) {
+    if (player.isOnFire()) {
+      _showOnFireDialog();
+    }
+  }
+
+  Future<void> _showOnFireDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('On Fire!'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Three consecutive hits!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _checkBallsBack() {
+    if (currentTeam.ballsBack()) {
+      setState(() {
+        for (var player in currentTeam.currentPlayers) {
+          player.resetHitThisRound();
+        }
+      });
+      _showBallsBackDialog();
+    }
+  }
+
+  Future<void> _showBallsBackDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Balls Back!'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('All players hit this round!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
+        );
       },
     );
   }
@@ -159,7 +227,8 @@ class _GameScreenState extends State<GameScreen> {
   void _checkBitchCup(int index) {
     if (currentTeam.cups
             .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
-        index == 4 && currentTeam.cups.length == 10) {
+        index == 4 &&
+        currentTeam.cups.length == 10) {
       _showBitchCupDialog();
     }
   }
@@ -284,11 +353,11 @@ class _GameScreenState extends State<GameScreen> {
   void _endTurn() {
     setState(() {
       for (var player in currentTeam.currentPlayers) {
-        if (!player.hitThisRound) {
+        if (player.hitThisRound == 0) {
           player.incrementMisses();
+          player.incrementThrows();
         }
         player.resetHitThisRound();
-        player.incrementThrows();
       }
 
       for (var cup in currentTeam.cups) {
@@ -302,8 +371,8 @@ class _GameScreenState extends State<GameScreen> {
       // Ensure the layout is built before checking for island cups
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          currentTeam.canIslandShot = currentTeam.cups
-              .any((cup) => cup.isVisible && _isIslandCup(cup));
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
         });
       });
     });
@@ -501,8 +570,8 @@ class _GameScreenState extends State<GameScreen> {
       // Ensure the layout is built before checking for island cups
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          currentTeam.canIslandShot = currentTeam.cups
-              .any((cup) => cup.isVisible && _isIslandCup(cup));
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
         });
       });
     });
@@ -548,8 +617,8 @@ class _GameScreenState extends State<GameScreen> {
       // Ensure the layout is built before checking for island cups
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          currentTeam.canIslandShot = currentTeam.cups
-              .any((cup) => cup.isVisible && _isIslandCup(cup));
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
         });
       });
     });
@@ -569,6 +638,7 @@ class _GameScreenState extends State<GameScreen> {
       setState(() {
         gameEnded = true;
       });
+
       _setPlayerHitLastCup(player);
       await _clearGameState();
       await _saveGameStatistics();
@@ -600,6 +670,9 @@ class _GameScreenState extends State<GameScreen> {
 
   void _removeLastCupHit(int cupIndex) {
     setState(() {
+      for (var player in currentTeam.players) {
+        player.lastCupHit = false;
+      }
       currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).color =
           currentTeam.color;
       currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).isVisible =
