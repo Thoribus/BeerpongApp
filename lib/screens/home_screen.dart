@@ -3,6 +3,9 @@ import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import the SVG package
+import 'package:beerpongapp/firestoreservice.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:beerpongapp/models/user.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,11 +16,13 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
+  User? user; // Add a user variable
 
   @override
   void initState() {
     super.initState();
     _checkSavedGame();
+    if (auth.FirebaseAuth.instance.currentUser != null) FirestoreService().getUser(auth.FirebaseAuth.instance.currentUser!.uid).then((value) => user = value); // Get the current user
   }
 
   Future<void> _checkSavedGame() async {
@@ -111,9 +116,9 @@ class HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
       alignment: Alignment.centerLeft,
-      child: const Text(
-        'Welcome Back, User!',
-        style: TextStyle(
+      child: Text(
+        'Welcome Back, ${user?.username ?? "User"}', // Update the welcome message
+        style: const TextStyle(
           color: Colors.black, // Set the text color to amber
           fontSize: 24,
           fontWeight: FontWeight.bold,
@@ -126,8 +131,8 @@ class HomeScreenState extends State<HomeScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
-        color:
-            const Color.fromRGBO(27, 26, 26, 1), // Set the background color to black
+        color: const Color.fromRGBO(
+            27, 26, 26, 1), // Set the background color to black
         borderRadius: BorderRadius.circular(20.0),
         boxShadow: const [
           BoxShadow(
