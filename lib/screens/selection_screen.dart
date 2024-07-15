@@ -47,8 +47,8 @@ class SelectionScreenState extends State<SelectionScreen> {
         return AlertDialog(
           backgroundColor: Colors.amber,
           title: Text(
-            'Select ' + title,
-            style: TextStyle(
+            'Select $title',
+            style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold, // Make the title text bold
             ),
@@ -79,7 +79,7 @@ class SelectionScreenState extends State<SelectionScreen> {
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: Color(0xFFF0AE1D),
+          backgroundColor: const Color(0xFFF0AE1D),
         ),
         body: Container(
           color: Colors.black,
@@ -119,30 +119,14 @@ class SelectionScreenState extends State<SelectionScreen> {
                     title: 'Players',
                     imagePath: 'assets/two_cats.svg',
                     content: _buildPlayersSelection(),
-                    infoMessage: 'Select the players for your game.' +
-                        '\n' +
-                        '' +
-                        '\n' +
-                        'Add at least one player per team. You can add friends or custom players to each team.' +
-                        '\n' +
-                        '' +
-                        '\n' +
-                        'Statistics will only be saved when accounts are selected!',
+                    infoMessage: 'Select the players for your game.\n\nAdd at least one player per team. You can add friends or custom players to each team.\n\nStatistics will only be saved when accounts are selected!',
                   ),
                 if (selectedSection == 'All' || selectedSection == 'Game Mode')
                   _buildBracketSection(
                     title: 'Game Mode',
                     imagePath: 'assets/racoon_winner.svg',
                     content: _buildGameModeSelection(),
-                    infoMessage: 'Choose the game mode you want to play.' +
-                        '\n' +
-                        '' +
-                        '\n' +
-                        'A single game creates a match between two players/teams.' +
-                        '\n' +
-                        '' +
-                        '\n' +
-                        'A tournament creates a  several matcheas between multiple players/teams.',
+                    infoMessage: 'Choose the game mode you want to play.\n\nA single game creates a match between two players/teams.\n\nA tournament creates a  several matcheas between multiple players/teams.',
                   ),
                 if (selectedSection == 'All' ||
                     selectedSection == 'Special Rules')
@@ -150,25 +134,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                     title: 'Special Rules',
                     imagePath: 'assets/frog_island.svg',
                     content: _buildSpecialRulesSelection(),
-                    infoMessage: 'Select any special rules for your game.' +
-                        '\n' +
-                        '' +
-                        '\n' +
-                        'DEATHCUP.' +
-                        '\n' +
-                        'When a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.' +
-                        '\n' +
-                        'The team that hits the deathcup automatically wins!' +
-                        '\n' +
-                        '' +
-                        '\n' +
-                        'ISLAND.' +
-                        '\n' +
-                        'A player can declare an island-shot (once per game) when a single cup has no surrounding cups.' +
-                        '\n' +
-                        'When an ISLAND is hit, an additional cup is cleared from the field!' +
-                        '\n' +
-                        '',
+                    infoMessage: 'Select any special rules for your game.\n\nDEATHCUP.\nWhen a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.\nThe team that hits the deathcup automatically wins!\n\nISLAND.\nA player can declare an island-shot (once per game) when a single cup has no surrounding cups.\nWhen an ISLAND is hit, an additional cup is cleared from the field!\n',
                   ),
                 if (selectedSection == 'All' ||
                     selectedSection == 'Starting Team')
@@ -203,7 +169,7 @@ class SelectionScreenState extends State<SelectionScreen> {
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(
               color:
-                  selectedSection == section ? Color(0xFFF0AE1D) : Colors.grey,
+                  selectedSection == section ? const Color(0xFFF0AE1D) : Colors.grey,
               width: 2,
             ),
           ),
@@ -212,7 +178,7 @@ class SelectionScreenState extends State<SelectionScreen> {
             section,
             style: TextStyle(
               color:
-                  selectedSection == section ? Color(0xFFF0AE1D) : Colors.grey,
+                  selectedSection == section ? const Color(0xFFF0AE1D) : Colors.grey,
             ),
           ),
         ),
@@ -310,7 +276,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                 min: 1,
                 max: 4,
                 divisions: 3,
-                activeColor: Color(0xFFF0AE1D),
+                activeColor: const Color(0xFFF0AE1D),
                 label: '$_numPlayers',
                 onChanged: (double value) {
                   setState(() {
@@ -479,7 +445,7 @@ class SelectionScreenState extends State<SelectionScreen> {
           child: ToggleButtons(
             borderRadius: BorderRadius.circular(8.0),
             selectedColor: Colors.black,
-            fillColor: Color(0xFFF0AE1D),
+            fillColor: const Color(0xFFF0AE1D),
             onPressed: (int newIndex) {
               setState(() {
                 selectedGameMode = gameModes[newIndex];
@@ -531,7 +497,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                         value;
                   });
                 },
-                activeColor: Color(0xFFF0AE1D),
+                activeColor: const Color(0xFFF0AE1D),
                 inactiveThumbColor: Colors.black,
               ),
             );
@@ -592,7 +558,7 @@ class SelectionScreenState extends State<SelectionScreen> {
               }
             : () {},
         style: ElevatedButton.styleFrom(
-          backgroundColor: canStartGame ? Color(0xFFF0AE1D) : Colors.grey,
+          backgroundColor: canStartGame ? const Color(0xFFF0AE1D) : Colors.grey,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),

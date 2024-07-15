@@ -51,12 +51,19 @@ class Player {
   // Method to increment the player's score
   void incrementScore() {
     score++; // Increase the score by 1
-    hitThisRound++; // Mark that the player hit a cup this round
+  }
+
+  void incrementHitThisRound() {
+    hitThisRound++;
     consecuteiveHits++;
   }
 
   void incrementScoreBy(double points) {
     score += points;
+  }
+
+  void decrementScore() {
+    score--;
   }
 
   // Method to increment the player's misses
@@ -118,6 +125,9 @@ class Player {
 
   // Method to decode Player instance from JSON
   factory Player.fromJson(Map<String, dynamic> json) {
+    if (json["hitThisRound"] is bool) {
+      json["hitThisRound"] = json["hitThisRound"] ? 1 : 0;
+    }
     return Player(
       name: json['name'],
       score: json['score'],
@@ -127,9 +137,9 @@ class Player {
       cupsHit: List<int>.from(json['cupsHit']),
       hitThisRound: json['hitThisRound'],
       islandShotUsed: json['islandShotUsed'],
-      defended: json['defended'],
-      consecuteiveHits: json['consecuteiveHits'],
-      onFire: json['onFire'],
+      defended: json['defended'] ?? 0,
+      consecuteiveHits: json['consecuteiveHits'] ?? 0,
+      onFire: json['onFire'] ?? 0,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
     )
       ..lastCupHit = json['lastCupHit'];

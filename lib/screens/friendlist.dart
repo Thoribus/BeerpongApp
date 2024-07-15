@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../models/user.dart';
-import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';

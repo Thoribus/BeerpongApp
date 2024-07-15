@@ -1,7 +1,7 @@
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import '../models/game_statistics.dart';
 import '../models/player.dart';
 import 'dart:math';
@@ -215,13 +215,13 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 class GameDetailsPage extends StatefulWidget {
   final GameStatistics game;
 
-  const GameDetailsPage({Key? key, required this.game}) : super(key: key);
+  const GameDetailsPage({super.key, required this.game});
 
   @override
-  _GameDetailsPageState createState() => _GameDetailsPageState();
+  GameDetailsPageState createState() => GameDetailsPageState();
 }
 
-class _GameDetailsPageState extends State<GameDetailsPage> {
+class GameDetailsPageState extends State<GameDetailsPage> {
   late PageController _pageController;
   int _currentPage = 0;
   bool _showTeam1Stats = true; // Track which team stats to show
@@ -269,7 +269,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _showTeam1Stats ? Colors.blue : Colors.grey,
                 ),
-                child: Text('Team 1'),
+                child: const Text('Team 1'),
               ),
               const SizedBox(width: 20),
               ElevatedButton(
@@ -281,7 +281,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: !_showTeam1Stats ? Colors.red : Colors.grey,
                 ),
-                child: Text('Team 2'),
+                child: const Text('Team 2'),
               ),
             ],
           ),
@@ -337,13 +337,13 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
     // Replace with your game stats page implementation if needed
     return Container(
       color: Colors.black,
-      child: SingleChildScrollView(
+      child: const SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Game Statistics',
                 style: TextStyle(
                   color: Colors.amber,
@@ -351,11 +351,11 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Divider(
+              Divider(
                 color: Colors.amber,
                 thickness: 1,
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               // Add additional game stats widgets as needed
             ],
           ),
@@ -425,20 +425,20 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
             Icons.person,
             color: _showTeam1Stats ? Colors.blue : Colors.red,
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Text(
             player.name,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
-          Spacer(),
+          const Spacer(),
           Text(
             'Score: ${player.score}',
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Text(
             'Misses: ${player.misses}',
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
         ],
       ),
