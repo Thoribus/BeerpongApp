@@ -1,8 +1,10 @@
-import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/screens/base_screen.dart';
-import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:provider/provider.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
 import 'dart:math';
@@ -101,12 +103,13 @@ class _GameScreenState extends State<GameScreen> {
     await _showSelectionDialog(
       context,
       'Select Player',
-      currentTeam.players,
+      currentTeam.currentPlayers,
       (player) {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
         _handleCupHit(cupIndex);
-        player.incrementThrows();
+        _incrementPlayerThrows(player);
+        _incrementPlayerHitThisRound(player);
         _incrementPlayerScore(player);
         _checkBallsBack();
         _ckeckOnFire(player);
@@ -205,9 +208,33 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  void _decrementPlayerScore(Player player) {
+    setState(() {
+      player.decrementScore();
+    });
+  }
+
   void _addCupToPlayer(Player player, int cupIndex) {
     setState(() {
       player.hitCup(cupIndex);
+    });
+  }
+
+  void _incrementPlayerThrows(Player player) {
+    setState(() {
+      player.incrementThrows();
+    });
+  }
+
+  void _incrementPlayerMisses(Player player) {
+    setState(() {
+      player.incrementMisses();
+    });
+  }
+
+  void _incrementPlayerHitThisRound(Player player) {
+    setState(() {
+      player.incrementHitThisRound();
     });
   }
 
@@ -331,6 +358,8 @@ class _GameScreenState extends State<GameScreen> {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
         _incrementPlayerScore(player);
+        _incrementPlayerHitThisRound(player);
+        _incrementPlayerThrows(player);
         _handleCupHit(cupIndex);
         _incrementPlayerScore(player);
         _handleCupHit(currentTeam.cups
@@ -346,6 +375,7 @@ class _GameScreenState extends State<GameScreen> {
           }
           islandShotActive = false;
         });
+        _checkGameEnd(player, cupIndex);
       },
     );
   }
@@ -354,9 +384,10 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       for (var player in currentTeam.currentPlayers) {
         if (player.hitThisRound == 0) {
-          player.incrementMisses();
-          player.incrementThrows();
+          _incrementPlayerMisses(player);
+          _incrementPlayerThrows(player);
         }
+        print(player.toJson());
         player.resetHitThisRound();
       }
 
@@ -492,8 +523,8 @@ class _GameScreenState extends State<GameScreen> {
   void _incrementPlayerAirballs(Player player) {
     setState(() {
       player.incrementAirballs();
-      int teamAirballs = currentTeam.currentPlayers
-          .fold(0, (sum, player) => sum + player.airballs);
+      int teamAirballs =
+          currentTeam.players.fold(0, (sum, player) => sum + player.airballs);
       if (teamAirballs % 3 == 0) {
         _showAirballDialog(context, teamAirballs);
       }
@@ -632,6 +663,7 @@ class _GameScreenState extends State<GameScreen> {
       if (selectedRules['Nachwurf'] == true) {
         bool enemyTurn = await _handleNachwurf(cupIndex);
         if (enemyTurn) {
+          _decrementPlayerScore(player);
           return; // If the enemy hits a cup, cancel the last cup hit and don't end the game
         }
       }
@@ -698,14 +730,25 @@ class _GameScreenState extends State<GameScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('OK'),
+              child: const Text('Go to Stats'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const BaseScreen(
-                        selectedIndex: 3, child: StatisticsScreen()),
+                    builder: (context) => const BaseScreen(selectedIndex: 3),
+                  ),
+                );
+              },
+            ),
+            TextButton(
+              child: const Text('Go to Home'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BaseScreen(selectedIndex: 2),
                   ),
                 );
               },
@@ -722,11 +765,23 @@ class _GameScreenState extends State<GameScreen> {
             ? false
             : true;
 
-    FirestoreService().saveGame(
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<User> updatedUsers = await FirestoreService().saveGame(
       team1: team1.players,
       team2: team2.players,
       winner: blueTeamWin ? "Team 1" : "Team 2",
     );
+
+    // Check if the current user is in the updated users list
+    bool userExists =
+        updatedUsers.any((user) => user.id == userProvider.user?.id);
+    // Find the updated current user and refresh the UserProvider
+    if (userExists) {
+      User currentUser =
+          updatedUsers.firstWhere((user) => user.id == userProvider.user?.id);
+
+      userProvider.updateUser(currentUser);
+    }
   }
 
   @override

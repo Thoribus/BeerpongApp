@@ -2,7 +2,6 @@ import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/player.dart';
 
@@ -29,15 +28,16 @@ class FirestoreService {
     );
   }
 
-  Future<void> saveGame({
+  Future<List<User>> saveGame({
     required List<Player> team1,
     required List<Player> team2,
     required String winner,
   }) async {
+    List<User> updatedUsers = [];
     try {
       List<String> participants = [
-        ...team1.map((player) => player.user != null ? player.user!.id : ""),
-        ...team2.map((player) => player.user != null ? player.user!.id : "")
+        ...team1.map((player) => player.user != null ? player.user!.id : ''),
+        ...team2.map((player) => player.user != null ? player.user!.id : ''),
       ];
       await _db.collection('games').add({
         'team1': team1.map((player) => player.toJson()).toList(),
@@ -51,17 +51,21 @@ class FirestoreService {
         if (player.user != null) {
           User user = mapPlayerToUser(player, winner == 'Team 1');
           await updateUser(user);
+          updatedUsers.add(user);
         }
       }
       for (Player player in team2) {
         if (player.user != null) {
           User user = mapPlayerToUser(player, winner == 'Team 2');
           await updateUser(user);
+          updatedUsers.add(user);
         }
       }
+      
     } catch (e) {
       print('Error saving game: $e');
     }
+    return updatedUsers;
   }
 
   Future<List<GameStatistics>> retrieveGames() async {
@@ -104,7 +108,7 @@ class FirestoreService {
       wins: data['wins'] ?? 0,
       losses: data['losses'] ?? 0,
       friends: List<String>.from(data['friends'] ?? []),
-      icon: IconData(data['icon'], fontFamily: 'MaterialIcons'),
+      icon: IconData(data['icon'], fontFamily: 'BeerpongIcons', fontPackage: null),
       iconColor: Color(data['iconColor']),
     );
   }
@@ -150,30 +154,6 @@ class FirestoreService {
     }
   }
 
-  // Sign in with Google and return the authenticated user
-  Future<auth.User?> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        return null; // The user canceled the sign-in
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      auth.UserCredential userCredential =
-          await auth.FirebaseAuth.instance.signInWithCredential(credential);
-      return userCredential.user;
-    } catch (e) {
-      print('Error during Google Sign-In: $e');
-      rethrow;
-    }
-  }
-
   // Add a new user to Firestore
   Future<void> addUser(User user) async {
     try {
@@ -185,26 +165,11 @@ class FirestoreService {
   }
 
   // Update an existing user in Firestore
-  Future<void> updateUser(User user) async {
+   Future<void> updateUser(User user) async {
     try {
       DocumentReference docRef = _db.collection('users').doc(user.id);
-      DocumentSnapshot docSnapshot = await docRef.get();
-
-      if (!docSnapshot.exists) {
-        await addUser(user);
-      } else {
-        Map<String, dynamic> data = user.toJson();
-        Map<String, dynamic> existingData = docSnapshot.data() as Map<String, dynamic>;
-
-        // Add missing fields with their default values
-        data.forEach((key, value) {
-          if (!existingData.containsKey(key)) {
-            existingData[key] = value;
-          }
-        });
-
-        await docRef.update(existingData);
-      }
+      Map<String, dynamic> data = user.toJson();
+      await docRef.update(data);
     } catch (e) {
       print('Error updating user: $e');
       rethrow;

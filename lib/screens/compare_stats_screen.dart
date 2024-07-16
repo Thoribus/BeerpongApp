@@ -6,10 +6,10 @@ class ComparisonScreen extends StatelessWidget {
   final User friend;
 
   const ComparisonScreen({
-    Key? key,
+    super.key,
     required this.currentUser,
     required this.friend,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
