@@ -1,8 +1,10 @@
-import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/screens/base_screen.dart';
-import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:provider/provider.dart';
 import '../models/cup.dart';
 import '../models/player.dart';
 import 'dart:math';
@@ -101,12 +103,16 @@ class _GameScreenState extends State<GameScreen> {
     await _showSelectionDialog(
       context,
       'Select Player',
-      currentTeam.players,
+      currentTeam.currentPlayers,
       (player) {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
         _handleCupHit(cupIndex);
+        _incrementPlayerThrows(player);
+        _incrementPlayerHitThisRound(player);
         _incrementPlayerScore(player);
+        _checkBallsBack();
+        _ckeckOnFire(player);
         _checkGameEnd(player, cupIndex);
       },
     );
@@ -131,15 +137,104 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
+  void _ckeckOnFire(Player player) {
+    if (player.isOnFire()) {
+      _showOnFireDialog();
+    }
+  }
+
+  Future<void> _showOnFireDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('On Fire!'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Three consecutive hits!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _checkBallsBack() {
+    if (currentTeam.ballsBack()) {
+      setState(() {
+        for (var player in currentTeam.currentPlayers) {
+          player.resetHitThisRound();
+        }
+      });
+      _showBallsBackDialog();
+    }
+  }
+
+  Future<void> _showBallsBackDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Balls Back!'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('All players hit this round!'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _incrementPlayerScore(Player player) {
     setState(() {
       player.incrementScore();
     });
   }
 
+  void _decrementPlayerScore(Player player) {
+    setState(() {
+      player.decrementScore();
+    });
+  }
+
   void _addCupToPlayer(Player player, int cupIndex) {
     setState(() {
       player.hitCup(cupIndex);
+    });
+  }
+
+  void _incrementPlayerThrows(Player player) {
+    setState(() {
+      player.incrementThrows();
+    });
+  }
+
+  void _incrementPlayerMisses(Player player) {
+    setState(() {
+      player.incrementMisses();
+    });
+  }
+
+  void _incrementPlayerHitThisRound(Player player) {
+    setState(() {
+      player.incrementHitThisRound();
     });
   }
 
@@ -159,7 +254,8 @@ class _GameScreenState extends State<GameScreen> {
   void _checkBitchCup(int index) {
     if (currentTeam.cups
             .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
-        index == 4) {
+        index == 4 &&
+        currentTeam.cups.length == 10) {
       _showBitchCupDialog();
     }
   }
@@ -262,6 +358,8 @@ class _GameScreenState extends State<GameScreen> {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
         _incrementPlayerScore(player);
+        _incrementPlayerHitThisRound(player);
+        _incrementPlayerThrows(player);
         _handleCupHit(cupIndex);
         _incrementPlayerScore(player);
         _handleCupHit(currentTeam.cups
@@ -277,6 +375,7 @@ class _GameScreenState extends State<GameScreen> {
           }
           islandShotActive = false;
         });
+        _checkGameEnd(player, cupIndex);
       },
     );
   }
@@ -284,11 +383,12 @@ class _GameScreenState extends State<GameScreen> {
   void _endTurn() {
     setState(() {
       for (var player in currentTeam.currentPlayers) {
-        if (!player.hitThisRound) {
-          player.incrementMisses();
+        if (player.hitThisRound == 0) {
+          _incrementPlayerMisses(player);
+          _incrementPlayerThrows(player);
         }
+        print(player.toJson());
         player.resetHitThisRound();
-        player.incrementThrows();
       }
 
       for (var cup in currentTeam.cups) {
@@ -302,8 +402,8 @@ class _GameScreenState extends State<GameScreen> {
       // Ensure the layout is built before checking for island cups
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          currentTeam.canIslandShot = currentTeam.cups
-              .any((cup) => cup.isVisible && _isIslandCup(cup));
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
         });
       });
     });
@@ -423,8 +523,8 @@ class _GameScreenState extends State<GameScreen> {
   void _incrementPlayerAirballs(Player player) {
     setState(() {
       player.incrementAirballs();
-      int teamAirballs = currentTeam.currentPlayers
-          .fold(0, (sum, player) => sum + player.airballs);
+      int teamAirballs =
+          currentTeam.players.fold(0, (sum, player) => sum + player.airballs);
       if (teamAirballs % 3 == 0) {
         _showAirballDialog(context, teamAirballs);
       }
@@ -501,8 +601,8 @@ class _GameScreenState extends State<GameScreen> {
       // Ensure the layout is built before checking for island cups
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          currentTeam.canIslandShot = currentTeam.cups
-              .any((cup) => cup.isVisible && _isIslandCup(cup));
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
         });
       });
     });
@@ -548,8 +648,8 @@ class _GameScreenState extends State<GameScreen> {
       // Ensure the layout is built before checking for island cups
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          currentTeam.canIslandShot = currentTeam.cups
-              .any((cup) => cup.isVisible && _isIslandCup(cup));
+          currentTeam.canIslandShot =
+              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
         });
       });
     });
@@ -563,12 +663,14 @@ class _GameScreenState extends State<GameScreen> {
       if (selectedRules['Nachwurf'] == true) {
         bool enemyTurn = await _handleNachwurf(cupIndex);
         if (enemyTurn) {
+          _decrementPlayerScore(player);
           return; // If the enemy hits a cup, cancel the last cup hit and don't end the game
         }
       }
       setState(() {
         gameEnded = true;
       });
+
       _setPlayerHitLastCup(player);
       await _clearGameState();
       await _saveGameStatistics();
@@ -600,6 +702,9 @@ class _GameScreenState extends State<GameScreen> {
 
   void _removeLastCupHit(int cupIndex) {
     setState(() {
+      for (var player in currentTeam.players) {
+        player.lastCupHit = false;
+      }
       currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).color =
           currentTeam.color;
       currentTeam.cups.firstWhere((cup) => cup.index == cupIndex).isVisible =
@@ -625,14 +730,25 @@ class _GameScreenState extends State<GameScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('OK'),
+              child: const Text('Go to Stats'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const BaseScreen(
-                        selectedIndex: 3, child: StatisticsScreen()),
+                    builder: (context) => const BaseScreen(selectedIndex: 3),
+                  ),
+                );
+              },
+            ),
+            TextButton(
+              child: const Text('Go to Home'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BaseScreen(selectedIndex: 2),
                   ),
                 );
               },
@@ -649,11 +765,23 @@ class _GameScreenState extends State<GameScreen> {
             ? false
             : true;
 
-    FirestoreService().saveGame(
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    List<User> updatedUsers = await FirestoreService().saveGame(
       team1: team1.players,
       team2: team2.players,
       winner: blueTeamWin ? "Team 1" : "Team 2",
     );
+
+    // Check if the current user is in the updated users list
+    bool userExists =
+        updatedUsers.any((user) => user.id == userProvider.user?.id);
+    // Find the updated current user and refresh the UserProvider
+    if (userExists) {
+      User currentUser =
+          updatedUsers.firstWhere((user) => user.id == userProvider.user?.id);
+
+      userProvider.updateUser(currentUser);
+    }
   }
 
   @override
@@ -774,8 +902,10 @@ class _GameScreenState extends State<GameScreen> {
         cupRows.add(_buildCupRow(cups.sublist(5, 6)));
         break;
       case 5:
-        cupRows.add(_buildCupRow(cups.sublist(0, 3)));
-        cupRows.add(_buildCupRow(cups.sublist(3, 5)));
+        cupRows.add(_buildCupRow(cups.sublist(0, 1)));
+        cupRows.add(_buildCupRow(cups.sublist(1, 3)));
+        cupRows.add(_buildCupRow(cups.sublist(3, 4)));
+        cupRows.add(_buildCupRow(cups.sublist(4, 5)));
         break;
       case 4:
         cupRows.add(_buildCupRow(cups.sublist(0, 1)));

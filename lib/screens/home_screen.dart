@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game_screen.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Import the SVG package
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,12 +56,12 @@ class HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          backgroundColor: Colors.amber, // Set dialog background color to amber
+          backgroundColor: Colors.amber,
           title: const Text(
             'New Game',
             style: TextStyle(
               color: Colors.black,
-              fontWeight: FontWeight.bold, // Make the title text bold
+              fontWeight: FontWeight.bold,
             ),
           ),
           content: const Text(
@@ -74,7 +76,7 @@ class HomeScreenState extends State<HomeScreen> {
                 'Cancel',
                 style: TextStyle(
                   color: Colors.black,
-                  fontWeight: FontWeight.bold, // Make the button text bold
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               onPressed: () {
@@ -86,7 +88,7 @@ class HomeScreenState extends State<HomeScreen> {
                 'Start New Game',
                 style: TextStyle(
                   color: Colors.black,
-                  fontWeight: FontWeight.bold, // Make the button text bold
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               onPressed: () async {
@@ -106,19 +108,23 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWelcomeText() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
-      alignment: Alignment.centerLeft,
-      child: const Text(
-        'Welcome Back, User!',
-        style: TextStyle(
-          color: Colors.black, // Set the text color to amber
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+  Widget _buildWelcomeText(BuildContext context) {
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Welcome Back, ${userProvider.user?.username ?? "User"}',
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -126,10 +132,9 @@ class HomeScreenState extends State<HomeScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
-        color:
-            Color.fromRGBO(27, 26, 26, 1), // Set the background color to black
+        color: const Color.fromRGBO(27, 26, 26, 1),
         borderRadius: BorderRadius.circular(20.0),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Colors.black,
             blurRadius: 10,
@@ -147,7 +152,7 @@ class HomeScreenState extends State<HomeScreen> {
                 const Text(
                   'New Game',
                   style: TextStyle(
-                    color: Colors.amber, // Set the text color to amber
+                    color: Colors.amber,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -155,8 +160,7 @@ class HomeScreenState extends State<HomeScreen> {
                 if (_hasSavedGame)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Colors.green, // Set the button color to green
+                      backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 24),
                       shape: const RoundedRectangleBorder(
@@ -179,14 +183,12 @@ class HomeScreenState extends State<HomeScreen> {
                     },
                     child: const Text(
                       'Resume',
-                      style: TextStyle(
-                          color: Colors.black), // Set the text color to black
+                      style: TextStyle(color: Colors.black),
                     ),
                   ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.amber, // Set the button color to amber
+                    backgroundColor: Colors.amber,
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                     shape: const RoundedRectangleBorder(
@@ -207,7 +209,7 @@ class HomeScreenState extends State<HomeScreen> {
                   },
                   child: const Icon(
                     Icons.add,
-                    color: Colors.black, // Set the icon color to black
+                    color: Colors.black,
                   ),
                 ),
               ],
@@ -228,19 +230,17 @@ class HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Background SVG Image
           Positioned.fill(
             child: SvgPicture.asset(
-              'assets/amber_fullscreen_home.svg', // Updated to use asset directory
+              'assets/amber_fullscreen_home.svg',
               fit: BoxFit.cover,
             ),
           ),
-          // Content
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                _buildWelcomeText(),
+                _buildWelcomeText(context),
                 const Spacer(),
                 SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
@@ -248,8 +248,7 @@ class HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
                       _buildGameButton(context),
-                      const SizedBox(
-                          height: 60), // Add spacing above the button
+                      const SizedBox(height: 60),
                     ],
                   ),
                 ),

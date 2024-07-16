@@ -1,86 +1,98 @@
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/screens/account_screen.dart';
+import 'package:beerpongapp/screens/friendlist.dart';
+import 'package:beerpongapp/screens/home_screen.dart';
+import 'package:beerpongapp/screens/statistics_screen.dart';
 
 class BaseScreen extends StatefulWidget {
-  final Widget child;
   final int selectedIndex;
 
-  const BaseScreen(
-      {required this.child, required this.selectedIndex, super.key});
+  const BaseScreen({required this.selectedIndex, super.key});
 
   @override
   BaseScreenState createState() => BaseScreenState();
 }
 
 class BaseScreenState extends State<BaseScreen> {
+  late PageController _pageController;
+  late int _selectedIndex = widget.selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  void _onItemTapped(int index) {
+    _pageController.jumpToPage(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading:
-            false, // Prevents the back button from appearing
-        backgroundColor:
-            Color(0xFFF0AE1D), // Amber background color for app bar
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFFF0AE1D),
         title: Text(
-          _getAppBarTitle(widget.selectedIndex),
+          _getAppBarTitle(_selectedIndex),
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.black, // Text color of the app bar title
+            color: Colors.black,
           ),
         ),
-        centerTitle: true, // Center align the title
+        centerTitle: true,
       ),
-      body: widget.child,
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          // Override the bottom navigation bar theme
-          canvasColor:
-              Colors.black, // Background color of the BottomNavigationBar
-          primaryColor: Color(
-              0xFFF0AE1D), // Active color of the BottomNavigationBar icons
-          textTheme: Theme.of(context).textTheme.copyWith(
-                bodySmall: const TextStyle(
-                    color: Colors
-                        .grey), // Inactive color of the BottomNavigationBar icons
-              ),
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.black, // Setting background color to black
-          type:
-              BottomNavigationBarType.fixed, // Ensures all items are fixed size
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined, color: _getIconColor(0)),
-              label: 'Settings',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline, color: _getIconColor(1)),
-              label: 'Friends',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.sports_bar_outlined, color: _getIconColor(2)),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bar_chart_outlined, color: _getIconColor(3)),
-              label: 'Stats',
-            ),
-            BottomNavigationBarItem(
-              icon:
-                  Icon(Icons.account_circle_outlined, color: _getIconColor(4)),
-              label: 'Profile',
-            ),
-          ],
-          currentIndex: widget.selectedIndex,
-          selectedItemColor: Color(0xFFF0AE1D), // R 240 G 174 B 29
-          onTap: _onItemTapped,
-          showUnselectedLabels: true,
-        ),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(), // Disable swipe to change pages
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        children: const [
+          HomeScreen(),
+          FriendsListScreen(),
+          HomeScreen(),
+          StatisticsScreen(),
+          AccountScreen(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.black,
+        type: BottomNavigationBarType.fixed,
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings_outlined, color: _getIconColor(0)),
+            label: 'Settings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_outline, color: _getIconColor(1)),
+            label: 'Friends',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sports_bar_outlined, color: _getIconColor(2)),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart_outlined, color: _getIconColor(3)),
+            label: 'Stats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle_outlined, color: _getIconColor(4)),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: const Color(0xFFF0AE1D),
+        onTap: _onItemTapped,
+        showUnselectedLabels: true,
       ),
     );
   }
 
   Color _getIconColor(int index) {
-    return widget.selectedIndex == index ? Color(0xFFF0AE1D) : Colors.grey;
+    return _selectedIndex == index ? const Color(0xFFF0AE1D) : Colors.grey;
   }
 
   String _getAppBarTitle(int index) {
@@ -97,29 +109,6 @@ class BaseScreenState extends State<BaseScreen> {
         return 'Profile';
       default:
         return '';
-    }
-  }
-
-  void _onItemTapped(int index) {
-    if (index != widget.selectedIndex) {
-      switch (index) {
-        case 0:
-          // Placeholder for the Settings screen
-          print("Settings screen tapped");
-          break;
-        case 1:
-          Navigator.pushReplacementNamed(context, '/friendlist');
-          break;
-        case 2:
-          Navigator.pushReplacementNamed(context, '/'); // Home screen
-          break;
-        case 3:
-          Navigator.pushReplacementNamed(context, '/statistics');
-          break;
-        case 4:
-          Navigator.pushReplacementNamed(context, '/account');
-          break;
-      }
     }
   }
 }

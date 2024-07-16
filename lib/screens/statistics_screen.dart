@@ -1,7 +1,7 @@
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import '../models/game_statistics.dart';
 import '../models/player.dart';
 import 'dart:math';
@@ -218,10 +218,10 @@ class GameDetailsPage extends StatefulWidget {
   const GameDetailsPage({super.key, required this.game});
 
   @override
-  _GameDetailsPageState createState() => _GameDetailsPageState();
+  GameDetailsPageState createState() => GameDetailsPageState();
 }
 
-class _GameDetailsPageState extends State<GameDetailsPage> {
+class GameDetailsPageState extends State<GameDetailsPage> {
   late PageController _pageController;
   int _currentPage = 0;
   String selectedTeam = 'Both Teams';
@@ -316,9 +316,9 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
   Widget _buildTeamViewPage() {
     return Container(
       color: Colors.black,
-      child: SingleChildScrollView(
+      child: const SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -330,7 +330,7 @@ class _GameDetailsPageState extends State<GameDetailsPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Divider(
+              Divider(
                 color: Colors.amber,
                 thickness: 1,
               ),
