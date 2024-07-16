@@ -36,8 +36,8 @@ class FirestoreService {
     List<User> updatedUsers = [];
     try {
       List<String> participants = [
-        ...team1.map((player) => player.name),
-        ...team2.map((player) => player.name),
+        ...team1.map((player) => player.user != null ? player.user!.id : ''),
+        ...team2.map((player) => player.user != null ? player.user!.id : ''),
       ];
       await _db.collection('games').add({
         'team1': team1.map((player) => player.toJson()).toList(),

@@ -730,13 +730,25 @@ class _GameScreenState extends State<GameScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('OK'),
+              child: const Text('Go to Stats'),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const BaseScreen(selectedIndex: 3),
+                  ),
+                );
+              },
+            ),
+            TextButton(
+              child: const Text('Go to Home'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BaseScreen(selectedIndex: 2),
                   ),
                 );
               },
