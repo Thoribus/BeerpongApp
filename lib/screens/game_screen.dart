@@ -364,7 +364,7 @@ class _GameScreenState extends State<GameScreen> {
         _incrementPlayerScore(player);
         _handleCupHit(currentTeam.cups
             .firstWhere((cup) =>
-                cup.index != cupIndex && cup.color == currentTeam.color)
+                cup.index != cupIndex && cup.color == currentTeam.color || cup.color == Colors.yellow)
             .index);
 
         setState(() {

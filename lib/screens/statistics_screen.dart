@@ -316,7 +316,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
   Widget _buildTeamViewPage() {
     return Container(
       color: Colors.black,
-      child: const SingleChildScrollView(
+      child: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Column(
