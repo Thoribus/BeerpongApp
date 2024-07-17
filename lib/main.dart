@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/screens/base_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-import 'package:beerpongapp/screens/base_screen.dart'; // Import your BaseScreen class
-import 'package:beerpongapp/screens/friendlist.dart';
-import 'package:beerpongapp/screens/statistics_screen.dart';
-import 'package:beerpongapp/screens/account_screen.dart';
-import 'package:beerpongapp/screens/home_screen.dart';
-
-// The main function is the entry point of the Flutter application.
 Future<void> main() async {
   WidgetsFlutterBinding
       .ensureInitialized(); // Ensure that the Flutter binding is initialized.
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp()); // Run the app and pass an instance of MyApp to it.
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserProvider()..loadUser(),
+      child: const MyApp(),
+    ),
+  );
 }
 
-// MyApp is a stateless widget that represents the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -32,14 +32,11 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/', // Set initial route
       routes: {
-        '/': (context) => const BaseScreen(
-            selectedIndex: 2, child: HomeScreen()), // Example initial screen
-        '/friendlist': (context) =>
-            const BaseScreen(selectedIndex: 1, child: FriendsListScreen()),
-        '/statistics': (context) =>
-            const BaseScreen(selectedIndex: 3, child: StatisticsScreen()),
-        '/account': (context) =>
-            const BaseScreen(selectedIndex: 4, child: AccountScreen()),
+        '/': (context) =>
+            const BaseScreen(selectedIndex: 2), // Example initial screen
+        '/friendlist': (context) => const BaseScreen(selectedIndex: 1),
+        '/statistics': (context) => const BaseScreen(selectedIndex: 3),
+        '/account': (context) => const BaseScreen(selectedIndex: 4),
         // Add routes for all screens you want to navigate to
       },
     );

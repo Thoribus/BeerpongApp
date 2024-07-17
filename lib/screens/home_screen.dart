@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game_screen.dart';
@@ -10,39 +13,13 @@ class HomeScreen extends StatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
-
-  late AnimationController _animationController;
-  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _checkSavedGame();
-
-    // Initialize animation controller and animation
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: true);
-    _animation = Tween(begin: 2.0, end: 15.0).animate(_animationController);
-
-    // Start animation
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  didUpdateWidget(HomeScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    print(_hasSavedGame);
   }
 
   Future<void> _checkSavedGame() async {
@@ -79,24 +56,49 @@ class HomeScreenState extends State<HomeScreen>
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('New Game'),
+          backgroundColor: Colors.amber,
+          title: const Text(
+            'New Game',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: const Text(
-              'Starting a new game will delete the current game. Do you want to continue?'),
+            'Starting a new game will delete the current game. Do you want to continue?',
+            style: TextStyle(
+              color: Colors.black,
+            ),
+          ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
-              child: const Text('Start New Game'),
+              child: const Text(
+                'Start New Game',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 await _clearSavedGame();
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => SelectionScreen(onReturn: _onReturnFromNextScreen,)),
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SelectionScreen(onReturn: _onReturnFromNextScreen)),
                 );
               },
             ),
@@ -106,18 +108,23 @@ class HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildWelcomeText() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      alignment: Alignment.center,
-      child: const Text(
-        'Welcome, X!', // Display username retrieved from user.dart
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+  Widget _buildWelcomeText(BuildContext context) {
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Welcome Back, ${userProvider.user?.username ?? "User"}',
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -125,57 +132,67 @@ class HomeScreenState extends State<HomeScreen>
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
+        color: const Color.fromRGBO(27, 26, 26, 1),
         borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: Colors.amber, width: 3.0),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.amber.withOpacity(0.8),
-            blurRadius: _animation.value,
-            spreadRadius: _animation.value,
+            color: Colors.black,
+            blurRadius: 10,
+            spreadRadius: 2,
           ),
         ],
       ),
       child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20.0),
-            child: Image.asset(
-              'assets/animals_beerpong.jpg',
-              fit: BoxFit.cover,
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height * 0.3,
-            ),
-          ),
           Container(
-            decoration: const BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(20.0),
-                bottomRight: Radius.circular(20.0),
-              ),
-            ),
+            padding: const EdgeInsets.all(16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 16),
-                  child: Text(
-                    'New Game',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const Text(
+                  'New Game',
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                if (_hasSavedGame)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 24),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GameScreen(
+                            title: 'Resume Game',
+                            players1: [],
+                            players2: [],
+                            selectedRules: {},
+                            startingTeam: true,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Resume',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber.withOpacity(0.8),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    backgroundColor: Colors.amber,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
                     shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        bottomRight: Radius.circular(20.0),
-                      ),
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
                     ),
                   ),
                   onPressed: () {
@@ -185,11 +202,15 @@ class HomeScreenState extends State<HomeScreen>
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => SelectionScreen(onReturn: _onReturnFromNextScreen,)),
+                            builder: (context) => SelectionScreen(
+                                onReturn: _onReturnFromNextScreen)),
                       );
                     }
                   },
-                  child: const Icon(Icons.add),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -207,52 +228,34 @@ class HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _buildWelcomeText(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    _buildGameButton(context),
-                    const SizedBox(height: 40),
-                    if (_hasSavedGame)
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const GameScreen(
-                                title: 'Resume Game',
-                                players1: [],
-                                players2: [],
-                                selectedRules: {},
-                                startingTeam: true,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.play_arrow),
-                        label: const Text('Resume Game'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.withOpacity(0.8),
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 24),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/amber_fullscreen_home.svg',
+              fit: BoxFit.cover,
             ),
-          ],
-        ),
+          ),
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _buildWelcomeText(context),
+                const Spacer(),
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      _buildGameButton(context),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

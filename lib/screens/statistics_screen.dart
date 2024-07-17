@@ -1,7 +1,7 @@
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:beerpongapp/firestoreservice.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import '../models/game_statistics.dart';
 import '../models/player.dart';
 
@@ -155,8 +155,8 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              ...players
-                  .map((player) => _buildPlayerRow(player, player == topPlayer)),
+              ...players.map(
+                  (player) => _buildPlayerRow(player, player == topPlayer)),
             ],
           ),
         ),
@@ -166,7 +166,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           width: 20,
         ),
         Icon(
-          isWinningTeam ? Icons.flag : Icons.close,
+          isWinningTeam ? Icons.close : Icons.flag,
           color: teamColor,
         ),
       ],
@@ -210,10 +210,36 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 }
 
-class GameDetailsPage extends StatelessWidget {
+class GameDetailsPage extends StatefulWidget {
   final GameStatistics game;
 
   const GameDetailsPage({super.key, required this.game});
+
+  @override
+  GameDetailsPageState createState() => GameDetailsPageState();
+}
+
+class GameDetailsPageState extends State<GameDetailsPage> {
+  late PageController _pageController;
+  int _currentPage = 0;
+  String selectedTeam = 'Both Teams';
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!.round();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -227,11 +253,65 @@ class GameDetailsPage extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.amber,
       ),
-      body: _buildGameStatsPage(game),
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: _currentPage == 0
+                    ? null
+                    : () {
+                        _pageController.jumpToPage(0);
+                      },
+                child: Text(
+                  'View Team',
+                  style: TextStyle(
+                    color: _currentPage == 0 ? Colors.amber : Colors.white,
+                    backgroundColor: Colors.black,
+                  ),
+                ),
+              ),
+              const VerticalDivider(
+                color: Colors.white,
+                width: 20,
+                thickness: 2,
+                indent: 5,
+                endIndent: 5,
+              ),
+              TextButton(
+                onPressed: _currentPage == 1
+                    ? null
+                    : () {
+                        _pageController.jumpToPage(1);
+                      },
+                child: Text(
+                  'View Game Stats',
+                  style: TextStyle(
+                    color: _currentPage == 1 ? Colors.amber : Colors.white,
+                    backgroundColor: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              scrollDirection: Axis.horizontal,
+              children: [
+                _buildTeamViewPage(),
+                _buildGameStatsPage(widget.game),
+              ],
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.black,
     );
   }
 
-  Widget _buildGameStatsPage(GameStatistics game) {
+  Widget _buildTeamViewPage() {
     return Container(
       color: Colors.black,
       child: SingleChildScrollView(
@@ -240,6 +320,237 @@ class GameDetailsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                'Team View',
+                style: TextStyle(
+                  color: Colors.amber,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Divider(
+                color: Colors.amber,
+                thickness: 1,
+              ),
+              const SizedBox(height: 10),
+              _buildTeamToggleButtons(),
+              const SizedBox(height: 20),
+              _buildTeamData(),
+              const SizedBox(height: 50),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamToggleButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildToggleButton('Team Blue', Colors.blue),
+        _buildToggleButton('Team Red', Colors.red),
+        _buildToggleButton('Both Teams', Colors.amber),
+      ],
+    );
+  }
+
+  Widget _buildToggleButton(String team, Color color) {
+    return TextButton(
+      onPressed: () {
+        setState(() {
+          selectedTeam = team;
+        });
+      },
+      style: TextButton.styleFrom(
+        backgroundColor: selectedTeam == team ? color : Colors.grey,
+      ),
+      child: Text(
+        team,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamData() {
+    List<Player> players = [];
+    if (selectedTeam == 'Team Blue') {
+      players = widget.game.team1Players;
+    } else if (selectedTeam == 'Team Red') {
+      players = widget.game.team2Players;
+    } else {
+      players = widget.game.team1Players + widget.game.team2Players;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          selectedTeam,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        const SizedBox(height: 10),
+        _buildTeamStatsTable(selectedTeam, Colors.amber, players),
+      ],
+    );
+  }
+
+  Widget _buildTeamStatsTable(
+    String teamName,
+    Color teamColor,
+    List<Player> players,
+  ) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columnSpacing: 10,
+        columns: const [
+          DataColumn(
+            label: Text('Player', style: TextStyle(color: Colors.white)),
+          ),
+          DataColumn(
+            label: Text('S', style: TextStyle(color: Colors.white)),
+          ),
+          DataColumn(
+            label: Text('M', style: TextStyle(color: Colors.white)),
+          ),
+          DataColumn(
+            label: Text('T', style: TextStyle(color: Colors.white)),
+          ),
+          DataColumn(
+            label: Text('A', style: TextStyle(color: Colors.white)),
+          ),
+          DataColumn(
+            label: Text('HR', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+        rows: players.map((player) {
+          double hitRate = player.throws > 0 ? player.score / player.throws : 0;
+          return DataRow(
+            cells: [
+              DataCell(SizedBox(
+                width: 100,
+                child: Row(
+                  children: [
+                    Icon(Icons.person, color: teamColor),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        player.name.length > 10
+                            ? '${player.name.substring(0, 10)}...'
+                            : player.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+              DataCell(SizedBox(
+                width: 30,
+                child: Text(
+                  '${player.score}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+              DataCell(SizedBox(
+                width: 30,
+                child: Text(
+                  '${player.misses}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+              DataCell(SizedBox(
+                width: 30,
+                child: Text(
+                  '${player.throws}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+              DataCell(SizedBox(
+                width: 30,
+                child: Text(
+                  '${player.airballs}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+              DataCell(SizedBox(
+                width: 30,
+                child: Text(
+                  hitRate.toStringAsFixed(2),
+                  style: const TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildGameStatsPage(GameStatistics game) {
+    Player mvp = game.team1Players[0];
+    Player airballer = game.team1Players[0];
+    Player missManiac = game.team1Players[0];
+    Player sniper = game.team1Players[0];
+
+    double bestHitRate = 0;
+
+    for (var player in game.team1Players + game.team2Players) {
+      if (player.score > mvp.score) {
+        mvp = player;
+      }
+      if (player.airballs > airballer.airballs) {
+        airballer = player;
+      }
+      if (player.misses > missManiac.misses) {
+        missManiac = player;
+      }
+      double hitRate = player.throws > 0 ? player.score / player.throws : 0;
+      if (hitRate > bestHitRate) {
+        bestHitRate = hitRate;
+        sniper = player;
+      }
+    }
+
+    return Container(
+      color: Colors.black,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Achievements',
+                style: TextStyle(
+                  color: Colors.amber,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Divider(
+                color: Colors.amber,
+                thickness: 1,
+              ),
+              const SizedBox(height: 10),
+              _buildAchievementsSection(mvp, airballer, missManiac, sniper),
+              const SizedBox(height: 20),
               const Text(
                 'Team Statistics',
                 style: TextStyle(
@@ -264,57 +575,53 @@ class GameDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamStatsTable(
-      String teamName, Color teamColor, List<Player> players) {
+  Widget _buildAchievementsSection(
+      Player mvp, Player airballer, Player missManiac, Player sniper) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          teamName,
-          style: TextStyle(
-            color: teamColor,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildAchievementIcon(Icons.star, 'MVP', mvp),
+            _buildAchievementIcon(Icons.air, 'Airballer', airballer),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildAchievementIcon(Icons.clear, 'Miss Maniac', missManiac),
+            _buildAchievementIcon(Icons.album, 'Sniper', sniper),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAchievementIcon(IconData icon, String title, Player player) {
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 25,
+          backgroundColor: Colors.grey[800],
+          child: Icon(
+            icon,
+            color: Colors.amber,
+            size: 30,
           ),
         ),
-        DataTable(
-          columns: const [
-            DataColumn(
-              label: Text('Player', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('S', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('M', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('T', style: TextStyle(color: Colors.white)),
-            ),
-            DataColumn(
-              label: Text('A', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-          rows: players.map((player) {
-            return DataRow(cells: [
-              DataCell(Row(
-                children: [
-                  Icon(Icons.person, color: teamColor),
-                  const SizedBox(width: 8),
-                  Text(player.name,
-                      style: const TextStyle(color: Colors.white)),
-                ],
-              )),
-              DataCell(Text('${player.score}',
-                  style: const TextStyle(color: Colors.white))),
-              DataCell(Text('${player.misses}',
-                  style: const TextStyle(color: Colors.white))),
-              DataCell(Text('${player.throws}',
-                  style: const TextStyle(color: Colors.white))),
-              DataCell(Text('${player.airballs}',
-                  style: const TextStyle(color: Colors.white))),
-            ]);
-          }).toList(),
+        const SizedBox(height: 8),
+        Text(
+          title,
+          style: const TextStyle(color: Colors.amber),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          player.name.length > 10
+              ? '${player.name.substring(0, 10)}...'
+              : player.name,
+          style: const TextStyle(color: Colors.white),
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
