@@ -4,16 +4,16 @@ import 'package:beerpongapp/models/user.dart';
 class AchievementsScreen extends StatelessWidget {
   final User user;
 
-  const AchievementsScreen({Key? key, required this.user}) : super(key: key);
+  const AchievementsScreen({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Achievements'),
+        title: const Text('Achievements'),
       ),
       body: ListView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: [
           _buildAchievement(
             icon: Icons.star,
@@ -51,10 +51,10 @@ class AchievementsScreen extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.amber,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -62,21 +62,21 @@ class AchievementsScreen extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         LinearProgressIndicator(
           value: currentProgress / totalProgress,
           backgroundColor: Colors.grey,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+          valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
           '$currentProgress / $totalProgress',
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
       ],
     );
   }
