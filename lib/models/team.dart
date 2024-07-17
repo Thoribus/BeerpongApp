@@ -40,4 +40,16 @@ class Team {
   String toString() {
     return 'Team: ${players.map((player) => player.name).join(', ')}';
   }
+
+  Team clone() {
+    return Team(
+      color: color,
+      players: players.map((player) => player.clone()).toList(),
+      cups: cups.map((cup) => cup.clone()).toList(),
+      currentPlayers: currentPlayers.map((player) => player.clone()).toList(),
+      remainingCups: remainingCups.map((cup) => cup.clone()).toList(),
+      isRearranged: isRearranged,
+      canIslandShot: canIslandShot,
+    );
+  }
 }

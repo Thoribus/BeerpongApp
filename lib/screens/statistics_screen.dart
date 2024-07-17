@@ -4,8 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import '../models/game_statistics.dart';
 import '../models/player.dart';
-import 'dart:math';
-import 'package:fl_chart/fl_chart.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -318,7 +316,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
       color: Colors.black,
       child: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -330,7 +328,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Divider(
+              const Divider(
                 color: Colors.amber,
                 thickness: 1,
               ),
@@ -369,7 +367,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
       ),
       child: Text(
         team,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
@@ -433,7 +431,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
           double hitRate = player.throws > 0 ? player.score / player.throws : 0;
           return DataRow(
             cells: [
-              DataCell(Container(
+              DataCell(SizedBox(
                 width: 100,
                 child: Row(
                   children: [
@@ -444,7 +442,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                         player.name.length > 10
                             ? '${player.name.substring(0, 10)}...'
                             : player.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -453,47 +451,47 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                   ],
                 ),
               )),
-              DataCell(Container(
+              DataCell(SizedBox(
                 width: 30,
                 child: Text(
                   '${player.score}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                   ),
                 ),
               )),
-              DataCell(Container(
+              DataCell(SizedBox(
                 width: 30,
                 child: Text(
                   '${player.misses}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                   ),
                 ),
               )),
-              DataCell(Container(
+              DataCell(SizedBox(
                 width: 30,
                 child: Text(
                   '${player.throws}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                   ),
                 ),
               )),
-              DataCell(Container(
+              DataCell(SizedBox(
                 width: 30,
                 child: Text(
                   '${player.airballs}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                   ),
                 ),
               )),
-              DataCell(Container(
+              DataCell(SizedBox(
                 width: 30,
                 child: Text(
                   hitRate.toStringAsFixed(2),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                   ),
                 ),

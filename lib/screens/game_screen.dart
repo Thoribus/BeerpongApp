@@ -111,7 +111,6 @@ class _GameScreenState extends State<GameScreen> {
         _incrementPlayerThrows(player);
         _incrementPlayerHitThisRound(player);
         _incrementPlayerScore(player);
-        _checkBallsBack();
         _ckeckOnFire(player);
         _checkGameEnd(player, cupIndex);
       },
@@ -130,9 +129,10 @@ class _GameScreenState extends State<GameScreen> {
             _addCupToPlayer(player, cup.index);
             _handleCupHit(cup.index);
             _incrementPlayerScore(player);
+            _incrementPlayerThrows(player);
           }
         }
-        _checkGameEnd(player, currentTeam.cups.first.index);
+        _checkGameEnd(player, 11);
       },
     );
   }
@@ -244,6 +244,7 @@ class _GameScreenState extends State<GameScreen> {
           Colors.green) {
         _checkProximity(index);
       } else {
+        _checkBallsBack();
         _checkBitchCup(index);
         currentTeam.cups.firstWhere((cup) => cup.index == index).color =
             Colors.green;
@@ -364,7 +365,7 @@ class _GameScreenState extends State<GameScreen> {
         _incrementPlayerScore(player);
         _handleCupHit(currentTeam.cups
             .firstWhere((cup) =>
-                cup.index != cupIndex && cup.color == currentTeam.color || cup.color == Colors.yellow)
+                cup.index != cupIndex && (cup.color == currentTeam.color || cup.color == Colors.yellow))
             .index);
 
         setState(() {
@@ -621,13 +622,9 @@ class _GameScreenState extends State<GameScreen> {
 
   void _saveCurrentState() {
     _actionStack.add({
-      'team1Cups': team1.cups.map((cup) => cup.clone()).toList(),
-      'team2Cups': team2.cups.map((cup) => cup.clone()).toList(),
-      'team1Players': team1.players.map((player) => player.clone()).toList(),
-      'team2Players': team2.players.map((player) => player.clone()).toList(),
+      'team1': team1.clone(),
+      'team2': team2.clone(),
       'isTeamOneTurn': isTeamOneTurn,
-      'isRearranged1': team1.isRearranged,
-      'isRearranged2': team2.isRearranged,
     });
   }
 
@@ -636,13 +633,9 @@ class _GameScreenState extends State<GameScreen> {
 
     final lastState = _actionStack.removeLast();
     setState(() {
-      team1.cups = lastState['team1Cups'].cast<Cup>();
-      team2.cups = lastState['team2Cups'].cast<Cup>();
-      team1.players = lastState['team1Players'].cast<Player>();
-      team2.players = lastState['team2Players'].cast<Player>();
+      team1 = lastState['team1'].cast<Team>();
+      team2 = lastState['team2'].cast<Team>();
       isTeamOneTurn = lastState['isTeamOneTurn'];
-      team1.isRearranged = lastState['isRearranged1'];
-      team2.isRearranged = lastState['isRearranged2'];
       currentTeam = isTeamOneTurn ? team1 : team2;
 
       // Ensure the layout is built before checking for island cups
@@ -660,7 +653,7 @@ class _GameScreenState extends State<GameScreen> {
         .every((cup) => !cup.isVisible || cup.color == Colors.green);
 
     if (teamAllHit) {
-      if (selectedRules['Nachwurf'] == true) {
+      if (selectedRules['Nachwurf'] == true && cupIndex != 11) {
         bool enemyTurn = await _handleNachwurf(cupIndex);
         if (enemyTurn) {
           _decrementPlayerScore(player);
@@ -674,6 +667,13 @@ class _GameScreenState extends State<GameScreen> {
       _setPlayerHitLastCup(player);
       await _clearGameState();
       await _saveGameStatistics();
+
+      for (var player in team1.players) {
+        print(player.toJson());
+      }
+      for (var player in team2.players) {
+        print(player.toJson());
+      }
 
       _showGameEndDialog(context, currentTeam.players);
     }
