@@ -965,7 +965,7 @@ class _GameScreenState extends State<GameScreen> {
         newIndices = [6, 7, 8, 3, 4, 1];
         break;
       case 5:
-        newIndices = [6, 7, 8, 3, 4];
+        newIndices = [7, 3, 4, 1, 0];
         break;
       case 4:
         newIndices = [7, 3, 4, 1];
