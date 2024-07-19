@@ -107,10 +107,10 @@ class _GameScreenState extends State<GameScreen> {
       (player) {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
-        _handleCupHit(cupIndex);
         _incrementPlayerThrows(player);
         _incrementPlayerHitThisRound(player);
         _incrementPlayerScore(player);
+        _handleCupHit(cupIndex);
         _ckeckOnFire(player);
         _checkGameEnd(player, cupIndex);
       },
@@ -244,6 +244,7 @@ class _GameScreenState extends State<GameScreen> {
           Colors.green) {
         _checkProximity(index);
       } else {
+        print("hello");
         _checkBallsBack();
         _checkBitchCup(index);
         currentTeam.cups.firstWhere((cup) => cup.index == index).color =
