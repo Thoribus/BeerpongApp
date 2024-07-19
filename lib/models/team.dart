@@ -38,7 +38,7 @@ class Team {
 
   @override
   String toString() {
-    return 'Team: ${players.map((player) => player.name).join(', ')}';
+    return 'Team(color: $color, players: $players, cups: $cups, currentPlayers: $currentPlayers, remainingCups: $remainingCups, isRearranged: $isRearranged, canIslandShot: $canIslandShot)';
   }
 
   Team clone() {
