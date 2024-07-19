@@ -632,9 +632,11 @@ class _GameScreenState extends State<GameScreen> {
     if (_actionStack.isEmpty) return;
 
     final lastState = _actionStack.removeLast();
+    Team test = lastState["team1"];
+    print(test.toString());
     setState(() {
-      team1 = lastState['team1'].cast<Team>();
-      team2 = lastState['team2'].cast<Team>();
+      team1 = lastState['team1'];
+      team2 = lastState['team2'];
       isTeamOneTurn = lastState['isTeamOneTurn'];
       currentTeam = isTeamOneTurn ? team1 : team2;
 
