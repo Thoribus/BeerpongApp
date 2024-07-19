@@ -1046,6 +1046,18 @@ class _GameScreenState extends State<GameScreen> {
                   ? _buildCups(currentTeam.remainingCups, true)
                   : _buildCups(currentTeam.cups, false),
               const SizedBox(height: 40),
+              Text(currentTeam.currentPlayers[0].name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  )),
+              Text(currentTeam.currentPlayers[1].name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  )),
               _buildSpecialRulesButtons(),
             ],
           ),
