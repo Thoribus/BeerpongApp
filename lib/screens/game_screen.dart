@@ -365,7 +365,8 @@ class _GameScreenState extends State<GameScreen> {
         _incrementPlayerScore(player);
         _handleCupHit(currentTeam.cups
             .firstWhere((cup) =>
-                cup.index != cupIndex && (cup.color == currentTeam.color || cup.color == Colors.yellow))
+                cup.index != cupIndex &&
+                (cup.color == currentTeam.color || cup.color == Colors.yellow))
             .index);
 
         setState(() {
@@ -457,13 +458,24 @@ class _GameScreenState extends State<GameScreen> {
     const double proximityThreshold = 100.0;
     double hitCups = 0.0;
 
-    for (int i = 0; i < currentTeam.cups.length; i++) {
-      if (i == index) continue;
-      if (currentTeam.cups[i].isVisible && currentTeam.cups[index].isVisible) {
-        final renderBox1 = currentTeam.cups[i].key.currentContext
-            ?.findRenderObject() as RenderBox?;
-        final renderBox2 = currentTeam.cups[index].key.currentContext
-            ?.findRenderObject() as RenderBox?;
+    // Find the cup with the given index
+    Cup? targetCup;
+    for (Cup cup in currentTeam.cups) {
+      if (cup.index == index && cup.isVisible) {
+        targetCup = cup;
+        break;
+      }
+    }
+
+    if (targetCup == null) return;
+
+    // Check proximity for all visible cups
+    for (Cup cup in currentTeam.cups) {
+      if (cup.index != index && cup.isVisible) {
+        final renderBox1 =
+            cup.key.currentContext?.findRenderObject() as RenderBox?;
+        final renderBox2 =
+            targetCup.key.currentContext?.findRenderObject() as RenderBox?;
 
         if (renderBox1 != null && renderBox2 != null) {
           Offset position1 = renderBox1.localToGlobal(Offset.zero);
@@ -472,12 +484,13 @@ class _GameScreenState extends State<GameScreen> {
           double distance = _calculateDistance(position1, position2);
           if (distance < proximityThreshold) {
             hitCups++;
-            currentTeam.cups[i].color = Colors.green;
+            cup.color = Colors.green;
           }
         }
       }
     }
-    currentTeam.cups[index].color = currentTeam.color;
+
+    targetCup.color = currentTeam.color;
     for (var player in currentTeam.currentPlayers) {
       if (player.cupsHit.contains(index)) {
         player.incrementScoreBy(hitCups / 2 - 1);
