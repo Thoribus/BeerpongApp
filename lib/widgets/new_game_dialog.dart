@@ -1,49 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import '../util/firestoreservice.dart';
+import '../models/user.dart';
+import '../models/player.dart';
 
-// Define a stateful widget for the new game dialog
 class NewGameDialog extends StatefulWidget {
-  const NewGameDialog({super.key, required this.team});
-
-  // Define a final integer field for the team number
   final int team;
+  final List<String> initialNames;
+  final int numPlayers;
+
+  const NewGameDialog({
+    super.key,
+    required this.team,
+    required this.initialNames,
+    required this.numPlayers,
+  });
 
   @override
-  _NewGameDialogState createState() => _NewGameDialogState();
+  NewGameDialogState createState() => NewGameDialogState();
 }
 
-class _NewGameDialogState extends State<NewGameDialog> {
-  // Define a variable to keep track of the number of players
-  final int _numPlayers = 2;
-
-  // Create a list of TextEditingController objects to manage player name inputs
+class NewGameDialogState extends State<NewGameDialog> {
   final List<TextEditingController> _controllers = [];
+  late List<User> _friends;
+  late int _numPlayers;
+  final Map<int, User> _friendMap = {};
 
   @override
   void initState() {
     super.initState();
-    // Initialize the controllers for the default number of players (2 players)
-    _controllers.addAll(List.generate(_numPlayers, (_) => TextEditingController()));
+
+    _numPlayers = widget.numPlayers;
+
+    if (widget.initialNames.isNotEmpty) {
+      _controllers.addAll(
+          widget.initialNames.map((name) => TextEditingController(text: name)));
+    } else {
+      _controllers
+          .addAll(List.generate(_numPlayers, (_) => TextEditingController()));
+    }
   }
 
   @override
   void dispose() {
-    // Dispose of all controllers when the widget is disposed to free up resources
     for (var controller in _controllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  // Method to update the number of player input fields based on the count
-  void _updatePlayerFields(int count) {
-    setState(() {
-      // If the new count is greater, add more controllers
-      if (count > _controllers.length) {
-        _controllers.addAll(List.generate(count - _controllers.length, (_) => TextEditingController()));
-      } 
-      // If the new count is less, remove excess controllers
-      else if (count < _controllers.length) {
-        _controllers.removeRange(count, _controllers.length);
+  Future<void> selectFromFriendList(int index) async {
+    auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
+    User? user = await FirestoreService().getUser(currentUser!.uid);
+    _friends = await FirestoreService().getFriends(user!.id);
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose a player'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                ListTile(
+                  title: Text(user.username),
+                  onTap: () {
+                    Navigator.of(context).pop(user);
+                  },
+                ),
+                ..._friends.map((friend) => ListTile(
+                      title: Text(friend.username),
+                      onTap: () {
+                        Navigator.of(context).pop(friend);
+                      },
+                    )),
+              ],
+            ),
+          ),
+        );
+      },
+    ).then((selectedPlayer) {
+      if (selectedPlayer != null) {
+        setState(() {
+          _controllers[index].text = selectedPlayer.username;
+          _friendMap[index] = selectedPlayer;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Selected player: $selectedPlayer')),
+        );
       }
     });
   }
@@ -51,48 +94,81 @@ class _NewGameDialogState extends State<NewGameDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      // Title of the dialog showing the team number
-      title: Text('Enter Player Names for Team ${widget.team}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Input field for the number of players
-          TextField(
-            decoration: const InputDecoration(labelText: 'Number of Players'),
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              // Update the player fields based on the entered number
-              int? count = int.tryParse(value);
-              if (count != null && count > 0) {
-                _updatePlayerFields(count);
-              }
-            },
-          ),
-          // Generate input fields for player names dynamically based on the number of controllers
-          ..._controllers.map((controller) {
-            int index = _controllers.indexOf(controller) + 1;
-            return TextField(
-              controller: controller,
-              decoration: InputDecoration(labelText: 'Player $index'),
+      title: Text('Edit Team ${widget.team}'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(_numPlayers, (index) {
+            if (index >= _controllers.length) {
+              _controllers.add(TextEditingController());
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controllers[index],
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.amber.withOpacity(0.2),
+                        labelText: 'Player ${index + 1}',
+                        labelStyle: const TextStyle(color: Colors.amber),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: const BorderSide(
+                            color: Colors.amber,
+                            width: 2.0,
+                          ),
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.person),
+                    onPressed: () => selectFromFriendList(index),
+                  ),
+                ],
+              ),
             );
           }),
-        ],
+        ),
       ),
-      actions: [
-        // Cancel button to close the dialog without saving any input
+      actions: <Widget>[
         TextButton(
+          child: const Text('CANCEL'),
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text('Cancel'),
         ),
-        // Button to save the input and pass it back to the previous screen
-        ElevatedButton(
+        TextButton(
+          child: const Text('SAVE'),
           onPressed: () {
-            // Pass the entered player names back to the previous screen
-            Navigator.of(context).pop(_controllers.map((controller) => controller.text).toList());
+            final List<Player> names =
+                _controllers.take(_numPlayers).map((controller) {
+              int index = _controllers.indexOf(controller);
+              return Player(
+                name: controller.text.trim(),
+                user: _friendMap[index],
+              );
+            }).toList();
+            Navigator.of(context).pop(names);
           },
-          child: const Text('Start Game'),
         ),
       ],
     );

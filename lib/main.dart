@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
-import '../screens/home_screen.dart'; // Import the home screen from the screens directory
+import 'package:provider/provider.dart';
+import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/screens/base_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-// The main function is the entry point of the Flutter application.
-void main() {
-  runApp(const MyApp()); // Run the app and pass an instance of MyApp to it.
+Future<void> main() async {
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensure that the Flutter binding is initialized.
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => UserProvider()..loadUser(),
+      child: const MyApp(),
+    ),
+  );
 }
 
-// MyApp is a stateless widget that represents the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -14,15 +26,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Beerpong App', // The title of the application
+      title: 'Beerpong Compagnion!',
       theme: ThemeData(
-        buttonTheme: const ButtonThemeData(
-          buttonColor: Colors.white, // Default button colorr
-          textTheme: ButtonTextTheme.primary, // Default button text theme
-        ),
-        useMaterial3: true, // Use Material Design 3
+        primarySwatch: Colors.amber, // Adjust the theme as per your design
       ),
-      home: const HomeScreen(), // Set HomeScreen as the initial route
+      initialRoute: '/', // Set initial route
+      routes: {
+        '/': (context) =>
+            const BaseScreen(selectedIndex: 2), // Example initial screen
+        '/friendlist': (context) => const BaseScreen(selectedIndex: 1),
+        '/statistics': (context) => const BaseScreen(selectedIndex: 3),
+        '/account': (context) => const BaseScreen(selectedIndex: 4),
+        // Add routes for all screens you want to navigate to
+      },
     );
   }
 }

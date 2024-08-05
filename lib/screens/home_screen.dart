@@ -1,215 +1,259 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/screens/statistics_screen.dart';
-import '../models/player.dart';
-import '../widgets/new_game_dialog.dart';
-import 'game_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/screens/selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:beerpongapp/screens/game_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize:
-            const Size.fromHeight(kToolbarHeight + 20), // Adjust height as needed
-        child: CustomAppBar(),
+  HomeScreenState createState() => HomeScreenState();
+}
+
+class HomeScreenState extends State<HomeScreen> {
+  bool _hasSavedGame = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSavedGame();
+  }
+
+  Future<void> _checkSavedGame() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasSavedGame =
+        prefs.containsKey('team1Cups') && prefs.containsKey('team2Cups');
+    setState(() {
+      _hasSavedGame = hasSavedGame;
+    });
+  }
+
+  Future<void> _clearSavedGame() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> keys = [
+      'team1Cups',
+      'team2Cups',
+      'team1Players',
+      'team2Players',
+      'isTeamOneTurn',
+      'islandShotActive',
+      'team1IsRearranged',
+      'team2IsRearranged'
+    ];
+    for (String key in keys) {
+      await prefs.remove(key);
+    }
+    setState(() {
+      _hasSavedGame = false;
+    });
+  }
+
+  Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.amber,
+          title: const Text(
+            'New Game',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: const Text(
+            'Starting a new game will delete the current game. Do you want to continue?',
+            style: TextStyle(
+              color: Colors.black,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: const Text(
+                'Start New Game',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await _clearSavedGame();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SelectionScreen(onReturn: _onReturnFromNextScreen)),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildWelcomeText(BuildContext context) {
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Welcome Back, ${userProvider.user?.username ?? "User"}',
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGameButton(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(27, 26, 26, 1),
+        borderRadius: BorderRadius.circular(20.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
       ),
-      body: Container(
-        color: Colors.black,
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  width: MediaQuery.of(context).size.width * 0.75,
-                  height: MediaQuery.of(context).size.height * 0.3,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.amber, width: 3.0),
-                    borderRadius: BorderRadius.circular(15.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.amber.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'New Game',
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12.0),
-                        child: Image.asset(
-                          'assets/beerpong.jpg',
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
+                ),
+                if (_hasSavedGame)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 24),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20.0)),
                       ),
-                      Positioned(
-                        bottom: 10,
-                        left: 10,
-                        right: 10,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber.withOpacity(0.7),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GameScreen(
+                            title: 'Resume Game',
+                            players1: [],
+                            players2: [],
+                            selectedRules: {},
+                            startingTeam: true,
                           ),
-                          onPressed: () async {
-                            // Show dialog for team 1 and cast the result to List<String>
-                            final team1Result = await showDialog<List<String>>(
-                              context: context,
-                              builder: (context) =>
-                                  const NewGameDialog(team: 1),
-                            );
-
-                if (team1Result != null) {
-                  final players1 =
-                      team1Result.map((name) => Player(name: name)).toList();
-
-                              // Show dialog for team 2 and cast the result to List<String>
-                              final team2Result =
-                                  await showDialog<List<String>>(
-                                context: context,
-                                builder: (context) =>
-                                    const NewGameDialog(team: 2),
-                              );
-                  if (team2Result != null) {
-                    final players2 =
-                        team2Result.map((name) => Player(name: name)).toList();
-
-                                // Navigate to the game screen with both teams' players
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => GameScreen(
-                                      title: 'Beer Pong',
-                                      players1: players1,
-                                      players2: players2,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          child: const Text('Neues Spiel'),
                         ),
-                      ),
-                    ],
+                      );
+                    },
+                    child: const Text(
+                      'Resume',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20), // Add some spacing between the elements
-                _buildElevatedButton(
-                  context: context,
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                    ),
+                  ),
                   onPressed: () {
-                    // Navigate to Statistik screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const StatisticsScreen(
-                        ),
-                      ),
-                    );
+                    if (_hasSavedGame) {
+                      _showNewGameConfirmationDialog(context);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => SelectionScreen(
+                                onReturn: _onReturnFromNextScreen)),
+                      );
+                    }
                   },
-                  icon: Icons.bar_chart,
-                  label: 'Statistik',
-                ),
-                _buildElevatedButton(
-                  context: context,
-                  onPressed: () {
-                    // Navigate to Freundesliste screen
-                  },
-                  icon: Icons.people_alt_rounded,
-                  label: 'Freundesliste',
-                ),
-                _buildElevatedButton(
-                  context: context,
-                  onPressed: () {
-                    // Navigate to Einstellungen screen
-                  },
-                  icon: Icons.settings,
-                  label: 'Einstellungen',
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.black,
+                  ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
-}
 
-Widget _buildElevatedButton({
-  required BuildContext context,
-  required VoidCallback onPressed,
-  required IconData icon,
-  required String label,
-}) {
-  return Container(
-    width: MediaQuery.of(context).size.width * 0.75,
-    margin: const EdgeInsets.symmetric(vertical: 10),
-    decoration: BoxDecoration(
-      border: Border.all(color: Colors.amber, width: 3.0),
-      borderRadius: BorderRadius.circular(15.0),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.amber.withOpacity(0.7),
-          spreadRadius: 2,
-          blurRadius: 5,
-          offset: Offset(0, 3),
-        ),
-      ],
-    ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(12.0),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon),
-            const SizedBox(width: 8),
-            Text(label),
-          ],
-        ),
-      ),
-    ),
-  );
-}
+  void _onReturnFromNextScreen() {
+    _checkSavedGame();
+  }
 
-class CustomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.amber.withOpacity(0.5), // Amber color with low opacity
-      child: AppBar(
-        title: const Text('Beerpong App'),
-        backgroundColor:
-            Colors.transparent, // Make app bar background transparent
-        elevation: 3, // Remove elevation
-        leading: IconButton(
-          icon: Icon(Icons.menu),
-          onPressed: () {
-            print('Menu Icon Pressed');
-          },
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.sports_bar_rounded),
-            onPressed: () {
-              print('Beer Icon Pressed');
-            },
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SvgPicture.asset(
+              'assets/amber_fullscreen_home.svg',
+              fit: BoxFit.cover,
+            ),
           ),
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              print('Settings Icon Pressed');
-            },
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _buildWelcomeText(context),
+                const Spacer(),
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      _buildGameButton(context),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
