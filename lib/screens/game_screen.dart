@@ -44,13 +44,14 @@ class _GameScreenState extends State<GameScreen> {
 
   late bool isTeamOneTurn = widget.startingTeam;
   bool islandShotActive = false;
+  Player? currentIslandShooter = null;
 
   final List<Map<String, dynamic>> _actionStack = [];
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
   late Future<void> _loadGameFuture;
-  late Player? currentIslandShooter;
+  
   Color islandBackgroundColor = Colors.grey;
 
   @override
@@ -347,13 +348,16 @@ class _GameScreenState extends State<GameScreen> {
       (player) {
         _saveCurrentState();
         setState(() {
-          currentIslandShooter = player;
-          player.islandShotUsed = true;
+          currentIslandShooter = player;  //to remember the player who is shooting the island shot
+          player.islandShotUsed = true;   //to remember that the player has used the island shot
+          islandShotActive = false;
           _toggleIslandCups();
-          if (currentTeam.players
-              .every((player) => player.islandShotUsed == true)) {
-            currentTeam.canIslandShot = false;
+          if (currentTeam.players.every((player) => player.islandShotUsed == true)) {
+            currentTeam.canIslandShot = false;    //if all players have used the island shot, disable the island shot
+            if (currentTeam.canIslandShot == false) {   //if the island shot is disabled, change the color of the button
+              islandBackgroundColor = Colors.grey;
             }
+          }
         });
       },
     );
@@ -410,7 +414,7 @@ class _GameScreenState extends State<GameScreen> {
       currentTeam.currentPlayers.toList(),
       (player) {
         _saveCurrentState();
-        if (player == currentIslandShooter) {
+        if (player == currentIslandShooter) {   //island hit
           setState(() {
             _toggleIslandCups();            
             currentIslandShooter = null;
@@ -432,7 +436,7 @@ class _GameScreenState extends State<GameScreen> {
           }
         }
 
-        else {
+        else {  //normal hit
           _incrementPlayerScore(player);
           _addCupToPlayer(player, cupIndex);
           _incrementPlayerHitThisRound(player);
@@ -709,6 +713,8 @@ class _GameScreenState extends State<GameScreen> {
       'team1': team1.clone(),
       'team2': team2.clone(),
       'isTeamOneTurn': isTeamOneTurn,
+      'islandShotActive': islandShotActive,
+      'currentIslandShooter': currentIslandShooter,
     });
   }
 
@@ -722,6 +728,10 @@ class _GameScreenState extends State<GameScreen> {
       team1 = lastState['team1'];
       team2 = lastState['team2'];
       isTeamOneTurn = lastState['isTeamOneTurn'];
+      islandShotActive = lastState['islandShotActive']; //island logic
+      if (lastState['currentIslandShooter'] != null) {
+        currentIslandShooter = lastState['currentIslandShooter']; //not always initialized
+      }
       currentTeam = isTeamOneTurn ? team1 : team2;
       WidgetsBinding.instance.addPostFrameCallback((_) {	
         setState(() {	
