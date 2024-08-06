@@ -51,7 +51,7 @@ class _GameScreenState extends State<GameScreen> {
 
   late Future<void> _loadGameFuture;
   late Player? currentIslandShooter;
-  Color IslandBackgroundColor = Colors.grey;
+  Color islandBackgroundColor = Colors.grey;
 
   @override
   void initState() {
@@ -448,6 +448,7 @@ class _GameScreenState extends State<GameScreen> {
   void _endTurn() {
     setState(() {
       if (islandShotActive) {
+        currentIslandShooter = null;
         _toggleIslandCups(); // Reset island shot highlight
       }
 
@@ -470,7 +471,7 @@ class _GameScreenState extends State<GameScreen> {
   
       WidgetsBinding.instance.addPostFrameCallback((_) {	
         setState(() {	
-          IslandBackgroundColor = (currentTeam.cups.any(
+          islandBackgroundColor = (currentTeam.cups.any(
                           (element) => element.isVisible && _isIslandCup(element)) &&
                           currentTeam.canIslandShot)
                       ? Colors.amber
@@ -682,7 +683,7 @@ class _GameScreenState extends State<GameScreen> {
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
       WidgetsBinding.instance.addPostFrameCallback((_) {	
         setState(() {	
-          IslandBackgroundColor = (currentTeam.cups.any(
+          islandBackgroundColor = (currentTeam.cups.any(
                           (element) => element.isVisible && _isIslandCup(element)) &&
                           currentTeam.canIslandShot)
                       ? Colors.amber
@@ -724,7 +725,7 @@ class _GameScreenState extends State<GameScreen> {
       currentTeam = isTeamOneTurn ? team1 : team2;
       WidgetsBinding.instance.addPostFrameCallback((_) {	
         setState(() {	
-          IslandBackgroundColor = (currentTeam.cups.any(
+          islandBackgroundColor = (currentTeam.cups.any(
                           (element) => element.isVisible && _isIslandCup(element)) &&
                           currentTeam.canIslandShot)
                       ? Colors.amber
@@ -1170,7 +1171,7 @@ class _GameScreenState extends State<GameScreen> {
         Visibility(
           visible: selectedRules["Island"] == true,
           child: FloatingActionButton(
-            backgroundColor: IslandBackgroundColor,
+            backgroundColor: islandBackgroundColor,
             heroTag: "Island",
             onPressed: currentTeam.canIslandShot &&
                     currentTeam.cups.any(
