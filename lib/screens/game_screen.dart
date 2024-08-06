@@ -51,6 +51,7 @@ class _GameScreenState extends State<GameScreen> {
 
   late Future<void> _loadGameFuture;
   late Player? currentIslandShooter;
+  Color IslandBackgroundColor = Colors.grey;
 
   @override
   void initState() {
@@ -113,7 +114,7 @@ class _GameScreenState extends State<GameScreen> {
         _incrementPlayerHitThisRound(player);
         _incrementPlayerScore(player);
         _handleCupHit(cupIndex);
-        _ckeckOnFire(player);
+        _checkOnFire(player);
         _checkGameEnd(player, cupIndex);
       },
     );
@@ -139,7 +140,7 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  void _ckeckOnFire(Player player) {
+  void _checkOnFire(Player player) {
     if (player.isOnFire()) {
       _showOnFireDialog();
     }
@@ -391,7 +392,6 @@ class _GameScreenState extends State<GameScreen> {
         (cup.color == teamColor || cup.color == Colors.yellow)).toList();
 
     // Check if there are any cups left after filtering
-    print(filteredCups);
     if (filteredCups.isEmpty) {
       throw Exception('No matching cups found');
     }
@@ -415,21 +415,30 @@ class _GameScreenState extends State<GameScreen> {
             _toggleIslandCups();            
             currentIslandShooter = null;
           });
-          player.incrementScoreBy(2);
+          _incrementPlayerScore(player);
           _addCupToPlayer(player, cupIndex);
           _incrementPlayerHitThisRound(player);
           _incrementPlayerThrows(player);
           _handleCupHit(cupIndex);
-          _handleCupHit(getRandomCupIndex(currentTeam.cups, cupIndex, currentTeam.color)); // Random cup hit
-          
+          (player);
+          try {
+            int islandIndex = getRandomCupIndex(currentTeam.cups, cupIndex, currentTeam.color); // Random cup hit
+            _handleCupHit(islandIndex);
+            _addCupToPlayer(player, islandIndex);
+            _incrementPlayerScore(player); // Increment player score if no exception is thrown
+          } catch (e) {
+            // Handle the exception
+            print('No matching cups found');
+          }
         }
 
         else {
-          player.incrementScore();
+          _incrementPlayerScore(player);
           _addCupToPlayer(player, cupIndex);
           _incrementPlayerHitThisRound(player);
           _incrementPlayerThrows(player);
           _handleCupHit(cupIndex);
+          _checkOnFire(player);
         }
         _checkGameEnd(player, cupIndex);
         }
@@ -458,7 +467,16 @@ class _GameScreenState extends State<GameScreen> {
       isTeamOneTurn = !isTeamOneTurn;
       currentTeam = isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
-     
+  
+      WidgetsBinding.instance.addPostFrameCallback((_) {	
+        setState(() {	
+          IslandBackgroundColor = (currentTeam.cups.any(
+                          (element) => element.isVisible && _isIslandCup(element)) &&
+                          currentTeam.canIslandShot)
+                      ? Colors.amber
+                      : Colors.grey;
+        });
+      });
     });
   }
 
@@ -662,6 +680,15 @@ class _GameScreenState extends State<GameScreen> {
       this.islandShotActive = islandShotActive;
       currentTeam = this.isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
+      WidgetsBinding.instance.addPostFrameCallback((_) {	
+        setState(() {	
+          IslandBackgroundColor = (currentTeam.cups.any(
+                          (element) => element.isVisible && _isIslandCup(element)) &&
+                          currentTeam.canIslandShot)
+                      ? Colors.amber
+                      : Colors.grey;
+        });
+      });
     });
   }
 
@@ -695,6 +722,15 @@ class _GameScreenState extends State<GameScreen> {
       team2 = lastState['team2'];
       isTeamOneTurn = lastState['isTeamOneTurn'];
       currentTeam = isTeamOneTurn ? team1 : team2;
+      WidgetsBinding.instance.addPostFrameCallback((_) {	
+        setState(() {	
+          IslandBackgroundColor = (currentTeam.cups.any(
+                          (element) => element.isVisible && _isIslandCup(element)) &&
+                          currentTeam.canIslandShot)
+                      ? Colors.amber
+                      : Colors.grey;
+        });
+      });
     });
   }
 
@@ -1134,11 +1170,7 @@ class _GameScreenState extends State<GameScreen> {
         Visibility(
           visible: selectedRules["Island"] == true,
           child: FloatingActionButton(
-            backgroundColor: (currentTeam.cups.any(
-                    (element) => element.isVisible && _isIslandCup(element)) &&
-                    currentTeam.canIslandShot)
-                ? Colors.amber
-                : Colors.grey,
+            backgroundColor: IslandBackgroundColor,
             heroTag: "Island",
             onPressed: currentTeam.canIslandShot &&
                     currentTeam.cups.any(
