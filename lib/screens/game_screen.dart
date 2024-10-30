@@ -244,7 +244,6 @@ class _GameScreenState extends State<GameScreen> {
           Colors.green) {
         _checkProximity(index);
       } else {
-        print("hello");
         _checkBallsBack();
         _checkBitchCup(index);
         currentTeam.cups.firstWhere((cup) => cup.index == index).color =
