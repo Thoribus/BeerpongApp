@@ -158,4 +158,16 @@ class Player {
         .map<Player>((item) => Player.fromJson(item))
         .toList();
   }
+
+  // Override the == operator
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! Player) return false;
+    return name == other.name;
+  }
+
+  // Override the hashCode getter
+  @override
+  int get hashCode => name.hashCode ^ score.hashCode;
 }
