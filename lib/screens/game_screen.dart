@@ -12,6 +12,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import '../models/team.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
@@ -43,12 +44,15 @@ class _GameScreenState extends State<GameScreen> {
 
   late bool isTeamOneTurn = widget.startingTeam;
   bool islandShotActive = false;
+  Player? currentIslandShooter = null;
 
   final List<Map<String, dynamic>> _actionStack = [];
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
   late Future<void> _loadGameFuture;
+  
+  Color islandBackgroundColor = Colors.grey;
 
   @override
   void initState() {
@@ -107,12 +111,11 @@ class _GameScreenState extends State<GameScreen> {
       (player) {
         _saveCurrentState();
         _addCupToPlayer(player, cupIndex);
-        _handleCupHit(cupIndex);
         _incrementPlayerThrows(player);
         _incrementPlayerHitThisRound(player);
         _incrementPlayerScore(player);
-        _checkBallsBack();
-        _ckeckOnFire(player);
+        _handleCupHit(cupIndex);
+        _checkOnFire(player);
         _checkGameEnd(player, cupIndex);
       },
     );
@@ -130,14 +133,15 @@ class _GameScreenState extends State<GameScreen> {
             _addCupToPlayer(player, cup.index);
             _handleCupHit(cup.index);
             _incrementPlayerScore(player);
+            _incrementPlayerThrows(player);
           }
         }
-        _checkGameEnd(player, currentTeam.cups.first.index);
+        _checkGameEnd(player, 11);
       },
     );
   }
 
-  void _ckeckOnFire(Player player) {
+  void _checkOnFire(Player player) {
     if (player.isOnFire()) {
       _showOnFireDialog();
     }
@@ -244,6 +248,8 @@ class _GameScreenState extends State<GameScreen> {
           Colors.green) {
         _checkProximity(index);
       } else {
+        print("hello");
+        _checkBallsBack();
         _checkBitchCup(index);
         currentTeam.cups.firstWhere((cup) => cup.index == index).color =
             Colors.green;
@@ -311,15 +317,50 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _highlightIslandCups() {
+  void _toggleIslandCups() {
     setState(() {
-      islandShotActive = true;
-      for (var cup in currentTeam.cups) {
-        if (_isIslandCup(cup)) {
-          cup.color = Colors.yellow;
+      if (islandShotActive){
+        islandShotActive = false;
+        for (var cup in currentTeam.cups) {
+          if (_isIslandCup(cup)) {
+            cup.color = currentTeam.color;
+          }
+        }
+      }
+      else{
+        islandShotActive = true;
+        for (var cup in currentTeam.cups) {
+          if (_isIslandCup(cup)) {
+            cup.color = Colors.yellow;
+          }
         }
       }
     });
+  }
+
+  Future<void> _highlightIslandCups() async{
+    await _showSelectionDialog(
+      context,
+      'Select Player',
+      currentTeam.currentPlayers
+          .where((player) => player.islandShotUsed == false)
+          .toList(),
+      (player) {
+        _saveCurrentState();
+        setState(() {
+          currentIslandShooter = player;  //to remember the player who is shooting the island shot
+          player.islandShotUsed = true;   //to remember that the player has used the island shot
+          islandShotActive = false;
+          _toggleIslandCups();
+          if (currentTeam.players.every((player) => player.islandShotUsed == true)) {
+            currentTeam.canIslandShot = false;    //if all players have used the island shot, disable the island shot
+            if (currentTeam.canIslandShot == false) {   //if the island shot is disabled, change the color of the button
+              islandBackgroundColor = Colors.grey;
+            }
+          }
+        });
+      },
+    );
   }
 
   bool _isIslandCup(Cup cup) {
@@ -347,41 +388,74 @@ class _GameScreenState extends State<GameScreen> {
     return closeCupsCount == 0;
   }
 
+  int getRandomCupIndex(List<Cup> cups, int cupIndex, Color teamColor) {
+    // Filter the cups
+    List<Cup> filteredCups = cups.where((cup) =>
+        cup.index != cupIndex &&
+        cup.isVisible &&
+        (cup.color == teamColor || cup.color == Colors.yellow)).toList();
+
+    // Check if there are any cups left after filtering
+    if (filteredCups.isEmpty) {
+      throw Exception('No matching cups found');
+    }
+
+    // Select a random cup from the filtered list
+    Random random = Random();
+    int randomIndex = random.nextInt(filteredCups.length);
+    return filteredCups[randomIndex].index;
+  }
+
+
   Future<void> _handleIslandShot(int cupIndex) async {
     await _showSelectionDialog(
       context,
       'Select Player and Shot Result',
-      currentTeam.currentPlayers
-          .where((player) => player.islandShotUsed == false)
-          .toList(),
+      currentTeam.currentPlayers.toList(),
       (player) {
         _saveCurrentState();
-        _addCupToPlayer(player, cupIndex);
-        _incrementPlayerScore(player);
-        _incrementPlayerHitThisRound(player);
-        _incrementPlayerThrows(player);
-        _handleCupHit(cupIndex);
-        _incrementPlayerScore(player);
-        _handleCupHit(currentTeam.cups
-            .firstWhere((cup) =>
-                cup.index != cupIndex && cup.color == currentTeam.color)
-            .index);
-
-        setState(() {
-          player.islandShotUsed = true;
-          if (currentTeam.currentPlayers
-              .every((player) => player.islandShotUsed == true)) {
-            currentTeam.canIslandShot = false;
+        if (player == currentIslandShooter) {   //island hit
+          setState(() {
+            _toggleIslandCups();            
+            currentIslandShooter = null;
+          });
+          _incrementPlayerScore(player);
+          _addCupToPlayer(player, cupIndex);
+          _incrementPlayerHitThisRound(player);
+          _incrementPlayerThrows(player);
+          _handleCupHit(cupIndex);
+          (player);
+          try {
+            int islandIndex = getRandomCupIndex(currentTeam.cups, cupIndex, currentTeam.color); // Random cup hit
+            _handleCupHit(islandIndex);
+            _addCupToPlayer(player, islandIndex);
+            _incrementPlayerScore(player); // Increment player score if no exception is thrown
+          } catch (e) {
+            // Handle the exception
+            print('No matching cups found');
           }
-          islandShotActive = false;
-        });
+        }
+
+        else {  //normal hit
+          _incrementPlayerScore(player);
+          _addCupToPlayer(player, cupIndex);
+          _incrementPlayerHitThisRound(player);
+          _incrementPlayerThrows(player);
+          _handleCupHit(cupIndex);
+          _checkOnFire(player);
+        }
         _checkGameEnd(player, cupIndex);
-      },
+        }
     );
   }
 
   void _endTurn() {
     setState(() {
+      if (islandShotActive) {
+        currentIslandShooter = null;
+        _toggleIslandCups(); // Reset island shot highlight
+      }
+
       for (var player in currentTeam.currentPlayers) {
         if (player.hitThisRound == 0) {
           _incrementPlayerMisses(player);
@@ -398,12 +472,14 @@ class _GameScreenState extends State<GameScreen> {
       isTeamOneTurn = !isTeamOneTurn;
       currentTeam = isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
-
-      // Ensure the layout is built before checking for island cups
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          currentTeam.canIslandShot =
-              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
+  
+      WidgetsBinding.instance.addPostFrameCallback((_) {	
+        setState(() {	
+          islandBackgroundColor = (currentTeam.cups.any(
+                          (element) => element.isVisible && _isIslandCup(element)) &&
+                          currentTeam.canIslandShot)
+                      ? Colors.amber
+                      : Colors.grey;
         });
       });
     });
@@ -456,13 +532,24 @@ class _GameScreenState extends State<GameScreen> {
     const double proximityThreshold = 100.0;
     double hitCups = 0.0;
 
-    for (int i = 0; i < currentTeam.cups.length; i++) {
-      if (i == index) continue;
-      if (currentTeam.cups[i].isVisible && currentTeam.cups[index].isVisible) {
-        final renderBox1 = currentTeam.cups[i].key.currentContext
-            ?.findRenderObject() as RenderBox?;
-        final renderBox2 = currentTeam.cups[index].key.currentContext
-            ?.findRenderObject() as RenderBox?;
+    // Find the cup with the given index
+    Cup? targetCup;
+    for (Cup cup in currentTeam.cups) {
+      if (cup.index == index && cup.isVisible) {
+        targetCup = cup;
+        break;
+      }
+    }
+
+    if (targetCup == null) return;
+
+    // Check proximity for all visible cups
+    for (Cup cup in currentTeam.cups) {
+      if (cup.index != index && cup.isVisible) {
+        final renderBox1 =
+            cup.key.currentContext?.findRenderObject() as RenderBox?;
+        final renderBox2 =
+            targetCup.key.currentContext?.findRenderObject() as RenderBox?;
 
         if (renderBox1 != null && renderBox2 != null) {
           Offset position1 = renderBox1.localToGlobal(Offset.zero);
@@ -471,12 +558,13 @@ class _GameScreenState extends State<GameScreen> {
           double distance = _calculateDistance(position1, position2);
           if (distance < proximityThreshold) {
             hitCups++;
-            currentTeam.cups[i].color = Colors.green;
+            cup.color = Colors.green;
           }
         }
       }
     }
-    currentTeam.cups[index].color = currentTeam.color;
+
+    targetCup.color = currentTeam.color;
     for (var player in currentTeam.currentPlayers) {
       if (player.cupsHit.contains(index)) {
         player.incrementScoreBy(hitCups / 2 - 1);
@@ -597,12 +685,13 @@ class _GameScreenState extends State<GameScreen> {
       this.islandShotActive = islandShotActive;
       currentTeam = this.isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
-
-      // Ensure the layout is built before checking for island cups
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          currentTeam.canIslandShot =
-              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
+      WidgetsBinding.instance.addPostFrameCallback((_) {	
+        setState(() {	
+          islandBackgroundColor = (currentTeam.cups.any(
+                          (element) => element.isVisible && _isIslandCup(element)) &&
+                          currentTeam.canIslandShot)
+                      ? Colors.amber
+                      : Colors.grey;
         });
       });
     });
@@ -621,13 +710,11 @@ class _GameScreenState extends State<GameScreen> {
 
   void _saveCurrentState() {
     _actionStack.add({
-      'team1Cups': team1.cups.map((cup) => cup.clone()).toList(),
-      'team2Cups': team2.cups.map((cup) => cup.clone()).toList(),
-      'team1Players': team1.players.map((player) => player.clone()).toList(),
-      'team2Players': team2.players.map((player) => player.clone()).toList(),
+      'team1': team1.clone(),
+      'team2': team2.clone(),
       'isTeamOneTurn': isTeamOneTurn,
-      'isRearranged1': team1.isRearranged,
-      'isRearranged2': team2.isRearranged,
+      'islandShotActive': islandShotActive,
+      'currentIslandShooter': currentIslandShooter,
     });
   }
 
@@ -635,21 +722,24 @@ class _GameScreenState extends State<GameScreen> {
     if (_actionStack.isEmpty) return;
 
     final lastState = _actionStack.removeLast();
+    Team test = lastState["team1"];
+    print(test.toString());
     setState(() {
-      team1.cups = lastState['team1Cups'].cast<Cup>();
-      team2.cups = lastState['team2Cups'].cast<Cup>();
-      team1.players = lastState['team1Players'].cast<Player>();
-      team2.players = lastState['team2Players'].cast<Player>();
+      team1 = lastState['team1'];
+      team2 = lastState['team2'];
       isTeamOneTurn = lastState['isTeamOneTurn'];
-      team1.isRearranged = lastState['isRearranged1'];
-      team2.isRearranged = lastState['isRearranged2'];
+      islandShotActive = lastState['islandShotActive']; //island logic
+      if (lastState['currentIslandShooter'] != null) {
+        currentIslandShooter = lastState['currentIslandShooter']; //not always initialized
+      }
       currentTeam = isTeamOneTurn ? team1 : team2;
-
-      // Ensure the layout is built before checking for island cups
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          currentTeam.canIslandShot =
-              currentTeam.cups.any((cup) => cup.isVisible && _isIslandCup(cup));
+      WidgetsBinding.instance.addPostFrameCallback((_) {	
+        setState(() {	
+          islandBackgroundColor = (currentTeam.cups.any(
+                          (element) => element.isVisible && _isIslandCup(element)) &&
+                          currentTeam.canIslandShot)
+                      ? Colors.amber
+                      : Colors.grey;
         });
       });
     });
@@ -660,7 +750,7 @@ class _GameScreenState extends State<GameScreen> {
         .every((cup) => !cup.isVisible || cup.color == Colors.green);
 
     if (teamAllHit) {
-      if (selectedRules['Nachwurf'] == true) {
+      if (selectedRules['Nachwurf'] == true && cupIndex != 11) {
         bool enemyTurn = await _handleNachwurf(cupIndex);
         if (enemyTurn) {
           _decrementPlayerScore(player);
@@ -674,6 +764,13 @@ class _GameScreenState extends State<GameScreen> {
       _setPlayerHitLastCup(player);
       await _clearGameState();
       await _saveGameStatistics();
+
+      for (var player in team1.players) {
+        print(player.toJson());
+      }
+      for (var player in team2.players) {
+        print(player.toJson());
+      }
 
       _showGameEndDialog(context, currentTeam.players);
     }
@@ -963,7 +1060,7 @@ class _GameScreenState extends State<GameScreen> {
         newIndices = [6, 7, 8, 3, 4, 1];
         break;
       case 5:
-        newIndices = [6, 7, 8, 3, 4];
+        newIndices = [7, 3, 4, 1, 0];
         break;
       case 4:
         newIndices = [7, 3, 4, 1];
@@ -1044,6 +1141,18 @@ class _GameScreenState extends State<GameScreen> {
                   ? _buildCups(currentTeam.remainingCups, true)
                   : _buildCups(currentTeam.cups, false),
               const SizedBox(height: 40),
+              Text(currentTeam.currentPlayers[0].name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  )),
+              Text(currentTeam.currentPlayers[1].name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  )),
               _buildSpecialRulesButtons(),
             ],
           ),
@@ -1072,10 +1181,7 @@ class _GameScreenState extends State<GameScreen> {
         Visibility(
           visible: selectedRules["Island"] == true,
           child: FloatingActionButton(
-            backgroundColor: currentTeam.cups.any(
-                    (element) => element.isVisible && _isIslandCup(element))
-                ? Colors.amber
-                : Colors.grey,
+            backgroundColor: islandBackgroundColor,
             heroTag: "Island",
             onPressed: currentTeam.canIslandShot &&
                     currentTeam.cups.any(
