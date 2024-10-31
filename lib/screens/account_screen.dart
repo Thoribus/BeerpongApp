@@ -5,6 +5,7 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:provider/provider.dart';
 import 'achievements_screen.dart';
 import 'personal_statistics_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -46,8 +47,6 @@ class AccountScreenState extends State<AccountScreen> {
                   const SizedBox(height: 20),
                   _buildUserCard(),
                   const SizedBox(height: 20),
-                  _buildSectionTitle("Appearance"),
-                  _buildAppearanceCard(),
                   _buildSectionTitle("Achievements"),
                   _buildAchievementsCard(),
                   _buildSectionTitle("Statistics"),
@@ -67,40 +66,80 @@ class AccountScreenState extends State<AccountScreen> {
     return Card(
       color: Colors.amber.withOpacity(0.2),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
+            // Left section with user icon and names
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: _showIconPicker,
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: selectedColor,
-                    child: Icon(
-                      selectedIcon,
-                      size: 60,
-                      color: Colors.white,
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: selectedColor,
+                      child: Icon(
+                        selectedIcon,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.username ?? 'Username',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Text(
+                          'dummy data',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _showIconPicker, // Opens the appearance picker
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  user!.username,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  child: const Text(
+                    'Custom',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
             ),
-            const Divider(color: Colors.grey),
-            Text(
-              "User ID: ${user!.id}",
-              style: const TextStyle(color: Colors.white70),
+
+            // Right section with SVG image
+            SizedBox(
+              width: 150,
+              height: 150,
+              child: SvgPicture.asset(
+                'assets/otter_canvas.svg',
+                fit: BoxFit.contain,
+              ),
             ),
           ],
         ),
@@ -118,19 +157,6 @@ class AccountScreenState extends State<AccountScreen> {
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
-      ),
-    );
-  }
-
-  Widget _buildAppearanceCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(Icons.palette, color: Colors.amber),
-        title: const Text("Customize"),
-        subtitle: const Text("Make the app your own"),
-        onTap: _showIconPicker,
       ),
     );
   }

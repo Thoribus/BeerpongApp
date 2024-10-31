@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'compare_stats_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // Add this import for SVG support
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
@@ -20,6 +21,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   late auth.User? authUser;
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  String _selectedAttribute = 'Total Score'; // Default sorting attribute
 
   @override
   void initState() {
@@ -52,21 +54,22 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-         return AlertDialog(
+        return AlertDialog(
           title: const Text('Add Friend'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(hintText: 'Enter friend\'s ID'),
+                decoration:
+                    const InputDecoration(hintText: 'Enter friend\'s ID'),
               ),
               const SizedBox(height: 10),
               GestureDetector(
                 onTap: () {
                   FlutterClipboard.copy(authUser!.uid).then((value) =>
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Copied to Clipboard'))));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Copied to Clipboard'))));
                 },
                 child: Text(
                   'Your ID: ${authUser!.uid}',
@@ -168,7 +171,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                         _pageController.jumpToPage(0);
                       },
                 child: Text(
-                  'Friends List',
+                  'Friends',
                   style: TextStyle(
                     color: _currentPage == 0 ? Colors.amber : Colors.white,
                   ),
@@ -188,7 +191,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                         _pageController.jumpToPage(1);
                       },
                 child: Text(
-                  'Ranking',
+                  'Leaderboard',
                   style: TextStyle(
                     color: _currentPage == 1 ? Colors.amber : Colors.white,
                   ),
@@ -268,32 +271,89 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           return const Center(child: Text('No friends found.'));
         } else {
           List<User> friends = snapshot.data!;
-          friends.sort((a, b) => b.winRate.compareTo(a.winRate));
-          return ListView.builder(
-            itemCount: friends.length,
-            itemBuilder: (context, index) {
-              User friend = friends[index];
-              bool isCurrentUser = friend.id == authUser!.uid;
-              return ListTile(
-                leading: Text(
-                  '${index + 1}',
-                  style: const TextStyle(color: Colors.amber, fontSize: 24),
+
+          // Sort friends based on the selected attribute
+          friends.sort((a, b) {
+            switch (_selectedAttribute) {
+              case 'Total Score':
+                return b.totalScore.compareTo(a.totalScore);
+              case 'Win Rate':
+                return b.winRate.compareTo(a.winRate);
+              default:
+                return 0; // No sorting
+            }
+          });
+
+          return SingleChildScrollView(
+            // Make the entire ranking page scrollable
+            child: Column(
+              children: [
+                // Podium graphic
+                SvgPicture.asset(
+                  'assets/podium.svg', // Ensure this path is correct
+                  width: double.infinity,
+                  height: 150, // Adjust height as needed
                 ),
-                title: Text(
-                  friend.username,
-                  style: TextStyle(
-                    color: isCurrentUser ? Colors.amber : Colors.white,
-                    fontWeight:
-                        isCurrentUser ? FontWeight.bold : FontWeight.normal,
-                  ),
+                const SizedBox(
+                    height: 10), // Space between the podium and the list
+
+                // Dropdown for sorting attribute
+                DropdownButton<String>(
+                  value: _selectedAttribute,
+                  items: <String>['Total Score', 'Win Rate']
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value,
+                          style: const TextStyle(color: Colors.white)),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedAttribute = newValue!;
+                    });
+                  },
+                  dropdownColor: Colors.black, // Dropdown background color
+                  style: const TextStyle(
+                      color: Colors.white), // Dropdown text color
                 ),
-                subtitle: Text(
-                  'Win Rate: ${(friend.winRate * 100).toStringAsFixed(2)}%',
-                  style: const TextStyle(color: Colors.grey),
+
+                // The list of friends ranked
+                ListView.builder(
+                  physics:
+                      const NeverScrollableScrollPhysics(), // Disable scrolling
+                  shrinkWrap: true, // Wrap the list to prevent overflow
+                  itemCount: friends.length,
+                  itemBuilder: (context, index) {
+                    User friend = friends[index];
+                    return ListTile(
+                      leading: Text(
+                        '${index + 1}',
+                        style:
+                            const TextStyle(color: Colors.amber, fontSize: 24),
+                      ),
+                      title: Text(
+                        friend.username,
+                        style: TextStyle(
+                          color: friend.id == authUser!.uid
+                              ? Colors.amber
+                              : Colors.white,
+                          fontWeight: friend.id == authUser!.uid
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      subtitle: Text(
+                        _selectedAttribute == 'Total Score'
+                            ? 'Total Score: ${friend.totalScore}'
+                            : 'Win Rate: ${(friend.winRate * 100).toStringAsFixed(2)}%',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  },
                 ),
-                tileColor: isCurrentUser ? Colors.grey[200] : Colors.black,
-              );
-            },
+              ],
+            ),
           );
         }
       },
@@ -301,12 +361,10 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Future<List<User>> _fetchFriendsAndUser() async {
-    final user = await _userFuture;
-    List<User> friends = await _friends;
-    if (user != null) {
-      if (!friends.contains(user)) {
-        friends.add(user);
-      }
+    List<User> friends = await FirestoreService().getFriends(authUser!.uid);
+    User? currentUser = await FirestoreService().getUser(authUser!.uid);
+    if (currentUser != null) {
+      friends.insert(0, currentUser); // Add current user to the top of the list
     }
     return friends;
   }
