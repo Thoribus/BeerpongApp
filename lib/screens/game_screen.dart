@@ -11,7 +11,7 @@ import 'dart:math';
 import 'package:percent_indicator/percent_indicator.dart';
 import '../models/team.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:awesome_dialog/awesome_dialog.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({
@@ -51,7 +51,7 @@ class _GameScreenState extends State<GameScreen> {
   int _currentPage = 0;
 
   late Future<void> _loadGameFuture;
-  
+
   Color islandBackgroundColor = Colors.grey;
 
   @override
@@ -79,27 +79,92 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<void> _showSelectionDialog(BuildContext context, String title,
       List<Player> players, Function(Player) onSelected) async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(title),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: players.map((player) {
-                return ElevatedButton(
-                  child: Text(player.name),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                    onSelected(player);
-                  },
-                );
-              }).toList(),
+      dialogType: DialogType.question, // Matches the question style
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.amberAccent,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-        );
-      },
-    );
+          const SizedBox(height: 10.0),
+          // Description
+          const Text(
+            "Select the player for the cup action:",
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          // Player cards
+          Wrap(
+            spacing: 10.0,
+            runSpacing: 10.0,
+            alignment: WrapAlignment.center,
+            children: players.map((player) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  onSelected(player);
+                },
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  elevation: 4.0,
+                  child: Container(
+                    width: 120.0,
+                    height: 150.0,
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Player icon
+                        CircleAvatar(
+                          radius: 35.0,
+                          backgroundColor: Colors.grey.shade300,
+                          child: Icon(
+                            Icons.person,
+                            size: 50.0,
+                            color: Colors.brown,
+                          ),
+                        ),
+                        const SizedBox(height: 8.0),
+                        // Player name
+                        Text(
+                          player.name,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+      btnCancelOnPress: () {},
+      btnCancelText: "Cancel",
+    ).show();
   }
 
   Future<void> _showPlayerSelectionDialog(
@@ -148,27 +213,53 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _showOnFireDialog() async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('On Fire!'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Three consecutive hits!'),
-              ],
+      dialogType: DialogType.success, // Success dialog type
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.redAccent.shade100, // Green for success
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          const Text(
+            'On Fire!',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+          const SizedBox(height: 10.0),
+          // Description
+          const Text(
+            'Three consecutive hits!',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
             ),
-          ],
-        );
-      },
-    );
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          // Icons next to each other
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.fireplace_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+      btnOkOnPress: () {},
+      btnOkText: "OK", // Single OK button
+    ).show();
   }
 
   void _checkBallsBack() {
@@ -183,27 +274,59 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _showBallsBackDialog() async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Balls Back!'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('All players hit this round!'),
-              ],
+      dialogType: DialogType.infoReverse, // Success dialog type for celebration
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.blueAccent.shade100, // Green for success
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          const Text(
+            'Balls Back!',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+          const SizedBox(height: 10.0),
+          // Description
+          const Text(
+            'All players hit this round!',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
             ),
-          ],
-        );
-      },
-    );
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          // Icons next to each other
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.circle_outlined,
+                size: 50.0,
+                color: Colors.green,
+              ),
+              SizedBox(width: 10.0), // Space between the two icons
+              Icon(
+                Icons.circle_outlined,
+                size: 50.0,
+                color: Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+      btnOkOnPress: () {},
+      btnOkText: "OK", // Single OK button
+    ).show();
   }
 
   void _incrementPlayerScore(Player player) {
@@ -267,27 +390,65 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _showBitchCupDialog() async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Bitchcup!'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Bitchcup getroffen!'),
-              ],
+      dialogType: DialogType.error, // Success dialog type
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.redAccent.shade100, // Green for success
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          const Text(
+            'Bitch Cup!',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Hosen runter!'),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+          const SizedBox(height: 10.0),
+          // Description
+          const Text(
+            'Drop your pants!',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
             ),
-          ],
-        );
-      },
-    );
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          // Icons next to each other
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.directions_walk_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+              SizedBox(width: 10.0), // Space between the two icons
+              Icon(
+                Icons.arrow_downward_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+              SizedBox(width: 10.0), // Space between the two icons
+              Icon(
+                Icons.dry_cleaning_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+      btnCancelOnPress: () {},
+      btnCancelText: "OK", // Single OK button
+    ).show();
   }
 
   void _setPlayerHitLastCup(Player player) {
@@ -319,15 +480,14 @@ class _GameScreenState extends State<GameScreen> {
 
   void _toggleIslandCups() {
     setState(() {
-      if (islandShotActive){
+      if (islandShotActive) {
         islandShotActive = false;
         for (var cup in currentTeam.cups) {
           if (_isIslandCup(cup)) {
             cup.color = currentTeam.color;
           }
         }
-      }
-      else{
+      } else {
         islandShotActive = true;
         for (var cup in currentTeam.cups) {
           if (_isIslandCup(cup)) {
@@ -338,7 +498,7 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  Future<void> _highlightIslandCups() async{
+  Future<void> _highlightIslandCups() async {
     await _showSelectionDialog(
       context,
       'Select Player',
@@ -348,13 +508,18 @@ class _GameScreenState extends State<GameScreen> {
       (player) {
         _saveCurrentState();
         setState(() {
-          currentIslandShooter = player;  //to remember the player who is shooting the island shot
-          player.islandShotUsed = true;   //to remember that the player has used the island shot
+          currentIslandShooter =
+              player; //to remember the player who is shooting the island shot
+          player.islandShotUsed =
+              true; //to remember that the player has used the island shot
           islandShotActive = false;
           _toggleIslandCups();
-          if (currentTeam.players.every((player) => player.islandShotUsed == true)) {
-            currentTeam.canIslandShot = false;    //if all players have used the island shot, disable the island shot
-            if (currentTeam.canIslandShot == false) {   //if the island shot is disabled, change the color of the button
+          if (currentTeam.players
+              .every((player) => player.islandShotUsed == true)) {
+            currentTeam.canIslandShot =
+                false; //if all players have used the island shot, disable the island shot
+            if (currentTeam.canIslandShot == false) {
+              //if the island shot is disabled, change the color of the button
               islandBackgroundColor = Colors.grey;
             }
           }
@@ -390,10 +555,12 @@ class _GameScreenState extends State<GameScreen> {
 
   int getRandomCupIndex(List<Cup> cups, int cupIndex, Color teamColor) {
     // Filter the cups
-    List<Cup> filteredCups = cups.where((cup) =>
-        cup.index != cupIndex &&
-        cup.isVisible &&
-        (cup.color == teamColor || cup.color == Colors.yellow)).toList();
+    List<Cup> filteredCups = cups
+        .where((cup) =>
+            cup.index != cupIndex &&
+            cup.isVisible &&
+            (cup.color == teamColor || cup.color == Colors.yellow))
+        .toList();
 
     // Check if there are any cups left after filtering
     if (filteredCups.isEmpty) {
@@ -406,47 +573,44 @@ class _GameScreenState extends State<GameScreen> {
     return filteredCups[randomIndex].index;
   }
 
-
   Future<void> _handleIslandShot(int cupIndex) async {
-    await _showSelectionDialog(
-      context,
-      'Select Player and Shot Result',
-      currentTeam.currentPlayers.toList(),
-      (player) {
-        _saveCurrentState();
-        if (player == currentIslandShooter) {   //island hit
-          setState(() {
-            _toggleIslandCups();            
-            currentIslandShooter = null;
-          });
-          _incrementPlayerScore(player);
-          _addCupToPlayer(player, cupIndex);
-          _incrementPlayerHitThisRound(player);
-          _incrementPlayerThrows(player);
-          _handleCupHit(cupIndex);
-          (player);
-          try {
-            int islandIndex = getRandomCupIndex(currentTeam.cups, cupIndex, currentTeam.color); // Random cup hit
-            _handleCupHit(islandIndex);
-            _addCupToPlayer(player, islandIndex);
-            _incrementPlayerScore(player); // Increment player score if no exception is thrown
-          } catch (e) {
-            // Handle the exception
-            print('No matching cups found');
-          }
+    await _showSelectionDialog(context, 'Select Player and Shot Result',
+        currentTeam.currentPlayers.toList(), (player) {
+      _saveCurrentState();
+      if (player == currentIslandShooter) {
+        //island hit
+        setState(() {
+          _toggleIslandCups();
+          currentIslandShooter = null;
+        });
+        _incrementPlayerScore(player);
+        _addCupToPlayer(player, cupIndex);
+        _incrementPlayerHitThisRound(player);
+        _incrementPlayerThrows(player);
+        _handleCupHit(cupIndex);
+        (player);
+        try {
+          int islandIndex = getRandomCupIndex(
+              currentTeam.cups, cupIndex, currentTeam.color); // Random cup hit
+          _handleCupHit(islandIndex);
+          _addCupToPlayer(player, islandIndex);
+          _incrementPlayerScore(
+              player); // Increment player score if no exception is thrown
+        } catch (e) {
+          // Handle the exception
+          print('No matching cups found');
         }
-
-        else {  //normal hit
-          _incrementPlayerScore(player);
-          _addCupToPlayer(player, cupIndex);
-          _incrementPlayerHitThisRound(player);
-          _incrementPlayerThrows(player);
-          _handleCupHit(cupIndex);
-          _checkOnFire(player);
-        }
-        _checkGameEnd(player, cupIndex);
-        }
-    );
+      } else {
+        //normal hit
+        _incrementPlayerScore(player);
+        _addCupToPlayer(player, cupIndex);
+        _incrementPlayerHitThisRound(player);
+        _incrementPlayerThrows(player);
+        _handleCupHit(cupIndex);
+        _checkOnFire(player);
+      }
+      _checkGameEnd(player, cupIndex);
+    });
   }
 
   void _endTurn() {
@@ -472,50 +636,78 @@ class _GameScreenState extends State<GameScreen> {
       isTeamOneTurn = !isTeamOneTurn;
       currentTeam = isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
-  
-      WidgetsBinding.instance.addPostFrameCallback((_) {	
-        setState(() {	
-          islandBackgroundColor = (currentTeam.cups.any(
-                          (element) => element.isVisible && _isIslandCup(element)) &&
-                          currentTeam.canIslandShot)
-                      ? Colors.amber
-                      : Colors.grey;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          islandBackgroundColor = (currentTeam.cups.any((element) =>
+                      element.isVisible && _isIslandCup(element)) &&
+                  currentTeam.canIslandShot)
+              ? Colors.amber
+              : Colors.grey;
         });
       });
     });
   }
 
   Future<void> _confirmEndTurn(BuildContext context) async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Confirm End Turn'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Are you sure you want to end your turn?'),
-              ],
+      dialogType: DialogType.success, // Success dialog type
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.amberAccent.shade100, // Green for success
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          const Text(
+            'End your turn!',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+          const SizedBox(height: 10.0),
+          // Description
+          const Text(
+            'Confirm that all cup actions were selected!',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
             ),
-            TextButton(
-              child: const Text('End Turn'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _saveCurrentState();
-                _endTurn();
-              },
-            ),
-          ],
-        );
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          // Icons next to each other
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.circle_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+              SizedBox(width: 10.0), // Space between the two icons
+              Icon(
+                Icons.circle_outlined,
+                size: 50.0,
+                color: Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+      btnCancelOnPress: () {},
+      btnCancelText: "Cancel", // Single OK button
+      btnOkOnPress: () {
+        _saveCurrentState();
+        _endTurn();
       },
-    );
+      btnOkText: "End Turn", // Single OK button
+    ).show();
   }
 
   double _calculateDistance(Offset position1, Offset position2) {
@@ -585,27 +777,54 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _showAirballDialog(BuildContext context, int airballs) async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Airball Milestone'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Total airballs: $airballs'),
-              ],
+      dialogType: DialogType.success, // Success dialog type
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.greenAccent.shade100, // Green for success
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          const Text(
+            'Airball Milestone',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Shots...'),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+          const SizedBox(height: 10.0),
+          // Description
+          const Text(
+            'All players need to drink a shot!',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
             ),
-          ],
-        );
-      },
-    );
+            textAlign: TextAlign.center,
+          ),
+          Text('Total airballs: $airballs'),
+          const SizedBox(height: 20.0),
+          // Icons next to each otherTotal airballs: $airballs'
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.wine_bar_outlined,
+                size: 50.0,
+                color: Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+      btnOkOnPress: () {},
+      btnOkText: "OK", // Single OK button
+    ).show();
   }
 
   void _incrementPlayerAirballs(Player player) {
@@ -685,13 +904,13 @@ class _GameScreenState extends State<GameScreen> {
       this.islandShotActive = islandShotActive;
       currentTeam = this.isTeamOneTurn ? team1 : team2;
       currentTeam.currentPlayers = currentTeam.rotatePlayers();
-      WidgetsBinding.instance.addPostFrameCallback((_) {	
-        setState(() {	
-          islandBackgroundColor = (currentTeam.cups.any(
-                          (element) => element.isVisible && _isIslandCup(element)) &&
-                          currentTeam.canIslandShot)
-                      ? Colors.amber
-                      : Colors.grey;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          islandBackgroundColor = (currentTeam.cups.any((element) =>
+                      element.isVisible && _isIslandCup(element)) &&
+                  currentTeam.canIslandShot)
+              ? Colors.amber
+              : Colors.grey;
         });
       });
     });
@@ -730,16 +949,17 @@ class _GameScreenState extends State<GameScreen> {
       isTeamOneTurn = lastState['isTeamOneTurn'];
       islandShotActive = lastState['islandShotActive']; //island logic
       if (lastState['currentIslandShooter'] != null) {
-        currentIslandShooter = lastState['currentIslandShooter']; //not always initialized
+        currentIslandShooter =
+            lastState['currentIslandShooter']; //not always initialized
       }
       currentTeam = isTeamOneTurn ? team1 : team2;
-      WidgetsBinding.instance.addPostFrameCallback((_) {	
-        setState(() {	
-          islandBackgroundColor = (currentTeam.cups.any(
-                          (element) => element.isVisible && _isIslandCup(element)) &&
-                          currentTeam.canIslandShot)
-                      ? Colors.amber
-                      : Colors.grey;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          islandBackgroundColor = (currentTeam.cups.any((element) =>
+                      element.isVisible && _isIslandCup(element)) &&
+                  currentTeam.canIslandShot)
+              ? Colors.amber
+              : Colors.grey;
         });
       });
     });
@@ -811,49 +1031,79 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<void> _showGameEndDialog(
       BuildContext context, List<Player> players) async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Game Over'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                ...players.map((player) => Text("${player.name} ")),
-                const Text("have won the game!"),
-              ],
+      dialogType: DialogType.warning, // Info dialog type (adjust as needed)
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.amber.shade100, // Custom background color
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          const Text(
+            'Game Over',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Go to Stats'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BaseScreen(selectedIndex: 3),
-                  ),
-                );
-              },
+          const SizedBox(height: 10.0),
+          // Description of the winners
+          Text(
+            "${players.map((player) => player.name).join(', ')} have won the game!",
+            style: const TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
             ),
-            TextButton(
-              child: const Text('Go to Home'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BaseScreen(selectedIndex: 2),
-                  ),
-                );
-              },
-            ),
-          ],
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          // Optional icons or any additional content
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                BeerpongIcons.medal,
+                size: 50.0,
+                color: Colors.amber,
+              ),
+              SizedBox(width: 10.0), // Space between the two icons
+              Icon(
+                BeerpongIcons.medal,
+                size: 50.0,
+                color: Colors.amber,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+      btnOkOnPress: () {
+        // You can handle any action on OK button here if needed
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const BaseScreen(selectedIndex: 3), // Navigate to Stats
+          ),
         );
       },
-    );
+      btnOkText: "Go to Stats", // Button text for the first action
+      btnCancelOnPress: () {
+        // Cancel action to go back to Home
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const BaseScreen(selectedIndex: 2), // Navigate to Home
+          ),
+        );
+      },
+      btnCancelText: "Go to Home", // Button text for the cancel action
+    ).show();
   }
 
   Future<void> _saveGameStatistics() async {
@@ -1028,29 +1278,65 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Future<void> _showRearrangeErrorDialog(BuildContext context) async {
-    return showDialog<void>(
+    AwesomeDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Rearrange Error'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('You can only rearrange if you have 6 or fewer cups.'),
-              ],
+      dialogType: DialogType.error, // Success dialog type
+      animType: AnimType.topSlide, // Animation from the top
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.redAccent.shade100, // Green for success
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Title
+          const Text(
+            'Rearrange Error!',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
+            textAlign: TextAlign.center,
           ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
+          const SizedBox(height: 10.0),
+          // Description
+          const Text(
+            'You can only rearrange if you have 6 or less cups!',
+            style: TextStyle(
+              fontSize: 16.0,
+              color: Colors.black54,
             ),
-          ],
-        );
-      },
-    );
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          // Icons next to each other
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(
+                Icons.scatter_plot_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+              SizedBox(width: 10.0), // Space between the two icons
+              Icon(
+                Icons.arrow_forward_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+              SizedBox(width: 10.0), // Space between the two icons
+              Icon(
+                Icons.workspaces_outlined,
+                size: 50.0,
+                color: Colors.red,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20.0),
+        ],
+      ),
+      btnCancelOnPress: () {},
+      btnCancelText: "OK", // Single OK button
+    ).show();
   }
 
   List<Cup> _assignSpecificIndices(List<Cup> cups) {
@@ -1097,36 +1383,126 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildCurrentGamePage() {
-    return Stack(
-      children: [
-        Positioned(
-          top: 90.0,
-          left: 16.0,
-          right: 16.0,
-          bottom: 16.0,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16.0),
-              gradient: LinearGradient(
-                colors: [Colors.brown.shade700, Colors.brown.shade400],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: Colors.white,
-                width: 4.0,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            // Box Decoration stretching to the bottom
+            Positioned(
+              top: 100.0,
+              left: 16.0,
+              right: 16.0,
+              bottom: 16.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.0),
+                  gradient: LinearGradient(
+                    colors: [Colors.brown.shade700, Colors.brown.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 4.0,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: currentTeam.isRearranged
+                          ? _buildCups(currentTeam.remainingCups, true)
+                          : _buildCups(currentTeam.cups, false),
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      flex: 1,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Bottom-left player names
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (currentTeam.currentPlayers.length > 0)
+                                Text(
+                                  currentTeam.currentPlayers[0].name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              if (currentTeam.currentPlayers.length > 1)
+                                Text(
+                                  currentTeam.currentPlayers[1].name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          // Bottom-right player names
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (currentTeam.currentPlayers.length > 2)
+                                Text(
+                                  currentTeam.currentPlayers[2].name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              if (currentTeam.currentPlayers.length > 3)
+                                Text(
+                                  currentTeam.currentPlayers[3].name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+            // Buttons Section
+            Positioned(
+              top: 20.0,
+              left: 16.0,
+              right: 16.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Deathcup Button
+                  if (selectedRules["Deathcup"] == true)
+                    FloatingActionButton(
+                      onPressed: () => _showDeathcupSelectionDialog(context),
+                      backgroundColor: Colors.amber,
+                      heroTag: "Deathcup",
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(20),
+                              bottomLeft: Radius.circular(100),
+                              bottomRight: Radius.circular(100),
+                              topLeft: Radius.circular(100))),
+                      child: const Icon(BeerpongIcons.skull, size: 35),
+                    )
+                  else
+                    const SizedBox(width: 56.0), // Placeholder for alignment
+                  // Airball Button (Always Centered)
                   FloatingActionButton.extended(
                     backgroundColor: Colors.amber,
                     heroTag: "airball",
@@ -1135,65 +1511,28 @@ class _GameScreenState extends State<GameScreen> {
                     label: const Text('Airball'),
                     icon: const Icon(BeerpongIcons.airball, size: 45),
                   ),
+                  // Island Button
+                  if (selectedRules["Island"] == true)
+                    FloatingActionButton(
+                      backgroundColor: islandBackgroundColor,
+                      heroTag: "Island",
+                      onPressed: currentTeam.canIslandShot &&
+                              currentTeam.cups.any((element) =>
+                                  element.isVisible && _isIslandCup(element))
+                          ? () {
+                              _highlightIslandCups();
+                            }
+                          : () {}, // Disable the button if the conditions are not met
+                      child: const Icon(BeerpongIcons.palm_tree, size: 45),
+                    )
+                  else
+                    const SizedBox(width: 56.0), // Placeholder for alignment
                 ],
               ),
-              currentTeam.isRearranged
-                  ? _buildCups(currentTeam.remainingCups, true)
-                  : _buildCups(currentTeam.cups, false),
-              const SizedBox(height: 40),
-              Text(currentTeam.currentPlayers[0].name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  )),
-              Text(currentTeam.currentPlayers[1].name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  )),
-              _buildSpecialRulesButtons(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSpecialRulesButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (selectedRules["Deathcup"] == true)
-          FloatingActionButton(
-            onPressed: () => _showDeathcupSelectionDialog(context),
-            backgroundColor: Colors.amber,
-            heroTag: "Deathcup",
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(20),
-                    bottomLeft: Radius.circular(100),
-                    bottomRight: Radius.circular(100),
-                    topLeft: Radius.circular(100))),
-            child: const Icon(BeerpongIcons.skull, size: 35),
-          ),
-        Visibility(
-          visible: selectedRules["Island"] == true,
-          child: FloatingActionButton(
-            backgroundColor: islandBackgroundColor,
-            heroTag: "Island",
-            onPressed: currentTeam.canIslandShot &&
-                    currentTeam.cups.any(
-                        (element) => element.isVisible && _isIslandCup(element))
-                ? () {
-                    _highlightIslandCups();
-                  }
-                : () {}, // Disable the button if the conditions are not met
-            child: const Icon(BeerpongIcons.palm_tree, size: 45),
-          ),
-        )
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1219,40 +1558,51 @@ class _GameScreenState extends State<GameScreen> {
                 thickness: 1,
               ),
               const SizedBox(height: 10),
-              DataTable(
-                columns: const [
-                  DataColumn(
-                      label: Text('Player',
-                          style: TextStyle(color: Colors.white))),
-                  DataColumn(
-                      label: Text('S', style: TextStyle(color: Colors.white))),
-                  DataColumn(
-                      label: Text('M', style: TextStyle(color: Colors.white))),
-                  DataColumn(
-                      label: Text('T', style: TextStyle(color: Colors.white))),
-                  DataColumn(
-                      label: Text('A', style: TextStyle(color: Colors.white))),
-                ],
-                rows: currentTeam.currentPlayers.map((player) {
-                  return DataRow(cells: [
-                    DataCell(Row(
-                      children: [
-                        Icon(Icons.person, color: teamColor),
-                        const SizedBox(width: 8),
-                        Text(player.name,
-                            style: const TextStyle(color: Colors.white)),
-                      ],
-                    )),
-                    DataCell(Text('${player.score}',
-                        style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${player.misses}',
-                        style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${player.throws}',
-                        style: const TextStyle(color: Colors.white))),
-                    DataCell(Text('${player.airballs}',
-                        style: const TextStyle(color: Colors.white))),
-                  ]);
-                }).toList(),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: const [
+                    DataColumn(
+                        label: Text('Player',
+                            style: TextStyle(color: Colors.white))),
+                    DataColumn(
+                        label:
+                            Text('S', style: TextStyle(color: Colors.white))),
+                    DataColumn(
+                        label:
+                            Text('M', style: TextStyle(color: Colors.white))),
+                    DataColumn(
+                        label:
+                            Text('T', style: TextStyle(color: Colors.white))),
+                    DataColumn(
+                        label:
+                            Text('A', style: TextStyle(color: Colors.white))),
+                  ],
+                  rows: currentTeam.currentPlayers.map((player) {
+                    return DataRow(cells: [
+                      DataCell(Row(
+                        children: [
+                          Icon(Icons.person, color: teamColor),
+                          const SizedBox(width: 8),
+                          // Truncate long names
+                          Text(
+                            player.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      )),
+                      DataCell(Text('${player.score}',
+                          style: const TextStyle(color: Colors.white))),
+                      DataCell(Text('${player.misses}',
+                          style: const TextStyle(color: Colors.white))),
+                      DataCell(Text('${player.throws}',
+                          style: const TextStyle(color: Colors.white))),
+                      DataCell(Text('${player.airballs}',
+                          style: const TextStyle(color: Colors.white))),
+                    ]);
+                  }).toList(),
+                ),
               ),
               const SizedBox(height: 50),
               _buildHitRateChart(teamColor),
@@ -1291,7 +1641,9 @@ class _GameScreenState extends State<GameScreen> {
             itemCount: currentTeam.currentPlayers.length,
             itemBuilder: (context, index) {
               final player = currentTeam.currentPlayers[index];
+              // Calculate hit rate and ensure it doesn't exceed 100
               final hitRate = _calculateHitRate(player.score, player.throws);
+              final displayHitRate = hitRate > 100 ? 100 : hitRate;
               return Column(
                 children: [
                   Text(player.name,
@@ -1301,9 +1653,10 @@ class _GameScreenState extends State<GameScreen> {
                       radius: 50.0,
                       lineWidth: 10.0,
                       animation: true,
-                      percent: hitRate / 1000,
+                      percent:
+                          displayHitRate / 100, // Cap the percentage to 100
                       center: Text(
-                        "${hitRate.toStringAsFixed(1)}%",
+                        "${hitRate.toStringAsFixed(1)}%", // Display the real hit rate
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14.0,
@@ -1333,24 +1686,23 @@ class _GameScreenState extends State<GameScreen> {
             backgroundColor: Colors.amber,
             heroTag: "undo",
             onPressed: _undoLastAction,
-            tooltip: 'Rückgängig',
+            tooltip: 'Go Back one turn.',
             child: const Icon(Icons.undo),
           ),
           FloatingActionButton.extended(
             backgroundColor: Colors.amber,
             heroTag: "rearrange",
             onPressed: toggleRearranged,
-            tooltip: 'Verbleibende Becker umstellen.',
-            label: const Text('Umstellen'),
+            tooltip: 'Rearrange the current cups.',
+            label: const Text('Rearrange'),
             icon: const Icon(BeerpongIcons.umstellen, size: 35),
           ),
           FloatingActionButton.extended(
             backgroundColor: Colors.amber,
             heroTag: "end",
             onPressed: () => _confirmEndTurn(context),
-            tooltip:
-                'Die getroffenen Becher wurden ausgewählt. Gegnerischer Zug.',
-            label: const Text('Zugende'),
+            tooltip: 'All cups selected. Next turn.',
+            label: const Text('End Turn'),
             icon: const Icon(Icons.check_rounded),
           ),
         ],

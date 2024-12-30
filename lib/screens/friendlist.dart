@@ -272,7 +272,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         } else {
           List<User> friends = snapshot.data!;
 
-          // Sort friends based on the selected attribute
           friends.sort((a, b) {
             switch (_selectedAttribute) {
               case 'Total Score':
@@ -280,83 +279,124 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               case 'Win Rate':
                 return b.winRate.compareTo(a.winRate);
               default:
-                return 0; // No sorting
+                return 0;
             }
           });
 
-          return SingleChildScrollView(
-            // Make the entire ranking page scrollable
-            child: Column(
-              children: [
-                // Podium graphic
-                SvgPicture.asset(
-                  'assets/podium.svg', // Ensure this path is correct
-                  width: double.infinity,
-                  height: 150, // Adjust height as needed
-                ),
-                const SizedBox(
-                    height: 10), // Space between the podium and the list
+          return Column(
+            children: [
+              // Fixed top section with podium and top 3 users
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Podium SVG
+                  SvgPicture.asset(
+                    'assets/podium.svg',
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.4,
+                  ),
 
-                // Dropdown for sorting attribute
-                DropdownButton<String>(
-                  value: _selectedAttribute,
-                  items: <String>['Total Score', 'Win Rate']
-                      .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value,
-                          style: const TextStyle(color: Colors.white)),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedAttribute = newValue!;
-                    });
-                  },
-                  dropdownColor: Colors.black, // Dropdown background color
-                  style: const TextStyle(
-                      color: Colors.white), // Dropdown text color
-                ),
+                  // Top 3 users positioned above the podium
+                  Positioned(
+                    top: 20,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (friends.length > 1)
+                          _buildPodiumPosition(friends[1], 2),
+                        if (friends.isNotEmpty)
+                          _buildPodiumPosition(friends[0], 1),
+                        if (friends.length > 2)
+                          _buildPodiumPosition(friends[2], 3),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
 
-                // The list of friends ranked
-                ListView.builder(
-                  physics:
-                      const NeverScrollableScrollPhysics(), // Disable scrolling
-                  shrinkWrap: true, // Wrap the list to prevent overflow
-                  itemCount: friends.length,
+              // Dropdown for sorting attribute
+              DropdownButton<String>(
+                value: _selectedAttribute,
+                items: <String>['Total Score', 'Win Rate']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value,
+                        style: const TextStyle(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedAttribute = newValue!;
+                  });
+                },
+                dropdownColor: Colors.black,
+                style: const TextStyle(color: Colors.white),
+              ),
+
+              // Scrollable list of users starting from 4th place
+              Expanded(
+                child: ListView.builder(
+                  itemCount: friends.length - 3,
                   itemBuilder: (context, index) {
-                    User friend = friends[index];
+                    User friend = friends[index + 3];
                     return ListTile(
                       leading: Text(
-                        '${index + 1}',
+                        '${index + 4}', // Rank from 4 onward
                         style:
-                            const TextStyle(color: Colors.amber, fontSize: 24),
+                            const TextStyle(color: Colors.amber, fontSize: 18),
                       ),
-                      title: Text(
-                        friend.username,
-                        style: TextStyle(
-                          color: friend.id == authUser!.uid
-                              ? Colors.amber
-                              : Colors.white,
-                          fontWeight: friend.id == authUser!.uid
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
+                      title: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: friend.iconColor,
+                            child: Icon(friend.icon, color: Colors.white),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            friend.username,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ],
                       ),
-                      subtitle: Text(
+                      trailing: Text(
                         _selectedAttribute == 'Total Score'
-                            ? 'Total Score: ${friend.totalScore}'
-                            : 'Win Rate: ${(friend.winRate * 100).toStringAsFixed(2)}%',
+                            ? friend.totalScore.toString()
+                            : '${(friend.winRate * 100).toStringAsFixed(2)}%',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     );
                   },
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         }
       },
+    );
+  }
+
+  Widget _buildPodiumPosition(User user, int position) {
+    return Column(
+      children: [
+        CircleAvatar(
+          backgroundColor: user.iconColor,
+          radius: position == 1 ? 45 : 35, // Larger for 1st place
+          child: Icon(user.icon,
+              color: Colors.white, size: position == 1 ? 45 : 35),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          user.username,
+          style: const TextStyle(color: Colors.white),
+        ),
+        Text(
+          _selectedAttribute == 'Total Score'
+              ? '${user.totalScore}'
+              : '${(user.winRate * 100).toStringAsFixed(2)}%',
+          style: const TextStyle(color: Colors.amber),
+        ),
+      ],
     );
   }
 
