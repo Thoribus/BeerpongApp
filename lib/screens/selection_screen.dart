@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:beerpongapp/screens/game_screen.dart';
 import 'package:beerpongapp/widgets/new_game_dialog.dart';
 import '../models/player.dart';
+import 'package:beerpongapp/constants.dart'; // Use centralized constants
 
 class SelectionScreen extends StatefulWidget {
   final VoidCallback onReturn;
@@ -45,11 +46,11 @@ class SelectionScreenState extends State<SelectionScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.amber,
+          backgroundColor: AppConstants.primaryColor,
           title: Text(
             'Select $title',
             style: const TextStyle(
-              color: Colors.black,
+              color: AppConstants.secondaryColor,
               fontWeight: FontWeight.bold, // Make the title text bold
             ),
           ),
@@ -76,13 +77,13 @@ class SelectionScreenState extends State<SelectionScreen> {
           title: const Text(
             'Game Setup',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            style: TextStyle(color: AppConstants.secondaryColor, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: const Color(0xFFF0AE1D),
+          backgroundColor: AppConstants.primaryColor,
         ),
         body: Container(
-          color: Colors.black,
+          color: AppConstants.secondaryColor,
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(
             child: Column(
@@ -165,11 +166,11 @@ class SelectionScreenState extends State<SelectionScreen> {
         },
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black,
+            color: AppConstants.secondaryColor,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(
               color:
-                  selectedSection == section ? const Color(0xFFF0AE1D) : Colors.grey,
+                  selectedSection == section ? AppConstants.primaryColor : AppConstants.unselectedColor,
               width: 2,
             ),
           ),
@@ -178,7 +179,7 @@ class SelectionScreenState extends State<SelectionScreen> {
             section,
             style: TextStyle(
               color:
-                  selectedSection == section ? const Color(0xFFF0AE1D) : Colors.grey,
+                  selectedSection == section ? AppConstants.primaryColor : AppConstants.unselectedColor,
             ),
           ),
         ),
@@ -202,7 +203,7 @@ class SelectionScreenState extends State<SelectionScreen> {
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFF0AE1D),
+                color: AppConstants.primaryColor,
               ),
             ),
             const SizedBox(width: 8),
@@ -215,11 +216,11 @@ class SelectionScreenState extends State<SelectionScreen> {
                 height: 15,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xFFF0AE1D),
+                  color: AppConstants.primaryColor,
                 ),
                 child: const Icon(
                   Icons.info,
-                  color: Colors.black,
+                  color: AppConstants.secondaryColor,
                   size: 14,
                 ),
               ),
@@ -276,7 +277,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                 min: 1,
                 max: 4,
                 divisions: 3,
-                activeColor: const Color(0xFFF0AE1D),
+                activeColor: AppConstants.primaryColor,
                 label: '$_numPlayers',
                 onChanged: (double value) {
                   setState(() {
@@ -296,7 +297,7 @@ class SelectionScreenState extends State<SelectionScreen> {
           Center(
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber.withOpacity(0.75),
+                backgroundColor: AppConstants.primaryColor.withOpacity(0.75),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12.0),
                 ),
@@ -307,9 +308,9 @@ class SelectionScreenState extends State<SelectionScreen> {
                 await _showTeamDialog(team: 1);
                 await _showTeamDialog(team: 2);
               },
-              icon: const Icon(Icons.add, size: 24, color: Colors.black),
+              icon: const Icon(Icons.add, size: 24, color: AppConstants.secondaryColor),
               label: const Text('Add Players',
-                  style: TextStyle(fontSize: 16, color: Colors.black)),
+                  style: TextStyle(fontSize: 16, color: AppConstants.secondaryColor)),
             ),
           )
         else
@@ -323,7 +324,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                     await _showTeamDialog(team: 2);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber.withOpacity(0.7),
+                    backgroundColor: AppConstants.primaryColor.withOpacity(0.7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
@@ -331,7 +332,7 @@ class SelectionScreenState extends State<SelectionScreen> {
                         vertical: 12, horizontal: 24),
                   ),
                   child: const Text('Edit Players',
-                      style: TextStyle(color: Colors.black)),
+                      style: TextStyle(color: AppConstants.secondaryColor)),
                 ),
               ),
             ],
@@ -444,8 +445,8 @@ class SelectionScreenState extends State<SelectionScreen> {
           width: double.infinity,
           child: ToggleButtons(
             borderRadius: BorderRadius.circular(8.0),
-            selectedColor: Colors.black,
-            fillColor: const Color(0xFFF0AE1D),
+            selectedColor: AppConstants.secondaryColor,
+            fillColor: AppConstants.primaryColor,
             onPressed: (int newIndex) {
               setState(() {
                 selectedGameMode = gameModes[newIndex];
@@ -497,8 +498,8 @@ class SelectionScreenState extends State<SelectionScreen> {
                         value;
                   });
                 },
-                activeColor: const Color(0xFFF0AE1D),
-                inactiveThumbColor: Colors.black,
+                activeColor: AppConstants.primaryColor,
+                inactiveThumbColor: AppConstants.secondaryColor,
               ),
             );
           },
@@ -521,7 +522,7 @@ class SelectionScreenState extends State<SelectionScreen> {
           width: double.infinity,
           child: ToggleButtons(
             borderRadius: BorderRadius.circular(8.0),
-            selectedColor: Colors.black,
+            selectedColor: AppConstants.secondaryColor,
             fillColor: startingTeam == 'Team Blue' ? Colors.blue : Colors.red,
             onPressed: (int newIndex) {
               setState(() {
@@ -558,14 +559,14 @@ class SelectionScreenState extends State<SelectionScreen> {
               }
             : () {},
         style: ElevatedButton.styleFrom(
-          backgroundColor: canStartGame ? const Color(0xFFF0AE1D) : Colors.grey,
+          backgroundColor: canStartGame ? AppConstants.primaryColor : Colors.grey,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
         ),
         child: const Text('Start Game',
-            style: TextStyle(fontSize: 18, color: Colors.black)),
+            style: TextStyle(fontSize: 18, color: AppConstants.secondaryColor)),
       ),
     );
   }

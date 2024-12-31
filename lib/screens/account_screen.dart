@@ -3,6 +3,9 @@ import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:provider/provider.dart';
+import 'achievements_screen.dart';
+import 'personal_statistics_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -25,122 +28,231 @@ class AccountScreenState extends State<AccountScreen> {
       selectedIcon = user!.icon;
       selectedColor = user!.iconColor;
     }
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Center(
-        child: user == null
-            ? ElevatedButton(
+      body: user == null
+          ? Center(
+              child: ElevatedButton(
                 onPressed: () async {
                   userProvider.signIn();
                 },
                 child: const Text('Sign in with Google'),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
+              ),
+            )
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: _showIconPicker,
-                    child: Column(
+                  _buildUserCard(),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle("Achievements"),
+                  _buildAchievementsCard(),
+                  _buildSectionTitle("Statistics"),
+                  _buildStatisticsCard(),
+                  _buildSectionTitle("Privacy"),
+                  _buildPrivacyCard(),
+                  _buildSectionTitle("Dark Mode"),
+                  _buildDarkModeCard(),
+                  const SizedBox(height: 20),
+                  _buildSignOutButton(userProvider),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildUserCard() {
+    return Card(
+      color: Colors.amber.withOpacity(0.2),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Left section with user icon and names
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: selectedColor,
+                      child: Icon(
+                        selectedIcon,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: selectedColor,
-                          child: Icon(
-                            selectedIcon,
-                            size: 80,
+                        Text(
+                          user?.username ?? 'Username',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          user!.username,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        const Text(
+                          'dummy data',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: DataTable(
-                        columnSpacing: 16,
-                        headingRowHeight: 40,
-                        dataRowMinHeight: 32,
-                        columns: const [
-                          DataColumn(
-                            label: Text(
-                              'Attribute',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              'Value',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                        rows: [
-                          _buildDataRow('User ID', user!.id),
-                          _buildDataRow('Total Score', '${user!.totalScore}'),
-                          _buildDataRow('Total Misses', '${user!.totalMisses}'),
-                          _buildDataRow(
-                              'Total Airballs', '${user!.totalAirballs}'),
-                          _buildDataRow('Cups Hit', '${user!.cupsHit}'),
-                          _buildDataRow('Wins', '${user!.wins}'),
-                          _buildDataRow('Losses', '${user!.losses}'),
-                        ],
-                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _showIconPicker, // Opens the appearance picker
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () async {
-                      userProvider.signOut();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                  child: const Text(
+                    'Custom',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
-                    child: const Text('Sign out',
-                        style: TextStyle(color: Colors.black)),
                   ),
-                ],
+                ),
+              ],
+            ),
+
+            // Right section with SVG image
+            SizedBox(
+              width: 150,
+              height: 150,
+              child: SvgPicture.asset(
+                'assets/otter_canvas.svg',
+                fit: BoxFit.contain,
               ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  DataRow _buildDataRow(String attribute, String value) {
-    return DataRow(
-      cells: [
-        DataCell(
-          Text(
-            attribute,
-            style: const TextStyle(color: Colors.white),
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAchievementsCard() {
+    return Card(
+      color: Colors.amber.withOpacity(0.2),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: ListTile(
+        leading: const Icon(BeerpongIcons.medal, color: Colors.amber),
+        title: const Text("Collectables"),
+        subtitle: const Text("See what you got"),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AchievementsScreen(user: user!),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStatisticsCard() {
+    return Card(
+      color: Colors.amber.withOpacity(0.2),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: ListTile(
+        leading: const Icon(BeerpongIcons.medal, color: Colors.amber),
+        title: const Text("Performance"),
+        subtitle: const Text("I see what you did there..."),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PersonalStatisticsScreen(user: user!),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPrivacyCard() {
+    return Card(
+      color: Colors.amber.withOpacity(0.2),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: ListTile(
+        leading: const Icon(Icons.lock, color: Colors.red),
+        title: const Text("Privacy"),
+        subtitle: const Text("Manage your privacy settings"),
+        onTap: () {
+          // Privacy settings logic here
+        },
+      ),
+    );
+  }
+
+  Widget _buildDarkModeCard() {
+    return Card(
+      color: Colors.amber.withOpacity(0.2),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: SwitchListTile(
+        title: const Text("Dark Mode"),
+        value: false, // Set this to a variable if needed
+        onChanged: (bool value) {
+          // Dark mode toggle logic here
+        },
+      ),
+    );
+  }
+
+  Widget _buildSignOutButton(UserProvider userProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
           ),
         ),
-        DataCell(
-          Text(
-            value,
-            style: const TextStyle(color: Colors.white),
+        onPressed: () async {
+          userProvider.signOut();
+          setState(() {}); // Refresh the UI after signing out
+        },
+        child: const Text(
+          'Sign Out',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -192,49 +304,6 @@ class AccountScreenState extends State<AccountScreen> {
                   },
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Select Background Color',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                  ),
-                  itemCount: _colorList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    Color color = _colorList[index];
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedColor = color;
-                          final userProvider =
-                              Provider.of<UserProvider>(context, listen: false);
-                          userProvider
-                              .updateUser(user!.copyWith(iconColor: color));
-                        });
-                        Navigator.pop(context);
-                      },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor:
-                            selectedColor == color ? Colors.amber : color,
-                        child: selectedColor == color
-                            ? const Icon(Icons.check, color: Colors.white)
-                            : null,
-                      ),
-                    );
-                  },
-                ),
-              ),
             ],
           ),
         );
@@ -249,16 +318,5 @@ class AccountScreenState extends State<AccountScreen> {
     BeerpongIcons.racoon_avatar,
     BeerpongIcons.eagle_avatar,
     BeerpongIcons.frog_avatar,
-  ];
-
-  final List<Color> _colorList = [
-    Colors.red,
-    Colors.blue,
-    Colors.green,
-    Colors.yellow,
-    Colors.orange,
-    Colors.purple,
-    Colors.brown,
-    Colors.cyan,
   ];
 }
