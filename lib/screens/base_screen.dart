@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/screens/settings_screen.dart';
 import 'package:beerpongapp/screens/account_screen.dart';
 import 'package:beerpongapp/screens/friendlist.dart';
 import 'package:beerpongapp/screens/home_screen.dart';
@@ -44,14 +45,15 @@ class BaseScreenState extends State<BaseScreen> {
       ),
       body: PageView(
         controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(), // Disable swipe to change pages
+        physics:
+            const NeverScrollableScrollPhysics(), // Disable swipe to change pages
         onPageChanged: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
         children: const [
-          HomeScreen(),
+          SettingsScreen(),
           FriendsListScreen(),
           HomeScreen(),
           StatisticsScreen(),
