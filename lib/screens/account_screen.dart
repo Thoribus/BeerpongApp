@@ -14,10 +14,25 @@ class AccountScreen extends StatefulWidget {
   AccountScreenState createState() => AccountScreenState();
 }
 
-class AccountScreenState extends State<AccountScreen> {
+class AccountScreenState extends State<AccountScreen>
+    with SingleTickerProviderStateMixin {
   User? user;
   IconData? selectedIcon = Icons.person;
   Color? selectedColor = Colors.blue;
+  String? selectedAvatar; // Holds the selected SVG asset path (null initially)
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,105 +55,139 @@ class AccountScreenState extends State<AccountScreen> {
                 child: const Text('Sign in with Google'),
               ),
             )
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildUserCard(),
-                  const SizedBox(height: 20),
-                  _buildSectionTitle("Achievements"),
-                  _buildAchievementsCard(),
-                  _buildSectionTitle("Statistics"),
-                  _buildStatisticsCard(),
-                  _buildSectionTitle("Privacy"),
-                  _buildPrivacyCard(),
-                  _buildSectionTitle("Dark Mode"),
-                  _buildDarkModeCard(),
-                  const SizedBox(height: 20),
-                ],
-              ),
+          : Column(
+              children: [
+                const SizedBox(height: 20),
+                _buildUserCard(),
+                const SizedBox(height: 10),
+                _buildTabBar(),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      PersonalStatisticsScreen(user: user!),
+                      AchievementsScreen(user: user!),
+                      _buildActivityScreen(),
+                    ],
+                  ),
+                ),
+              ],
             ),
     );
   }
 
   Widget _buildUserCard() {
+    // Example of the current selected avatar, can be an icon or an SVG
+    String? selectedAvatar =
+        'assets/cat_avatar_profile.svg'; // Default to SVG for now
+
     return Card(
-      color: Colors.amber.withOpacity(0.2),
+      color: Colors.transparent, // Transparent background
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(
+            20), // More rounded corners for a credit card look
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      elevation: 5.0,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
           children: [
-            // Left section with user icon and names
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: selectedColor,
-                      child: Icon(
-                        selectedIcon,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.username ?? 'Username',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Text(
-                          'dummy data',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _showIconPicker, // Opens the appearance picker
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Custom',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // Right section with SVG image
-            SizedBox(
-              width: 150,
-              height: 150,
+            // Background image using slanted-gradient.svg
+            Positioned.fill(
               child: SvgPicture.asset(
-                'assets/otter_canvas.svg',
-                fit: BoxFit.contain,
+                'assets/slanted-gradient.svg',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Upper part - Winner icons on the left
+                  Row(
+                    children: [
+                      // Winner icons on the left (3 amber icons with circular background)
+                      Row(
+                        children: List.generate(3, (index) {
+                          return Container(
+                            margin: EdgeInsets.only(right: 8.0),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.amber,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.star,
+                                size: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10), // Space to push content down
+                  // Bottom part - User data on the left and CircleAvatar on the right
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left side - User text and username at the bottom-left
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'username',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.username ?? 'Username',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Right side - CircleAvatar with either icon or SVG background
+                      GestureDetector(
+                        onTap: _showIconPicker, // Trigger the icon picker
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Display an icon or SVG based on selectedAvatar
+                            CircleAvatar(
+                              radius: 50, // Increased size
+                              backgroundColor: selectedColor,
+                              child: selectedAvatar.isEmpty
+                                  ? Icon(selectedIcon,
+                                      size: 60, color: Colors.white)
+                                  : SvgPicture.asset(
+                                      selectedAvatar, // Use the SVG asset
+                                      width: 60,
+                                      height: 60,
+                                    ),
+                            ),
+                            SvgPicture.asset(
+                              'assets/avatar_border.svg',
+                              width: 100,
+                              height: 100,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -147,85 +196,25 @@ class AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+  Widget _buildTabBar() {
+    return TabBar(
+      controller: _tabController,
+      indicatorColor: Colors.amber,
+      labelColor: Colors.amber,
+      unselectedLabelColor: Colors.white70,
+      tabs: const [
+        Tab(icon: Icon(Icons.pie_chart), text: "Stats"),
+        Tab(icon: Icon(Icons.emoji_events), text: "Achievements"),
+        Tab(icon: Icon(Icons.history), text: "Activity"),
+      ],
+    );
+  }
+
+  Widget _buildActivityScreen() {
+    return Center(
       child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAchievementsCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(BeerpongIcons.medal, color: Colors.amber),
-        title: const Text("Collectables"),
-        subtitle: const Text("See what you got"),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AchievementsScreen(user: user!),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildStatisticsCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(Icons.pie_chart, color: Colors.amber),
-        title: const Text("Performance"),
-        subtitle: const Text("I see what you did there..."),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PersonalStatisticsScreen(user: user!),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildPrivacyCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(Icons.lock, color: Colors.red),
-        title: const Text("Privacy"),
-        subtitle: const Text("Manage your privacy settings"),
-        onTap: () {
-          // Privacy settings logic here
-        },
-      ),
-    );
-  }
-
-  Widget _buildDarkModeCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: SwitchListTile(
-        title: const Text("Dark Mode"),
-        value: false, // Set this to a variable if needed
-        onChanged: (bool value) {
-          // Dark mode toggle logic here
-        },
+        'Activity Screen Placeholder',
+        style: TextStyle(color: Colors.white, fontSize: 16),
       ),
     );
   }
@@ -242,7 +231,7 @@ class AccountScreenState extends State<AccountScreen> {
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
-                  'Select Icon and Color',
+                  'Select Icon and Avatar',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -256,25 +245,57 @@ class AccountScreenState extends State<AccountScreen> {
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
                   ),
-                  itemCount: _iconList.length,
+                  itemCount: _iconList.length +
+                      _svgAssets.length, // Assuming you have a list of SVGs
                   itemBuilder: (BuildContext context, int index) {
-                    IconData icon = _iconList[index];
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selectedIcon = icon;
-                          final userProvider =
-                              Provider.of<UserProvider>(context, listen: false);
-                          userProvider.updateUser(user!.copyWith(icon: icon));
-                        });
-                      },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor:
-                            selectedIcon == icon ? Colors.amber : Colors.grey,
-                        child: Icon(icon, color: Colors.white),
-                      ),
-                    );
+                    if (index < _iconList.length) {
+                      // Icon selection part
+                      IconData icon = _iconList[index];
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedIcon = icon;
+                            selectedAvatar = null; // Reset the selected SVG
+                            final userProvider = Provider.of<UserProvider>(
+                                context,
+                                listen: false);
+                            userProvider.updateUser(user!.copyWith(icon: icon));
+                          });
+                        },
+                        child: CircleAvatar(
+                          radius: 30, // Match the size of the avatar
+                          backgroundColor:
+                              selectedIcon == icon ? Colors.amber : Colors.grey,
+                          child: Icon(icon, color: Colors.white),
+                        ),
+                      );
+                    } else {
+                      // SVG selection part
+                      String svgAsset = _svgAssets[
+                          index - _iconList.length]; // Adjust index for SVGs
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedIcon = null; // Reset the selected icon
+                            selectedAvatar = svgAsset; // Set the selected SVG
+                            //final userProvider = Provider.of<UserProvider>(
+                            //context,
+                            //listen: false);
+                            //userProvider
+                            //.updateUser(user!.copyWith(avatar: svgAsset));
+                          });
+                        },
+                        child: CircleAvatar(
+                          radius: 30, // Same size for consistency
+                          backgroundColor: Colors.transparent,
+                          child: SvgPicture.asset(
+                            svgAsset, // The selected SVG
+                            width: 60,
+                            height: 60,
+                          ),
+                        ),
+                      );
+                    }
                   },
                 ),
               ),
@@ -284,6 +305,11 @@ class AccountScreenState extends State<AccountScreen> {
       },
     );
   }
+
+  List<String> _svgAssets = [
+    'assets/cat_avatar_profile.svg'
+    // Add more SVG asset paths here
+  ];
 
   final List<IconData> _iconList = [
     BeerpongIcons.bunny_avatar,

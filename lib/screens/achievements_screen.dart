@@ -10,10 +10,6 @@ class AchievementsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.amber,
-        title: const Text("Achievements"),
-      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

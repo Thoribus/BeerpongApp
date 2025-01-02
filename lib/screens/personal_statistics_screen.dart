@@ -55,16 +55,14 @@ class PersonalStatisticsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.amber,
-        title: const Text("Statistics"),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
+            _buildStatisticsTiles(user), // New 2x2 rectangle brackets layout
+            const SizedBox(height: 24),
             _buildSectionTitle("Performance Summary"),
             _buildCard(
               child: StatisticsTable(user: user),
@@ -86,7 +84,88 @@ class PersonalStatisticsScreen extends StatelessWidget {
     );
   }
 
-  // Widget to build the section title
+  Widget _buildStatisticsTiles(User user) {
+    final stats = [
+      {'icon': Icons.score, 'title': 'Total Score', 'value': user.totalScore},
+      {
+        'icon': Icons.air,
+        'title': 'Total Airballs',
+        'value': user.totalAirballs
+      },
+      {
+        'icon': Icons.sports_bar,
+        'title': 'Cups Hit',
+        'value': user.cupsHit.length
+      },
+      {'icon': Icons.emoji_events, 'title': 'Wins', 'value': user.wins},
+    ];
+
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 2.5, // Half the height
+      ),
+      itemCount: stats.length,
+      itemBuilder: (context, index) {
+        final stat = stats[index];
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            children: [
+              // Icon with circle background
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  stat['icon'] as IconData,
+                  color: Colors.amber,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Value and title
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${stat['value']}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      stat['title'] as String,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -234,19 +313,16 @@ class PersonalStatisticsScreen extends StatelessWidget {
     int minCount = cupCounts.reduce((a, b) => a < b ? a : b);
     int maxCount = cupCounts.reduce((a, b) => a > b ? a : b);
 
-    // Normalize the count to a value between 0 and 1
     double normalizedValue = (maxCount == minCount)
         ? 0.0
         : (count - minCount) / (maxCount - minCount);
 
-    // Determine the color based on the normalized value
-    if (normalizedValue <= 0)
-      return Colors.amber[100]!; // Lightest amber for no hits
+    if (normalizedValue <= 0) return Colors.amber[100]!;
     if (normalizedValue <= 0.2) return Colors.amber[200]!;
     if (normalizedValue <= 0.4) return Colors.amber[400]!;
     if (normalizedValue <= 0.6) return Colors.amber[600]!;
     if (normalizedValue <= 0.8) return Colors.amber[800]!;
-    return Colors.amber[900]!; // Darkest amber for most hits
+    return Colors.amber[900]!;
   }
 }
 

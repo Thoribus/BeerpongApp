@@ -94,7 +94,10 @@ flutter:
     - assets/racoon_winner.svg
     - assets/otter_canvas.svg
     - assets/podium.svg
-  #   - images/a_dot_ham.jpeg
+    - assets/avatar_border.svg
+    - assets/slanted-gradient.svg
+    - assets/cat_avatar_profile.svg
+       #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
