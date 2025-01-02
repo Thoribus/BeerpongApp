@@ -56,6 +56,7 @@ class AccountScreenState extends State<AccountScreen> {
                   _buildSectionTitle("Dark Mode"),
                   _buildDarkModeCard(),
                   const SizedBox(height: 20),
+                  _buildSignOutButton(userProvider),
                 ],
               ),
             ),
@@ -226,6 +227,31 @@ class AccountScreenState extends State<AccountScreen> {
         onChanged: (bool value) {
           // Dark mode toggle logic here
         },
+      ),
+    );
+  }
+
+  Widget _buildSignOutButton(UserProvider userProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+        onPressed: () async {
+          userProvider.signOut();
+          setState(() {}); // Refresh the UI after signing out
+        },
+        child: const Text(
+          'Sign Out',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }

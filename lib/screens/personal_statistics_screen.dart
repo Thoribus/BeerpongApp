@@ -114,7 +114,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
   }
 
   Widget _buildScoreChart() {
-    return Container(
+    return SizedBox(
       height: 200,
       child: BarChart(
         BarChartData(
@@ -146,7 +146,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
                       return Text('Cups',
                           style: TextStyle(color: Colors.amber[200]));
                     default:
-                      return Text('');
+                      return const Text('');
                   }
                 },
               ),
@@ -201,7 +201,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
       [9]
     ];
 
-    return Container(
+    return SizedBox(
       height: 300,
       child: Column(
         children: pyramidRows.map((row) {
@@ -240,8 +240,9 @@ class PersonalStatisticsScreen extends StatelessWidget {
         : (count - minCount) / (maxCount - minCount);
 
     // Determine the color based on the normalized value
-    if (normalizedValue <= 0)
+    if (normalizedValue <= 0) {
       return Colors.amber[100]!; // Lightest amber for no hits
+    }
     if (normalizedValue <= 0.2) return Colors.amber[200]!;
     if (normalizedValue <= 0.4) return Colors.amber[400]!;
     if (normalizedValue <= 0.6) return Colors.amber[600]!;

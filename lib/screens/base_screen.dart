@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/settings_screen.dart';
+import 'package:beerpongapp/constants.dart'; // Use centralized constants
 import 'package:beerpongapp/screens/account_screen.dart';
 import 'package:beerpongapp/screens/friendlist.dart';
 import 'package:beerpongapp/screens/home_screen.dart';
@@ -24,9 +25,7 @@ class BaseScreenState extends State<BaseScreen> {
     _pageController = PageController(initialPage: _selectedIndex);
   }
 
-  void _onItemTapped(int index) {
-    _pageController.jumpToPage(index);
-  }
+  void _onItemTapped(int index) => _pageController.jumpToPage(index);
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +37,7 @@ class BaseScreenState extends State<BaseScreen> {
           _getAppBarTitle(_selectedIndex),
           style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: AppConstants.secondaryColor,
           ),
         ),
         centerTitle: true,
@@ -61,56 +60,36 @@ class BaseScreenState extends State<BaseScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppConstants.secondaryColor,
         type: BottomNavigationBarType.fixed,
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined, color: _getIconColor(0)),
-            label: 'Settings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline, color: _getIconColor(1)),
-            label: 'Friends',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_bar_outlined, color: _getIconColor(2)),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined, color: _getIconColor(3)),
-            label: 'Stats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle_outlined, color: _getIconColor(4)),
-            label: 'Profile',
-          ),
+        items: [
+          _createNavBarItem(Icons.settings_outlined, 'Settings', 0),
+          _createNavBarItem(Icons.favorite_outline, 'Friends', 1),
+          _createNavBarItem(Icons.sports_bar_outlined, 'Home', 2),
+          _createNavBarItem(Icons.bar_chart_outlined, 'Stats', 3),
+          _createNavBarItem(Icons.account_circle_outlined, 'Profile', 4),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFFF0AE1D),
+        selectedItemColor: AppConstants.primaryColor,
         onTap: _onItemTapped,
         showUnselectedLabels: true,
       ),
     );
   }
 
-  Color _getIconColor(int index) {
-    return _selectedIndex == index ? const Color(0xFFF0AE1D) : Colors.grey;
-  }
+  String _getAppBarTitle(int index) => [
+        'Settings',
+        'Friends',
+        '',
+        'Statistics',
+        'Profile'
+      ][index];
 
-  String _getAppBarTitle(int index) {
-    switch (index) {
-      case 0:
-        return 'Settings';
-      case 1:
-        return 'Friendlist';
-      case 2:
-        return '';
-      case 3:
-        return 'Statistics';
-      case 4:
-        return 'Profile';
-      default:
-        return '';
-    }
+  BottomNavigationBarItem _createNavBarItem(
+      IconData icon, String label, int index) {
+    return BottomNavigationBarItem(
+      icon: Icon(icon, color: _selectedIndex == index ? AppConstants.primaryColor : Colors.grey),
+      label: label,
+    );
   }
 }

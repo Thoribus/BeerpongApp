@@ -39,7 +39,7 @@ class AchievementsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 30,
               backgroundColor: Colors.amber,
               child: Icon(
