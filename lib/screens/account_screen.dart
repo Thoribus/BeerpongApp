@@ -187,7 +187,7 @@ class AccountScreenState extends State<AccountScreen> {
       color: Colors.amber.withOpacity(0.2),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
-        leading: const Icon(BeerpongIcons.medal, color: Colors.amber),
+        leading: const Icon(Icons.pie_chart, color: Colors.amber),
         title: const Text("Performance"),
         subtitle: const Text("I see what you did there..."),
         onTap: () {

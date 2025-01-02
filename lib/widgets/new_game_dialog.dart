@@ -1,3 +1,4 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../util/firestoreservice.dart';
@@ -51,41 +52,198 @@ class NewGameDialogState extends State<NewGameDialog> {
 
   Future<void> selectFromFriendList(int index) async {
     auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
-    User? user = await FirestoreService().getUser(currentUser!.uid);
-    _friends = await FirestoreService().getFriends(user!.id);
-    showDialog(
+
+    // Check if currentUser is not null
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No user logged in!')),
+      );
+      return;
+    }
+
+    User? user = await FirestoreService().getUser(currentUser.uid);
+
+    // Check if user data is retrieved successfully
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error fetching user data!')),
+      );
+      return;
+    }
+
+    _friends = await FirestoreService().getFriends(user.id);
+
+    // Check if friends list is available
+    if (_friends.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No friends found!')),
+      );
+      return;
+    }
+
+    AwesomeDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Choose a player'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: [
-                ListTile(
-                  title: Text(user.username),
-                  onTap: () {
-                    Navigator.of(context).pop(user);
-                  },
+      dialogType: DialogType.noHeader,
+      animType: AnimType.scale,
+      dialogBackgroundColor: Colors.amber,
+      width: 500, // Fixed width for the dialog
+      buttonsBorderRadius:
+          BorderRadius.circular(12), // Rounded corners for buttons
+      body: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Choose a Player',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                ..._friends.map((friend) => ListTile(
-                      title: Text(friend.username),
-                      onTap: () {
-                        Navigator.of(context).pop(friend);
-                      },
-                    )),
-              ],
-            ),
+              ),
+              // Current user option
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context, user);
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 16.0),
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[100],
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.account_circle,
+                          size: 36.0, color: Colors.amber),
+                      const SizedBox(width: 16.0),
+                      Text(
+                        user.username,
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Friends list displayed in 2 columns and scrollable vertically if there are more than 6 friends
+              GridView.builder(
+                shrinkWrap:
+                    true, // Prevents GridView from taking up too much space
+                physics:
+                    const NeverScrollableScrollPhysics(), // Prevents nested scrolling
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // Two columns
+                  childAspectRatio: 1.0, // Aspect ratio of each item
+                  crossAxisSpacing: 8.0, // Space between columns
+                  mainAxisSpacing: 8.0, // Space between rows
+                ),
+                itemCount: _friends.length > 6
+                    ? 6
+                    : _friends
+                        .length, // Limit the first 6 items, if there are more than 6 friends
+                itemBuilder: (context, index) {
+                  final friend = _friends[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context, friend);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.account_circle,
+                              size: 36.0, color: Colors.blue),
+                          const SizedBox(height: 8.0),
+                          Text(
+                            friend.username,
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              // If there are more than 6 friends, make the list scrollable vertically
+              if (_friends.length > 6)
+                Container(
+                  height:
+                      250, // Adjust this height based on how much space you want for scrolling
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 1.0,
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                    ),
+                    itemCount: _friends.length,
+                    itemBuilder: (context, index) {
+                      final friend = _friends[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context, friend);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[100],
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.account_circle,
+                                  size: 36.0, color: Colors.blue),
+                              const SizedBox(height: 8.0),
+                              Text(
+                                friend.username,
+                                style: const TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
           ),
-        );
-      },
-    ).then((selectedPlayer) {
+        ),
+      ),
+      btnCancelOnPress: () {},
+      btnCancelText: "Cancel",
+    ).show().then((selectedPlayer) {
       if (selectedPlayer != null) {
         setState(() {
           _controllers[index].text = selectedPlayer.username;
           _friendMap[index] = selectedPlayer;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Selected player: $selectedPlayer')),
+          SnackBar(
+              content: Text('Selected player: ${selectedPlayer.username}')),
         );
       }
     });
@@ -97,7 +255,6 @@ class NewGameDialogState extends State<NewGameDialog> {
       title: Text('Edit Team ${widget.team}'),
       content: SingleChildScrollView(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: List.generate(_numPlayers, (index) {
             if (index >= _controllers.length) {
               _controllers.add(TextEditingController());
@@ -121,20 +278,6 @@ class NewGameDialogState extends State<NewGameDialog> {
                             width: 2.0,
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: Colors.amber,
-                            width: 2.0,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: Colors.amber,
-                            width: 2.0,
-                          ),
-                        ),
                       ),
                       style: const TextStyle(color: Colors.black),
                     ),
@@ -149,15 +292,12 @@ class NewGameDialogState extends State<NewGameDialog> {
           }),
         ),
       ),
-      actions: <Widget>[
+      actions: [
         TextButton(
-          child: const Text('CANCEL'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text("CANCEL"),
         ),
         TextButton(
-          child: const Text('SAVE'),
           onPressed: () {
             final List<Player> names =
                 _controllers.take(_numPlayers).map((controller) {
@@ -169,6 +309,7 @@ class NewGameDialogState extends State<NewGameDialog> {
             }).toList();
             Navigator.of(context).pop(names);
           },
+          child: const Text("SAVE"),
         ),
       ],
     );
