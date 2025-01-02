@@ -44,7 +44,7 @@ class _GameScreenState extends State<GameScreen> {
 
   late bool isTeamOneTurn = widget.startingTeam;
   bool islandShotActive = false;
-  Player? currentIslandShooter = null;
+  Player? currentIslandShooter;
 
   final List<Map<String, dynamic>> _actionStack = [];
   final PageController _pageController = PageController();
@@ -371,7 +371,6 @@ class _GameScreenState extends State<GameScreen> {
           Colors.green) {
         _checkProximity(index);
       } else {
-        print("hello");
         _checkBallsBack();
         _checkBitchCup(index);
         currentTeam.cups.firstWhere((cup) => cup.index == index).color =

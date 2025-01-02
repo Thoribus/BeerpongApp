@@ -7,7 +7,6 @@ class Team {
   List<Player> players;
   List<Player> currentPlayers = [];
   List<Cup> cups;
-  List<Cup> remainingCups;
   bool isRearranged = false;
   bool canIslandShot = true;
 
@@ -16,7 +15,6 @@ class Team {
     required this.players,
     required this.cups,
     this.currentPlayers = const [],
-    this.remainingCups = const [],
     this.isRearranged = false,
     this.canIslandShot = true,
   });
@@ -38,7 +36,7 @@ class Team {
 
   @override
   String toString() {
-    return 'Team(color: $color, players: $players, cups: $cups, currentPlayers: $currentPlayers, remainingCups: $remainingCups, isRearranged: $isRearranged, canIslandShot: $canIslandShot)';
+    return 'Team(color: $color, players: $players, cups: $cups, currentPlayers: $currentPlayers, isRearranged: $isRearranged, canIslandShot: $canIslandShot)';
   }
 
   Team clone() {
@@ -47,7 +45,6 @@ class Team {
       players: players.map((player) => player.clone()).toList(),
       cups: cups.map((cup) => cup.clone()).toList(),
       currentPlayers: currentPlayers.map((player) => player.clone()).toList(),
-      remainingCups: remainingCups.map((cup) => cup.clone()).toList(),
       isRearranged: isRearranged,
       canIslandShot: canIslandShot,
     );

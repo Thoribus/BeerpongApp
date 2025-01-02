@@ -193,7 +193,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
   }
 
   Widget _buildScoreChart() {
-    return Container(
+    return SizedBox(
       height: 200,
       child: BarChart(
         BarChartData(
@@ -225,7 +225,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
                       return Text('Cups',
                           style: TextStyle(color: Colors.amber[200]));
                     default:
-                      return Text('');
+                      return const Text('');
                   }
                 },
               ),
@@ -280,7 +280,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
       [9]
     ];
 
-    return Container(
+    return SizedBox(
       height: 300,
       child: Column(
         children: pyramidRows.map((row) {

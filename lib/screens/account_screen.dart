@@ -219,6 +219,31 @@ class AccountScreenState extends State<AccountScreen>
     );
   }
 
+  Widget _buildSignOutButton(UserProvider userProvider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+        ),
+        onPressed: () async {
+          userProvider.signOut();
+          setState(() {}); // Refresh the UI after signing out
+        },
+        child: const Text(
+          'Sign Out',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showIconPicker() {
     showModalBottomSheet(
       context: context,

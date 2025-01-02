@@ -1,12 +1,14 @@
+import 'package:beerpongapp/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:provider/provider.dart';
 import '../models/user.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'compare_stats_screen.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Add this import for SVG support
+import 'package:flutter_svg/flutter_svg.dart';
+import '../util/user_provider.dart';
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
@@ -17,19 +19,17 @@ class FriendsListScreen extends StatefulWidget {
 
 class FriendsListScreenState extends State<FriendsListScreen> {
   late Future<List<User>> _friends;
-  late Future<User?> _userFuture;
-  late auth.User? authUser;
+  String _selectedAttribute = 'Total Score';
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  String _selectedAttribute = 'Total Score'; // Default sorting attribute
 
   @override
   void initState() {
     super.initState();
-    authUser = auth.FirebaseAuth.instance.currentUser;
-    _userFuture = FirestoreService().getUser(authUser!.uid);
-    _friends = FirestoreService().getFriends(authUser!.uid);
-    _pageController.addListener(_handlePageChange);
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.user != null) {
+      _friends = FirestoreService().getFriends(userProvider.user!.id);
+    }
   }
 
   @override
@@ -38,78 +38,95 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     super.dispose();
   }
 
-  void _handlePageChange() {
-    int page = _pageController.page?.round() ?? 0;
-    if (_currentPage != page) {
-      setState(() {
-        _currentPage = page;
-      });
-    }
-  }
-
   Future<void> _showAddFriendDialog(BuildContext context) async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     final TextEditingController controller = TextEditingController();
 
-    return showDialog<void>(
+    if (userProvider.user == null) {
+      _showErrorSnackBar('You must be signed in to add friends.');
+      return;
+    }
+
+    await showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add Friend'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                decoration:
-                    const InputDecoration(hintText: 'Enter friend\'s ID'),
-              ),
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () {
-                  FlutterClipboard.copy(authUser!.uid).then((value) =>
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Copied to Clipboard'))));
-                },
-                child: Text(
-                  'Your ID: ${authUser!.uid}',
-                  style: const TextStyle(color: Colors.blue),
-                ),
-              ),
-              const SizedBox(height: 10),
-              QrImageView(
-                version: QrVersions.auto,
-                data: authUser!.uid,
-                size: 300.0,
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _scanQRCode,
-                child: const Text('Scan QR Code'),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Add'),
-              onPressed: () {
-                final String friendId = controller.text.trim();
-                if (friendId.isNotEmpty) {
-                  _addFriend(context, friendId);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
+          content: _buildAddFriendDialogContent(controller, userProvider),
+          actions: _buildAddFriendDialogActions(controller, userProvider),
         );
       },
     );
+  }
+
+  Widget _buildAddFriendDialogContent(
+      TextEditingController controller, UserProvider userProvider) {
+    return SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(hintText: 'Enter friend\'s ID'),
+            ),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () {
+                FlutterClipboard.copy(userProvider.user!.id).then((value) =>
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Copied to Clipboard'))));
+              },
+              child: Text(
+                'Your ID: ${userProvider.user!.id}',
+                style: const TextStyle(color: Colors.blue),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: MediaQuery.of(context).size.width * 0.6,
+              child: QrImageView(
+                version: QrVersions.auto,
+                data: userProvider.user!.id,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _scanQRCode,
+              child: const Text('Scan QR Code'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildAddFriendDialogActions(
+      TextEditingController controller, UserProvider userProvider) {
+    return [
+      TextButton(
+        child: const Text('Cancel'),
+        onPressed: () {
+          Navigator.of(context).pop();
+        },
+      ),
+      TextButton(
+        child: const Text('Add'),
+        onPressed: () {
+          final String friendId = controller.text.trim();
+          if (friendId.isNotEmpty) {
+            _addFriend(context, friendId, userProvider);
+            Navigator.of(context).pop();
+          }
+        },
+      ),
+    ];
   }
 
   Future<void> _scanQRCode() async {
@@ -117,88 +134,69 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       var result = await BarcodeScanner.scan();
       if (!mounted) return;
       if (result.type == ResultType.Barcode) {
-        _addFriend(context, result.rawContent);
-        Navigator.of(context).pop(); // Close the dialog after scanning
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        _addFriend(context, result.rawContent, userProvider);
+        Navigator.of(context).pop();
       }
     } catch (e) {
-      print('Error scanning QR code: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error scanning QR code: $e')),
-      );
+      _showErrorSnackBar('Error scanning QR code: $e');
     }
   }
 
-  Future<void> _addFriend(BuildContext context, String friendId) async {
+  Future<void> _addFriend(
+      BuildContext context, String friendId, UserProvider userProvider) async {
     try {
-      await FirestoreService().addFriend(authUser!.uid, friendId);
+      await FirestoreService().addFriend(userProvider.user!.id, friendId);
       setState(() {
-        _friends = FirestoreService().getFriends(authUser!.uid);
+        _friends = FirestoreService().getFriends(userProvider.user!.id);
       });
     } catch (e) {
-      print('Error adding friend: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding friend: $e')),
-      );
+      _showErrorSnackBar('Error adding friend: $e');
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _showComparisonScreen(User friend) {
-    _userFuture.then((currentUser) {
-      if (currentUser != null) {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => ComparisonScreen(
-            currentUser: currentUser,
-            friend: friend,
-          ),
-        ));
-      }
-    });
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.user == null) {
+      _showErrorSnackBar('You must be signed in to view comparisons.');
+      return;
+    }
+
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => ComparisonScreen(
+        currentUser: userProvider.user!,
+        friend: friend,
+      ),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+
+    if (userProvider.user == null) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: const Center(
+          child: Text(
+            'You must be signed in to view your friends.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(
-                onPressed: _currentPage == 0
-                    ? null
-                    : () {
-                        _pageController.jumpToPage(0);
-                      },
-                child: Text(
-                  'Friends',
-                  style: TextStyle(
-                    color: _currentPage == 0 ? Colors.amber : Colors.white,
-                  ),
-                ),
-              ),
-              const VerticalDivider(
-                color: Colors.white,
-                width: 20,
-                thickness: 2,
-                indent: 5,
-                endIndent: 5,
-              ),
-              TextButton(
-                onPressed: _currentPage == 1
-                    ? null
-                    : () {
-                        _pageController.jumpToPage(1);
-                      },
-                child: Text(
-                  'Leaderboard',
-                  style: TextStyle(
-                    color: _currentPage == 1 ? Colors.amber : Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          _buildPageSelector(),
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -218,6 +216,39 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     );
   }
 
+  Widget _buildPageSelector() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildPageSelectorButton('Friends', 0),
+        const VerticalDivider(
+          color: Colors.white,
+          width: 20,
+          thickness: 2,
+          indent: 5,
+          endIndent: 5,
+        ),
+        _buildPageSelectorButton('Leaderboard', 1),
+      ],
+    );
+  }
+
+  Widget _buildPageSelectorButton(String title, int pageIndex) {
+    return TextButton(
+      onPressed: _currentPage == pageIndex
+          ? null
+          : () {
+              _pageController.jumpToPage(pageIndex);
+            },
+      child: Text(
+        title,
+        style: TextStyle(
+          color: _currentPage == pageIndex ? AppConstants.primaryColor : Colors.white,
+        ),
+      ),
+    );
+  }
+
   Widget _buildFriendsListPage() {
     return FutureBuilder<List<User>>(
       future: _friends,
@@ -229,11 +260,10 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No friends found.'));
         } else {
-          List<User> friends = snapshot.data!;
           return ListView.builder(
-            itemCount: friends.length,
+            itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
-              User friend = friends[index];
+              User friend = snapshot.data![index];
               return ListTile(
                 leading: GestureDetector(
                   child: CircleAvatar(
@@ -401,11 +431,14 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Future<List<User>> _fetchFriendsAndUser() async {
-    List<User> friends = await FirestoreService().getFriends(authUser!.uid);
-    User? currentUser = await FirestoreService().getUser(authUser!.uid);
-    if (currentUser != null) {
-      friends.insert(0, currentUser); // Add current user to the top of the list
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.user == null) {
+      return [];
     }
+
+    List<User> friends =
+        await FirestoreService().getFriends(userProvider.user!.id);
+    friends.insert(0, userProvider.user!);
     return friends;
   }
 }
