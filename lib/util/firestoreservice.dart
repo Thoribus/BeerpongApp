@@ -91,44 +91,60 @@ class FirestoreService {
     }
   }
 
-  /// Returns a list of the user's own stats from each game in descending order.
-  Future<List<Player>> retrieveUserStats() async {
-    final user = auth.FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return [];
-    }
+/// Retrieves a list of [UserStatsInGame], each containing the user’s Player data 
+/// and the game’s timestamp, in descending chronological order.
+Future<List<UserStatsInGame>> retrieveUserStatsWithDate() async {
+  final user = auth.FirebaseAuth.instance.currentUser;
+  if (user == null) return [];
 
-    List<GameStatistics> allGames = await retrieveGames();
-    // retrieveGames() is already sorted by descending timestamp
+  try {
+    // 1) Query for this user’s games, sorted descending by timestamp
+    final snapshot = await _db
+        .collection('games')
+        .where('participants', arrayContains: user.uid)
+        .orderBy('timestamp', descending: true)
+        .get();
 
-    // Create a new list of Player objects that belong to this user
-    final userStats = <Player>[];
+    // 2) Convert snapshot docs to GameStatistics
+    final allGames = snapshot.docs.map((doc) {
+      return GameStatistics.fromFirestore(doc.data());
+    }).toList();
+
+    // 3) Build a list of userStats that includes the date + Player
+    final userStatsList = <UserStatsInGame>[];
 
     for (final game in allGames) {
-      // game.team1Players and game.team2Players are lists of Player
-      // We can search them by user ID (or name, if that's how you store it).
-      final matchingInTeam1 = game.team1Players.firstWhere(
-        (p) => p.user?.id == user.uid, // or however you identify them
-        orElse: () => Player(name: 'notFound'),
-      );
+      // Combine the two teams into a single list if you want to search them all at once
+      final allPlayersInGame = [
+        ...game.team1Players,
+        ...game.team2Players,
+      ];
 
-      final matchingInTeam2 = game.team2Players.firstWhere(
+      // Try to find the Player object whose user?.id == user.uid
+      final matchingPlayer = allPlayersInGame.firstWhere(
         (p) => p.user?.id == user.uid,
         orElse: () => Player(name: 'notFound'),
       );
 
-      // If found in Team1
-      if (matchingInTeam1.name != 'notFound') {
-        userStats.add(matchingInTeam1);
-      }
-      // If found in Team2
-      else if (matchingInTeam2.name != 'notFound') {
-        userStats.add(matchingInTeam2);
+      // If found the player's data
+      if (matchingPlayer.name != 'notFound') {
+        // Combine with date
+        userStatsList.add(
+          UserStatsInGame(
+            date: game.date,       // from GameStatistics
+            player: matchingPlayer,
+          ),
+        );
       }
     }
 
-    return userStats;
+    return userStatsList; 
+  } catch (e) {
+    print('Error retrieving user stats: $e');
+    return [];
   }
+}
+
 
   // Convert Firestore Document to User model
   User _userFromFirestore(DocumentSnapshot doc) {
