@@ -61,7 +61,6 @@ class FirestoreService {
           updatedUsers.add(user);
         }
       }
-      
     } catch (e) {
       print('Error saving game: $e');
     }
@@ -80,6 +79,7 @@ class FirestoreService {
       QuerySnapshot snapshot = await _db
           .collection('games')
           .where('participants', arrayContains: user.uid)
+          .orderBy('timestamp', descending: true)
           .get();
       print(snapshot.docs.first.data() as Map<String, dynamic>);
       return snapshot.docs.map((doc) {
@@ -89,6 +89,45 @@ class FirestoreService {
       print('Error retrieving games: $e');
       return [];
     }
+  }
+
+  /// Returns a list of the user's own stats from each game in descending order.
+  Future<List<Player>> retrieveUserStats() async {
+    final user = auth.FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return [];
+    }
+
+    List<GameStatistics> allGames = await retrieveGames();
+    // retrieveGames() is already sorted by descending timestamp
+
+    // Create a new list of Player objects that belong to this user
+    final userStats = <Player>[];
+
+    for (final game in allGames) {
+      // game.team1Players and game.team2Players are lists of Player
+      // We can search them by user ID (or name, if that's how you store it).
+      final matchingInTeam1 = game.team1Players.firstWhere(
+        (p) => p.user?.id == user.uid, // or however you identify them
+        orElse: () => Player(name: 'notFound'),
+      );
+
+      final matchingInTeam2 = game.team2Players.firstWhere(
+        (p) => p.user?.id == user.uid,
+        orElse: () => Player(name: 'notFound'),
+      );
+
+      // If found in Team1
+      if (matchingInTeam1.name != 'notFound') {
+        userStats.add(matchingInTeam1);
+      }
+      // If found in Team2
+      else if (matchingInTeam2.name != 'notFound') {
+        userStats.add(matchingInTeam2);
+      }
+    }
+
+    return userStats;
   }
 
   // Convert Firestore Document to User model
@@ -108,11 +147,11 @@ class FirestoreService {
       wins: data['wins'] ?? 0,
       losses: data['losses'] ?? 0,
       friends: List<String>.from(data['friends'] ?? []),
-      icon: IconData(data['icon'], fontFamily: 'BeerpongIcons', fontPackage: null),
+      icon: IconData(data['icon'],
+          fontFamily: 'BeerpongIcons', fontPackage: null),
       iconColor: Color(data['iconColor']),
     );
   }
-
 
   // Fetch friends of a user
   Future<List<User>> getFriends(String userId) async {
@@ -165,7 +204,7 @@ class FirestoreService {
   }
 
   // Update an existing user in Firestore
-   Future<void> updateUser(User user) async {
+  Future<void> updateUser(User user) async {
     try {
       DocumentReference docRef = _db.collection('users').doc(user.id);
       Map<String, dynamic> data = user.toJson();
