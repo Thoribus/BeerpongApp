@@ -1,4 +1,4 @@
-import 'package:beerpongapp/screens/game_screen.dart';
+import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/screens/home_screen.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';

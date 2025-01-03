@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:beerpongapp/screens/game_screen.dart';
+import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/widgets/new_game_dialog.dart';
 import '../models/player.dart';
 import 'package:beerpongapp/constants.dart'; // Use centralized constants

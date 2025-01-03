@@ -1,7 +1,7 @@
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/screens/game_screen.dart';
+import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';

@@ -61,7 +61,6 @@ class FirestoreService {
           updatedUsers.add(user);
         }
       }
-      
     } catch (e) {
       print('Error saving game: $e');
     }
@@ -80,6 +79,7 @@ class FirestoreService {
       QuerySnapshot snapshot = await _db
           .collection('games')
           .where('participants', arrayContains: user.uid)
+          .orderBy('timestamp', descending: true)
           .get();
       print(snapshot.docs.first.data() as Map<String, dynamic>);
       return snapshot.docs.map((doc) {
@@ -90,6 +90,61 @@ class FirestoreService {
       return [];
     }
   }
+
+/// Retrieves a list of [UserStatsInGame], each containing the user’s Player data 
+/// and the game’s timestamp, in descending chronological order.
+Future<List<UserStatsInGame>> retrieveUserStatsWithDate() async {
+  final user = auth.FirebaseAuth.instance.currentUser;
+  if (user == null) return [];
+
+  try {
+    // 1) Query for this user’s games, sorted descending by timestamp
+    final snapshot = await _db
+        .collection('games')
+        .where('participants', arrayContains: user.uid)
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    // 2) Convert snapshot docs to GameStatistics
+    final allGames = snapshot.docs.map((doc) {
+      return GameStatistics.fromFirestore(doc.data());
+    }).toList();
+
+    // 3) Build a list of userStats that includes the date + Player
+    final userStatsList = <UserStatsInGame>[];
+
+    for (final game in allGames) {
+      // Combine the two teams into a single list if you want to search them all at once
+      final allPlayersInGame = [
+        ...game.team1Players,
+        ...game.team2Players,
+      ];
+
+      // Try to find the Player object whose user?.id == user.uid
+      final matchingPlayer = allPlayersInGame.firstWhere(
+        (p) => p.user?.id == user.uid,
+        orElse: () => Player(name: 'notFound'),
+      );
+
+      // If found the player's data
+      if (matchingPlayer.name != 'notFound') {
+        // Combine with date
+        userStatsList.add(
+          UserStatsInGame(
+            date: game.date,       // from GameStatistics
+            player: matchingPlayer,
+          ),
+        );
+      }
+    }
+
+    return userStatsList; 
+  } catch (e) {
+    print('Error retrieving user stats: $e');
+    return [];
+  }
+}
+
 
   // Convert Firestore Document to User model
   User _userFromFirestore(DocumentSnapshot doc) {
@@ -108,11 +163,11 @@ class FirestoreService {
       wins: data['wins'] ?? 0,
       losses: data['losses'] ?? 0,
       friends: List<String>.from(data['friends'] ?? []),
-      icon: IconData(data['icon'], fontFamily: 'BeerpongIcons', fontPackage: null),
+      icon: IconData(data['icon'],
+          fontFamily: 'BeerpongIcons', fontPackage: null),
       iconColor: Color(data['iconColor']),
     );
   }
-
 
   // Fetch friends of a user
   Future<List<User>> getFriends(String userId) async {
@@ -165,7 +220,7 @@ class FirestoreService {
   }
 
   // Update an existing user in Firestore
-   Future<void> updateUser(User user) async {
+  Future<void> updateUser(User user) async {
     try {
       DocumentReference docRef = _db.collection('users').doc(user.id);
       Map<String, dynamic> data = user.toJson();
