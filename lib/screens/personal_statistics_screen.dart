@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/models/game_statistics.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 
 // Class representing a cup in the game
 class Cup {
@@ -61,7 +63,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            _buildStatisticsTiles(user), // New 2x2 rectangle brackets layout
+            _buildStatisticsTiles(user), // 2x2 rectangle brackets layout
             const SizedBox(height: 24),
             _buildSectionTitle("Performance Summary"),
             _buildCard(
@@ -78,6 +80,219 @@ class PersonalStatisticsScreen extends StatelessWidget {
               child: _buildScoreChart(),
             ),
             const SizedBox(height: 20),
+            _buildSectionTitle("Game History"),
+            _buildCard(
+              child: FutureBuilder<List<UserStatsInGame>>(
+                future: FirestoreService().retrieveUserStatsWithDate(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+                  final userStats = snapshot.data ?? [];
+                  return _buildGameHistoryChart(userStats);
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameHistoryChart(List<UserStatsInGame> userStats) {
+    String selectedXAxis = 'Date'; // Default x-axis option
+    final List<String> xAxisOptions = [
+      'Date',
+      'Game Number'
+    ]; // Dropdown options
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Brackets with Data and Dropdown
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left Bracket: "Data"
+                _buildBracket(
+                  content: const Text(
+                    'Data',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+                // Right Bracket: Dropdown Menu
+                _buildBracket(
+                  content: DropdownButton<String>(
+                    value: selectedXAxis,
+                    dropdownColor: Colors.grey[800],
+                    icon:
+                        const Icon(Icons.arrow_drop_down, color: Colors.white),
+                    underline: Container(height: 0), // Remove underline
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedXAxis = newValue!;
+                      });
+                    },
+                    items: xAxisOptions
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Line Chart
+            _buildLineChart(userStats, selectedXAxis),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Builds a bracket-style container with custom content
+  Widget _buildBracket({required Widget content}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: content,
+    );
+  }
+
+  /// Builds the line chart with the selected x-axis type
+  Widget _buildLineChart(List<UserStatsInGame> userStats, String xAxis) {
+    final gradientColors = [
+      const Color(0xff23b6e6),
+      const Color(0xff02d39a),
+    ];
+
+    List<FlSpot> spots = userStats.asMap().entries.map((entry) {
+      double xValue = xAxis == 'Date'
+          ? entry.key.toDouble()
+          : entry.value.date.millisecondsSinceEpoch.toDouble();
+      return FlSpot(xValue, entry.value.player.score.toDouble());
+    }).toList();
+
+    return SizedBox(
+      height: 300,
+      child: LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: userStats.length.toDouble() - 1,
+          minY: 0,
+          maxY: userStats
+                  .map((e) => e.player.score.toDouble())
+                  .reduce((a, b) => a > b ? a : b) +
+              10,
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 1,
+                reservedSize: 30,
+                getTitlesWidget: (value, meta) {
+                  if (xAxis == 'Date') {
+                    int index = value.toInt();
+                    if (index < 0 || index >= userStats.length)
+                      return const Text('');
+                    return Text(
+                      userStats[index]
+                          .date
+                          .toLocal()
+                          .toIso8601String()
+                          .split('T')[0],
+                      style: const TextStyle(
+                          color: Color(0xff68737d),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    );
+                  } else {
+                    return Text(
+                      '${value.toInt()}',
+                      style: const TextStyle(
+                          color: Color(0xff68737d),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    );
+                  }
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 10,
+                reservedSize: 42,
+                getTitlesWidget: (value, meta) {
+                  return Text(
+                    '${value.toInt()}',
+                    style: const TextStyle(
+                        color: Color(0xff67727d),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                  );
+                },
+              ),
+            ),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          borderData: FlBorderData(
+            show: true,
+            border: Border.all(color: const Color(0xff37434d), width: 1),
+          ),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: true,
+            horizontalInterval: 10,
+            verticalInterval: 1,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(color: const Color(0xff37434d), strokeWidth: 1);
+            },
+            getDrawingVerticalLine: (value) {
+              return FlLine(color: const Color(0xff37434d), strokeWidth: 1);
+            },
+          ),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              gradient: LinearGradient(
+                colors: gradientColors,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              barWidth: 6,
+              isStrokeCapRound: true,
+              dotData: FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: gradientColors
+                      .map((color) => color.withOpacity(0.3))
+                      .toList(),
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
+            ),
           ],
         ),
       ),

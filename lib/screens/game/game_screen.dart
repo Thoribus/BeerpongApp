@@ -879,7 +879,7 @@ class GameScreenState extends State<GameScreen> {
                         label:
                             Text('A', style: TextStyle(color: Colors.white))),
                   ],
-                  rows: currentTeam.currentPlayers.map((player) {
+                  rows: currentTeam.players.map((player) {
                     return DataRow(
                       cells: [
                         DataCell(Row(
@@ -937,7 +937,7 @@ class GameScreenState extends State<GameScreen> {
             ),
             itemCount: currentTeam.currentPlayers.length,
             itemBuilder: (context, index) {
-              final player = currentTeam.currentPlayers[index];
+              final player = currentTeam.players[index];
               final hitRate = _calculateHitRate(player.score, player.throws);
               final displayHitRate = hitRate.clamp(0, 100);
 

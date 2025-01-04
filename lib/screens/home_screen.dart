@@ -20,24 +20,21 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeSavedGameState();
+    _checkSavedGame();
   }
 
-  Future<void> _initializeSavedGameState() async {
-    final hasSavedGame = await _checkSavedGame();
+  Future<void> _checkSavedGame() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasSavedGame =
+        prefs.containsKey('team1Cups') && prefs.containsKey('team2Cups');
     setState(() {
       _hasSavedGame = hasSavedGame;
     });
   }
 
-  Future<bool> _checkSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('team1Cups') && prefs.containsKey('team2Cups');
-  }
-
   Future<void> _clearSavedGame() async {
-    final prefs = await SharedPreferences.getInstance();
-    const keysToRemove = [
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> keys = [
       'team1Cups',
       'team2Cups',
       'team1Players',
@@ -45,9 +42,9 @@ class HomeScreenState extends State<HomeScreen> {
       'isTeamOneTurn',
       'islandShotActive',
       'team1IsRearranged',
-      'team2IsRearranged',
+      'team2IsRearranged'
     ];
-    for (final key in keysToRemove) {
+    for (String key in keys) {
       await prefs.remove(key);
     }
     setState(() {
@@ -55,32 +52,45 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _showNewGameConfirmationDialog() async {
+  Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
-      builder: (dialogContext) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
-          backgroundColor: AppConstants.primaryColor,
+          backgroundColor: Colors.amber,
           title: const Text(
             'New Game',
-            style: TextStyle(color: AppConstants.secondaryColor, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           content: const Text(
             'Starting a new game will delete the current game. Do you want to continue?',
-            style: TextStyle(color: AppConstants.secondaryColor),
+            style: TextStyle(
+              color: Colors.black,
+            ),
           ),
           actions: <Widget>[
             TextButton(
               child: const Text(
                 'Cancel',
-                style: TextStyle(color: AppConstants.secondaryColor, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              onPressed: () => Navigator.of(dialogContext).pop(),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
             ),
             TextButton(
               child: const Text(
                 'Start New Game',
-                style: TextStyle(color: AppConstants.secondaryColor, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
@@ -88,8 +98,8 @@ class HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => SelectionScreen(onReturn: _refreshSavedGameState),
-                  ),
+                      builder: (context) =>
+                          SelectionScreen(onReturn: _onReturnFromNextScreen)),
                 );
               },
             ),
@@ -99,17 +109,17 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _refreshSavedGameState() => _initializeSavedGameState();
-
-  Widget _buildWelcomeText() {
+  Widget _buildWelcomeText(BuildContext context) {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+          alignment: Alignment.centerLeft,
           child: Text(
             'Welcome Back, ${userProvider.user?.username ?? "User"}',
             style: const TextStyle(
-              color: AppConstants.secondaryColor,
+              color: Colors.black,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -119,101 +129,106 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGameButtons() {
+  Widget _buildGameButton(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
         color: const Color.fromRGBO(27, 26, 26, 1),
         borderRadius: BorderRadius.circular(20.0),
         boxShadow: const [
-          BoxShadow(color: AppConstants.secondaryColor, blurRadius: 10, spreadRadius: 2),
+          BoxShadow(
+            color: Colors.black,
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Resume Game',
-                  style: TextStyle(color: AppConstants.primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
+                  'New Game',
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                if (_hasSavedGame)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 24),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GameScreen(
+                            title: 'Resume Game',
+                            players1: [],
+                            players2: [],
+                            selectedRules: {},
+                            startingTeam: true,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Resume',
+                      style: TextStyle(color: Colors.black),
                     ),
                   ),
-                  onPressed: _hasSavedGame
-                      ? () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const GameScreen(
-                                title: 'Resume Game',
-                                players1: [],
-                                players2: [],
-                                selectedRules: {},
-                                startingTeam: true,
-                              ),
-                            ),
-                          )
-                      : null,
-                  child: const Text(
-                    'Resume',
-                    style: TextStyle(color: AppConstants.secondaryColor),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Start New Game',
-                  style: TextStyle(color: AppConstants.primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
-                ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstants.primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    backgroundColor: Colors.amber,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 24),
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20.0)),
                     ),
                   ),
                   onPressed: () {
                     if (_hasSavedGame) {
-                      _showNewGameConfirmationDialog();
+                      _showNewGameConfirmationDialog(context);
                     } else {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => SelectionScreen(onReturn: _refreshSavedGameState),
-                        ),
+                            builder: (context) => SelectionScreen(
+                                onReturn: _onReturnFromNextScreen)),
                       );
                     }
                   },
                   child: const Icon(
                     Icons.add,
-                    color: AppConstants.secondaryColor,
+                    color: Colors.black,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+  }
+
+  void _onReturnFromNextScreen() {
+    _checkSavedGame();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppConstants.secondaryColor,
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           Positioned.fill(
@@ -225,14 +240,15 @@ class HomeScreenState extends State<HomeScreen> {
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildWelcomeText(),
+              children: <Widget>[
+                _buildWelcomeText(context),
                 const Spacer(),
                 SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
-                    children: [
-                      _buildGameButtons(),
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: <Widget>[
+                      _buildGameButton(context),
                       const SizedBox(height: 60),
                     ],
                   ),
