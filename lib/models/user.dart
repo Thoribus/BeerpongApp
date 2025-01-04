@@ -1,8 +1,17 @@
-import 'package:flutter/material.dart';
-
+/// Represents the user in your Beer Pong app.
 class User {
   final String id;
   String username;
+
+  /// A short descriptor or rank the user can display (e.g., "Beer Pong King").
+  String title;
+
+  /// Keys identifying which of your pre-defined images they chose. 
+  /// For example, "avatar_1", "avatar_2", "background_blue", etc.
+  String avatarKey;
+  String backgroundKey;
+
+  /// Various gameplay stats
   double totalScore;
   int totalMisses;
   int totalAirballs;
@@ -14,13 +23,14 @@ class User {
   int wins;
   int losses;
   List<String> friends;
-  IconData icon;
-  Color iconColor;
 
   User({
     required this.id,
     required this.username,
-    this.totalScore = 0,
+    this.title = '',
+    this.avatarKey = '',
+    this.backgroundKey = '',
+    this.totalScore = 0.0,
     this.totalMisses = 0,
     this.totalAirballs = 0,
     this.totalThrows = 0,
@@ -31,21 +41,24 @@ class User {
     this.wins = 0,
     this.losses = 0,
     this.friends = const [],
-    this.icon = Icons.person, // Default icon if not provided
-    this.iconColor = Colors.blue, // Default color if not provided
   });
 
+  /// Convenience getter to compute the user's overall win rate.
   double get winRate {
-    int totalGames = wins + losses;
+    final totalGames = wins + losses;
     if (totalGames == 0) return 0.0;
     return wins / totalGames;
   }
 
-  // Method to encode User instance to JSON
+  /// Encode this user into a JSON-compatible map for Firestore.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'username': username,
+      'title': title,
+      'avatarKey': avatarKey,
+      'backgroundKey': backgroundKey,
+
       'totalScore': totalScore,
       'totalMisses': totalMisses,
       'totalAirballs': totalAirballs,
@@ -57,36 +70,38 @@ class User {
       'wins': wins,
       'losses': losses,
       'friends': friends,
-      'icon': icon.codePoint, // Encode icon as an integer
-      'iconColor': iconColor.value, // Encode color as an integer
     };
   }
 
-  // Method to decode User instance from JSON
+  /// Decode a User from a Firestore or JSON map.
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'],
       username: json['username'],
-      totalScore: json['totalScore'],
-      totalMisses: json['totalMisses'],
-      totalAirballs: json['totalAirballs'],
-      totalThrows: json['totalThrows'],
+      title: json['title'] ?? '',
+      avatarKey: json['avatarKey'] ?? '',
+      backgroundKey: json['backgroundKey'] ?? '',
+
+      totalScore: (json['totalScore'] ?? 0.0).toDouble(),
+      totalMisses: json['totalMisses'] ?? 0,
+      totalAirballs: json['totalAirballs'] ?? 0,
+      totalThrows: json['totalThrows'] ?? 0,
       onFire: json['onFire'] ?? 0,
       defended: json['defended'] ?? 0,
       hitLastCup: json['hitLastCup'] ?? 0,
-      cupsHit: List<int>.from(json['cupsHit']),
-      wins: json['wins'],
-      losses: json['losses'],
-      friends: List<String>.from(json['friends']),
-      icon: IconData(json['icon'], fontFamily: 'BeerpongIcons', fontPackage: null), // Decode icon from integer
-      iconColor: Color(json['iconColor']), // Decode color from integer
+      cupsHit: List<int>.from(json['cupsHit'] ?? []),
+      wins: json['wins'] ?? 0,
+      losses: json['losses'] ?? 0,
+      friends: List<String>.from(json['friends'] ?? []),
     );
   }
 
-  // Method to create a copy of the User with some properties changed
+  /// Creates a copy of this user with optionally updated fields.
   User copyWith({
-    String? id,
     String? username,
+    String? title,
+    String? avatarKey,
+    String? backgroundKey,
     double? totalScore,
     int? totalMisses,
     int? totalAirballs,
@@ -98,12 +113,14 @@ class User {
     int? wins,
     int? losses,
     List<String>? friends,
-    IconData? icon,
-    Color? iconColor,
   }) {
     return User(
-      id: id ?? this.id,
+      id: id, // The ID never changes in this example
       username: username ?? this.username,
+      title: title ?? this.title,
+      avatarKey: avatarKey ?? this.avatarKey,
+      backgroundKey: backgroundKey ?? this.backgroundKey,
+
       totalScore: totalScore ?? this.totalScore,
       totalMisses: totalMisses ?? this.totalMisses,
       totalAirballs: totalAirballs ?? this.totalAirballs,
@@ -115,8 +132,6 @@ class User {
       wins: wins ?? this.wins,
       losses: losses ?? this.losses,
       friends: friends ?? this.friends,
-      icon: icon ?? this.icon,
-      iconColor: iconColor ?? this.iconColor,
     );
   }
 }

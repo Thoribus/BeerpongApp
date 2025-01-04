@@ -96,6 +96,12 @@ flutter:
     - assets/racoon_winner.svg
     - assets/otter_canvas.svg
     - assets/podium.svg
+    - assets/avatars/bunny.png
+    - assets/avatars/cat.png
+    - assets/avatars/dog.png
+    - assets/avatars/raccoon.png
+    - assets/avatars/eagle.png
+    - assets/avatars/frog.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
