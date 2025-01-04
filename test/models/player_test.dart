@@ -14,7 +14,7 @@ void main() {
       hitThisRound: 1,
       islandShotUsed: false,
       defended: 1,
-      consecuteiveHits: 3,
+      consecutiveHits: 3,
       onFire: 1,
       user: User(id: '123', username: 'john_doe'),
     );
@@ -30,7 +30,7 @@ void main() {
     expect(newPlayer.hitThisRound, player.hitThisRound);
     expect(newPlayer.islandShotUsed, player.islandShotUsed);
     expect(newPlayer.defended, player.defended);
-    expect(newPlayer.consecuteiveHits, player.consecuteiveHits);
+    expect(newPlayer.consecutiveHits, player.consecutiveHits);
     expect(newPlayer.onFire, player.onFire);
     expect(newPlayer.user?.id, player.user?.id);
   });
