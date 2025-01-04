@@ -31,7 +31,7 @@ class HomeScreenState extends State<HomeScreen> {
       _hasSavedGame = hasSavedGame;
     });
   }
-
+  
   Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
@@ -207,6 +207,7 @@ class HomeScreenState extends State<HomeScreen> {
   void _onReturnFromNextScreen() {
     _checkSavedGame();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -15,7 +15,8 @@ class AccountScreen extends StatefulWidget {
   AccountScreenState createState() => AccountScreenState();
 }
 
-class AccountScreenState extends State<AccountScreen> {
+class AccountScreenState extends State<AccountScreen>
+    with SingleTickerProviderStateMixin {
   User? user;
 
   /// A list of possible avatar keys that map to local assets in your `assets` folder.
@@ -27,6 +28,19 @@ class AccountScreenState extends State<AccountScreen> {
     'eagle',
     'frog',
   ];
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,25 +58,23 @@ class AccountScreenState extends State<AccountScreen> {
                 child: const Text('Sign in with Google'),
               ),
             )
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildUserCard(),
-                  const SizedBox(height: 20),
-                  _buildSectionTitle("Achievements"),
-                  _buildAchievementsCard(),
-                  _buildSectionTitle("Statistics"),
-                  _buildStatisticsCard(),
-                  _buildSectionTitle("Privacy"),
-                  _buildPrivacyCard(),
-                  _buildSectionTitle("Dark Mode"),
-                  _buildDarkModeCard(),
-                  const SizedBox(height: 20),
-                  _buildSignOutButton(userProvider),
-                ],
-              ),
+          : Column(
+              children: [
+                const SizedBox(height: 20),
+                _buildUserCard(),
+                const SizedBox(height: 10),
+                _buildTabBar(),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      PersonalStatisticsScreen(user: user!),
+                      AchievementsScreen(user: user!),
+                      _buildActivityScreen(),
+                    ],
+                  ),
+                ),
+              ],
             ),
     );
   }
@@ -78,22 +90,93 @@ class AccountScreenState extends State<AccountScreen> {
     final avatarAsset = _mapAvatarKeyToAsset(currentUser.avatarKey);
 
     return Card(
-      color: Colors.amber.withOpacity(0.2),
+      color: Colors.transparent, // Transparent background
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(
+            20), // More rounded corners for a credit card look
+      ),
+      elevation: 5.0,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
           children: [
-            // Left section: avatar image + user info
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    // Circular avatar image
-                    CircleAvatar(
+            // Background image using slanted-gradient.svg
+            Positioned.fill(
+              child: SvgPicture.asset(
+                'assets/slanted-gradient.svg',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Upper part - Winner icons on the left
+                  Row(
+                    children: [
+                      // Winner icons on the left (3 amber icons with circular background)
+                      Row(
+                        children: List.generate(3, (index) {
+                          return Container(
+                            margin: EdgeInsets.only(right: 8.0),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.amber,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.star,
+                                size: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10), // Space to push content down
+                  // Bottom part - User data on the left and CircleAvatar on the right
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left side - User text and username at the bottom-left
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            currentUser.title.isNotEmpty
+                              ? currentUser.title
+                              : 'No Title Yet',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                         Text(
+                          currentUser.username,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                          ),
+                        ],
+                      ),
+                      // Right side - CircleAvatar with either icon or SVG background
+                      GestureDetector(
+                        onTap: _showAvatarPicker, // Trigger the icon picker
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Display an icon or SVG based on selectedAvatar
+                                                CircleAvatar(
                       radius: 30,
                       backgroundColor: Colors.white24,
                       child: avatarAsset.isNotEmpty
@@ -111,59 +194,12 @@ class AccountScreenState extends State<AccountScreen> {
                               color: Colors.white,
                             ),
                     ),
-                    const SizedBox(width: 12),
-                    // Username & Title
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          currentUser.username,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                          ],
                         ),
-                        Text(
-                          currentUser.title.isNotEmpty
-                              ? currentUser.title
-                              : 'No Title Yet',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _showAvatarPicker, // Let user pick a new avatar
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    'Change Avatar',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // Right section with an SVG image (example decorative image)
-            SizedBox(
-              width: 150,
-              height: 150,
-              child: SvgPicture.asset(
-                'assets/otter_canvas.svg', // adjust path if needed
-                fit: BoxFit.contain,
+                ],
               ),
             ),
           ],
@@ -172,87 +208,25 @@ class AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  /// Displays a section title with bold text.
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+  Widget _buildTabBar() {
+    return TabBar(
+      controller: _tabController,
+      indicatorColor: Colors.amber,
+      labelColor: Colors.amber,
+      unselectedLabelColor: Colors.white70,
+      tabs: const [
+        Tab(icon: Icon(Icons.pie_chart), text: "Stats"),
+        Tab(icon: Icon(Icons.emoji_events), text: "Achievements"),
+        Tab(icon: Icon(Icons.history), text: "Activity"),
+      ],
+    );
+  }
+
+  Widget _buildActivityScreen() {
+    return Center(
       child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  /// A card leading to AchievementsScreen.
-  Widget _buildAchievementsCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(Icons.star, color: Colors.amber),
-        title: const Text("Collectables", style: TextStyle(color: Colors.white)),
-        subtitle: const Text("See what you got", style: TextStyle(color: Colors.white70)),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AchievementsScreen(user: user!),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  /// A card leading to the PersonalStatisticsScreen.
-  Widget _buildStatisticsCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(Icons.pie_chart, color: Colors.amber),
-        title: const Text("Performance", style: TextStyle(color: Colors.white)),
-        subtitle: const Text("I see what you did there...", style: TextStyle(color: Colors.white70)),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PersonalStatisticsScreen(user: user!),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  /// Placeholder for privacy settings.
-  Widget _buildPrivacyCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: const ListTile(
-        leading: Icon(Icons.lock, color: Colors.red),
-        title: Text("Privacy", style: TextStyle(color: Colors.white)),
-        subtitle: Text("Manage your privacy settings", style: TextStyle(color: Colors.white70)),
-      ),
-    );
-  }
-
-  /// Dark Mode toggle placeholder card.
-  Widget _buildDarkModeCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: SwitchListTile(
-        title: const Text("Dark Mode", style: TextStyle(color: Colors.white)),
-        value: false, // TODO: Implement a real dark-mode toggle
-        onChanged: (bool value) {
-          // Toggle logic here, e.g. using a theme provider
-        },
+        'Activity Screen Placeholder',
+        style: TextStyle(color: Colors.white, fontSize: 16),
       ),
     );
   }
