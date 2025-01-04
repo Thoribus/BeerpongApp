@@ -1,11 +1,11 @@
-import 'package:beerpongapp/constants.dart';
+import 'package:beerpongapp/screens/game/game_persistence.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:beerpongapp/screens/selection_screen.dart';
-import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/screens/selection_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:beerpongapp/screens/game/game_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,32 +26,12 @@ class HomeScreenState extends State<HomeScreen> {
   Future<void> _checkSavedGame() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool hasSavedGame =
-        prefs.containsKey('team1Cups') && prefs.containsKey('team2Cups');
+        prefs.containsKey('currentGameState');
     setState(() {
       _hasSavedGame = hasSavedGame;
     });
   }
-
-  Future<void> _clearSavedGame() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> keys = [
-      'team1Cups',
-      'team2Cups',
-      'team1Players',
-      'team2Players',
-      'isTeamOneTurn',
-      'islandShotActive',
-      'team1IsRearranged',
-      'team2IsRearranged'
-    ];
-    for (String key in keys) {
-      await prefs.remove(key);
-    }
-    setState(() {
-      _hasSavedGame = false;
-    });
-  }
-
+  
   Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
@@ -94,7 +74,10 @@ class HomeScreenState extends State<HomeScreen> {
               ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                await _clearSavedGame();
+                await GamePersistence.clearGameState();
+                setState(() {
+                  _hasSavedGame = false;
+                });
                 Navigator.push(
                   context,
                   MaterialPageRoute(

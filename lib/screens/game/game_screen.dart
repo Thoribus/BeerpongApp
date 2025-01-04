@@ -935,7 +935,7 @@ class GameScreenState extends State<GameScreen> {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
             ),
-            itemCount: currentTeam.currentPlayers.length,
+            itemCount: currentTeam.players.length,
             itemBuilder: (context, index) {
               final player = currentTeam.players[index];
               final hitRate = _calculateHitRate(player.score, player.throws);

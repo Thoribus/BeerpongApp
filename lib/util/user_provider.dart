@@ -4,11 +4,13 @@ import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 
+/// Provides the current user's data and handles sign-in/out flows.
 class UserProvider with ChangeNotifier {
   User? _user;
 
   User? get user => _user;
 
+  /// Load the current user's data from Firestore.
   Future<void> loadUser() async {
     final auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
@@ -17,52 +19,64 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  /// Updates the user's data in Firestore and locally.
   Future<void> updateUser(User user) async {
     _user = user;
     await FirestoreService().updateUser(user);
     notifyListeners();
   }
 
-  void signOut() async {
+  /// Clears local user data and signs out from Firebase & Google.
+  Future<void> signOut() async {
     _user = null;
     await GoogleSignIn().signOut();
-    auth.FirebaseAuth.instance.signOut();
+    await auth.FirebaseAuth.instance.signOut();
     notifyListeners();
   }
 
-  void signIn() async {
-    auth.User? authUser = await signInWithGoogle();
+  /// Signs in with Google OAuth. If the user is new, add them to Firestore.
+  Future<void> signIn() async {
+    final auth.User? authUser = await _signInWithGoogle();
     if (authUser == null) {
       _user = null;
       return;
+    }
+
+    // Check if user doc already exists
+    final existingUser = await FirestoreService().getUser(authUser.uid);
+    if (existingUser == null) {
+      // Create a new default user in Firestore
+      final newUser = User(
+        id: authUser.uid,
+        username: authUser.displayName ?? 'Unknown',
+      );
+      await FirestoreService().addUser(newUser);
+      _user = newUser;
     } else {
-      if (await FirestoreService().getUser(authUser.uid) == null) {
-        FirestoreService()
-            .addUser(User(id: authUser.uid, username: authUser.displayName!));
-      } else {
-        _user = await FirestoreService().getUser(authUser.uid);
-      }
+      _user = existingUser;
     }
     notifyListeners();
   }
 
-  // Sign in with Google and return the authenticated user
-  Future<auth.User?> signInWithGoogle() async {
+  /// Actual Google sign-in flow returning the Firebase user.
+  Future<auth.User?> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) {
         return null; // The user canceled the sign-in
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = 
+        await googleUser.authentication;
+
       final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      auth.UserCredential userCredential =
-          await auth.FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = 
+        await auth.FirebaseAuth.instance.signInWithCredential(credential);
+
       return userCredential.user;
     } catch (e) {
       print('Error during Google Sign-In: $e');
