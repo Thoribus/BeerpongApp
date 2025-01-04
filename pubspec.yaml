@@ -99,6 +99,15 @@ flutter:
     - assets/avatar_border.svg
     - assets/slanted-gradient.svg
     - assets/cat_avatar_profile.svg
+    - assets/liquid-cheese.svg
+    - assets/liquid-cheese.png
+    - assets/ach_wins.png
+    - assets/ach_loses.png
+    - assets/ach_friends.png
+    - assets/ach_lost.png
+    - assets/ach_airball.png
+    - assets/ach_champion.png
+    - assets/background_achievement.png
        #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
