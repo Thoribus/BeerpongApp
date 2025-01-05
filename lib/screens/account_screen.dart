@@ -21,12 +21,12 @@ class AccountScreenState extends State<AccountScreen>
 
   /// A list of possible avatar keys that map to local assets in your `assets` folder.
   final List<String> _avatarKeys = [
-    'bunny',
-    'cat',
-    'dog',
-    'raccoon',
-    'eagle',
-    'frog',
+    'avatar_catbeer',
+    'avatar_catpants',
+    'avatar_cupbeer',
+    'avatar_aggroracoon',
+    'avatar_frogisland',
+    'avatar_cheering',
   ];
   late TabController _tabController;
 
@@ -180,11 +180,19 @@ class AccountScreenState extends State<AccountScreen>
                               backgroundColor: Colors.white24,
                               child: avatarAsset.isNotEmpty
                                   ? ClipOval(
-                                      child: Image.asset(
+                                      child: SvgPicture.asset(
                                         avatarAsset,
                                         fit: BoxFit.cover,
                                         width: 56,
                                         height: 56,
+                                        placeholderBuilder:
+                                            (BuildContext context) => Container(
+                                          color: Colors.grey,
+                                          child: const Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                          ),
+                                        ),
                                       ),
                                     )
                                   : const Icon(
@@ -307,7 +315,7 @@ class AccountScreenState extends State<AccountScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: assetPath.isNotEmpty
-                            ? Image.asset(assetPath, fit: BoxFit.cover)
+                            ? SvgPicture.asset(assetPath, fit: BoxFit.cover)
                             : const Icon(Icons.person, color: Colors.white),
                       ),
                     );
@@ -326,6 +334,6 @@ class AccountScreenState extends State<AccountScreen>
   String _mapAvatarKeyToAsset(String avatarKey) {
     if (avatarKey.isEmpty) return '';
     // Adjust as needed for your file naming structure
-    return 'assets/avatars/$avatarKey.png';
+    return 'assets/avatars/$avatarKey.svg';
   }
 }
