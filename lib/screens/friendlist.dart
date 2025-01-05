@@ -277,10 +277,14 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+          return Center(
+              child: Text('Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.white)));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No friends found.', style: TextStyle(color: Colors.white)));
+          return const Center(
+              child: Text('No friends found.',
+                  style: TextStyle(color: Colors.white)));
         }
 
         final friends = snapshot.data!;
@@ -315,10 +319,14 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+          return Center(
+              child: Text('Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.white)));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No friends found.', style: TextStyle(color: Colors.white)));
+          return const Center(
+              child: Text('No friends found.',
+                  style: TextStyle(color: Colors.white)));
         }
 
         final friends = snapshot.data!;
@@ -351,9 +359,12 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (friends.length > 1) _buildPodiumPosition(friends[1], 2),
-                      if (friends.isNotEmpty) _buildPodiumPosition(friends[0], 1),
-                      if (friends.length > 2) _buildPodiumPosition(friends[2], 3),
+                      if (friends.length > 1)
+                        _buildPodiumPosition(friends[1], 2),
+                      if (friends.isNotEmpty)
+                        _buildPodiumPosition(friends[0], 1),
+                      if (friends.length > 2)
+                        _buildPodiumPosition(friends[2], 3),
                     ],
                   ),
                 ),
@@ -432,7 +443,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         radius: radius,
         backgroundColor: Colors.white24,
         child: ClipOval(
-          child: Image.asset(
+          child: SvgPicture.asset(
             assetPath,
             fit: BoxFit.cover,
             width: radius * 2,
@@ -483,6 +494,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
   String _mapAvatarKeyToAsset(String avatarKey) {
     if (avatarKey.isEmpty) return '';
-    return 'assets/avatars/$avatarKey.png';
+    return 'assets/avatars/$avatarKey.svg';
   }
 }

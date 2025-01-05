@@ -102,6 +102,12 @@ flutter:
     - assets/avatars/raccoon.png
     - assets/avatars/eagle.png
     - assets/avatars/frog.png
+    - assets/avatars/avatar_catbeer.svg
+    - assets/avatars/avatar_catpants.svg
+    - assets/avatars/avatar_cheering.svg
+    - assets/avatars/avatar_frogisland.svg
+    - assets/avatars/avatar_aggroracoon.svg
+    - assets/avatars/avatar_cupbeer.svg
     - assets/avatar_border.svg
     - assets/slanted-gradient.svg
     - assets/cat_avatar_profile.svg
