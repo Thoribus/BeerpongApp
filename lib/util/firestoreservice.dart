@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/player.dart';
+import 'package:beerpongapp/models/invitation.dart';
 
 /// Provides methods to interact with Firestore for users, games, stats, etc.
 class FirestoreService {
@@ -88,7 +89,7 @@ class FirestoreService {
       for (final player in [...team1, ...team2]) {
         if (player.user == null) continue;
         final isWinner = (winner == 'Team 1' && team1.contains(player)) ||
-                         (winner == 'Team 2' && team2.contains(player));
+            (winner == 'Team 2' && team2.contains(player));
 
         final updatedUser = _mapPlayerToUser(player, isWinner);
         await updateUser(updatedUser);
@@ -104,16 +105,16 @@ class FirestoreService {
   User _mapPlayerToUser(Player player, bool isWinner) {
     final oldUser = player.user!;
     // increment stats
-    final newTotalScore   = oldUser.totalScore + player.score;
-    final newTotalMisses  = oldUser.totalMisses + player.misses;
-    final newTotalAirballs= oldUser.totalAirballs + player.airballs;
-    final newTotalThrows  = oldUser.totalThrows + player.throws;
-    final newOnFire       = oldUser.onFire + player.onFire;
-    final newDefended     = oldUser.defended + player.defended;
-    final newHitLastCup   = oldUser.hitLastCup + (player.lastCupHit ? 1 : 0);
-    final newCupsHit      = [...oldUser.cupsHit, ...player.cupsHit];
-    final newWins         = oldUser.wins + (isWinner ? 1 : 0);
-    final newLosses       = oldUser.losses + (isWinner ? 0 : 1);
+    final newTotalScore = oldUser.totalScore + player.score;
+    final newTotalMisses = oldUser.totalMisses + player.misses;
+    final newTotalAirballs = oldUser.totalAirballs + player.airballs;
+    final newTotalThrows = oldUser.totalThrows + player.throws;
+    final newOnFire = oldUser.onFire + player.onFire;
+    final newDefended = oldUser.defended + player.defended;
+    final newHitLastCup = oldUser.hitLastCup + (player.lastCupHit ? 1 : 0);
+    final newCupsHit = [...oldUser.cupsHit, ...player.cupsHit];
+    final newWins = oldUser.wins + (isWinner ? 1 : 0);
+    final newLosses = oldUser.losses + (isWinner ? 0 : 1);
 
     return oldUser.copyWith(
       totalScore: newTotalScore,
@@ -185,7 +186,7 @@ class FirestoreService {
         }
       }
 
-      return userStatsList; 
+      return userStatsList;
     } catch (e) {
       print('Error retrieving user stats: $e');
       return [];
@@ -235,6 +236,56 @@ class FirestoreService {
       rethrow;
     }
   }
+  //endregion
 
+  //region ----- Invitation Functions -----
+  Future<String> sendGameInvitation({
+    required String fromUserId,
+    required String toUserId,
+    required int teamNumber,
+    required int playerIndex,
+  }) async {
+    final docRef = await _db.collection('invitations').add({
+      'fromUserId': fromUserId,
+      'toUserId': toUserId,
+      'teamNumber': teamNumber,
+      'playerIndex': playerIndex,
+      'status': 'pending',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    return docRef.id;
+  }
+
+  Future<void> updateInvitationStatus(
+      String invitationId, String newStatus) async {
+    await _db.collection('invitations').doc(invitationId).update({
+      'status': newStatus,
+    });
+  }
+
+  Future<void> deleteGameInvitation(String invitationId) async {
+    await _db.collection('invitations').doc(invitationId).delete();
+  }
+
+  Future<List<Invitation>> getGameInvitations(String userId) async {
+    final snapshot = await _db
+        .collection('invitations')
+        .where('toUserId', isEqualTo: userId)
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Invitation(
+        id: doc.id,
+        fromUserId: data['fromUserId'],
+        toUserId: data['toUserId'],
+        teamNumber: data['teamNumber'],
+        playerIndex: data['playerIndex'],
+        status: data['status'],
+        createdAt: data['createdAt'],
+      );
+    }).toList();
+  }
   //endregion
 }

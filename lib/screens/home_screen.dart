@@ -1,4 +1,6 @@
+import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -21,17 +23,79 @@ class HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _checkSavedGame();
+    _checkPendingInvitations();
   }
 
   Future<void> _checkSavedGame() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool hasSavedGame =
-        prefs.containsKey('currentGameState');
+    bool hasSavedGame = prefs.containsKey('currentGameState');
     setState(() {
       _hasSavedGame = hasSavedGame;
     });
   }
-  
+
+  Future<void> _checkPendingInvitations() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final currentUser = userProvider.user;
+
+    if (currentUser == null) return;
+
+    List<Invitation> invites =
+        await FirestoreService().getGameInvitations(currentUser.id);
+
+    if (invites.isNotEmpty) {
+      _showInvitationDialog(invites.first);
+    }
+  }
+
+  /// Shows a popup with Accept/Decline for the given invitation.
+  void _showInvitationDialog(Invitation invite) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text("Game Invitation"),
+          content: Text(
+            "You've been invited by user ${invite.fromUserId} to join "
+            "Team ${invite.teamNumber}. "
+            "Do you accept?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Decline
+                await FirestoreService()
+                    .updateInvitationStatus(invite.id, "declined");
+                Navigator.of(dialogContext).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('You declined the invitation.')),
+                );
+              },
+              child: const Text("Decline"),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Accept
+                await FirestoreService()
+                    .updateInvitationStatus(invite.id, "accepted");
+                Navigator.of(dialogContext).pop();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('You accepted the invitation!')),
+                );
+
+                // (Optional) Add user to the actual game doc.
+                // e.g., FirestoreService().addPlayerToGame(invite.gameId, currentUser.id, invite.teamNumber);
+              },
+              child: const Text("Accept"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
