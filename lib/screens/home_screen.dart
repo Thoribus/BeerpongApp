@@ -36,6 +36,10 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkPendingInvitations() async {
+    // If you already have a saved game, don't check for invitations.
+    // Finish the game first.
+    if (_hasSavedGame) return;
+
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.user;
 
@@ -222,7 +226,7 @@ class HomeScreenState extends State<HomeScreen> {
                 if (_hasSavedGame)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _hasInvitations ? Colors.grey : Colors.green,
+                      backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 24),
                       shape: const RoundedRectangleBorder(
@@ -230,16 +234,6 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     onPressed: () {
-                      if (_hasInvitations) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'You are currently in a game.',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -276,7 +270,7 @@ class HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       );
-                      return;
+                      //return;
                     }
                     if (_hasSavedGame) {
                       _showNewGameConfirmationDialog(context);
