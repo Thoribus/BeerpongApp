@@ -1,4 +1,5 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../util/firestoreservice.dart';
@@ -26,6 +27,11 @@ class NewGameDialogState extends State<NewGameDialog> {
   late List<User> _friends;
   late int _numPlayers;
   final Map<int, User> _friendMap = {};
+
+  /// invitationDocIds: a map from each player index to the invitation doc ID.
+  /// invitationStatuses: a map from each player index to the invitation status (pending/accepted/declined).
+  final Map<int, String> _invitationDocIds = {};
+  final Map<int, String> _invitationStatuses = {};
 
   @override
   void initState() {
@@ -153,7 +159,7 @@ class NewGameDialogState extends State<NewGameDialog> {
                 itemBuilder: (context, index) {
                   final friend = _friends[index];
                   return GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(context, friend);
                     },
                     child: Container(
@@ -235,17 +241,56 @@ class NewGameDialogState extends State<NewGameDialog> {
       ),
       btnCancelOnPress: () {},
       btnCancelText: "Cancel",
-    ).show().then((selectedPlayer) {
+    ).show().then((selectedPlayer) async {
       if (selectedPlayer != null) {
         setState(() {
           _controllers[index].text = selectedPlayer.username;
           _friendMap[index] = selectedPlayer;
         });
+        // Send an invitation to Firestore
+        final currentUser = await FirestoreService().getUser(user.id);
+        if (currentUser == null) return;
+
+        // Don't send an invitation to yourself
+        if (currentUser.id == selectedPlayer.id) return;
+
+        final String docId = await FirestoreService().sendGameInvitation(
+          fromUserId: currentUser.id,
+          toUserId: selectedPlayer.id,
+          teamNumber: widget.team,
+          playerIndex: index,
+        );
+
+        setState(() {
+          _invitationDocIds[index] = docId;
+          _invitationStatuses[index] = 'pending'; // Start as "pending"
+        });
+
+        // 3) Listen for updates to that doc’s status
+        _listenToInvitationStatus(index, docId);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('Selected player: ${selectedPlayer.username}')),
         );
       }
+    });
+  }
+
+  void _listenToInvitationStatus(int index, String docId) {
+    FirebaseFirestore.instance
+        .collection('invitations')
+        .doc(docId)
+        .snapshots()
+        .listen((snapshot) {
+      if (!snapshot.exists) return;
+      final data = snapshot.data()!;
+      final status = data['status'] as String? ?? 'pending';
+
+      // Once the doc changes to "accepted" or "declined", update local UI
+      setState(() {
+        _invitationStatuses[index] = status;
+      });
     });
   }
 
@@ -286,6 +331,18 @@ class NewGameDialogState extends State<NewGameDialog> {
                     icon: const Icon(Icons.person),
                     onPressed: () => selectFromFriendList(index),
                   ),
+                  if (_invitationStatuses.containsKey(index))
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        _invitationStatuses[index] == 'pending'
+                            ? 'pending...'
+                            : _invitationStatuses[index] == 'accepted'
+                                ? 'accepted!'
+                                : 'declined',
+                        style: const TextStyle(color: Colors.amber),
+                      ),
+                    ),
                 ],
               ),
             );
@@ -299,6 +356,14 @@ class NewGameDialogState extends State<NewGameDialog> {
         ),
         TextButton(
           onPressed: () {
+            final anyPending = _invitationStatuses.values.contains('pending');
+            if (anyPending) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('At least one friend has not accepted yet!')),
+              );
+              return;
+            }
             final List<Player> names =
                 _controllers.take(_numPlayers).map((controller) {
               int index = _controllers.indexOf(controller);
