@@ -21,12 +21,12 @@ class AccountScreenState extends State<AccountScreen>
 
   /// A list of possible avatar keys that map to local assets in your `assets` folder.
   final List<String> _avatarKeys = [
-    'bunny',
-    'cat',
-    'dog',
-    'raccoon',
-    'eagle',
-    'frog',
+    'avatar_catbeer',
+    'avatar_catpants',
+    'avatar_cupbeer',
+    'avatar_aggroracoon',
+    'avatar_frogisland',
+    'avatar_cheering',
   ];
   late TabController _tabController;
 
@@ -81,7 +81,7 @@ class AccountScreenState extends State<AccountScreen>
 
   /// Builds the card at the top displaying the user’s avatar and username/title.
   Widget _buildUserCard() {
-    final currentUser = user; 
+    final currentUser = user;
     if (currentUser == null) {
       return const SizedBox.shrink();
     }
@@ -149,8 +149,8 @@ class AccountScreenState extends State<AccountScreen>
                         children: [
                           Text(
                             currentUser.title.isNotEmpty
-                              ? currentUser.title
-                              : 'No Title Yet',
+                                ? currentUser.title
+                                : 'No Title Yet',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -158,14 +158,13 @@ class AccountScreenState extends State<AccountScreen>
                             ),
                           ),
                           const SizedBox(height: 4),
-                         Text(
-                          currentUser.username,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                          Text(
+                            currentUser.username,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -176,24 +175,32 @@ class AccountScreenState extends State<AccountScreen>
                           alignment: Alignment.center,
                           children: [
                             // Display an icon or SVG based on selectedAvatar
-                                                CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.white24,
-                      child: avatarAsset.isNotEmpty
-                          ? ClipOval(
-                              child: Image.asset(
-                                avatarAsset,
-                                fit: BoxFit.cover,
-                                width: 56,
-                                height: 56,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.person,
-                              size: 40,
-                              color: Colors.white,
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white24,
+                              child: avatarAsset.isNotEmpty
+                                  ? ClipOval(
+                                      child: SvgPicture.asset(
+                                        avatarAsset,
+                                        fit: BoxFit.cover,
+                                        width: 56,
+                                        height: 56,
+                                        placeholderBuilder:
+                                            (BuildContext context) => Container(
+                                          color: Colors.grey,
+                                          child: const Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.white,
+                                    ),
                             ),
-                    ),
                           ],
                         ),
                       ),
@@ -238,7 +245,8 @@ class AccountScreenState extends State<AccountScreen>
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         ),
         onPressed: () async {
           await userProvider.signOut();
@@ -270,7 +278,10 @@ class AccountScreenState extends State<AccountScreen>
                 padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Select an Avatar',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
               ),
               Expanded(
@@ -289,8 +300,10 @@ class AccountScreenState extends State<AccountScreen>
 
                     return GestureDetector(
                       onTap: () {
-                        final userProvider = Provider.of<UserProvider>(context, listen: false);
-                        final updatedUser = currentUser.copyWith(avatarKey: key);
+                        final userProvider =
+                            Provider.of<UserProvider>(context, listen: false);
+                        final updatedUser =
+                            currentUser.copyWith(avatarKey: key);
                         userProvider.updateUser(updatedUser);
                         Navigator.pop(context); // Close the bottom sheet
                       },
@@ -302,7 +315,7 @@ class AccountScreenState extends State<AccountScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: assetPath.isNotEmpty
-                            ? Image.asset(assetPath, fit: BoxFit.cover)
+                            ? SvgPicture.asset(assetPath, fit: BoxFit.cover)
                             : const Icon(Icons.person, color: Colors.white),
                       ),
                     );
@@ -321,6 +334,6 @@ class AccountScreenState extends State<AccountScreen>
   String _mapAvatarKeyToAsset(String avatarKey) {
     if (avatarKey.isEmpty) return '';
     // Adjust as needed for your file naming structure
-    return 'assets/avatars/$avatarKey.png';
+    return 'assets/avatars/$avatarKey.svg';
   }
 }
