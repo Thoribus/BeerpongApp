@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/models/player.dart';
@@ -101,6 +103,103 @@ class DialogHelpers {
       currentTeam.currentPlayers,
       onSelected,
     );
+  }
+
+  static Future<Player?> showNachwurfSelectionDialog(
+    BuildContext context,
+    String title,
+    List<Player> players,
+  ) {
+    // Create a Completer that we'll complete when user picks or cancels.
+    final completer = Completer<Player?>();
+
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.question,
+      animType: AnimType.topSlide,
+      headerAnimationLoop: false,
+      dialogBackgroundColor: Colors.amberAccent,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10.0),
+          const Text(
+            "Select the player for the cup action:",
+            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20.0),
+          Wrap(
+            spacing: 10.0,
+            runSpacing: 10.0,
+            alignment: WrapAlignment.center,
+            children: players.map((player) {
+              return GestureDetector(
+                onTap: () {
+                  // Complete with this player's choice
+                  if (!completer.isCompleted) {
+                    completer.complete(player);
+                  }
+                  // Dismiss the dialog
+                  Navigator.of(context).pop();
+                },
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  elevation: 4.0,
+                  child: SizedBox(
+                    width: 120.0,
+                    height: 150.0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 35.0,
+                            backgroundColor: Colors.grey.shade300,
+                            child: const Icon(
+                              Icons.person,
+                              size: 50.0,
+                              color: Colors.brown,
+                            ),
+                          ),
+                          const SizedBox(height: 8.0),
+                          Text(
+                            player.name,
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+      btnCancelText: "Cancel",
+      btnCancelOnPress: () {
+        // If user cancels, we complete with null
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
+      },
+    ).show();
+
+    // Return the Future that completes when user picks a player or cancels
+    return completer.future;
   }
 
   /// Dialog for picking a player for the Death Cup rule.

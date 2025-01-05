@@ -434,46 +434,53 @@ class GameScreenState extends State<GameScreen> {
   }
   //endregion
 
-  //region ----- Checking for Game End / Nachwurf -----
+//region ----- Checking for Game End / Nachwurf -----
   void _checkGameEnd(Player player, int cupIndex) async {
-    final allCupsGone = currentTeam.cups
-        .every((cup) => !cup.isVisible || cup.color == Colors.green);
-    if (!allCupsGone) return;
+    final allCupsGone = currentTeam.cups.every(
+      (cup) => !cup.isVisible || cup.color == Colors.green,
+    );
+    if (!allCupsGone) return; // Not all cups are gone => do nothing
 
-    // If “Nachwurf” is active and we’re not on the extra cup => enemy tries to defend
+    // If “Nachwurf” is active and we’re not on the special extra cup => let enemy defend
     if (selectedRules['Nachwurf'] == true && cupIndex != 11) {
-      final enemyTurn = await _handleNachwurf(cupIndex);
-      if (enemyTurn) {
-        // The enemy canceled the last cup => revert
+      final enemyHit = await _handleNachwurf(cupIndex);
+      if (enemyHit) {
+        // The enemy canceled the last cup => revert and do NOT end the game
         _decrementPlayerScore(player);
         return;
       }
+      // If we reach here => enemy failed to defend => game ends
     }
 
-    // Game is over
+    // Now the game truly ends
     setState(() => gameEnded = true);
     _setPlayerHitLastCup(player);
+
     await GamePersistence.clearGameState();
     await _saveGameStatistics();
-    DialogHelpers.showGameEndDialog(this, currentTeam.players);
+    await DialogHelpers.showGameEndDialog(this, currentTeam.players);
   }
 
   Future<bool> _handleNachwurf(int cupIndex) async {
     final enemyTeam = (currentTeam == team1) ? team2 : team1;
-    bool enemyHit = false;
 
-    await DialogHelpers.showSelectionDialog(
+    // Wait for a Player? result
+    final chosenPlayer = await DialogHelpers.showNachwurfSelectionDialog(
       context,
       'Enemy Team\'s Last Turn',
       enemyTeam.players,
-      (player) {
-        setState(() => player.defended++);
-        saveCurrentState();
-        enemyHit = true;
-        _removeLastCupHit(cupIndex);
-      },
     );
-    return enemyHit;
+
+    // If chosenPlayer == null => user canceled => enemyHit = false
+    // If chosenPlayer != null => enemyHit = true => revert the last cup
+    if (chosenPlayer != null) {
+      setState(() => chosenPlayer.defended++);
+      saveCurrentState();
+      _removeLastCupHit(cupIndex);
+      return true; // enemyHit
+    } else {
+      return false; // user canceled => no hit
+    }
   }
 
   void _removeLastCupHit(int cupIndex) {

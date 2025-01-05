@@ -9,7 +9,7 @@ import 'personal_statistics_screen.dart';
 
 /// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
 class AccountScreen extends StatefulWidget {
-  const AccountScreen({Key? key}) : super(key: key);
+  const AccountScreen({super.key});
 
   @override
   AccountScreenState createState() => AccountScreenState();
@@ -120,13 +120,13 @@ class AccountScreenState extends State<AccountScreen>
                       Row(
                         children: List.generate(3, (index) {
                           return Container(
-                            margin: EdgeInsets.only(right: 8.0),
-                            decoration: BoxDecoration(
+                            margin: const EdgeInsets.only(right: 8.0),
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.amber,
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
                               child: Icon(
                                 Icons.star,
                                 size: 20,
@@ -230,7 +230,7 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Widget _buildActivityScreen() {
-    return Center(
+    return const Center(
       child: Text(
         'Activity Screen Placeholder',
         style: TextStyle(color: Colors.white, fontSize: 16),
