@@ -287,5 +287,25 @@ class FirestoreService {
       );
     }).toList();
   }
+
+  Future<List<Invitation>> getAllInvitations(String userId) async {
+    final snapshot = await _db
+        .collection('invitations')
+        .where('toUserId', isEqualTo: userId)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Invitation(
+        id: doc.id,
+        fromUserId: data['fromUserId'],
+        toUserId: data['toUserId'],
+        teamNumber: data['teamNumber'],
+        playerIndex: data['playerIndex'],
+        status: data['status'],
+        createdAt: data['createdAt'],
+      );
+    }).toList();
+  }
   //endregion
 }

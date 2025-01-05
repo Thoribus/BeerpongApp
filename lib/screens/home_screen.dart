@@ -18,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
+  bool _hasInvitations = false;
 
   @override
   void initState() {
@@ -41,10 +42,23 @@ class HomeScreenState extends State<HomeScreen> {
     if (currentUser == null) return;
 
     List<Invitation> invites =
-        await FirestoreService().getGameInvitations(currentUser.id);
+        await FirestoreService().getAllInvitations(currentUser.id);
 
     if (invites.isNotEmpty) {
-      _showInvitationDialog(invites.first);
+      for (Invitation invite in invites) {
+        if (invite.status == "pending") {
+          _showInvitationDialog(invites.first);
+          return;
+        }
+      }
+      setState(() {
+        _hasInvitations = true;
+      });
+    }
+    else {
+      setState(() {
+        _hasInvitations = false;
+      });
     }
   }
 
@@ -208,7 +222,7 @@ class HomeScreenState extends State<HomeScreen> {
                 if (_hasSavedGame)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: _hasInvitations ? Colors.grey : Colors.green,
                       padding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 24),
                       shape: const RoundedRectangleBorder(
@@ -216,6 +230,16 @@ class HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     onPressed: () {
+                      if (_hasInvitations) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'You are currently in a game.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -236,7 +260,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
+                    backgroundColor: _hasInvitations ? Colors.grey : Colors.amber,
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                     shape: const RoundedRectangleBorder(
@@ -244,6 +268,16 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   onPressed: () {
+                    if (_hasInvitations) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'You are currently in a game.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
                     if (_hasSavedGame) {
                       _showNewGameConfirmationDialog(context);
                     } else {
