@@ -9,7 +9,7 @@ import 'personal_statistics_screen.dart';
 
 /// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
 class AccountScreen extends StatefulWidget {
-  const AccountScreen({Key? key}) : super(key: key);
+  const AccountScreen({super.key});
 
   @override
   AccountScreenState createState() => AccountScreenState();
@@ -81,7 +81,7 @@ class AccountScreenState extends State<AccountScreen>
 
   /// Builds the card at the top displaying the user’s avatar and username/title.
   Widget _buildUserCard() {
-    final currentUser = user; 
+    final currentUser = user;
     if (currentUser == null) {
       return const SizedBox.shrink();
     }
@@ -120,13 +120,13 @@ class AccountScreenState extends State<AccountScreen>
                       Row(
                         children: List.generate(3, (index) {
                           return Container(
-                            margin: EdgeInsets.only(right: 8.0),
-                            decoration: BoxDecoration(
+                            margin: const EdgeInsets.only(right: 8.0),
+                            decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.amber,
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
                               child: Icon(
                                 Icons.star,
                                 size: 20,
@@ -149,8 +149,8 @@ class AccountScreenState extends State<AccountScreen>
                         children: [
                           Text(
                             currentUser.title.isNotEmpty
-                              ? currentUser.title
-                              : 'No Title Yet',
+                                ? currentUser.title
+                                : 'No Title Yet',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -158,14 +158,13 @@ class AccountScreenState extends State<AccountScreen>
                             ),
                           ),
                           const SizedBox(height: 4),
-                         Text(
-                          currentUser.username,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                          Text(
+                            currentUser.username,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -176,24 +175,24 @@ class AccountScreenState extends State<AccountScreen>
                           alignment: Alignment.center,
                           children: [
                             // Display an icon or SVG based on selectedAvatar
-                                                CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.white24,
-                      child: avatarAsset.isNotEmpty
-                          ? ClipOval(
-                              child: Image.asset(
-                                avatarAsset,
-                                fit: BoxFit.cover,
-                                width: 56,
-                                height: 56,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.person,
-                              size: 40,
-                              color: Colors.white,
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white24,
+                              child: avatarAsset.isNotEmpty
+                                  ? ClipOval(
+                                      child: Image.asset(
+                                        avatarAsset,
+                                        fit: BoxFit.cover,
+                                        width: 56,
+                                        height: 56,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.white,
+                                    ),
                             ),
-                    ),
                           ],
                         ),
                       ),
@@ -223,7 +222,7 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Widget _buildActivityScreen() {
-    return Center(
+    return const Center(
       child: Text(
         'Activity Screen Placeholder',
         style: TextStyle(color: Colors.white, fontSize: 16),
@@ -238,7 +237,8 @@ class AccountScreenState extends State<AccountScreen>
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         ),
         onPressed: () async {
           await userProvider.signOut();
@@ -270,7 +270,10 @@ class AccountScreenState extends State<AccountScreen>
                 padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Select an Avatar',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
               ),
               Expanded(
@@ -289,8 +292,10 @@ class AccountScreenState extends State<AccountScreen>
 
                     return GestureDetector(
                       onTap: () {
-                        final userProvider = Provider.of<UserProvider>(context, listen: false);
-                        final updatedUser = currentUser.copyWith(avatarKey: key);
+                        final userProvider =
+                            Provider.of<UserProvider>(context, listen: false);
+                        final updatedUser =
+                            currentUser.copyWith(avatarKey: key);
                         userProvider.updateUser(updatedUser);
                         Navigator.pop(context); // Close the bottom sheet
                       },
