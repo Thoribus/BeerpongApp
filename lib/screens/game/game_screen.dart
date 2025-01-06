@@ -46,7 +46,7 @@ class GameScreenState extends State<GameScreen> {
   late Team currentTeam;
 
   bool gameEnded = false;
-  late bool isTeamOneTurn = widget.startingTeam;
+  late bool isTeamOneTurn;
 
   // Island shot logic
   bool islandShotActive = false;
@@ -114,6 +114,7 @@ class GameScreenState extends State<GameScreen> {
           cups: List.generate(
               10, (index) => Cup(index: index, color: Colors.red)),
         );
+        isTeamOneTurn = widget.startingTeam;
         currentTeam = isTeamOneTurn ? team1 : team2;
         currentTeam.currentPlayers = currentTeam.rotatePlayers();
         invitations = widget.invitations;
@@ -627,9 +628,9 @@ class GameScreenState extends State<GameScreen> {
       team2: team2.players,
       winner: blueTeamWin ? "Team 1" : "Team 2",
     );
-    FirestoreService().updateGameDoc(widget.id, team1Players: team1.players, team2Players: team2.players, winner: blueTeamWin ? "Team 1" : "Team 2");
+    FirestoreService().updateGameDoc(id, team1Players: team1.players, team2Players: team2.players, winner: blueTeamWin ? "Team 1" : "Team 2");
 
-    for (String invitationId in widget.invitations) {
+    for (String invitationId in invitations) {
       FirestoreService().deleteGameInvitation(invitationId);
     }
 
