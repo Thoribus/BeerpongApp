@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +10,9 @@ import '../models/user.dart';
 import '../models/player.dart';
 import '../util/user_provider.dart';
 
-/// Encapsulates both the chosen Players and any accepted Invitation IDs.
+/// Used as the return type when the dialog closes:
+/// - [players] is the final list of Player objects (some might be user’s friends).
+/// - [acceptedInvitations] is a list of invitation doc IDs that ended up accepted.
 class NewGameDialogResult {
   final List<Player> players;
   final List<String> acceptedInvitations;
@@ -19,6 +23,8 @@ class NewGameDialogResult {
   });
 }
 
+/// A dialog to configure a team with up to [numPlayers] players.
+/// You can pick from your friend list or yourself, sending invitations as needed.
 class NewGameDialog extends StatefulWidget {
   final int team;
   final List<String> initialNames;
@@ -36,16 +42,21 @@ class NewGameDialog extends StatefulWidget {
 }
 
 class NewGameDialogState extends State<NewGameDialog> {
+  /// One text controller per row (e.g., up to [numPlayers]).
   final List<TextEditingController> _controllers = [];
 
-  /// For each input row, we store a selected [User] if the user picked a friend or themselves.
+  /// Each row might correspond to a friend pick:
+  ///   (rowIndex) -> selected [User].
   final Map<int, User> _friendMap = {};
 
-  /// We track invitation doc IDs and statuses by player index, for real-time updates.
-  final Map<int, String> _invitationDocIds = {};   // (playerIndex -> docId)
-  final Map<int, String> _invitationStatuses = {}; // (playerIndex -> 'pending'/'accepted'/'declined')
+  /// Track invitation doc IDs and statuses for real-time updates.
+  ///   (rowIndex) -> docId
+  final Map<int, String> _invitationDocIds = {};
 
-  /// A list of invitation doc IDs that ended up being accepted.
+  ///   (rowIndex) -> 'pending' | 'accepted' | 'declined'
+  final Map<int, String> _invitationStatuses = {};
+
+  /// Accumulate all accepted invitation IDs to return in the dialog result.
   final List<String> _acceptedInvitationIds = [];
 
   late int _numPlayers;
@@ -53,15 +64,16 @@ class NewGameDialogState extends State<NewGameDialog> {
   @override
   void initState() {
     super.initState();
-
     _numPlayers = widget.numPlayers;
+
+    // Pre-fill text fields with initial names or create empty ones
     if (widget.initialNames.isNotEmpty) {
-      // Pre-fill controllers from initialNames
-      _controllers.addAll(widget.initialNames.map(
-        (name) => TextEditingController(text: name),
-      ));
+      _controllers.addAll(
+        widget.initialNames.map(
+          (name) => TextEditingController(text: name),
+        ),
+      );
     } else {
-      // Create empty controllers for each player slot
       _controllers.addAll(
         List.generate(_numPlayers, (_) => TextEditingController()),
       );
@@ -70,15 +82,16 @@ class NewGameDialogState extends State<NewGameDialog> {
 
   @override
   void dispose() {
-    for (var controller in _controllers) {
+    // Clean up text controllers
+    for (final controller in _controllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  /// If the user taps "SAVE"
+  /// If user taps SAVE, finalize the players and invitations.
   void _onSave() {
-    // If any invitation is still 'pending', show a warning
+    // If any invitation is still 'pending', show a warning and do not close
     final anyPending = _invitationStatuses.values.contains('pending');
     if (anyPending) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,16 +102,14 @@ class NewGameDialogState extends State<NewGameDialog> {
       return;
     }
 
-    // Build the final list of [Player]
-    final players = _controllers.take(_numPlayers).map((controller) {
-      final index = _controllers.indexOf(controller);
-      return Player(
-        name: controller.text.trim(),
-        user: _friendMap[index], // Might be null if not a friend
-      );
-    }).toList();
+    // Otherwise, build final players list
+    final players = List<Player>.generate(_numPlayers, (i) {
+      final name = _controllers[i].text.trim();
+      final user = _friendMap[i]; // might be null if typed in manually
+      return Player(name: name, user: user);
+    });
 
-    // Return both the players and the accepted invites
+    // Return a combined result: the players plus any accepted invitations
     final result = NewGameDialogResult(
       players: players,
       acceptedInvitations: _acceptedInvitationIds,
@@ -107,13 +118,11 @@ class NewGameDialogState extends State<NewGameDialog> {
     Navigator.of(context).pop(result);
   }
 
-  /// Called when the user taps the [person] icon to pick from friend list or themselves
-  Future<void> selectFromFriendList(int index) async {
-    // Instead of calling auth.FirebaseAuth directly, use the UserProvider
+  /// Called when user taps the person icon to pick from friend list
+  Future<void> _selectFromFriendList(int rowIndex) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.user;
 
-    // Check if currentUser is not null
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No user logged in!')),
@@ -121,7 +130,7 @@ class NewGameDialogState extends State<NewGameDialog> {
       return;
     }
 
-    // Retrieve the user's friends
+    // Fetch the user's friends
     final friends = await FirestoreService().getFriends(currentUser.id);
     if (friends.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,78 +139,206 @@ class NewGameDialogState extends State<NewGameDialog> {
       return;
     }
 
+    // Show a pick-dialog (AwesomeDialog) with yourself + friend grid
+    await _showPickPlayerDialog(context, currentUser, friends).then(
+      (selectedPlayer) async {
+        if (selectedPlayer == null) return; // Canceled or closed
+
+        // Fill in the text field with selected user’s name
+        setState(() {
+          _controllers[rowIndex].text = selectedPlayer.username;
+          _friendMap[rowIndex] = selectedPlayer;
+        });
+
+        // If the user picks themselves, no invitation needed
+        if (selectedPlayer.id == currentUser.id) {
+          return;
+        }
+
+        // Otherwise, create an invitation doc in Firestore
+        final docId = await FirestoreService().sendGameInvitation(
+          fromUserId: currentUser.id,
+          toUserId: selectedPlayer.id,
+          teamNumber: widget.team,
+          playerIndex: rowIndex,
+          // optionally pass a separate "gameId" if needed
+        );
+
+        // Mark this row as "pending" invitation
+        setState(() {
+          _invitationDocIds[rowIndex] = docId;
+          _invitationStatuses[rowIndex] = 'pending';
+        });
+
+        // Start listening to this invitation doc for real-time status updates
+        _listenToInvitationStatus(rowIndex, docId);
+
+        // Notify user
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invited ${selectedPlayer.username}')),
+        );
+      },
+    );
+  }
+
+  /// Actually shows the pick player dialog (with your user + friends)
+  /// and returns the chosen [User] or null.
+  Future<User?> _showPickPlayerDialog(
+    BuildContext context,
+    User currentUser,
+    List<User> friends,
+  ) {
+    // 1) Create a `Completer<User?>`.
+    final completer = Completer<User?>();
+
+    // 2) Build the body content for the AwesomeDialog
+    final bodyWidget = _buildPickPlayerBody(
+      context,
+      currentUser,
+      friends,
+      completer,
+    );
+
+    // 3) Show the AwesomeDialog.
+    //    NOTE: We do *not* return `.show()` directly, because that is `Future<dynamic>`
     AwesomeDialog(
       context: context,
       dialogType: DialogType.noHeader,
       animType: AnimType.scale,
       dialogBackgroundColor: Colors.amber,
-      width: 500, // or whatever width works for you
-      buttonsBorderRadius: BorderRadius.circular(12),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Choose a Player',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+      width: 500,
+      body: bodyWidget,
+      // If there's a cancel button:
+      btnCancelOnPress: () {
+        // If user taps "Cancel," complete with null
+        if (!completer.isCompleted) {
+          completer.complete(null);
+        }
+      },
+      btnCancelText: "Cancel",
+    ).show();
+
+    // 4) Return the `Future<User?>` from the completer.
+    return completer.future;
+  }
+
+  /// This widget is used as the [body] of the AwesomeDialog above.
+  /// Instead of calling `Navigator.pop(context, user)`, we do:
+  ///   `completer.complete(user)` and `Navigator.pop(context)`.
+  Widget _buildPickPlayerBody(
+    BuildContext context,
+    User currentUser,
+    List<User> friends,
+    Completer<User?> completer,
+  ) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Choose a Player',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          // Option: pick yourself
+          GestureDetector(
+            onTap: () {
+              if (!completer.isCompleted) {
+                completer.complete(currentUser);
+              }
+              Navigator.pop(context); // close the dialog
+            },
+            child: Container(
+              margin:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              padding: const EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.amber[100],
+                borderRadius: BorderRadius.circular(10.0),
               ),
-              // Option for current user themselves
-              GestureDetector(
+              child: Row(
+                children: [
+                  const Icon(Icons.account_circle,
+                      size: 36.0, color: Colors.amber),
+                  const SizedBox(width: 16.0),
+                  Text(
+                    currentUser.username,
+                    style: const TextStyle(
+                        fontSize: 16.0, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Quick example of showing up to 6 friends in a 2-col grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 1.0,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+            ),
+            itemCount: (friends.length > 6) ? 6 : friends.length,
+            itemBuilder: (ctx, i) {
+              final friend = friends[i];
+              return GestureDetector(
                 onTap: () {
-                  Navigator.pop(context, currentUser);
+                  // user picks friend
+                  if (!completer.isCompleted) {
+                    completer.complete(friend);
+                  }
+                  Navigator.pop(context);
                 },
                 child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 8.0,
-                    horizontal: 16.0,
-                  ),
                   padding: const EdgeInsets.all(12.0),
                   decoration: BoxDecoration(
-                    color: Colors.amber[100],
+                    color: Colors.blue[100],
                     borderRadius: BorderRadius.circular(10.0),
                   ),
-                  child: Row(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.account_circle,
-                        size: 36.0,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: 16.0),
+                      const Icon(Icons.account_circle,
+                          size: 36.0, color: Colors.blue),
+                      const SizedBox(height: 8.0),
                       Text(
-                        currentUser.username,
+                        friend.username,
                         style: const TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            fontSize: 16.0, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
-              ),
-              // Show up to 6 friends in a 2-col grid
-              GridView.builder(
+              );
+            },
+          ),
+          // If more than 6 friends, a scrollable list for the rest
+          if (friends.length > 6)
+            SizedBox(
+              height: 250,
+              child: GridView.builder(
                 shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   childAspectRatio: 1.0,
                   crossAxisSpacing: 8.0,
                   mainAxisSpacing: 8.0,
                 ),
-                itemCount: friends.length > 6 ? 6 : friends.length,
+                itemCount: friends.length,
                 itemBuilder: (ctx, i) {
                   final friend = friends[i];
                   return GestureDetector(
-                    onTap: () => Navigator.pop(context, friend),
+                    onTap: () {
+                      if (!completer.isCompleted) {
+                        completer.complete(friend);
+                      }
+                      Navigator.pop(context);
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(12.0),
                       decoration: BoxDecoration(
@@ -211,18 +348,13 @@ class NewGameDialogState extends State<NewGameDialog> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
-                            Icons.account_circle,
-                            size: 36.0,
-                            color: Colors.blue,
-                          ),
+                          const Icon(Icons.account_circle,
+                              size: 36.0, color: Colors.blue),
                           const SizedBox(height: 8.0),
                           Text(
                             friend.username,
                             style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
+                                fontSize: 16.0, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -230,126 +362,76 @@ class NewGameDialogState extends State<NewGameDialog> {
                   );
                 },
               ),
-              // If there are more than 6 friends, a scrollable grid
-              if (friends.length > 6)
-                Container(
-                  height: 250,
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.0,
-                      crossAxisSpacing: 8.0,
-                      mainAxisSpacing: 8.0,
-                    ),
-                    itemCount: friends.length,
-                    itemBuilder: (ctx, i) {
-                      final friend = friends[i];
-                      return GestureDetector(
-                        onTap: () => Navigator.pop(context, friend),
-                        child: Container(
-                          padding: const EdgeInsets.all(12.0),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[100],
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.account_circle,
-                                size: 36.0,
-                                color: Colors.blue,
-                              ),
-                              const SizedBox(height: 8.0),
-                              Text(
-                                friend.username,
-                                style: const TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
-      btnCancelOnPress: () {},
-      btnCancelText: "Cancel",
-    ).show().then((selectedPlayer) async {
-      if (selectedPlayer != null) {
-        setState(() {
-          _controllers[index].text = selectedPlayer.username;
-          _friendMap[index] = selectedPlayer;
-        });
-
-        // If selectedPlayer is the current user, no invitation needed
-        if (selectedPlayer.id == currentUser.id) {
-          return;
-        }
-
-        // Otherwise, we create an invitation doc.
-        final docId = await FirestoreService().sendGameInvitation(
-          fromUserId: currentUser.id,
-          toUserId: selectedPlayer.id,
-          teamNumber: widget.team,
-          playerIndex: index,
-        );
-
-        setState(() {
-          _invitationDocIds[index] = docId;
-          _invitationStatuses[index] = 'pending'; 
-        });
-
-        // Listen for status updates in Firestore
-        _listenToInvitationStatus(index, docId);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Selected player: ${selectedPlayer.username}'),
-          ),
-        );
-      }
-    });
+    );
   }
 
-  /// Listens to Firestore doc changes for the invitation's status
+  /// Listen to the invitation doc. If status changes => update local UI.
   void _listenToInvitationStatus(int index, String docId) {
     FirebaseFirestore.instance
         .collection('invitations')
         .doc(docId)
         .snapshots()
-        .listen((snapshot) {
-      if (!snapshot.exists) return; // doc was deleted or never existed
+        .listen((snapshot) async {
+      if (!snapshot.exists) {
+        // Possibly the doc was deleted
+        return;
+      }
       final data = snapshot.data()!;
       final status = data['status'] as String? ?? 'pending';
 
-      // Update the UI based on status
+      // If it's still pending, check if older than 1 minute => auto-decline
+      if (status == 'pending') {
+        await _handleAutoDecline(docId, data);
+      }
+
       setState(() {
         _invitationStatuses[index] = status;
         if (status == 'accepted') {
-          // Mark this docId as accepted
+          // Mark invitation doc as accepted
           if (!_acceptedInvitationIds.contains(docId)) {
             _acceptedInvitationIds.add(docId);
           }
         } else if (status == 'declined') {
-          // If declined, you can optionally delete the doc and clear user from the row
+          // If declined, optionally remove the friend from the row
           FirestoreService().deleteGameInvitation(docId);
           _invitationDocIds.remove(index);
           _invitationStatuses.remove(index);
           _controllers[index].clear();
           _friendMap.remove(index);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invitation declined')),
+          );
         }
       });
     });
+  }
+
+  /// If doc is older than 60s => mark as "declined"
+  Future<void> _handleAutoDecline(
+      String docId, Map<String, dynamic> data) async {
+    final Timestamp? ts = data['timestamp'] as Timestamp?;
+    if (ts != null) {
+      final creationTime = ts.toDate();
+      final now = DateTime.now();
+      final diff = now.difference(creationTime).inSeconds;
+
+      if (diff > 60) {
+        await FirebaseFirestore.instance
+            .collection('invitations')
+            .doc(docId)
+            .update({'status': 'declined'});
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Invitation $docId auto-declined (1 min).')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -359,66 +441,74 @@ class NewGameDialogState extends State<NewGameDialog> {
       content: SingleChildScrollView(
         child: Column(
           children: List.generate(_numPlayers, (i) {
-            // Ensure we have a controller for each row
             if (i >= _controllers.length) {
               _controllers.add(TextEditingController());
             }
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controllers[i],
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.amber.withOpacity(0.2),
-                        labelText: 'Player ${i + 1}',
-                        labelStyle: const TextStyle(color: Colors.amber),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: const BorderSide(
-                            color: Colors.amber,
-                            width: 2.0,
-                          ),
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.black),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.person),
-                    onPressed: () => selectFromFriendList(i),
-                  ),
-                  if (_invitationStatuses.containsKey(i))
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(
-                        _invitationStatuses[i] == 'pending'
-                            ? 'pending...'
-                            : _invitationStatuses[i] == 'accepted'
-                                ? 'accepted!'
-                                : 'declined',
-                        style: const TextStyle(color: Colors.amber),
-                      ),
-                    ),
-                ],
-              ),
-            );
+            return _buildPlayerRow(i);
           }),
         ),
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(), // user cancels entirely
+          onPressed: () =>
+              Navigator.of(context).pop(), // Cancels the entire dialog
           child: const Text("CANCEL"),
         ),
         TextButton(
-          onPressed: _onSave, // finalize the dialog, returning the result
+          onPressed: _onSave, // Attempt to finalize
           child: const Text("SAVE"),
         ),
       ],
     );
+  }
+
+  /// Builds each row (TextField + icon + optional status text).
+  Widget _buildPlayerRow(int i) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controllers[i],
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.amber.withOpacity(0.2),
+                labelText: 'Player ${i + 1}',
+                labelStyle: const TextStyle(color: Colors.amber),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                  borderSide: const BorderSide(
+                    color: Colors.amber,
+                    width: 2.0,
+                  ),
+                ),
+              ),
+              style: const TextStyle(color: Colors.black),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => _selectFromFriendList(i),
+          ),
+          if (_invitationStatuses.containsKey(i))
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Text(
+                _buildStatusText(_invitationStatuses[i]!),
+                style: const TextStyle(color: Colors.amber),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Helper: convert status into user-friendly text
+  String _buildStatusText(String status) {
+    if (status == 'pending') return 'pending...';
+    if (status == 'accepted') return 'accepted!';
+    if (status == 'declined') return 'declined';
+    return status;
   }
 }

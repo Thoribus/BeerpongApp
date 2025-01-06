@@ -1,4 +1,5 @@
 import 'package:beerpongapp/models/invitation.dart';
+import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +68,8 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   /// Shows a popup with Accept/Decline for the given invitation.
-  void _showInvitationDialog(Invitation invite) {
+  void _showInvitationDialog(Invitation invite) async {
+  User? fromUser = await FirestoreService().getUser(invite.fromUserId);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -75,7 +77,7 @@ class HomeScreenState extends State<HomeScreen> {
         return AlertDialog(
           title: const Text("Game Invitation"),
           content: Text(
-            "You've been invited by user ${invite.fromUserId} to join "
+            "You've been invited by user ${fromUser?.username} to join "
             "Team ${invite.teamNumber}. "
             "Do you accept?",
           ),
