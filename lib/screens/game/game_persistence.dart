@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/team.dart';
 
@@ -48,8 +49,19 @@ class GamePersistence {
   }
 
   /// Clears the entire game state
-  static Future<void> clearGameState() async {
+  static Future<void> clearGameState(bool deleteGame) async {
     final prefs = await SharedPreferences.getInstance();
+    final savedState = prefs.getString(_gameStateKey);
+    if (savedState == null) {
+      return; // No saved data
+    }
+
+    // Delete the game doc from Firestore if we don't continue the ongoing game
+    if (deleteGame) {
+      final map = loadGameState() as Map<String, dynamic>;
+      final id = map['id'];
+      FirestoreService().deleteGameDoc(id);
+    }
     await prefs.remove(_gameStateKey);
   }
 }

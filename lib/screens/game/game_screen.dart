@@ -470,7 +470,7 @@ class GameScreenState extends State<GameScreen> {
     setState(() => gameEnded = true);
     _setPlayerHitLastCup(player);
 
-    await GamePersistence.clearGameState();
+    await GamePersistence.clearGameState(false);
     await _saveGameStatistics();
     await DialogHelpers.showGameEndDialog(this, currentTeam.players);
   }

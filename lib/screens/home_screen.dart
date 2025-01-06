@@ -158,7 +158,8 @@ class HomeScreenState extends State<HomeScreen> {
               ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                await GamePersistence.clearGameState();
+                // Also Delete the saved game in the database
+                await GamePersistence.clearGameState(true);
                 setState(() {
                   _hasSavedGame = false;
                 });
