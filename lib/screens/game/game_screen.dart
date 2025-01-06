@@ -16,18 +16,20 @@ import '../../models/team.dart';
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
-    required this.title,
+    required this.id,
     required this.players1,
     required this.players2,
     required this.selectedRules,
     required this.startingTeam,
+    required this.invitations,
   });
 
-  final String title;
+  final String id;
   final List<Player> players1;
   final List<Player> players2;
   final Map<String, bool> selectedRules;
   final bool startingTeam;
+  final List<String> invitations;
 
   @override
   State<GameScreen> createState() => GameScreenState();
@@ -35,7 +37,9 @@ class GameScreen extends StatefulWidget {
 
 class GameScreenState extends State<GameScreen> {
   //region ----- Game/Team/Player State -----
-  late Map<String, bool> selectedRules = widget.selectedRules;
+  late String id;
+  late Map<String, bool> selectedRules;
+  late List<String> invitations;
 
   late Team team1;
   late Team team2;
@@ -69,10 +73,13 @@ class GameScreenState extends State<GameScreen> {
   void dispose() {
     if (!gameEnded) {
       GamePersistence.saveGameState(
+          id: id,
           team1: team1,
           team2: team2,
           isTeamOneTurn: isTeamOneTurn,
-          islandShotActive: islandShotActive); // Save if the game hasn't ended
+          islandShotActive: islandShotActive,
+          invitations: invitations,
+          selectedRules: selectedRules); // Save if the game hasn't ended
     }
     _pageController.dispose();
     super.dispose();
@@ -94,6 +101,7 @@ class GameScreenState extends State<GameScreen> {
     if (map == null) {
       // No saved data -> init teams from scratch
       setState(() {
+        id = widget.id;
         team1 = Team(
           color: Colors.blue,
           players: widget.players1,
@@ -108,15 +116,20 @@ class GameScreenState extends State<GameScreen> {
         );
         currentTeam = isTeamOneTurn ? team1 : team2;
         currentTeam.currentPlayers = currentTeam.rotatePlayers();
+        invitations = widget.invitations;
+        selectedRules = widget.selectedRules;
       });
       return;
     }
 
     setState(() {
+      id = map['id'];
       team1 = Team.fromJson(map['team1']);
       team2 = Team.fromJson(map['team2']);
       isTeamOneTurn = map['isTeamOneTurn'] ?? false;
       islandShotActive = map['islandShotActive'] ?? false;
+      invitations = List<String>.from(map['invitations']);
+      selectedRules = Map<String, bool>.from(map['selectedRules']);
 
       // Current team
       currentTeam = isTeamOneTurn ? team1 : team2;
@@ -614,6 +627,11 @@ class GameScreenState extends State<GameScreen> {
       team2: team2.players,
       winner: blueTeamWin ? "Team 1" : "Team 2",
     );
+    FirestoreService().updateGameDoc(widget.id, team1Players: team1.players, team2Players: team2.players, winner: blueTeamWin ? "Team 1" : "Team 2");
+
+    for (String invitationId in widget.invitations) {
+      FirestoreService().deleteGameInvitation(invitationId);
+    }
 
     // Update current user in UserProvider if found in updatedUsers
     final userExists = updatedUsers.any((u) => u.id == userProvider.user?.id);

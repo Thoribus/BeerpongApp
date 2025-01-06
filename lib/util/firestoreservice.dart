@@ -69,36 +69,59 @@ class FirestoreService {
     required String winner,
   }) async {
     final updatedUsers = <User>[];
-    try {
-      // 1) Create participants list
-      final participants = <dynamic>{
-        ...team1.map((p) => p.user?.id ?? ''),
-        ...team2.map((p) => p.user?.id ?? ''),
-      }.toList(); // remove duplicates
+    for (final player in [...team1, ...team2]) {
+      if (player.user == null) continue;
+      final isWinner = (winner == 'Team 1' && team1.contains(player)) ||
+          (winner == 'Team 2' && team2.contains(player));
 
-      // 2) Add the game doc
-      await _db.collection('games').add({
-        'team1': team1.map((player) => player.toJson()).toList(),
-        'team2': team2.map((player) => player.toJson()).toList(),
-        'winner': winner,
-        'timestamp': FieldValue.serverTimestamp(),
-        'participants': participants,
-      });
-
-      // 3) Update each player's user stats
-      for (final player in [...team1, ...team2]) {
-        if (player.user == null) continue;
-        final isWinner = (winner == 'Team 1' && team1.contains(player)) ||
-            (winner == 'Team 2' && team2.contains(player));
-
-        final updatedUser = _mapPlayerToUser(player, isWinner);
-        await updateUser(updatedUser);
-        updatedUsers.add(updatedUser);
-      }
-    } catch (e) {
-      print('Error saving game: $e');
+      final updatedUser = _mapPlayerToUser(player, isWinner);
+      await updateUser(updatedUser);
+      updatedUsers.add(updatedUser);
     }
     return updatedUsers;
+  }
+
+  // Create an empty "games" doc with default or placeholder fields
+  Future<String> createEmptyGameDoc({
+    required List<Player> team1Players,
+    required List<Player> team2Players,
+    List<String> invitations = const [],
+  }) async {
+    final docRef = await _db.collection('games').add({
+      'timestamp': FieldValue.serverTimestamp(),
+      'winner': '',
+      'team1': team1Players.map((p) => p.toJson()).toList(),
+      'team2': team2Players.map((p) => p.toJson()).toList(),
+      'participants': [
+        // Maybe gather user IDs from team1+team2 if they're actual accounts
+        ...team1Players.where((p) => p.user != null).map((p) => p.user!.id),
+        ...team2Players.where((p) => p.user != null).map((p) => p.user!.id),
+      ],
+      'invitations': [
+        ...invitations,
+      ],
+    });
+    return docRef.id; // Return the new document ID
+  }
+
+  // Update the game doc with new team arrays or other fields
+  Future<void> updateGameDoc(
+    String gameId, {
+    required List<Player> team1Players,
+    required List<Player> team2Players,
+    String? winner,
+    // any other fields you need to update
+  }) async {
+    await _db.collection('games').doc(gameId).update({
+      'team1': team1Players.map((p) => p.toJson()).toList(),
+      'team2': team2Players.map((p) => p.toJson()).toList(),
+      'winner': winner,
+    });
+  }
+
+  // Delete the game doc if user leaves
+  Future<void> deleteGameDoc(String gameId) async {
+    await _db.collection('games').doc(gameId).delete();
   }
 
   /// Helper to copy relevant stats from Player => existing User, incrementing them.

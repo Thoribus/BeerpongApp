@@ -8,19 +8,25 @@ class GamePersistence {
 
   /// Saves the entire game state (team1, team2, flags) as a single JSON string.
   static Future<void> saveGameState({
+    required String id,
     required Team team1,
     required Team team2,
     required bool isTeamOneTurn,
     required bool islandShotActive,
+    required List<String> invitations,
+    required Map<String, bool> selectedRules,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
     // Build a big map with all we need
     final Map<String, dynamic> gameMap = {
+      'id': id,
       'team1': team1.toJson(),
       'team2': team2.toJson(),
       'isTeamOneTurn': isTeamOneTurn,
       'islandShotActive': islandShotActive,
+      'invitations': invitations,
+      'selectedRules': selectedRules,
     };
 
     final jsonString = json.encode(gameMap);

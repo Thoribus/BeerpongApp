@@ -238,11 +238,12 @@ class HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const GameScreen(
-                            title: 'Resume Game',
+                            id: 'Resume Game',
                             players1: [],
                             players2: [],
                             selectedRules: {},
                             startingTeam: true,
+                            invitations: [],
                           ),
                         ),
                       );

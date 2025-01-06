@@ -1,3 +1,4 @@
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
@@ -29,6 +30,23 @@ class SelectionScreenState extends State<SelectionScreen> {
   String startingTeam = 'Team Blue'; // Add this line
   String selectedSection = 'All'; // Default to 'All' when the screen is built
 
+  List<String> acceptedInvitations = [];
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  /// Creates an empty game doc in Firestore and stores its ID in `_tempGameId`.
+  Future<String> _createEmptyGameDoc(List<Player> team1Players, List<Player> team2Players, List<String> invitations) async {
+    final docId = await FirestoreService().createEmptyGameDoc(
+      team1Players: team1Players,
+      team2Players: team2Players,
+      invitations: invitations,
+    );
+    return docId;
+  }
+
   bool get canStartGame {
     return players1.isNotEmpty &&
         players2.isNotEmpty &&
@@ -36,7 +54,7 @@ class SelectionScreenState extends State<SelectionScreen> {
         players2.every((p) => p.name.isNotEmpty);
   }
 
-  void _onPopInvoked(bool didPop) {
+  void _onPopInvoked(bool didPop) async {
     // Call the callback function before popping the screen
     widget.onReturn();
   }
@@ -77,7 +95,9 @@ class SelectionScreenState extends State<SelectionScreen> {
           title: const Text(
             'Game Setup',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppConstants.secondaryColor, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: AppConstants.secondaryColor,
+                fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
           backgroundColor: AppConstants.primaryColor,
@@ -120,14 +140,16 @@ class SelectionScreenState extends State<SelectionScreen> {
                     title: 'Players',
                     imagePath: 'assets/two_cats.svg',
                     content: _buildPlayersSelection(),
-                    infoMessage: 'Select the players for your game.\n\nAdd at least one player per team. You can add friends or custom players to each team.\n\nStatistics will only be saved when accounts are selected!',
+                    infoMessage:
+                        'Select the players for your game.\n\nAdd at least one player per team. You can add friends or custom players to each team.\n\nStatistics will only be saved when accounts are selected!',
                   ),
                 if (selectedSection == 'All' || selectedSection == 'Game Mode')
                   _buildBracketSection(
                     title: 'Game Mode',
                     imagePath: 'assets/racoon_winner.svg',
                     content: _buildGameModeSelection(),
-                    infoMessage: 'Choose the game mode you want to play.\n\nA single game creates a match between two players/teams.\n\nA tournament creates a  several matcheas between multiple players/teams.',
+                    infoMessage:
+                        'Choose the game mode you want to play.\n\nA single game creates a match between two players/teams.\n\nA tournament creates a  several matcheas between multiple players/teams.',
                   ),
                 if (selectedSection == 'All' ||
                     selectedSection == 'Special Rules')
@@ -135,7 +157,8 @@ class SelectionScreenState extends State<SelectionScreen> {
                     title: 'Special Rules',
                     imagePath: 'assets/frog_island.svg',
                     content: _buildSpecialRulesSelection(),
-                    infoMessage: 'Select any special rules for your game.\n\nDEATHCUP.\nWhen a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.\nThe team that hits the deathcup automatically wins!\n\nISLAND.\nA player can declare an island-shot (once per game) when a single cup has no surrounding cups.\nWhen an ISLAND is hit, an additional cup is cleared from the field!\n',
+                    infoMessage:
+                        'Select any special rules for your game.\n\nDEATHCUP.\nWhen a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.\nThe team that hits the deathcup automatically wins!\n\nISLAND.\nA player can declare an island-shot (once per game) when a single cup has no surrounding cups.\nWhen an ISLAND is hit, an additional cup is cleared from the field!\n',
                   ),
                 if (selectedSection == 'All' ||
                     selectedSection == 'Starting Team')
@@ -169,8 +192,9 @@ class SelectionScreenState extends State<SelectionScreen> {
             color: AppConstants.secondaryColor,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(
-              color:
-                  selectedSection == section ? AppConstants.primaryColor : AppConstants.unselectedColor,
+              color: selectedSection == section
+                  ? AppConstants.primaryColor
+                  : AppConstants.unselectedColor,
               width: 2,
             ),
           ),
@@ -178,8 +202,9 @@ class SelectionScreenState extends State<SelectionScreen> {
           child: Text(
             section,
             style: TextStyle(
-              color:
-                  selectedSection == section ? AppConstants.primaryColor : AppConstants.unselectedColor,
+              color: selectedSection == section
+                  ? AppConstants.primaryColor
+                  : AppConstants.unselectedColor,
             ),
           ),
         ),
@@ -308,9 +333,11 @@ class SelectionScreenState extends State<SelectionScreen> {
                 await _showTeamDialog(team: 1);
                 await _showTeamDialog(team: 2);
               },
-              icon: const Icon(Icons.add, size: 24, color: AppConstants.secondaryColor),
+              icon: const Icon(Icons.add,
+                  size: 24, color: AppConstants.secondaryColor),
               label: const Text('Add Players',
-                  style: TextStyle(fontSize: 16, color: AppConstants.secondaryColor)),
+                  style: TextStyle(
+                      fontSize: 16, color: AppConstants.secondaryColor)),
             ),
           )
         else
@@ -415,7 +442,7 @@ class SelectionScreenState extends State<SelectionScreen> {
       initialNames = players2.map((player) => player.name).toList();
     }
 
-    final teamResult = await showDialog<List<Player>>(
+    final teamResult = await showDialog<NewGameDialogResult>(
       context: context,
       builder: (context) => NewGameDialog(
           team: team, initialNames: initialNames, numPlayers: _numPlayers),
@@ -424,9 +451,12 @@ class SelectionScreenState extends State<SelectionScreen> {
     if (teamResult != null) {
       setState(() {
         if (team == 1) {
-          players1 = teamResult;
+          players1 = teamResult.players;
         } else if (team == 2) {
-          players2 = teamResult;
+          players2 = teamResult.players;
+        }
+        for (String invitation in teamResult.acceptedInvitations) {
+          acceptedInvitations.add(invitation);
         }
       });
     }
@@ -541,15 +571,17 @@ class SelectionScreenState extends State<SelectionScreen> {
     return Center(
       child: ElevatedButton(
         onPressed: canStartGame
-            ? () {
+            ? () async {
+                String id = await _createEmptyGameDoc(players1, players2, acceptedInvitations);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => GameScreen(
-                      title: 'Beer Pong',
+                      id: id,
                       players1: players1,
                       players2: players2,
                       selectedRules: selectedRulesMap,
+                      invitations: acceptedInvitations,
                       startingTeam: startingTeam == "Team Blue"
                           ? true
                           : false, // Pass starting team
@@ -559,7 +591,8 @@ class SelectionScreenState extends State<SelectionScreen> {
               }
             : () {},
         style: ElevatedButton.styleFrom(
-          backgroundColor: canStartGame ? AppConstants.primaryColor : Colors.grey,
+          backgroundColor:
+              canStartGame ? AppConstants.primaryColor : Colors.grey,
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
