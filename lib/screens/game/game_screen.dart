@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
+import 'package:beerpongapp/screens/game_highlights_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -61,12 +65,15 @@ class GameScreenState extends State<GameScreen> {
   late Future<void> _loadGameFuture;
   //endregion
 
+  Timer? _timer;
+
   //region ----- Lifecycle -----
   @override
   void initState() {
     super.initState();
     _loadGameFuture = _loadGameState();
     _pageController.addListener(_handlePageChange);
+    _startPeriodicUpdate();
   }
 
   @override
@@ -82,6 +89,7 @@ class GameScreenState extends State<GameScreen> {
           selectedRules: selectedRules); // Save if the game hasn't ended
     }
     _pageController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
   //endregion
@@ -94,6 +102,13 @@ class GameScreenState extends State<GameScreen> {
     }
   }
   //endregion
+
+  void _startPeriodicUpdate() {
+    // Update every 10 seconds (adjust as needed)
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
+      await FirestoreService().updateGameDoc(id, team1Players: team1.players, team2Players: team2.players);
+    });
+  }
 
   //region ----- Persistent Storage (Save/Load) -----
   Future<void> _loadGameState() async {
@@ -471,8 +486,19 @@ class GameScreenState extends State<GameScreen> {
     _setPlayerHitLastCup(player);
 
     await GamePersistence.clearGameState(false);
-    await _saveGameStatistics();
-    await DialogHelpers.showGameEndDialog(this, currentTeam.players);
+    User oldUser = await _saveGameStatistics();
+
+    // Instead of showGameEndDialog, let’s push GameHighlightsScreen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => GameHighlightsScreen(
+          oldUser: oldUser, // the old user stats
+        ),
+      ),
+    );
+
+    //await DialogHelpers.showGameEndDialog(this, currentTeam.players);
   }
 
   Future<bool> _handleNachwurf(int cupIndex) async {
@@ -615,20 +641,22 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Saving Stats to Firestore -----
-  Future<void> _saveGameStatistics() async {
-    // We determine the winning team. If Team1’s cups are all green => Team2 wins, else Team1.
-    final isBlueTeamAllGreen =
+  Future<User> _saveGameStatistics() async {
+    // We determine the winning team. If Team1’s cups are all green or invisible => Team1 wins, else Team2.
+    final blueTeamWin =
         team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
-    final bool blueTeamWin =
-        !isBlueTeamAllGreen; // If Team1 is all green => Team2 is winner
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final User oldUser = userProvider.user!;
     final updatedUsers = await FirestoreService().saveGame(
       team1: team1.players,
       team2: team2.players,
       winner: blueTeamWin ? "Team 1" : "Team 2",
     );
-    FirestoreService().updateGameDoc(id, team1Players: team1.players, team2Players: team2.players, winner: blueTeamWin ? "Team 1" : "Team 2");
+    FirestoreService().updateGameDoc(id,
+        team1Players: team1.players,
+        team2Players: team2.players,
+        winner: blueTeamWin ? "Team 1" : "Team 2");
 
     for (String invitationId in invitations) {
       FirestoreService().deleteGameInvitation(invitationId);
@@ -641,6 +669,8 @@ class GameScreenState extends State<GameScreen> {
           updatedUsers.firstWhere((u) => u.id == userProvider.user?.id);
       userProvider.updateUser(currentUser);
     }
+
+    return oldUser;
   }
   //endregion
 

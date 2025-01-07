@@ -119,6 +119,11 @@ class FirestoreService {
     });
   }
 
+  /// Returns a stream of game document snapshots
+  Stream<DocumentSnapshot> getGameDocStream(String gameId) {
+    return _db.collection('games').doc(gameId).snapshots();
+  }
+
   // Delete the game doc if user leaves
   Future<void> deleteGameDoc(String gameId) async {
     await _db.collection('games').doc(gameId).delete();
@@ -275,6 +280,7 @@ class FirestoreService {
       'playerIndex': playerIndex,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
+      'gameId': '',
     });
     return docRef.id;
   }
@@ -283,6 +289,13 @@ class FirestoreService {
       String invitationId, String newStatus) async {
     await _db.collection('invitations').doc(invitationId).update({
       'status': newStatus,
+    });
+  }
+
+  Future<void> updateInvitationGameId(
+      String invitationId, String gameId) async {
+    await _db.collection('invitations').doc(invitationId).update({
+      'gameId': gameId,
     });
   }
 
@@ -307,6 +320,28 @@ class FirestoreService {
         playerIndex: data['playerIndex'],
         status: data['status'],
         createdAt: data['createdAt'],
+        gameId: data['gameId'],
+      );
+    }).toList();
+  }
+
+  Future<List<Invitation>> getGameInvitationsByGameId(String gameId) async {
+    final snapshot = await _db
+        .collection('invitations')
+        .where('gameId', isEqualTo: gameId)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Invitation(
+        id: doc.id,
+        fromUserId: data['fromUserId'],
+        toUserId: data['toUserId'],
+        teamNumber: data['teamNumber'],
+        playerIndex: data['playerIndex'],
+        status: data['status'],
+        createdAt: data['createdAt'],
+        gameId: data['gameId'],
       );
     }).toList();
   }
@@ -327,6 +362,7 @@ class FirestoreService {
         playerIndex: data['playerIndex'],
         status: data['status'],
         createdAt: data['createdAt'],
+        gameId: data['gameId'],
       );
     }).toList();
   }

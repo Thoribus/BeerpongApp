@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/team.dart';
@@ -58,9 +59,14 @@ class GamePersistence {
 
     // Delete the game doc from Firestore if we don't continue the ongoing game
     if (deleteGame) {
-      final map = loadGameState() as Map<String, dynamic>;
+      final map = await loadGameState() as Map<String, dynamic>;
       final id = map['id'];
       FirestoreService().deleteGameDoc(id);
+      final List<Invitation> invitations = await FirestoreService()
+          .getGameInvitationsByGameId(id); // Get all invitations for this game
+      for (final invitation in invitations) {
+        FirestoreService().deleteGameInvitation(invitation.id);
+      }
     }
     await prefs.remove(_gameStateKey);
   }

@@ -1,7 +1,9 @@
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
+import 'package:beerpongapp/screens/live_game_stats_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -55,21 +57,52 @@ class HomeScreenState extends State<HomeScreen> {
           _showInvitationDialog(invites.first);
           return;
         }
+        else if (invite.status == "accepted") {
+          // Listen for when the game starts
+          _listenToGameStart(invite.id);
+          return;
+        }
       }
       setState(() {
         _hasInvitations = true;
       });
-    }
-    else {
+    } else {
       setState(() {
         _hasInvitations = false;
       });
     }
   }
 
+  // Listen for when the invitation has a gameId so we can show a stats screen for each user
+  Future<void> _listenToGameStart(String docId) async {
+    FirebaseFirestore.instance
+        .collection('invitations')
+        .doc(docId)
+        .snapshots()
+        .listen((snapshot) async {
+      if (!snapshot.exists) {
+        // Possibly the doc was deleted
+        return;
+      }
+      final data = snapshot.data()!;
+      final gameId = data['gameId'];
+      
+      if (gameId != '') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LiveGameStatsScreen(
+              gameId: gameId,
+            ),
+          ),
+        );
+      }
+    });
+  }
+
   /// Shows a popup with Accept/Decline for the given invitation.
   void _showInvitationDialog(Invitation invite) async {
-  User? fromUser = await FirestoreService().getUser(invite.fromUserId);
+    User? fromUser = await FirestoreService().getUser(invite.fromUserId);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -258,7 +291,8 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _hasInvitations ? Colors.grey : Colors.amber,
+                    backgroundColor:
+                        _hasInvitations ? Colors.grey : Colors.amber,
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                     shape: const RoundedRectangleBorder(

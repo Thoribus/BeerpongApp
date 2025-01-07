@@ -573,6 +573,11 @@ class SelectionScreenState extends State<SelectionScreen> {
         onPressed: canStartGame
             ? () async {
                 String id = await _createEmptyGameDoc(players1, players2, acceptedInvitations);
+
+                // Update the game ID for all accepted invitations so that they can listen to the game
+                for (String invitation in acceptedInvitations) {
+                  await FirestoreService().updateInvitationGameId(invitation, id);
+                }
                 Navigator.push(
                   context,
                   MaterialPageRoute(

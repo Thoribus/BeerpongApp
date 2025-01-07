@@ -152,7 +152,7 @@ class NewGameDialogState extends State<NewGameDialog> {
 
         // If the user picks themselves, no invitation needed
         if (selectedPlayer.id == currentUser.id) {
-          return;
+          //return;
         }
 
         // Otherwise, create an invitation doc in Firestore
@@ -382,56 +382,33 @@ class NewGameDialogState extends State<NewGameDialog> {
       final data = snapshot.data()!;
       final status = data['status'] as String? ?? 'pending';
 
-      // If it's still pending, check if older than 1 minute => auto-decline
-      if (status == 'pending') {
-        await _handleAutoDecline(docId, data);
-      }
-
-      setState(() {
-        _invitationStatuses[index] = status;
-        if (status == 'accepted') {
+      if (status == 'accepted' && data['gameId'] == null) {
+        setState(() {
           // Mark invitation doc as accepted
           if (!_acceptedInvitationIds.contains(docId)) {
             _acceptedInvitationIds.add(docId);
           }
-        } else if (status == 'declined') {
+          _invitationStatuses[index] = status;
+        });
+      } else if (status == 'declined') {
+        setState(() {
           // If declined, optionally remove the friend from the row
           FirestoreService().deleteGameInvitation(docId);
           _invitationDocIds.remove(index);
           _invitationStatuses.remove(index);
           _controllers[index].clear();
           _friendMap.remove(index);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invitation declined')),
-          );
-        }
-      });
-    });
-  }
-
-  /// If doc is older than 60s => mark as "declined"
-  Future<void> _handleAutoDecline(
-      String docId, Map<String, dynamic> data) async {
-    final Timestamp? ts = data['timestamp'] as Timestamp?;
-    if (ts != null) {
-      final creationTime = ts.toDate();
-      final now = DateTime.now();
-      final diff = now.difference(creationTime).inSeconds;
-
-      if (diff > 60) {
-        await FirebaseFirestore.instance
-            .collection('invitations')
-            .doc(docId)
-            .update({'status': 'declined'});
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Invitation $docId auto-declined (1 min).')),
-          );
-        }
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Invitation declined')),
+        );
+      } else if (status == 'pending') {
+        setState(() {
+          _invitationStatuses[index] = status;
+        });
       }
-    }
+
+    });
   }
 
   @override
