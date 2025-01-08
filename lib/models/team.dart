@@ -39,9 +39,10 @@ class Team {
   /// Convert this Team instance into a JSON-friendly map.
   Map<String, dynamic> toJson() {
     return {
-      'colorValue': color.value,                // store color as int
-      'players': Player.encodeList(players),    // store players in JSON
-      'cups': Cup.encodeList(cups),            // store cups in JSON
+      'colorValue': color.value, // store color as int
+      'players':
+          players.map((p) => p.toJson()).toList(), // store players in JSON
+      'cups': cups.map((c) => c.toJson()).toList(),  // store cups in JSON
       'isRearranged': isRearranged,
       'canIslandShot': canIslandShot,
     };
@@ -52,8 +53,16 @@ class Team {
     final colorValue = data['colorValue'] as int? ?? Colors.blue.value;
     return Team(
       color: Color(colorValue),
-      players: Player.decodeList(data['players'] as String),
-      cups: Cup.decodeList(data['cups'] as String),
+      players: data['players'] != null
+          ? List<Map<String, dynamic>>.from(data['players'])
+              .map((playerData) => Player.fromJson(playerData))
+              .toList()
+          : [],
+      cups: data['cups'] != null
+          ? List<Map<String, dynamic>>.from(data['cups'])
+              .map((cupData) => Cup.fromJson(cupData))
+              .toList()
+          : [],
       isRearranged: data['isRearranged'] as bool? ?? false,
       canIslandShot: data['canIslandShot'] as bool? ?? true,
       // currentPlayers is ephemeral; typically rebuilt via rotatePlayers().

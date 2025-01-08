@@ -1,5 +1,7 @@
 // lib/screens/game/live_game_stats_screen.dart
 
+import 'package:beerpongapp/models/team.dart';
+import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -48,32 +50,20 @@ class _LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
           }
 
           // Extract game data
-          final gameData =
-              snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          final gameData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
 
-          // Parse team1 and team2 players
-          List<Player> team1Players = [];
-          List<Player> team2Players = [];
-
-          if (gameData['team1'] != null) {
-            team1Players = List<Map<String, dynamic>>.from(gameData['team1'])
-                .map((playerData) => Player.fromJson(playerData))
-                .toList();
-          }
-
-          if (gameData['team2'] != null) {
-            team2Players = List<Map<String, dynamic>>.from(gameData['team2'])
-                .map((playerData) => Player.fromJson(playerData))
-                .toList();
-          }
+          Team team1 = Team.fromJson(gameData['team1']);
+          Team team2 = Team.fromJson(gameData['team2']);
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                _buildTeamStats('Team Blue', team1Players, Colors.blue),
+                CupLayout.buildCupsArea(team: team1),
+                _buildTeamStats('Team Blue', team1.players, team1.color),
                 const SizedBox(height: 20),
-                _buildTeamStats('Team Red', team2Players, Colors.red),
+                CupLayout.buildCupsArea(team: team2),
+                _buildTeamStats('Team Red', team2.players, team2.color),
               ],
             ),
           );

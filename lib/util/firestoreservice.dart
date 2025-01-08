@@ -1,3 +1,4 @@
+import 'package:beerpongapp/models/team.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:beerpongapp/models/game_statistics.dart';
@@ -83,19 +84,19 @@ class FirestoreService {
 
   // Create an empty "games" doc with default or placeholder fields
   Future<String> createEmptyGameDoc({
-    required List<Player> team1Players,
-    required List<Player> team2Players,
+    required Team team1,
+    required Team team2,
     List<String> invitations = const [],
   }) async {
     final docRef = await _db.collection('games').add({
       'timestamp': FieldValue.serverTimestamp(),
       'winner': '',
-      'team1': team1Players.map((p) => p.toJson()).toList(),
-      'team2': team2Players.map((p) => p.toJson()).toList(),
+      'team1': team1.toJson(),
+      'team2': team2.toJson(),
       'participants': [
         // Maybe gather user IDs from team1+team2 if they're actual accounts
-        ...team1Players.where((p) => p.user != null).map((p) => p.user!.id),
-        ...team2Players.where((p) => p.user != null).map((p) => p.user!.id),
+        ...team1.players.where((p) => p.user != null).map((p) => p.user!.id),
+        ...team2.players.where((p) => p.user != null).map((p) => p.user!.id),
       ],
       'invitations': [
         ...invitations,
@@ -107,14 +108,14 @@ class FirestoreService {
   // Update the game doc with new team arrays or other fields
   Future<void> updateGameDoc(
     String gameId, {
-    required List<Player> team1Players,
-    required List<Player> team2Players,
+    required Team team1,
+    required Team team2,
     String? winner,
     // any other fields you need to update
   }) async {
     await _db.collection('games').doc(gameId).update({
-      'team1': team1Players.map((p) => p.toJson()).toList(),
-      'team2': team2Players.map((p) => p.toJson()).toList(),
+      'team1': team1.toJson(),
+      'team2': team2.toJson(),
       'winner': winner,
     });
   }

@@ -1,3 +1,5 @@
+import 'package:beerpongapp/models/cup.dart';
+import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -38,10 +40,11 @@ class SelectionScreenState extends State<SelectionScreen> {
   }
 
   /// Creates an empty game doc in Firestore and stores its ID in `_tempGameId`.
-  Future<String> _createEmptyGameDoc(List<Player> team1Players, List<Player> team2Players, List<String> invitations) async {
+  Future<String> _createEmptyGameDoc(
+      Team team1, Team team2, List<String> invitations) async {
     final docId = await FirestoreService().createEmptyGameDoc(
-      team1Players: team1Players,
-      team2Players: team2Players,
+      team1: team1,
+      team2: team2,
       invitations: invitations,
     );
     return docId;
@@ -572,11 +575,25 @@ class SelectionScreenState extends State<SelectionScreen> {
       child: ElevatedButton(
         onPressed: canStartGame
             ? () async {
-                String id = await _createEmptyGameDoc(players1, players2, acceptedInvitations);
+                Team team1 = Team(
+                  color: Colors.blue,
+                  players: players1,
+                  cups: List.generate(
+                      10, (index) => Cup(index: index, color: Colors.blue)),
+                );
+                Team team2 = Team(
+                  color: Colors.red,
+                  players: players2,
+                  cups: List.generate(
+                      10, (index) => Cup(index: index, color: Colors.red)),
+                );
+                String id = await _createEmptyGameDoc(
+                    team1, team2, acceptedInvitations);
 
                 // Update the game ID for all accepted invitations so that they can listen to the game
                 for (String invitation in acceptedInvitations) {
-                  await FirestoreService().updateInvitationGameId(invitation, id);
+                  await FirestoreService()
+                      .updateInvitationGameId(invitation, id);
                 }
                 Navigator.push(
                   context,

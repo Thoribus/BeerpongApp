@@ -106,7 +106,7 @@ class GameScreenState extends State<GameScreen> {
   void _startPeriodicUpdate() {
     // Update every 10 seconds (adjust as needed)
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
-      await FirestoreService().updateGameDoc(id, team1Players: team1.players, team2Players: team2.players);
+      await FirestoreService().updateGameDoc(id, team1: team1, team2: team2);
     });
   }
 
@@ -433,7 +433,7 @@ class GameScreenState extends State<GameScreen> {
     return sqrt(pow(pos1.dx - pos2.dx, 2) + pow(pos1.dy - pos2.dy, 2));
   }
 
-  double _calculateHitRate(double score, int throws) {
+  double _calculateHitRate(num score, int throws) {
     if (throws == 0) return 0.0;
     return (score / throws) * 100.0;
   }
@@ -654,8 +654,8 @@ class GameScreenState extends State<GameScreen> {
       winner: blueTeamWin ? "Team 1" : "Team 2",
     );
     FirestoreService().updateGameDoc(id,
-        team1Players: team1.players,
-        team2Players: team2.players,
+        team1: team1,
+        team2: team2,
         winner: blueTeamWin ? "Team 1" : "Team 2");
 
     for (String invitationId in invitations) {
@@ -755,6 +755,14 @@ class GameScreenState extends State<GameScreen> {
         ),
       ],
     );
+  }
+
+  void onCupTap(int cupIndex) {
+    if (islandShotActive) {
+      handleIslandShot(cupIndex);
+    } else {
+      showPlayerSelectionDialog(context, cupIndex);
+    }
   }
 
   /// The main “Game Table” page: cups layout, players, special rules.

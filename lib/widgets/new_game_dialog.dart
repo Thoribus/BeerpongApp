@@ -381,8 +381,9 @@ class NewGameDialogState extends State<NewGameDialog> {
       }
       final data = snapshot.data()!;
       final status = data['status'] as String? ?? 'pending';
+      print(status == 'accepted' && data['gameId'] == "");
 
-      if (status == 'accepted' && data['gameId'] == null) {
+      if (status == 'accepted' && data['gameId'] == "") {
         setState(() {
           // Mark invitation doc as accepted
           if (!_acceptedInvitationIds.contains(docId)) {

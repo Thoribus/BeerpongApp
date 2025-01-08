@@ -1,3 +1,4 @@
+import 'package:beerpongapp/models/team.dart';
 import 'package:flutter/material.dart';
 import '../../models/cup.dart';
 import 'game_screen.dart'; // so we can reference _GameScreenState
@@ -6,17 +7,27 @@ import 'game_screen.dart'; // so we can reference _GameScreenState
 class CupLayout {
   /// The top-level method that decides whether to build default or rearranged layout.
   static Widget buildCupsArea({
-    required GameScreenState state,
+    GameScreenState? state,
+    Team? team,
   }) {
-    final isRearranged = state.currentTeam.isRearranged;
-    final cups = state.currentTeam.cups;
+    bool isRearranged;
+    List<Cup> cups;
+    if (state != null) {
+      isRearranged = state.currentTeam.isRearranged;
+      cups = state.currentTeam.cups;
+    }
+    else {
+      isRearranged = team!.isRearranged;
+      cups = team.cups;
+    }
 
     return isRearranged
         ? _buildRearrangedCupsLayout(state, cups)
         : _buildDefaultCupsLayout(state, cups);
   }
 
-  static Widget _buildDefaultCupsLayout(GameScreenState state, List<Cup> cups) {
+  static Widget _buildDefaultCupsLayout(
+      GameScreenState? state, List<Cup> cups) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -28,7 +39,8 @@ class CupLayout {
     );
   }
 
-  static Widget _buildRearrangedCupsLayout(GameScreenState state, List<Cup> cups) {
+  static Widget _buildRearrangedCupsLayout(
+      GameScreenState? state, List<Cup> cups) {
     switch (cups.length) {
       case 6:
         return Column(
@@ -74,20 +86,20 @@ class CupLayout {
     }
   }
 
-  static Widget _buildCupRow(GameScreenState state, List<Cup> cups) {
+  static Widget _buildCupRow(GameScreenState? state, List<Cup> cups) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: cups.map((cup) {
-        return cup.widget(
-          () => state.islandShotActive
-              ? state.handleIslandShot(cup.index)
-              : state.showPlayerSelectionDialog(state.context, cup.index),
-        );
+        if (state != null) {
+          return cup.widget(() => state.onCupTap(cup.index));
+        } else {
+          return cup.widget(() => {});
+        }
       }).toList(),
     );
   }
 
-    //region ----- Assign Indices for Rearranged Cups -----
+  //region ----- Assign Indices for Rearranged Cups -----
   /// Assigns new indices to the given cups based on how many are left for the rearranged layout.
   static List<Cup> assignSpecificIndices(List<Cup> cups) {
     List<int> newIndices;

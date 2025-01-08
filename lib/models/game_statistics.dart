@@ -17,11 +17,12 @@ class GameStatistics {
   });
 
   factory GameStatistics.fromFirestore(Map<String, dynamic> data) {
+    print(data['team1']['players']);
     return GameStatistics(
       date: (data['timestamp'] as Timestamp).toDate(),
       winningTeam: data['winner'],
-      team1Players: (data['team1'] as List<dynamic>).map((playerData) => Player.fromJson(playerData)).toList(),
-      team2Players: (data['team2'] as List<dynamic>).map((playerData) => Player.fromJson(playerData)).toList(),
+      team1Players: (data['team1']['players'] as List<dynamic>).map((playerData) => Player.fromJson(playerData)).toList(),
+      team2Players: (data['team2']['players'] as List<dynamic>).map((playerData) => Player.fromJson(playerData)).toList(),
       participants: List<String>.from(data['participants']),
     );
   }

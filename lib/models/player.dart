@@ -1,10 +1,9 @@
-import 'dart:convert';
 import 'user.dart';
 
 /// A class representing a player in the game.
 class Player {
   final String name;        // The player's name
-  double score;             // The player's score
+  num score;             // The player's score
   int throws;               // Number of throws the player made
   int misses;               // Number of misses by the player
   int airballs;             // Number of airballs by the player
@@ -19,7 +18,7 @@ class Player {
 
   Player({
     required this.name,
-    this.score = 0,
+    this.score = 0.0,
     this.throws = 0,
     this.misses = 0,
     this.airballs = 0,
@@ -135,7 +134,7 @@ class Player {
 
   /// Decode a Player from a JSON map.
   factory Player.fromJson(Map<String, dynamic> json) {
-    // If hitThisRound was stored as bool, convert it
+    // Handle cases where 'hitThisRound' might be stored as a bool
     if (json["hitThisRound"] is bool) {
       json["hitThisRound"] = json["hitThisRound"] ? 1 : 0;
     }
@@ -157,15 +156,9 @@ class Player {
     );
   }
 
-  /// Encodes a list of Players to JSON.
-  static String encodeList(List<Player> players) {
-    return json.encode(players.map((p) => p.toJson()).toList());
-  }
-
-  /// Decodes a list of Players from JSON.
-  static List<Player> decodeList(String jsonStr) {
-    final list = json.decode(jsonStr) as List<dynamic>;
-    return list.map((item) => Player.fromJson(item)).toList();
+  @override
+  String toString() {
+    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, user: $user)';
   }
 
   /// Equality based on name (and potentially user).
