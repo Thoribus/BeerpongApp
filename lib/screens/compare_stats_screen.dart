@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import '../models/user.dart';
 
 class ComparisonScreen extends StatelessWidget {
@@ -10,6 +11,12 @@ class ComparisonScreen extends StatelessWidget {
     required this.currentUser,
     required this.friend,
   });
+
+  /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
+  String _mapAvatarKeyToAsset(String avatarKey) {
+    if (avatarKey.isEmpty) return '';
+    return 'assets/avatars/$avatarKey.svg';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,8 +66,15 @@ class ComparisonScreen extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 40,
-          backgroundImage: AssetImage(
-              'assets/avatars/cat.png'), // Replace with your image asset
+          backgroundColor: Colors.white24,
+          child: ClipOval(
+            child: SvgPicture.asset(
+              _mapAvatarKeyToAsset(user.avatarKey),
+              fit: BoxFit.cover,
+              width: 40 * 2,
+              height: 40 * 2,
+            ),
+          ),
         ),
         const SizedBox(height: 8),
         Text(

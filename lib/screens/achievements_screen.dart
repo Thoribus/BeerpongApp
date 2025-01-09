@@ -234,7 +234,7 @@ class AchievementsScreen extends StatelessWidget {
       {
         'imagePath': "ach_friends.png",
         'title': 'Friendships',
-        'currentProgress': 10,
+        'currentProgress': user.friends.length,
         'stages': [0, 5, 15, 20],
       },
       {

@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
-import 'package:beerpongapp/screens/game_highlights_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -51,6 +51,7 @@ class GameScreenState extends State<GameScreen> {
 
   bool gameEnded = false;
   late bool isTeamOneTurn;
+  String winner = '';
 
   // Island shot logic
   bool islandShotActive = false;
@@ -65,15 +66,12 @@ class GameScreenState extends State<GameScreen> {
   late Future<void> _loadGameFuture;
   //endregion
 
-  Timer? _timer;
-
   //region ----- Lifecycle -----
   @override
   void initState() {
     super.initState();
     _loadGameFuture = _loadGameState();
     _pageController.addListener(_handlePageChange);
-    _startPeriodicUpdate();
   }
 
   @override
@@ -89,7 +87,6 @@ class GameScreenState extends State<GameScreen> {
           selectedRules: selectedRules); // Save if the game hasn't ended
     }
     _pageController.dispose();
-    _timer?.cancel();
     super.dispose();
   }
   //endregion
@@ -102,13 +99,6 @@ class GameScreenState extends State<GameScreen> {
     }
   }
   //endregion
-
-  void _startPeriodicUpdate() {
-    // Update every 10 seconds (adjust as needed)
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) async {
-      await FirestoreService().updateGameDoc(id, team1: team1, team2: team2);
-    });
-  }
 
   //region ----- Persistent Storage (Save/Load) -----
   Future<void> _loadGameState() async {
@@ -156,6 +146,12 @@ class GameScreenState extends State<GameScreen> {
     });
   }
   //endregion
+
+  /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
+  String _mapAvatarKeyToAsset(String avatarKey) {
+    if (avatarKey.isEmpty) return '';
+    return 'assets/avatars/$avatarKey.svg';
+  }
 
   //region ----- Core Game Logic Methods -----
   /// Called when a cup is hit. Checks if the cup is already green or not.
@@ -482,21 +478,19 @@ class GameScreenState extends State<GameScreen> {
     }
 
     // Now the game truly ends
-    setState(() => gameEnded = true);
+    setState(() {
+      gameEnded = true;
+      final blueTeamWin = team1.cups
+          .every((cup) => !cup.isVisible || cup.color == Colors.green);
+      winner = blueTeamWin ? 'Team 1' : 'Team 2';
+    });
     _setPlayerHitLastCup(player);
 
     await GamePersistence.clearGameState(false);
     User oldUser = await _saveGameStatistics();
 
     // Instead of showGameEndDialog, let’s push GameHighlightsScreen
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => GameHighlightsScreen(
-          oldUser: oldUser, // the old user stats
-        ),
-      ),
-    );
+    await DialogHelpers.showGameEndDialog(this, currentTeam.players);
 
     //await DialogHelpers.showGameEndDialog(this, currentTeam.players);
   }
@@ -596,7 +590,7 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Undo/Redo Stack -----
-  void saveCurrentState() {
+  void saveCurrentState() async {
     _actionStack.add({
       'team1': team1.clone(),
       'team2': team2.clone(),
@@ -604,6 +598,9 @@ class GameScreenState extends State<GameScreen> {
       'islandShotActive': islandShotActive,
       'currentIslandShooter': currentIslandShooter,
     });
+
+    await FirestoreService()
+        .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
   }
 
   void _undoLastAction() {
@@ -642,21 +639,15 @@ class GameScreenState extends State<GameScreen> {
 
   //region ----- Saving Stats to Firestore -----
   Future<User> _saveGameStatistics() async {
-    // We determine the winning team. If Team1’s cups are all green or invisible => Team1 wins, else Team2.
-    final blueTeamWin =
-        team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
-
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final User oldUser = userProvider.user!;
     final updatedUsers = await FirestoreService().saveGame(
       team1: team1.players,
       team2: team2.players,
-      winner: blueTeamWin ? "Team 1" : "Team 2",
+      winner: winner,
     );
-    FirestoreService().updateGameDoc(id,
-        team1: team1,
-        team2: team2,
-        winner: blueTeamWin ? "Team 1" : "Team 2");
+    FirestoreService()
+        .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
 
     for (String invitationId in invitations) {
       FirestoreService().deleteGameInvitation(invitationId);
@@ -818,7 +809,6 @@ class GameScreenState extends State<GameScreen> {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 10),
                 ],
               ),
@@ -886,6 +876,7 @@ class GameScreenState extends State<GameScreen> {
     });
   }
 
+  /// Builds a player name widget with consistent styling.
   Widget _buildPlayerName(Player player) {
     return Container(
       padding: const EdgeInsets.all(8.0), // Inner padding
@@ -899,11 +890,24 @@ class GameScreenState extends State<GameScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundImage: AssetImage(
-                'assets/avatars/cat.png'), // Replace with your image asset
-          ),
+          player.user == null
+              ? const CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.person, color: Colors.white),
+                )
+              : CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white24,
+                  child: ClipOval(
+                    child: SvgPicture.asset(
+                      _mapAvatarKeyToAsset(player.user!.avatarKey),
+                      fit: BoxFit.cover,
+                      width: 20 * 2,
+                      height: 20 * 2,
+                    ),
+                  ),
+                ),
           const SizedBox(width: 8.0), // Space between avatar and text
           Expanded(
             child: Column(
@@ -922,9 +926,9 @@ class GameScreenState extends State<GameScreen> {
                   overflow: TextOverflow.ellipsis, // Handles very long names
                 ),
                 const SizedBox(height: 4.0),
-                Text(
+                const Text(
                   'Level: 1', // Dummy level
-                  style: const TextStyle(color: Colors.grey, fontSize: 12.0),
+                  style: TextStyle(color: Colors.grey, fontSize: 12.0),
                 ),
               ],
             ),

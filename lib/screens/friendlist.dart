@@ -1,8 +1,10 @@
 import 'package:beerpongapp/constants.dart'; // For AppConstants.primaryColor (optional)
+import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
@@ -197,9 +199,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     if (userProvider.user == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: Colors.black,
-        body: const Center(
+        body: Center(
           child: Text(
             'You must be signed in to view your friends.',
             style: TextStyle(color: Colors.white),
@@ -293,49 +295,63 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           itemCount: friends.length,
           itemBuilder: (ctx, index) {
             final friend = friends[index];
-            return Container(
-              margin: const EdgeInsets.symmetric(
-                  vertical: 4), // Add space between items
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color:
-                      Colors.grey.withOpacity(0.5), // Semi-transparent border
-                  width: 0.5,
-                ),
-                borderRadius:
-                    BorderRadius.circular(8), // Optional rounded corners
-              ),
-              child: ListTile(
-                leading: _buildFriendAvatar(friend),
-                title: Text(
-                  friend.username,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                subtitle: Text(
-                  'Title: ${friend.title}',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                trailing: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      'last seen',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+            return FutureBuilder<List<UserStatsInGame>>(
+              future: FirestoreService().retrieveUserStatsWithDate(friend),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                      child: Text('Error: ${snapshot.error}',
+                          style: const TextStyle(color: Colors.white)));
+                }
+                final lastGame = snapshot.data ?? [];
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 4), // Add space between items
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color:
+                          Colors.grey.withOpacity(0.5), // Semi-transparent border
+                      width: 0.5,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'X',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    borderRadius:
+                        BorderRadius.circular(8), // Optional rounded corners
+                  ),
+                  child: ListTile(
+                    leading: _buildFriendAvatar(friend),
+                    title: Text(
+                      friend.username,
+                      style: const TextStyle(color: Colors.white),
                     ),
-                  ],
-                ),
-                onTap: () => _showComparisonScreen(friend),
-              ),
+                    subtitle: Text(
+                      'Title: ${friend.title}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    trailing: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          lastGame.isNotEmpty ? DateFormat('dd.MM.yyyy – kk:mm').format(lastGame.first.date) : 'No games',
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'X',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () => _showComparisonScreen(friend),
+                  ),
+                );
+              },
             );
           },
         );
