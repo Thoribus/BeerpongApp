@@ -1,4 +1,5 @@
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -15,19 +16,22 @@ class ActivityScreen extends StatefulWidget {
 }
 
 class ActivityScreenState extends State<ActivityScreen> {
-  List<GameStatistics> games = [];
+  List<UserStatsInGame> games = [];
   bool isLoading = true;
   bool hasError = false;
+  late User? user;
 
   @override
   void initState() {
     super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    user = userProvider.user;
     _retrieveGames();
   }
 
   Future<void> _retrieveGames() async {
     try {
-      games = await FirestoreService().retrieveGames();
+      games = await FirestoreService().retrieveUserStatsWithDate(user!);
     } catch (e) {
       hasError = true;
     } finally {
@@ -38,35 +42,18 @@ class ActivityScreenState extends State<ActivityScreen> {
   }
 
   // Track the progress towards achievements for each game
-  void _progressEachGame(GameStatistics game) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final currentUser = userProvider.user;
-
-    if (currentUser == null) {
-      return;
+  void _progressEachGame(UserStatsInGame game) {
+    // Now you can track the user's progress in each game
+    for (final stats in games) {
+      print(
+          "Old Score: ${user!.totalScore - stats.player.score} New Score: ${user!.totalScore}");
+      print(
+          "Old Misses: ${user!.totalMisses - stats.player.misses} New Misses: ${user!.totalMisses}");
+      print(
+          "Old Airballs: ${user!.totalAirballs - stats.player.airballs} New Airballs: ${user!.totalAirballs}");
+      // Track the user's progress in this game
+      // ...
     }
-    if (game.participants.contains(currentUser.id)) {
-      // User participated in this game
-      final userStats = game.team1Players
-          .where((player) => player.user?.id == currentUser.id)
-          .map((player) => UserStatsInGame(date: game.date, player: player))
-          .toList();
-      userStats.addAll(game.team2Players
-          .where((player) => player.user?.id == currentUser.id)
-          .map((player) => UserStatsInGame(date: game.date, player: player))
-          .toList());
-
-      // Now you can track the user's progress in each game
-      for (final stats in userStats) {
-        print("Old Score: ${currentUser.totalScore - stats.player.score} New Score: ${currentUser.totalScore}");
-        print("Old Misses: ${currentUser.totalMisses - stats.player.misses} New Misses: ${currentUser.totalMisses}");
-        print("Old Airballs: ${currentUser.totalAirballs - stats.player.airballs} New Airballs: ${currentUser.totalAirballs}");
-        // Track the user's progress in this game
-        // ...
-      }
-    }
-
-
   }
 
   @override
@@ -105,7 +92,7 @@ class ActivityScreenState extends State<ActivityScreen> {
     );
   }
 
-  Widget _buildGameCard(GameStatistics game, int index) {
+  Widget _buildGameCard(UserStatsInGame game, int index) {
     return Card(
       color: Colors.amber.withOpacity(0.2),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
