@@ -55,6 +55,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       barrierDismissible: true,
       builder: (BuildContext ctx) {
         return AlertDialog(
+          backgroundColor: Colors.amberAccent,
           title: const Text('Add Friend'),
           content: _buildAddFriendDialogContent(controller, userProvider),
           actions: _buildAddFriendDialogActions(controller, userProvider),
@@ -292,17 +293,49 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           itemCount: friends.length,
           itemBuilder: (ctx, index) {
             final friend = friends[index];
-            return ListTile(
-              leading: _buildFriendAvatar(friend),
-              title: Text(
-                friend.username,
-                style: const TextStyle(color: Colors.white),
+            return Container(
+              margin: const EdgeInsets.symmetric(
+                  vertical: 4), // Add space between items
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color:
+                      Colors.grey.withOpacity(0.5), // Semi-transparent border
+                  width: 0.5,
+                ),
+                borderRadius:
+                    BorderRadius.circular(8), // Optional rounded corners
               ),
-              subtitle: Text(
-                'Total Score: ${friend.totalScore}',
-                style: const TextStyle(color: Colors.grey),
+              child: ListTile(
+                leading: _buildFriendAvatar(friend),
+                title: Text(
+                  friend.username,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                subtitle: Text(
+                  'Title: ${friend.title}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                trailing: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'last seen',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'X',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () => _showComparisonScreen(friend),
               ),
-              onTap: () => _showComparisonScreen(friend),
             );
           },
         );

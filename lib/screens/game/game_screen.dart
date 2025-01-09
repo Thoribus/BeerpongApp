@@ -797,34 +797,28 @@ class GameScreenState extends State<GameScreen> {
                   // Player names
                   Expanded(
                     flex: 1,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Left side
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (currentTeam.currentPlayers.isNotEmpty)
-                              _buildPlayerName(currentTeam.currentPlayers[0]),
-                            if (currentTeam.currentPlayers.length > 1)
-                              _buildPlayerName(currentTeam.currentPlayers[1]),
-                          ],
-                        ),
-                        // Right side
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            if (currentTeam.currentPlayers.length > 2)
-                              _buildPlayerName(currentTeam.currentPlayers[2]),
-                            if (currentTeam.currentPlayers.length > 3)
-                              _buildPlayerName(currentTeam.currentPlayers[3]),
-                          ],
-                        ),
-                      ],
+                    child: GridView.builder(
+                      physics:
+                          const NeverScrollableScrollPhysics(), // Disable scrolling within the grid
+                      padding: const EdgeInsets.all(
+                          8.0), // Add padding around the grid
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // 2 columns
+                        mainAxisSpacing: 8.0, // Vertical spacing
+                        crossAxisSpacing: 8.0, // Horizontal spacing
+                        childAspectRatio:
+                            2.5, // Ensures cards have identical dimensions
+                      ),
+                      itemCount: currentTeam.currentPlayers.length
+                          .clamp(0, 4), // Max 4 players
+                      itemBuilder: (context, index) {
+                        return _buildPlayerName(
+                            currentTeam.currentPlayers[index]);
+                      },
                     ),
                   ),
+
                   const SizedBox(height: 10),
                 ],
               ),
@@ -892,14 +886,50 @@ class GameScreenState extends State<GameScreen> {
     });
   }
 
-  /// Builds a player name widget with consistent styling.
   Widget _buildPlayerName(Player player) {
-    return Text(
-      player.name,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(8.0), // Inner padding
+      decoration: BoxDecoration(
+        color: Colors.brown.shade600, // Background color for card
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.5), // Semi-transparent border
+          width: 0.5,
+        ),
+        borderRadius: BorderRadius.circular(8.0), // Rounded corners
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundImage: AssetImage(
+                'assets/avatars/cat.png'), // Replace with your image asset
+          ),
+          const SizedBox(width: 8.0), // Space between avatar and text
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  player.name.length > 13
+                      ? '${player.name.substring(0, 12)}...' // Truncate long names
+                      : player.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.0,
+                  ),
+                  overflow: TextOverflow.ellipsis, // Handles very long names
+                ),
+                const SizedBox(height: 4.0),
+                Text(
+                  'Level: 1', // Dummy level
+                  style: const TextStyle(color: Colors.grey, fontSize: 12.0),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
