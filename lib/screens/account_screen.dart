@@ -1,3 +1,4 @@
+import 'package:beerpongapp/screens/activity_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -70,7 +71,7 @@ class AccountScreenState extends State<AccountScreen>
                     children: [
                       PersonalStatisticsScreen(user: user!),
                       AchievementsScreen(user: user!),
-                      _buildActivityScreen(),
+                      ActivityScreen(),
                     ],
                   ),
                 ),

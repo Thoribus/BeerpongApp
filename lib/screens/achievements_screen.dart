@@ -10,6 +10,7 @@ class CustomDialog extends StatelessWidget {
   final int stageProgress; // Current progress for the stage
 
   const CustomDialog({
+    super.key,
     required this.title,
     required this.description,
     required this.actions,
@@ -26,7 +27,7 @@ class CustomDialog extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          image: DecorationImage(
+          image: const DecorationImage(
             image: AssetImage("assets/background_achievement.png"),
             fit: BoxFit.fill,
           ),
