@@ -83,7 +83,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
             _buildSectionTitle("Game History"),
             _buildCard(
               child: FutureBuilder<List<UserStatsInGame>>(
-                future: FirestoreService().retrieveUserStatsWithDate(),
+                future: FirestoreService().retrieveUserStatsWithDate(user),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());

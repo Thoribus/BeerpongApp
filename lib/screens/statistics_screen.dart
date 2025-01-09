@@ -1,7 +1,10 @@
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:provider/provider.dart';
 import '../models/game_statistics.dart';
 import '../models/player.dart';
 
@@ -16,16 +19,19 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   List<GameStatistics> games = [];
   bool isLoading = true;
   bool hasError = false;
+  late User user;
 
   @override
   void initState() {
     super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    user = userProvider.user!;
     _retrieveGames();
   }
 
   Future<void> _retrieveGames() async {
     try {
-      games = await FirestoreService().retrieveGames();
+      games = await FirestoreService().retrieveGames(user);
     } catch (e) {
       hasError = true;
     } finally {

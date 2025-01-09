@@ -1,6 +1,5 @@
 import 'package:beerpongapp/models/team.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/player.dart';
@@ -110,7 +109,7 @@ class FirestoreService {
     String gameId, {
     required Team team1,
     required Team team2,
-    String? winner,
+    required String winner,
     // any other fields you need to update
   }) async {
     await _db.collection('games').doc(gameId).update({
@@ -160,14 +159,11 @@ class FirestoreService {
   }
 
   /// Retrieve games from Firestore for the current user (descending timestamp).
-  Future<List<GameStatistics>> retrieveGames() async {
-    final user = auth.FirebaseAuth.instance.currentUser;
-    if (user == null) return [];
-
+  Future<List<GameStatistics>> retrieveGames(User user) async {
     try {
       final snapshot = await _db
           .collection('games')
-          .where('participants', arrayContains: user.uid)
+          .where('participants', arrayContains: user.id)
           .orderBy('timestamp', descending: true)
           .get();
 
@@ -181,14 +177,11 @@ class FirestoreService {
   }
 
   /// Retrieve (date, player's stats) for the current user across all games.
-  Future<List<UserStatsInGame>> retrieveUserStatsWithDate() async {
-    final currentUser = auth.FirebaseAuth.instance.currentUser;
-    if (currentUser == null) return [];
-
+  Future<List<UserStatsInGame>> retrieveUserStatsWithDate(User user) async {
     try {
       final snapshot = await _db
           .collection('games')
-          .where('participants', arrayContains: currentUser.uid)
+          .where('participants', arrayContains: user.id)
           .orderBy('timestamp', descending: true)
           .get();
 
@@ -201,7 +194,7 @@ class FirestoreService {
       for (final game in allGames) {
         final allPlayersInGame = [...game.team1Players, ...game.team2Players];
         final matchingPlayer = allPlayersInGame.firstWhere(
-          (p) => p.user?.id == currentUser.uid,
+          (p) => p.user?.id == user.id,
           orElse: () => Player(name: 'notFound'),
         );
 
@@ -367,5 +360,7 @@ class FirestoreService {
       );
     }).toList();
   }
+
+  getLastGame(String id) {}
   //endregion
 }
