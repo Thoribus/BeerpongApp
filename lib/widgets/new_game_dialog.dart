@@ -408,7 +408,6 @@ class NewGameDialogState extends State<NewGameDialog> {
           _invitationStatuses[index] = status;
         });
       }
-
     });
   }
 
@@ -470,12 +469,22 @@ class NewGameDialogState extends State<NewGameDialog> {
             onPressed: () => _selectFromFriendList(i),
           ),
           if (_invitationStatuses.containsKey(i))
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Text(
-                _buildStatusText(_invitationStatuses[i]!),
-                style: const TextStyle(color: Colors.amber),
-              ),
+            Row(
+              children: [
+                const SizedBox(width: 8),
+                Text(
+                  _buildStatusText(_invitationStatuses[i]!),
+                  style: const TextStyle(color: Colors.amber),
+                ),
+
+                // If it's pending, we show an "X" button to cancel
+                if (_invitationStatuses[i] == 'pending')
+                  IconButton(
+                    icon: const Icon(Icons.cancel, color: Colors.red),
+                    onPressed: () => _cancelInvitation(i),
+                    tooltip: 'Cancel Invitation',
+                  ),
+              ],
             ),
         ],
       ),
@@ -488,5 +497,27 @@ class NewGameDialogState extends State<NewGameDialog> {
     if (status == 'accepted') return 'accepted!';
     if (status == 'declined') return 'declined';
     return status;
+  }
+
+  void _cancelInvitation(int rowIndex) async {
+    final docId = _invitationDocIds[rowIndex];
+    if (docId!.isEmpty) return;
+
+    // 1) Delete the doc from Firestore
+    await FirestoreService().deleteGameInvitation(docId);
+
+    // 2) Reset local state
+    setState(() {
+      _invitationDocIds.remove(rowIndex);
+      _invitationStatuses.remove(rowIndex);
+      _controllers[rowIndex]
+          .clear(); // optional: if you want to revert text field
+      _friendMap.remove(rowIndex);
+    });
+
+    // 3) Optionally, show a snack bar
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Invitation canceled')),
+    );
   }
 }
