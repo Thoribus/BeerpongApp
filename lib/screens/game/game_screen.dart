@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/screens/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -646,12 +647,21 @@ class GameScreenState extends State<GameScreen> {
       team2: team2.players,
       winner: winner,
     );
+
+    // Give new titles to players if they unlocked any
+    for (final user in updatedUsers) {
+      AchievementsScreen.checkAchievements(user);
+    }
+
+
     FirestoreService()
         .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
 
+    // Delete all game invitations
     for (String invitationId in invitations) {
       FirestoreService().deleteGameInvitation(invitationId);
     }
+
 
     // Update current user in UserProvider if found in updatedUsers
     final userExists = updatedUsers.any((u) => u.id == userProvider.user?.id);
