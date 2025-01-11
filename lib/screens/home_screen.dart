@@ -1,6 +1,9 @@
 import 'package:beerpongapp/models/invitation.dart';
+import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
+import 'package:beerpongapp/screens/live_game_stats_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
+  bool _hasInvitations = false;
 
   @override
   void initState() {
@@ -36,21 +40,70 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkPendingInvitations() async {
+    // If you already have a saved game, don't check for invitations.
+    // Finish the game first.
+    if (_hasSavedGame) return;
+
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.user;
 
     if (currentUser == null) return;
 
     List<Invitation> invites =
-        await FirestoreService().getGameInvitations(currentUser.id);
+        await FirestoreService().getAllInvitations(currentUser.id);
 
     if (invites.isNotEmpty) {
-      _showInvitationDialog(invites.first);
+      for (Invitation invite in invites) {
+        if (invite.status == "pending") {
+          _showInvitationDialog(invites.first);
+          return;
+        }
+        else if (invite.status == "accepted") {
+          // Listen for when the game starts
+          _listenToGameStart(invite.id);
+          return;
+        }
+      }
+      setState(() {
+        _hasInvitations = true;
+      });
+    } else {
+      setState(() {
+        _hasInvitations = false;
+      });
     }
   }
 
+  // Listen for when the invitation has a gameId so we can show a stats screen for each user
+  Future<void> _listenToGameStart(String docId) async {
+    FirebaseFirestore.instance
+        .collection('invitations')
+        .doc(docId)
+        .snapshots()
+        .listen((snapshot) async {
+      if (!snapshot.exists) {
+        // Possibly the doc was deleted
+        return;
+      }
+      final data = snapshot.data()!;
+      final gameId = data['gameId'];
+      
+      if (gameId != '') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LiveGameStatsScreen(
+              gameId: gameId,
+            ),
+          ),
+        );
+      }
+    });
+  }
+
   /// Shows a popup with Accept/Decline for the given invitation.
-  void _showInvitationDialog(Invitation invite) {
+  void _showInvitationDialog(Invitation invite) async {
+    User? fromUser = await FirestoreService().getUser(invite.fromUserId);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -58,7 +111,7 @@ class HomeScreenState extends State<HomeScreen> {
         return AlertDialog(
           title: const Text("Game Invitation"),
           content: Text(
-            "You've been invited by user ${invite.fromUserId} to join "
+            "You've been invited by user ${fromUser?.username} to join "
             "Team ${invite.teamNumber}. "
             "Do you accept?",
           ),
@@ -139,7 +192,8 @@ class HomeScreenState extends State<HomeScreen> {
               ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                await GamePersistence.clearGameState();
+                // Also Delete the saved game in the database
+                await GamePersistence.clearGameState(true);
                 setState(() {
                   _hasSavedGame = false;
                 });
@@ -221,11 +275,12 @@ class HomeScreenState extends State<HomeScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const GameScreen(
-                            title: 'Resume Game',
+                            id: 'Resume Game',
                             players1: [],
                             players2: [],
                             selectedRules: {},
                             startingTeam: true,
+                            invitations: [],
                           ),
                         ),
                       );
@@ -237,7 +292,8 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
+                    backgroundColor:
+                        _hasInvitations ? Colors.grey : Colors.amber,
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 24),
                     shape: const RoundedRectangleBorder(
@@ -245,6 +301,16 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   onPressed: () {
+                    if (_hasInvitations) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'You are currently in a game.',
+                          ),
+                        ),
+                      );
+                      //return;
+                    }
                     if (_hasSavedGame) {
                       _showNewGameConfirmationDialog(context);
                     } else {

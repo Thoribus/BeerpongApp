@@ -1,3 +1,4 @@
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/user.dart';
 
@@ -10,6 +11,7 @@ class CustomDialog extends StatelessWidget {
   final int stageProgress; // Current progress for the stage
 
   const CustomDialog({
+    super.key,
     required this.title,
     required this.description,
     required this.actions,
@@ -26,7 +28,7 @@ class CustomDialog extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          image: DecorationImage(
+          image: const DecorationImage(
             image: AssetImage("assets/background_achievement.png"),
             fit: BoxFit.fill,
           ),
@@ -144,6 +146,106 @@ class AchievementsScreen extends StatelessWidget {
 
   const AchievementsScreen({super.key, required this.user});
 
+  static void checkAchievements(User user) async {
+    bool changed = false;
+    List<Map<String, Object>> achievements = getAchievements(user);
+
+    for (var ach in achievements) {
+      List<int> stages = ach['stages'] as List<int>;
+      int stage1Threshold = stages[1];
+      int currentProgress = ach['currentProgress'] as int;
+      String titleToGrant = ach['titleToGrant'] as String;
+
+      // If user has not unlocked this title yet, check if they meet stage1 threshold
+      if (currentProgress >= stage1Threshold &&
+          !user.unlockedTitles.contains(titleToGrant)) {
+        user.unlockedTitles.add(titleToGrant);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await FirestoreService().updateUser(user);
+    }
+  }
+
+  static List<Map<String, Object>> getAchievements(User user) {
+    List<Map<String, Object>> achievements = [
+      {
+        'imagePath': "ach_wins.png",
+        'title': 'Wins',
+        'titleToGrant': 'Beginner Winner',
+        'currentProgress': user.wins,
+        'stages': [0, 25, 50, 100], // Bronze, Silver, Amber, Violet
+      },
+      {
+        'imagePath': "ach_lost.png",
+        'title': 'Losses',
+        'titleToGrant': 'Unlucky Warrior',
+        'currentProgress': user.losses,
+        'stages': [0, 25, 50, 100],
+      },
+      {
+        'imagePath': "ach_friends.png",
+        'title': 'Friendships',
+        'titleToGrant': 'Social Butterfly',
+        'currentProgress': user.friends.length,
+        'stages': [0, 5, 15, 20],
+      },
+      {
+        'imagePath': "ach_champion.png",
+        'title': 'Champion',
+        'titleToGrant': 'Heavy hitter',
+        'currentProgress': user.totalScore.round(),
+        'stages': [0, 20, 100, 1000],
+      },
+      {
+        'imagePath': "ach_loses.png",
+        'title': 'Misses',
+        'titleToGrant': 'Clumsy',
+        'currentProgress': user.totalMisses,
+        'stages': [0, 25, 50, 1000],
+      },
+      {
+        'imagePath': "ach_airball.png",
+        'title': 'Airballs',
+        'titleToGrant': 'Airballer',
+        'currentProgress': user.totalAirballs,
+        'stages': [0, 10, 20, 1000],
+      },
+    ];
+    return achievements;
+  }
+
+  /// Given a 'titleToGrant' like "Heavy hitter", find the corresponding
+  /// achievements row. E.g., row with 'titleToGrant' == "Heavy hitter".
+  static Map<String, Object>? findAchievementForTitle(String titleToGrant, User user) {
+    // Build the achievements list for this user
+    final achievements = AchievementsScreen.getAchievements(user);
+
+    // Find the row that has 'titleToGrant' == the passed-in string
+    for (var ach in achievements) {
+      if (ach['titleToGrant'] == titleToGrant) {
+        return ach;
+      }
+    }
+    return null; // Not found
+  }
+
+  /// Then you can compute the color for that title
+  static Color getColorForUnlockedTitle(String titleToGrant, User user) {
+    final ach = findAchievementForTitle(titleToGrant, user);
+    if (ach == null) {
+      return Colors.grey; // If for some reason we can't find it
+    }
+
+    // stage logic:
+    final currentProgress = ach['currentProgress'] as int;
+    final stages = ach['stages'] as List<int>;
+    final stageIndex = _getCurrentStageIndex(currentProgress, stages);
+    return _getStageColor(stageIndex);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -217,45 +319,7 @@ class AchievementsScreen extends StatelessWidget {
   }
 
   Widget _buildAchievementsGrid(BuildContext context) {
-    final achievements = [
-      {
-        'imagePath': "ach_wins.png",
-        'title': 'Wins',
-        'currentProgress': user.wins,
-        'stages': [0, 25, 50, 100], // Bronze, Silver, Amber, Violet
-      },
-      {
-        'imagePath': "ach_lost.png",
-        'title': 'Losses',
-        'currentProgress': user.losses,
-        'stages': [0, 25, 50, 100],
-      },
-      {
-        'imagePath': "ach_friends.png",
-        'title': 'Friendships',
-        'currentProgress': 10,
-        'stages': [0, 5, 15, 20],
-      },
-      {
-        'imagePath': "ach_champion.png",
-        'title': 'Champion',
-        'currentProgress': user.totalScore.round(),
-        'stages': [0, 20, 100, 1000],
-      },
-      {
-        'imagePath': "ach_loses.png",
-        'title': 'Misses',
-        'currentProgress': user.totalMisses,
-        'stages': [0, 25, 50, 1000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000],
-      },
-    ];
-
+    List<Map<String, Object>> achievements = getAchievements(user);
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -359,7 +423,7 @@ class AchievementsScreen extends StatelessWidget {
     );
   }
 
-  int _getCurrentStageIndex(int currentProgress, List<int> stages) {
+  static int _getCurrentStageIndex(int currentProgress, List<int> stages) {
     // Return the current stage index based on progress
     for (int i = stages.length - 1; i >= 0; i--) {
       if (currentProgress >= stages[i]) {
@@ -369,7 +433,7 @@ class AchievementsScreen extends StatelessWidget {
     return 0; // Default to first stage
   }
 
-  Color _getStageColor(int stageIndex) {
+  static Color _getStageColor(int stageIndex) {
     // Return the appropriate color for the stage
     switch (stageIndex) {
       case 3:

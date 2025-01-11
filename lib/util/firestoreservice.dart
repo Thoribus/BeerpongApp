@@ -1,5 +1,5 @@
+import 'package:beerpongapp/models/team.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/player.dart';
@@ -69,36 +69,64 @@ class FirestoreService {
     required String winner,
   }) async {
     final updatedUsers = <User>[];
-    try {
-      // 1) Create participants list
-      final participants = <dynamic>{
-        ...team1.map((p) => p.user?.id ?? ''),
-        ...team2.map((p) => p.user?.id ?? ''),
-      }.toList(); // remove duplicates
+    for (final player in [...team1, ...team2]) {
+      if (player.user == null) continue;
+      final isWinner = (winner == 'Team 1' && team1.contains(player)) ||
+          (winner == 'Team 2' && team2.contains(player));
 
-      // 2) Add the game doc
-      await _db.collection('games').add({
-        'team1': team1.map((player) => player.toJson()).toList(),
-        'team2': team2.map((player) => player.toJson()).toList(),
-        'winner': winner,
-        'timestamp': FieldValue.serverTimestamp(),
-        'participants': participants,
-      });
-
-      // 3) Update each player's user stats
-      for (final player in [...team1, ...team2]) {
-        if (player.user == null) continue;
-        final isWinner = (winner == 'Team 1' && team1.contains(player)) ||
-            (winner == 'Team 2' && team2.contains(player));
-
-        final updatedUser = _mapPlayerToUser(player, isWinner);
-        await updateUser(updatedUser);
-        updatedUsers.add(updatedUser);
-      }
-    } catch (e) {
-      print('Error saving game: $e');
+      final updatedUser = _mapPlayerToUser(player, isWinner);
+      await updateUser(updatedUser);
+      updatedUsers.add(updatedUser);
     }
     return updatedUsers;
+  }
+
+  // Create an empty "games" doc with default or placeholder fields
+  Future<String> createEmptyGameDoc({
+    required Team team1,
+    required Team team2,
+    List<String> invitations = const [],
+  }) async {
+    final docRef = await _db.collection('games').add({
+      'timestamp': FieldValue.serverTimestamp(),
+      'winner': '',
+      'team1': team1.toJson(),
+      'team2': team2.toJson(),
+      'participants': [
+        // Maybe gather user IDs from team1+team2 if they're actual accounts
+        ...team1.players.where((p) => p.user != null).map((p) => p.user!.id),
+        ...team2.players.where((p) => p.user != null).map((p) => p.user!.id),
+      ],
+      'invitations': [
+        ...invitations,
+      ],
+    });
+    return docRef.id; // Return the new document ID
+  }
+
+  // Update the game doc with new team arrays or other fields
+  Future<void> updateGameDoc(
+    String gameId, {
+    required Team team1,
+    required Team team2,
+    required String winner,
+    // any other fields you need to update
+  }) async {
+    await _db.collection('games').doc(gameId).update({
+      'team1': team1.toJson(),
+      'team2': team2.toJson(),
+      'winner': winner,
+    });
+  }
+
+  /// Returns a stream of game document snapshots
+  Stream<DocumentSnapshot> getGameDocStream(String gameId) {
+    return _db.collection('games').doc(gameId).snapshots();
+  }
+
+  // Delete the game doc if user leaves
+  Future<void> deleteGameDoc(String gameId) async {
+    await _db.collection('games').doc(gameId).delete();
   }
 
   /// Helper to copy relevant stats from Player => existing User, incrementing them.
@@ -131,14 +159,11 @@ class FirestoreService {
   }
 
   /// Retrieve games from Firestore for the current user (descending timestamp).
-  Future<List<GameStatistics>> retrieveGames() async {
-    final user = auth.FirebaseAuth.instance.currentUser;
-    if (user == null) return [];
-
+  Future<List<GameStatistics>> retrieveGames(User user) async {
     try {
       final snapshot = await _db
           .collection('games')
-          .where('participants', arrayContains: user.uid)
+          .where('participants', arrayContains: user.id)
           .orderBy('timestamp', descending: true)
           .get();
 
@@ -152,14 +177,11 @@ class FirestoreService {
   }
 
   /// Retrieve (date, player's stats) for the current user across all games.
-  Future<List<UserStatsInGame>> retrieveUserStatsWithDate() async {
-    final currentUser = auth.FirebaseAuth.instance.currentUser;
-    if (currentUser == null) return [];
-
+  Future<List<UserStatsInGame>> retrieveUserStatsWithDate(User user) async {
     try {
       final snapshot = await _db
           .collection('games')
-          .where('participants', arrayContains: currentUser.uid)
+          .where('participants', arrayContains: user.id)
           .orderBy('timestamp', descending: true)
           .get();
 
@@ -172,7 +194,7 @@ class FirestoreService {
       for (final game in allGames) {
         final allPlayersInGame = [...game.team1Players, ...game.team2Players];
         final matchingPlayer = allPlayersInGame.firstWhere(
-          (p) => p.user?.id == currentUser.uid,
+          (p) => p.user?.id == user.id,
           orElse: () => Player(name: 'notFound'),
         );
 
@@ -252,6 +274,7 @@ class FirestoreService {
       'playerIndex': playerIndex,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
+      'gameId': '',
     });
     return docRef.id;
   }
@@ -260,6 +283,13 @@ class FirestoreService {
       String invitationId, String newStatus) async {
     await _db.collection('invitations').doc(invitationId).update({
       'status': newStatus,
+    });
+  }
+
+  Future<void> updateInvitationGameId(
+      String invitationId, String gameId) async {
+    await _db.collection('invitations').doc(invitationId).update({
+      'gameId': gameId,
     });
   }
 
@@ -284,8 +314,53 @@ class FirestoreService {
         playerIndex: data['playerIndex'],
         status: data['status'],
         createdAt: data['createdAt'],
+        gameId: data['gameId'],
       );
     }).toList();
   }
+
+  Future<List<Invitation>> getGameInvitationsByGameId(String gameId) async {
+    final snapshot = await _db
+        .collection('invitations')
+        .where('gameId', isEqualTo: gameId)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Invitation(
+        id: doc.id,
+        fromUserId: data['fromUserId'],
+        toUserId: data['toUserId'],
+        teamNumber: data['teamNumber'],
+        playerIndex: data['playerIndex'],
+        status: data['status'],
+        createdAt: data['createdAt'],
+        gameId: data['gameId'],
+      );
+    }).toList();
+  }
+
+  Future<List<Invitation>> getAllInvitations(String userId) async {
+    final snapshot = await _db
+        .collection('invitations')
+        .where('toUserId', isEqualTo: userId)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      return Invitation(
+        id: doc.id,
+        fromUserId: data['fromUserId'],
+        toUserId: data['toUserId'],
+        teamNumber: data['teamNumber'],
+        playerIndex: data['playerIndex'],
+        status: data['status'],
+        createdAt: data['createdAt'],
+        gameId: data['gameId'],
+      );
+    }).toList();
+  }
+
+  getLastGame(String id) {}
   //endregion
 }

@@ -8,6 +8,7 @@ class Invitation {
   final int playerIndex;
   final String status;
   final Timestamp createdAt;
+  final String gameId;
 
   Invitation({
     required this.id,
@@ -17,6 +18,7 @@ class Invitation {
     required this.playerIndex,
     required this.status,
     required this.createdAt,
+    required this.gameId,
   });
 
   factory Invitation.fromMap(Map<String, dynamic> data, String documentId) {
@@ -26,6 +28,7 @@ class Invitation {
     final playerIndex = data['playerIndex'];
     final status = data['status'];
     final createdAt = data['createdAt'];
+    final gameId = data['gameId'];
 
     return Invitation(
       id: documentId,
@@ -35,6 +38,7 @@ class Invitation {
       playerIndex: playerIndex,
       status: status,
       createdAt: createdAt,
+      gameId: gameId,
     );
   }
 }

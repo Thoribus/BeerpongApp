@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 
 /// A class representing a cup in the game.
@@ -67,17 +66,5 @@ class Cup {
       isVisible: json['isVisible'],
       color: Color(json['color']), 
     );
-  }
-
-  /// Encodes a list of Cup instances into JSON string.
-  static String encodeList(List<Cup> cups) {
-    return json.encode(cups.map((cup) => cup.toJson()).toList());
-  }
-
-  /// Decodes a list of Cup instances from a JSON string.
-  static List<Cup> decodeList(String jsonString) {
-    return (json.decode(jsonString) as List<dynamic>)
-        .map((map) => Cup.fromJson(map))
-        .toList();
   }
 }

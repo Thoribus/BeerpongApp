@@ -1,3 +1,4 @@
+import 'package:beerpongapp/screens/activity_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -70,12 +71,62 @@ class AccountScreenState extends State<AccountScreen>
                     children: [
                       PersonalStatisticsScreen(user: user!),
                       AchievementsScreen(user: user!),
-                      _buildActivityScreen(),
+                      ActivityScreen(),
                     ],
                   ),
                 ),
               ],
             ),
+    );
+  }
+
+  void _showTitlePicker() {
+    final currentUser = user;
+    if (currentUser == null) return;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    if (currentUser.unlockedTitles.isEmpty) {
+      // They have no unlocked titles
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No unlocked titles yet')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black87,
+      builder: (BuildContext context) {
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              const Text(
+                'Choose a Title',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              const Divider(color: Colors.white70),
+              ...currentUser.unlockedTitles.map((titleToGrant) {
+                final color =
+                    AchievementsScreen.getColorForUnlockedTitle(titleToGrant, currentUser);
+                return ListTile(
+                  title: Text(
+                    titleToGrant,
+                    style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                  ),
+                  onTap: () {
+                    // Update the user’s active title
+                    final updatedUser =
+                        currentUser.copyWith(title: titleToGrant);
+                    userProvider.updateUser(updatedUser);
+                    Navigator.pop(context); // Close the sheet
+                  },
+                );
+              }).toList(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -147,14 +198,20 @@ class AccountScreenState extends State<AccountScreen>
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            currentUser.title.isNotEmpty
-                                ? currentUser.title
-                                : 'No Title Yet',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          GestureDetector(
+                            onTap: () => _showTitlePicker(),
+                            child: Text(
+                              currentUser.title.isNotEmpty
+                                  ? currentUser.title
+                                  : 'No Title Yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: currentUser.title.isNotEmpty
+                                    ? AchievementsScreen.getColorForUnlockedTitle(
+                                        currentUser.title, currentUser)
+                                    : Colors.white,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 4),

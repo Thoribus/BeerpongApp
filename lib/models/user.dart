@@ -23,6 +23,7 @@ class User {
   int wins;
   int losses;
   List<String> friends;
+  List<String> unlockedTitles;
 
   User({
     required this.id,
@@ -41,6 +42,7 @@ class User {
     this.wins = 0,
     this.losses = 0,
     this.friends = const [],
+    this.unlockedTitles = const [],
   });
 
   /// Convenience getter to compute the user's overall win rate.
@@ -58,7 +60,6 @@ class User {
       'title': title,
       'avatarKey': avatarKey,
       'backgroundKey': backgroundKey,
-
       'totalScore': totalScore,
       'totalMisses': totalMisses,
       'totalAirballs': totalAirballs,
@@ -70,6 +71,7 @@ class User {
       'wins': wins,
       'losses': losses,
       'friends': friends,
+      'unlockedTitles': unlockedTitles,
     };
   }
 
@@ -93,6 +95,7 @@ class User {
       wins: json['wins'] ?? 0,
       losses: json['losses'] ?? 0,
       friends: List<String>.from(json['friends'] ?? []),
+      unlockedTitles: List<String>.from(json['unlockedTitles'] ?? []),
     );
   }
 
@@ -113,6 +116,7 @@ class User {
     int? wins,
     int? losses,
     List<String>? friends,
+    List<String>? unlockedTitles,
   }) {
     return User(
       id: id, // The ID never changes in this example
@@ -120,7 +124,6 @@ class User {
       title: title ?? this.title,
       avatarKey: avatarKey ?? this.avatarKey,
       backgroundKey: backgroundKey ?? this.backgroundKey,
-
       totalScore: totalScore ?? this.totalScore,
       totalMisses: totalMisses ?? this.totalMisses,
       totalAirballs: totalAirballs ?? this.totalAirballs,
@@ -132,6 +135,7 @@ class User {
       wins: wins ?? this.wins,
       losses: losses ?? this.losses,
       friends: friends ?? this.friends,
+      unlockedTitles: unlockedTitles ?? this.unlockedTitles,
     );
   }
 }

@@ -1,8 +1,13 @@
+import 'dart:async';
+
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/screens/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -16,18 +21,20 @@ import '../../models/team.dart';
 class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
-    required this.title,
+    required this.id,
     required this.players1,
     required this.players2,
     required this.selectedRules,
     required this.startingTeam,
+    required this.invitations,
   });
 
-  final String title;
+  final String id;
   final List<Player> players1;
   final List<Player> players2;
   final Map<String, bool> selectedRules;
   final bool startingTeam;
+  final List<String> invitations;
 
   @override
   State<GameScreen> createState() => GameScreenState();
@@ -35,14 +42,17 @@ class GameScreen extends StatefulWidget {
 
 class GameScreenState extends State<GameScreen> {
   //region ----- Game/Team/Player State -----
-  late Map<String, bool> selectedRules = widget.selectedRules;
+  late String id;
+  late Map<String, bool> selectedRules;
+  late List<String> invitations;
 
   late Team team1;
   late Team team2;
   late Team currentTeam;
 
   bool gameEnded = false;
-  late bool isTeamOneTurn = widget.startingTeam;
+  late bool isTeamOneTurn;
+  String winner = '';
 
   // Island shot logic
   bool islandShotActive = false;
@@ -69,10 +79,13 @@ class GameScreenState extends State<GameScreen> {
   void dispose() {
     if (!gameEnded) {
       GamePersistence.saveGameState(
+          id: id,
           team1: team1,
           team2: team2,
           isTeamOneTurn: isTeamOneTurn,
-          islandShotActive: islandShotActive); // Save if the game hasn't ended
+          islandShotActive: islandShotActive,
+          invitations: invitations,
+          selectedRules: selectedRules); // Save if the game hasn't ended
     }
     _pageController.dispose();
     super.dispose();
@@ -94,6 +107,7 @@ class GameScreenState extends State<GameScreen> {
     if (map == null) {
       // No saved data -> init teams from scratch
       setState(() {
+        id = widget.id;
         team1 = Team(
           color: Colors.blue,
           players: widget.players1,
@@ -106,17 +120,23 @@ class GameScreenState extends State<GameScreen> {
           cups: List.generate(
               10, (index) => Cup(index: index, color: Colors.red)),
         );
+        isTeamOneTurn = widget.startingTeam;
         currentTeam = isTeamOneTurn ? team1 : team2;
         currentTeam.currentPlayers = currentTeam.rotatePlayers();
+        invitations = widget.invitations;
+        selectedRules = widget.selectedRules;
       });
       return;
     }
 
     setState(() {
+      id = map['id'];
       team1 = Team.fromJson(map['team1']);
       team2 = Team.fromJson(map['team2']);
       isTeamOneTurn = map['isTeamOneTurn'] ?? false;
       islandShotActive = map['islandShotActive'] ?? false;
+      invitations = List<String>.from(map['invitations']);
+      selectedRules = Map<String, bool>.from(map['selectedRules']);
 
       // Current team
       currentTeam = isTeamOneTurn ? team1 : team2;
@@ -127,6 +147,12 @@ class GameScreenState extends State<GameScreen> {
     });
   }
   //endregion
+
+  /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
+  String _mapAvatarKeyToAsset(String avatarKey) {
+    if (avatarKey.isEmpty) return '';
+    return 'assets/avatars/$avatarKey.svg';
+  }
 
   //region ----- Core Game Logic Methods -----
   /// Called when a cup is hit. Checks if the cup is already green or not.
@@ -404,7 +430,7 @@ class GameScreenState extends State<GameScreen> {
     return sqrt(pow(pos1.dx - pos2.dx, 2) + pow(pos1.dy - pos2.dy, 2));
   }
 
-  double _calculateHitRate(double score, int throws) {
+  double _calculateHitRate(num score, int throws) {
     if (throws == 0) return 0.0;
     return (score / throws) * 100.0;
   }
@@ -453,12 +479,21 @@ class GameScreenState extends State<GameScreen> {
     }
 
     // Now the game truly ends
-    setState(() => gameEnded = true);
+    setState(() {
+      gameEnded = true;
+      final blueTeamWin = team1.cups
+          .every((cup) => !cup.isVisible || cup.color == Colors.green);
+      winner = blueTeamWin ? 'Team 1' : 'Team 2';
+    });
     _setPlayerHitLastCup(player);
 
-    await GamePersistence.clearGameState();
-    await _saveGameStatistics();
+    await GamePersistence.clearGameState(false);
+    User oldUser = await _saveGameStatistics();
+
+    // Instead of showGameEndDialog, let’s push GameHighlightsScreen
     await DialogHelpers.showGameEndDialog(this, currentTeam.players);
+
+    //await DialogHelpers.showGameEndDialog(this, currentTeam.players);
   }
 
   Future<bool> _handleNachwurf(int cupIndex) async {
@@ -556,7 +591,7 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Undo/Redo Stack -----
-  void saveCurrentState() {
+  void saveCurrentState() async {
     _actionStack.add({
       'team1': team1.clone(),
       'team2': team2.clone(),
@@ -564,6 +599,9 @@ class GameScreenState extends State<GameScreen> {
       'islandShotActive': islandShotActive,
       'currentIslandShooter': currentIslandShooter,
     });
+
+    await FirestoreService()
+        .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
   }
 
   void _undoLastAction() {
@@ -601,19 +639,29 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Saving Stats to Firestore -----
-  Future<void> _saveGameStatistics() async {
-    // We determine the winning team. If Team1’s cups are all green => Team2 wins, else Team1.
-    final isBlueTeamAllGreen =
-        team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
-    final bool blueTeamWin =
-        !isBlueTeamAllGreen; // If Team1 is all green => Team2 is winner
-
+  Future<User> _saveGameStatistics() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final User oldUser = userProvider.user!;
     final updatedUsers = await FirestoreService().saveGame(
       team1: team1.players,
       team2: team2.players,
-      winner: blueTeamWin ? "Team 1" : "Team 2",
+      winner: winner,
     );
+
+    // Give new titles to players if they unlocked any
+    for (final user in updatedUsers) {
+      AchievementsScreen.checkAchievements(user);
+    }
+
+
+    FirestoreService()
+        .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
+
+    // Delete all game invitations
+    for (String invitationId in invitations) {
+      FirestoreService().deleteGameInvitation(invitationId);
+    }
+
 
     // Update current user in UserProvider if found in updatedUsers
     final userExists = updatedUsers.any((u) => u.id == userProvider.user?.id);
@@ -622,6 +670,8 @@ class GameScreenState extends State<GameScreen> {
           updatedUsers.firstWhere((u) => u.id == userProvider.user?.id);
       userProvider.updateUser(currentUser);
     }
+
+    return oldUser;
   }
   //endregion
 
@@ -708,6 +758,14 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
+  void onCupTap(int cupIndex) {
+    if (islandShotActive) {
+      handleIslandShot(cupIndex);
+    } else {
+      showPlayerSelectionDialog(context, cupIndex);
+    }
+  }
+
   /// The main “Game Table” page: cups layout, players, special rules.
   Widget _buildCurrentGamePage() {
     return LayoutBuilder(builder: (context, constraints) {
@@ -761,7 +819,6 @@ class GameScreenState extends State<GameScreen> {
                       },
                     ),
                   ),
-
                   const SizedBox(height: 10),
                 ],
               ),
@@ -829,6 +886,7 @@ class GameScreenState extends State<GameScreen> {
     });
   }
 
+  /// Builds a player name widget with consistent styling.
   Widget _buildPlayerName(Player player) {
     return Container(
       padding: const EdgeInsets.all(8.0), // Inner padding
@@ -842,11 +900,24 @@ class GameScreenState extends State<GameScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundImage: AssetImage(
-                'assets/avatars/cat.png'), // Replace with your image asset
-          ),
+          player.user == null
+              ? const CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white24,
+                  child: Icon(Icons.person, color: Colors.white),
+                )
+              : CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.white24,
+                  child: ClipOval(
+                    child: SvgPicture.asset(
+                      _mapAvatarKeyToAsset(player.user!.avatarKey),
+                      fit: BoxFit.cover,
+                      width: 20 * 2,
+                      height: 20 * 2,
+                    ),
+                  ),
+                ),
           const SizedBox(width: 8.0), // Space between avatar and text
           Expanded(
             child: Column(
@@ -865,9 +936,9 @@ class GameScreenState extends State<GameScreen> {
                   overflow: TextOverflow.ellipsis, // Handles very long names
                 ),
                 const SizedBox(height: 4.0),
-                Text(
+                const Text(
                   'Level: 1', // Dummy level
-                  style: const TextStyle(color: Colors.grey, fontSize: 12.0),
+                  style: TextStyle(color: Colors.grey, fontSize: 12.0),
                 ),
               ],
             ),
