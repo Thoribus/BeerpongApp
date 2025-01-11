@@ -8,6 +8,7 @@ import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
+import 'package:beerpongapp/screens/lobby_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -160,14 +161,14 @@ class HomeScreenState extends State<HomeScreen> {
     return Consumer<UserProvider>(
       builder: (context, userProvider, child) {
         return Container(
-          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
           alignment: Alignment.centerLeft,
           child: Text(
             'Welcome Back, ${userProvider.user?.username ?? "User"}',
             style: const TextStyle(
-              color: Colors.black,
-              fontSize: 24,
+              color: Colors.white,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -268,43 +269,124 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _onReturnFromNextScreen() {
-    _checkSavedGame();
+  Widget _buildSvgBracket() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.amber,
+                    width: 4.0,
+                  ),
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16.0),
+                  child: SvgPicture.asset(
+                    'assets/home_animals.svg', // Adjust the path as needed
+                    height: 245.0,
+                    width: MediaQuery.of(context).size.width,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBracketExample() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "BEERPONG BATTLE",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LobbyScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "Spectate",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[850],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: const Text(
+                "No invitations.",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/amber_fullscreen_home.svg',
-              fit: BoxFit.cover,
-            ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildWelcomeText(context),
+              _buildGameButton(context),
+              _buildSvgBracket(),
+              _buildBracketExample(),
+            ],
           ),
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _buildWelcomeText(context),
-                const Spacer(),
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: <Widget>[
-                      _buildGameButton(context),
-                      const SizedBox(height: 60),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  void _onReturnFromNextScreen() {
+    _checkSavedGame();
   }
 }
