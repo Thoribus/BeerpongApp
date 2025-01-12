@@ -57,8 +57,7 @@ class HomeScreenState extends State<HomeScreen> {
         if (invite.status == "pending") {
           _showInvitationDialog(invites.first);
           return;
-        }
-        else if (invite.status == "accepted") {
+        } else if (invite.status == "accepted") {
           // Listen for when the game starts
           _listenToGameStart(invite.id);
           return;
@@ -87,7 +86,7 @@ class HomeScreenState extends State<HomeScreen> {
       }
       final data = snapshot.data()!;
       final gameId = data['gameId'];
-      
+
       if (gameId != '') {
         Navigator.push(
           context,

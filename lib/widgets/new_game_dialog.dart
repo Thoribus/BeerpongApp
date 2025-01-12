@@ -152,7 +152,7 @@ class NewGameDialogState extends State<NewGameDialog> {
 
         // If the user picks themselves, no invitation needed
         if (selectedPlayer.id == currentUser.id) {
-          //return;
+          return;
         }
 
         // Otherwise, create an invitation doc in Firestore

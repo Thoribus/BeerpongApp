@@ -230,10 +230,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddFriendDialog(context),
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
@@ -242,7 +238,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildPageSelectorButton('Friends', 0),
+        _buildPageSelectorButton('Friendlist', 0),
         const VerticalDivider(
           color: Colors.white,
           width: 20,
@@ -291,69 +287,121 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         }
 
         final friends = snapshot.data!;
-        return ListView.builder(
-          itemCount: friends.length,
-          itemBuilder: (ctx, index) {
-            final friend = friends[index];
-            return FutureBuilder<List<UserStatsInGame>>(
-              future: FirestoreService().retrieveUserStatsWithDate(friend),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                      child: Text('Error: ${snapshot.error}',
-                          style: const TextStyle(color: Colors.white)));
-                }
-                final lastGame = snapshot.data ?? [];
-                return Container(
-                  margin: const EdgeInsets.symmetric(
-                      vertical: 4), // Add space between items
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color:
-                          Colors.grey.withOpacity(0.5), // Semi-transparent border
-                      width: 0.5,
-                    ),
-                    borderRadius:
-                        BorderRadius.circular(8), // Optional rounded corners
+
+        final userProvider = Provider.of<UserProvider>(context);
+        final currentUser = userProvider.user;
+
+        return ListView(
+          children: [
+            // Insert the ListTile for the current user data here
+            // Insert the ListTile for the current user data here
+            if (userProvider.user != null)
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.amber,
+                    width: 0.5,
                   ),
-                  child: ListTile(
-                    leading: _buildFriendAvatar(friend),
-                    title: Text(
-                      friend.username,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    subtitle: Text(
-                      'Title: ${friend.title}',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                    trailing: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          lastGame.isNotEmpty ? DateFormat('dd.MM.yyyy – kk:mm').format(lastGame.first.date) : 'No games',
-                          style: const TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'X',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () => _showComparisonScreen(friend),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListTile(
+                  leading: _buildFriendAvatar(userProvider.user!),
+                  title: Text(
+                    userProvider.user!.username,
+                    style: const TextStyle(color: Colors.white),
                   ),
+                  subtitle: Text(
+                    'Title: ${userProvider.user!.title}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  trailing: GestureDetector(
+                    onTap: () => _showAddFriendDialog(
+                        context), // Trigger the add friend dialog
+                    child: CircleAvatar(
+                      backgroundColor: Colors.amber,
+                      radius: 20, // Adjust size as needed
+                      child: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20, // Adjust icon size as needed
+                      ),
+                    ),
+                  ),
+                  onTap: () => _showComparisonScreen(userProvider.user!),
+                ),
+              ),
+
+            // Insert the ListTiles for friends below
+            ListView.builder(
+              shrinkWrap: true, // To prevent nested scrolling
+              physics:
+                  NeverScrollableScrollPhysics(), // Disable scrolling in the inner ListView
+              itemCount: friends.length,
+              itemBuilder: (ctx, index) {
+                final friend = friends[index];
+                return FutureBuilder<List<UserStatsInGame>>(
+                  future: FirestoreService().retrieveUserStatsWithDate(friend),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                          child: Text('Error: ${snapshot.error}',
+                              style: const TextStyle(color: Colors.white)));
+                    }
+                    final lastGame = snapshot.data ?? [];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey.withOpacity(0.5),
+                          width: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        leading: _buildFriendAvatar(friend),
+                        title: Text(
+                          friend.username,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          'Title: ${friend.title}',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        trailing: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'last seen',
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              lastGame.isNotEmpty
+                                  ? DateFormat('dd.MM.yyyy')
+                                      .format(lastGame.first.date)
+                                  : 'No games',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _showComparisonScreen(friend),
+                      ),
+                    );
+                  },
                 );
               },
-            );
-          },
+            ),
+          ],
         );
       },
     );
@@ -369,17 +417,23 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         }
         if (snapshot.hasError) {
           return Center(
-              child: Text('Error: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.white)));
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(
-              child: Text('No friends found.',
-                  style: TextStyle(color: Colors.white)));
+            child: Text(
+              'No friends found.',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
         }
 
         final friends = snapshot.data!;
-        // Sort by the selected attribute
+        // Sort the users based on the selected attribute
         friends.sort((a, b) {
           switch (_selectedAttribute) {
             case 'Total Score':
@@ -393,78 +447,67 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
         return Column(
           children: [
-            // Podium area
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                // If you have a podium.svg or something similar:
-                SvgPicture.asset(
-                  'assets/podium.svg',
-                  width: double.infinity,
-                  height: MediaQuery.of(ctx).size.height * 0.4,
-                ),
-                Positioned(
-                  top: 20,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (friends.length > 1)
-                        _buildPodiumPosition(friends[1], 2),
-                      if (friends.isNotEmpty)
-                        _buildPodiumPosition(friends[0], 1),
-                      if (friends.length > 2)
-                        _buildPodiumPosition(friends[2], 3),
-                    ],
-                  ),
-                ),
-              ],
+            // Top 3 users displayed in table format
+            Container(
+              color: Colors.grey[900],
+              child: Column(
+                children: [
+                  for (int i = 0; i < 3; i++)
+                    if (i < friends.length) _buildTopUserRow(friends[i], i + 1),
+                ],
+              ),
             ),
 
             // Sorting dropdown
-            DropdownButton<String>(
-              value: _selectedAttribute,
-              items: <String>['Total Score', 'Win Rate']
-                  .map<DropdownMenuItem<String>>((val) {
-                return DropdownMenuItem<String>(
-                  value: val,
-                  child: Text(
-                    val,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() => _selectedAttribute = newValue!);
-              },
-              dropdownColor: Colors.black,
-              style: const TextStyle(color: Colors.white),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: DropdownButton<String>(
+                value: _selectedAttribute,
+                items: <String>['Total Score', 'Win Rate']
+                    .map<DropdownMenuItem<String>>((val) {
+                  return DropdownMenuItem<String>(
+                    value: val,
+                    child:
+                        Text(val, style: const TextStyle(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() => _selectedAttribute = newValue!);
+                },
+                dropdownColor: Colors.black,
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
 
-            // List from 4th place onwards
+            // Remaining users displayed in a scrollable list
             Expanded(
               child: ListView.builder(
                 itemCount: (friends.length <= 3) ? 0 : (friends.length - 3),
                 itemBuilder: (ctx2, index) {
-                  final friend = friends[index + 3];
+                  final user = friends[index + 3];
                   return ListTile(
                     leading: Text(
                       '${index + 4}',
-                      style: const TextStyle(color: Colors.amber, fontSize: 18),
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     title: Row(
                       children: [
-                        _buildFriendAvatar(friend, radius: 20),
+                        _buildFriendAvatar(user, radius: 20),
                         const SizedBox(width: 10),
                         Text(
-                          friend.username,
+                          user.username,
                           style: const TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
                     trailing: Text(
                       _selectedAttribute == 'Total Score'
-                          ? friend.totalScore.toString()
-                          : '${(friend.winRate * 100).toStringAsFixed(2)}%',
+                          ? user.totalScore.toString()
+                          : '${(user.winRate * 100).toStringAsFixed(2)}%',
                       style: const TextStyle(color: Colors.grey),
                     ),
                   );
@@ -474,6 +517,69 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           ],
         );
       },
+    );
+  }
+
+// Build a row for the top 3 users
+  Widget _buildTopUserRow(User user, int rank) {
+    return Container(
+      decoration: BoxDecoration(
+        color: rank == 1 ? Colors.amber : Colors.transparent,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey.shade800,
+            width: 1.0,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      child: Row(
+        children: [
+          // Rank
+          SizedBox(
+            width: 40,
+            child: Text(
+              '$rank',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+          // Avatar with existing function
+          _buildFriendAvatar(user, radius: 25),
+          const SizedBox(width: 10),
+
+          // Username
+          Expanded(
+            child: Text(
+              user.username,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ),
+
+          // Points
+          SizedBox(
+            width: 80,
+            child: Text(
+              _selectedAttribute == 'Total Score'
+                  ? user.totalScore.toString()
+                  : '${(user.winRate * 100).toStringAsFixed(2)}%',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -501,29 +607,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         ),
       );
     }
-  }
-
-  /// Builds a single user for the top 3 podium positions.
-  Widget _buildPodiumPosition(User user, int position) {
-    // Larger avatar for 1st place
-    final radius = (position == 1) ? 45.0 : 35.0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Column(
-        children: [
-          _buildFriendAvatar(user, radius: radius),
-          const SizedBox(height: 5),
-          Text(user.username, style: const TextStyle(color: Colors.white)),
-          Text(
-            _selectedAttribute == 'Total Score'
-                ? '${user.totalScore}'
-                : '${(user.winRate * 100).toStringAsFixed(2)}%',
-            style: const TextStyle(color: Colors.amber),
-          ),
-        ],
-      ),
-    );
   }
 
   /// Returns a combined list of currentUser + their friends, for the leaderboard.

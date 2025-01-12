@@ -168,6 +168,7 @@ class FirestoreService {
           .get();
 
       return snapshot.docs.map((doc) {
+        print(doc.id);
         return GameStatistics.fromFirestore(doc.data());
       }).toList();
     } catch (e) {
