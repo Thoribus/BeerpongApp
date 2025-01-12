@@ -109,13 +109,28 @@ class FirestoreService {
     String gameId, {
     required Team team1,
     required Team team2,
-    required String winner,
+    String? winner,
+    List<String>? invitations,
+    List<String>? rules,
+    String? gameMode,
     // any other fields you need to update
   }) async {
     await _db.collection('games').doc(gameId).update({
       'team1': team1.toJson(),
       'team2': team2.toJson(),
-      'winner': winner,
+      'winner': winner ?? '',
+      'participants': [
+        // Maybe gather user IDs from team1+team2 if they're actual accounts
+        ...team1.players.where((p) => p.user != null).map((p) => p.user!.id),
+        ...team2.players.where((p) => p.user != null).map((p) => p.user!.id),
+      ],
+      'invitations': [
+        ...invitations ?? [],
+      ],
+      'specialRules': [
+        ...rules ?? [],
+      ],
+      'gamemode': gameMode ?? 'Single Game',
     });
   }
 

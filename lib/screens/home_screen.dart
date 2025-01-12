@@ -316,8 +316,7 @@ class HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => SelectionScreen(
-                                onReturn: _onReturnFromNextScreen)),
+                            builder: (context) => LobbyScreen()),
                       );
                     }
                   },
