@@ -80,7 +80,7 @@ class BaseScreenState extends State<BaseScreen> {
   String _getAppBarTitle(int index) => [
         'Settings',
         'Friends',
-        '',
+        'Beerpong Campagnion',
         'Statistics',
         'Profile'
       ][index];
@@ -88,7 +88,10 @@ class BaseScreenState extends State<BaseScreen> {
   BottomNavigationBarItem _createNavBarItem(
       IconData icon, String label, int index) {
     return BottomNavigationBarItem(
-      icon: Icon(icon, color: _selectedIndex == index ? AppConstants.primaryColor : Colors.grey),
+      icon: Icon(icon,
+          color: _selectedIndex == index
+              ? AppConstants.primaryColor
+              : Colors.grey),
       label: label,
     );
   }

@@ -197,7 +197,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
           maxX: userStats.length.toDouble() - 1,
           minY: 0,
           maxY: userStats
-                  .map((e) => e.player.score.toDouble())
+                  .map((e) => e.player.score)
                   .reduce((a, b) => a > b ? a : b) +
               10,
           titlesData: FlTitlesData(
