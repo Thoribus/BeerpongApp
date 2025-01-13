@@ -14,7 +14,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'compare_stats_screen.dart';
 
 class FriendsListScreen extends StatefulWidget {
-  const FriendsListScreen({Key? key}) : super(key: key);
+  const FriendsListScreen({super.key});
 
   @override
   FriendsListScreenState createState() => FriendsListScreenState();
@@ -289,7 +289,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         final friends = snapshot.data!;
 
         final userProvider = Provider.of<UserProvider>(context);
-        final currentUser = userProvider.user;
 
         return ListView(
           children: [
@@ -318,10 +317,10 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                   trailing: GestureDetector(
                     onTap: () => _showAddFriendDialog(
                         context), // Trigger the add friend dialog
-                    child: CircleAvatar(
+                    child: const CircleAvatar(
                       backgroundColor: Colors.amber,
                       radius: 20, // Adjust size as needed
-                      child: const Icon(
+                      child: Icon(
                         Icons.add,
                         color: Colors.white,
                         size: 20, // Adjust icon size as needed
@@ -336,7 +335,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
             ListView.builder(
               shrinkWrap: true, // To prevent nested scrolling
               physics:
-                  NeverScrollableScrollPhysics(), // Disable scrolling in the inner ListView
+                  const NeverScrollableScrollPhysics(), // Disable scrolling in the inner ListView
               itemCount: friends.length,
               itemBuilder: (ctx, index) {
                 final friend = friends[index];
@@ -377,7 +376,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                           children: [
                             const Text(
                               'last seen',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: Colors.grey, fontSize: 12),
                             ),
                             const SizedBox(height: 4),
@@ -386,7 +385,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                                   ? DateFormat('dd.MM.yyyy')
                                       .format(lastGame.first.date)
                                   : 'No games',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,

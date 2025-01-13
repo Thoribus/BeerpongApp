@@ -45,7 +45,6 @@ class SelectionScreenState extends State<SelectionScreen> {
     final docId = await FirestoreService().createEmptyGameDoc(
       team1: team1,
       team2: team2,
-      invitations: invitations,
     );
     return docId;
   }

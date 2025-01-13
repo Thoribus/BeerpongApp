@@ -122,7 +122,7 @@ class AccountScreenState extends State<AccountScreen>
                     Navigator.pop(context); // Close the sheet
                   },
                 );
-              }).toList(),
+              }),
             ],
           ),
         );
@@ -283,15 +283,6 @@ class AccountScreenState extends State<AccountScreen>
         Tab(icon: Icon(Icons.emoji_events), text: "Achievements"),
         Tab(icon: Icon(Icons.history), text: "Activity"),
       ],
-    );
-  }
-
-  Widget _buildActivityScreen() {
-    return const Center(
-      child: Text(
-        'Activity Screen Placeholder',
-        style: TextStyle(color: Colors.white, fontSize: 16),
-      ),
     );
   }
 

@@ -1,7 +1,9 @@
 import 'package:beerpongapp/models/invitation.dart';
-import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/models/player.dart';
+import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 import 'package:beerpongapp/screens/live_game_stats_screen.dart';
+import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +25,8 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
   bool _hasInvitations = false;
+  List<Invitation> _invitations = [];
+  double _progress = 0.0;
 
   @override
   void initState() {
@@ -55,8 +59,9 @@ class HomeScreenState extends State<HomeScreen> {
     if (invites.isNotEmpty) {
       for (Invitation invite in invites) {
         if (invite.status == "pending") {
-          _showInvitationDialog(invites.first);
-          return;
+          setState(() {
+            _invitations.add(invite);
+          });
         } else if (invite.status == "accepted") {
           // Listen for when the game starts
           _listenToGameStart(invite.id);
@@ -76,7 +81,7 @@ class HomeScreenState extends State<HomeScreen> {
   // Listen for when the invitation has a gameId so we can show a stats screen for each user
   Future<void> _listenToGameStart(String docId) async {
     FirebaseFirestore.instance
-        .collection('invitations')
+        .collection('games')
         .doc(docId)
         .snapshots()
         .listen((snapshot) async {
@@ -85,7 +90,7 @@ class HomeScreenState extends State<HomeScreen> {
         return;
       }
       final data = snapshot.data()!;
-      final gameId = data['gameId'];
+      final gameId = "";
 
       if (gameId != '') {
         Navigator.push(
@@ -98,55 +103,6 @@ class HomeScreenState extends State<HomeScreen> {
         );
       }
     });
-  }
-
-  /// Shows a popup with Accept/Decline for the given invitation.
-  void _showInvitationDialog(Invitation invite) async {
-    User? fromUser = await FirestoreService().getUser(invite.fromUserId);
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text("Game Invitation"),
-          content: Text(
-            "You've been invited by user ${fromUser?.username} to join "
-            "Team ${invite.teamNumber}. "
-            "Do you accept?",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                // Decline
-                await FirestoreService()
-                    .updateInvitationStatus(invite.id, "declined");
-                Navigator.of(dialogContext).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('You declined the invitation.')),
-                );
-              },
-              child: const Text("Decline"),
-            ),
-            TextButton(
-              onPressed: () async {
-                // Accept
-                await FirestoreService()
-                    .updateInvitationStatus(invite.id, "accepted");
-                Navigator.of(dialogContext).pop();
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('You accepted the invitation!')),
-                );
-
-                // (Optional) Add user to the actual game doc.
-                // e.g., FirestoreService().addPlayerToGame(invite.gameId, currentUser.id, invite.teamNumber);
-              },
-              child: const Text("Accept"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
@@ -316,8 +272,7 @@ class HomeScreenState extends State<HomeScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => SelectionScreen(
-                                onReturn: _onReturnFromNextScreen)),
+                            builder: (context) => const LobbyScreen()),
                       );
                     }
                   },
@@ -390,7 +345,7 @@ class HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const LobbyScreen()),
+                        builder: (context) => ReadOnlyLobbyScreen(gameId: _invitations[0].gameId,)),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -416,19 +371,203 @@ class HomeScreenState extends State<HomeScreen> {
               color: Colors.grey[850],
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Center(
-              child: const Text(
-                "No invitations.",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
+            child: _invitations.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No invitations available",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                : ListView.builder(
+                    scrollDirection: Axis.vertical,
+                    itemCount: _invitations.length,
+                    itemBuilder: (context, index) {
+                      return _buildInvitationCard(_invitations[index]);
+                    },
+                  ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInvitationCard(Invitation invite) {
+    final firestoreService = FirestoreService();
+
+    return StreamBuilder<DocumentSnapshot>(
+        stream: firestoreService.getGameDocStream(invite.gameId),
+        builder:
+            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red)),
+            );
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(
+              child: Text('Game not found.',
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
+            );
+          }
+
+          // Extract game data
+          final gameData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+
+          Team team1 = Team.fromJson(gameData['team1']);
+          Team team2 = Team.fromJson(gameData['team2']);
+
+          return Card(
+            color: Colors.grey[900],
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("Invitation",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                          Text(
+                              "${team1.players.length} VS ${team2.players.length}",
+                              style: const TextStyle(color: Colors.white70)),
+                        ],
+                      ),
+                      const Row(
+                        children: [
+                          Icon(Icons.star_border_outlined, color: Colors.amber),
+                          Icon(Icons.star_border_outlined, color: Colors.green),
+                          Icon(Icons.star_border_outlined, color: Colors.blue),
+                        ],
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      // Loop over the players in the game and build their avatars
+                      for (Player player in team1.players)
+                        _buildPlayerAvatar(player, Colors.amber),
+                      const Text(" VS ", style: TextStyle(color: Colors.white)),
+                      for (Player player in team2.players)
+                        _buildPlayerAvatar(player, Colors.green),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: 50, // Same height as the button
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8.0),
+                          gradient: LinearGradient(
+                            begin: Alignment.centerRight,
+                            end: Alignment.centerLeft,
+                            stops: [_progress, _progress + 0.01],
+                            colors: const [
+                              Colors
+                                  .grey, // Gradually appears as progress increases
+                              Colors.amber,
+                            ],
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors
+                              .transparent, // Transparent to show the gradient
+                          shadowColor:
+                              Colors.transparent, // Removes button shadow
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        onPressed: () async {
+                          await FirestoreService()
+                              .updateInvitationStatus(invite.id, "accepted");
+                        },
+                        child: const Text(
+                          "You got 30s to join. Hurry up!",
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget _buildPlayerAvatar(Player player, Color color) {
+    if (player.user == null) return _buildEmptyAvatar();
+    final avatarAsset = _mapAvatarKeyToAsset(player.user!.avatarKey);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: CircleAvatar(
+        radius: 20,
+        backgroundColor: color,
+        child: CircleAvatar(
+          radius: 30,
+          backgroundColor: Colors.white24,
+          child: avatarAsset.isNotEmpty
+              ? ClipOval(
+                  child: SvgPicture.asset(
+                    avatarAsset,
+                    fit: BoxFit.cover,
+                    width: 56,
+                    height: 56,
+                    placeholderBuilder: (BuildContext context) => Container(
+                      color: Colors.grey,
+                      child: const Icon(
+                        Icons.error,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                )
+              : const Icon(
+                  Icons.person,
+                  size: 40,
+                  color: Colors.white,
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyAvatar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: CircleAvatar(
+        radius: 20,
+        backgroundColor: Colors.grey[800],
+        child: const Icon(Icons.person, color: Colors.white70),
+      ),
+    );
+  }
+
+  Widget _buildProgressBar() {
+    return LinearProgressIndicator(
+      value: _progress,
+      backgroundColor: Colors.grey[800],
+      color: Colors.amberAccent,
+      minHeight: 6,
     );
   }
 
@@ -453,5 +592,13 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _onReturnFromNextScreen() {
     _checkSavedGame();
+  }
+
+  /// Maps a given avatarKey to the actual local asset path.
+  /// For example: 'bunny' -> 'assets/avatars/bunny.png'
+  String _mapAvatarKeyToAsset(String avatarKey) {
+    if (avatarKey.isEmpty) return '';
+    // Adjust as needed for your file naming structure
+    return 'assets/avatars/$avatarKey.svg';
   }
 }
