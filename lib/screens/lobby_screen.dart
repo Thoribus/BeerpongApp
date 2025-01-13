@@ -12,7 +12,7 @@ import '../models/cup.dart';
 import 'game/game_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
-  const LobbyScreen({Key? key}) : super(key: key);
+  const LobbyScreen({super.key});
 
   @override
   State<LobbyScreen> createState() => _LobbyScreenState();
@@ -55,6 +55,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
   String _startingTeam = 'Team Blue'; // Could be "Team Red" as well
 
+  bool _started = false;
+
   // ----------------------------
   // Lifecycle
   // ----------------------------
@@ -67,7 +69,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
   @override
   void dispose() {
     // Cancel all listeners
-    for (final docId in _blueInvitationDocIds.values) {
+/*     for (final docId in _blueInvitationDocIds.values) {
       if (docId.isNotEmpty) {
         FirestoreService().deleteGameInvitation(docId);
       }
@@ -77,7 +79,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
         FirestoreService().deleteGameInvitation(docId);
       }
     }
-    if (_gameId != null) FirestoreService().deleteGameDoc(_gameId!);
+    if (_gameId != null) FirestoreService().deleteGameDoc(_gameId!); */
     super.dispose();
   }
 
@@ -99,7 +101,6 @@ class _LobbyScreenState extends State<LobbyScreen> {
     final docId = await FirestoreService().createEmptyGameDoc(
       team1: emptyTeamBlue,
       team2: emptyTeamRed,
-      invitations: [], // No invites yet
     );
 
     setState(() {
@@ -329,14 +330,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
     final players = isBlue ? _playersBlue : _playersRed;
 
     // If user picks themselves => fill immediately, no invitation
-    if (selected.id == currentUser.id) {
+/*     if (selected.id == currentUser.id) {
       setState(() {
         players[rowIndex] = players[rowIndex].copyWithName(selected.username);
         players[rowIndex] = players[rowIndex].copyWithUser(selected);
       });
       _updateGameDoc();
       return;
-    }
+    } */
 
     // Otherwise => friend. fill name + user, create invitation doc
     setState(() {
@@ -349,6 +350,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
       toUserId: selected.id,
       teamNumber: isBlue ? 1 : 2,
       playerIndex: rowIndex,
+      gameId: _gameId!,
     );
 
     if (isBlue) {
@@ -772,6 +774,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
       team2: teamRed,
       gameMode: _selectedGameMode,
       rules: _selectedRules.entries.where((entry) => entry.value).map((entry) => entry.key).toList(),
+      startingTeam: _startingTeam,
+      invitations: _acceptedInvites,
+      started: _started,
       // winner: null if not decided
     );
 
@@ -803,6 +808,12 @@ class _LobbyScreenState extends State<LobbyScreen> {
     for (final inviteId in _acceptedInvites) {
       await FirestoreService().updateInvitationGameId(inviteId, _gameId!);
     }
+
+    setState(() {
+      _started = true;
+    });
+
+    _updateGameDoc(); // update Firestore with started=true
 
     // Move to the actual game screen
     Navigator.push(

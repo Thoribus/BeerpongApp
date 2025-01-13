@@ -210,8 +210,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   if (xAxis == 'Date') {
                     int index = value.toInt();
-                    if (index < 0 || index >= userStats.length)
-                      return const Text('');
+                    if (index < 0 || index >= userStats.length) return const Text('');
                     return Text(
                       userStats[index]
                           .date
@@ -251,8 +250,8 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 },
               ),
             ),
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           borderData: FlBorderData(
             show: true,
@@ -264,10 +263,10 @@ class PersonalStatisticsScreen extends StatelessWidget {
             horizontalInterval: 10,
             verticalInterval: 1,
             getDrawingHorizontalLine: (value) {
-              return FlLine(color: const Color(0xff37434d), strokeWidth: 1);
+              return const FlLine(color: Color(0xff37434d), strokeWidth: 1);
             },
             getDrawingVerticalLine: (value) {
-              return FlLine(color: const Color(0xff37434d), strokeWidth: 1);
+              return const FlLine(color: Color(0xff37434d), strokeWidth: 1);
             },
           ),
           lineBarsData: [
@@ -281,7 +280,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
               ),
               barWidth: 6,
               isStrokeCapRound: true,
-              dotData: FlDotData(show: false),
+              dotData: const FlDotData(show: false),
               belowBarData: BarAreaData(
                 show: true,
                 gradient: LinearGradient(

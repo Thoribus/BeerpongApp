@@ -85,7 +85,6 @@ class FirestoreService {
   Future<String> createEmptyGameDoc({
     required Team team1,
     required Team team2,
-    List<String> invitations = const [],
   }) async {
     final docRef = await _db.collection('games').add({
       'timestamp': FieldValue.serverTimestamp(),
@@ -97,9 +96,11 @@ class FirestoreService {
         ...team1.players.where((p) => p.user != null).map((p) => p.user!.id),
         ...team2.players.where((p) => p.user != null).map((p) => p.user!.id),
       ],
-      'invitations': [
-        ...invitations,
-      ],
+      'invitations': [],
+      'specialRules': [],
+      'gamemode': 'Single Game',
+      'started': false,
+      'startingTeam': 'Team Blue',
     });
     return docRef.id; // Return the new document ID
   }
@@ -113,6 +114,8 @@ class FirestoreService {
     List<String>? invitations,
     List<String>? rules,
     String? gameMode,
+    bool? started = false,
+    String? startingTeam = 'Team Blue',
     // any other fields you need to update
   }) async {
     await _db.collection('games').doc(gameId).update({
@@ -130,7 +133,9 @@ class FirestoreService {
       'specialRules': [
         ...rules ?? [],
       ],
-      'gamemode': gameMode ?? 'Single Game',
+      'gameMode': gameMode ?? 'Single Game',
+      'started': started,
+      'startingTeam': startingTeam,
     });
   }
 
@@ -171,6 +176,17 @@ class FirestoreService {
       wins: newWins,
       losses: newLosses,
     );
+  }
+
+  Future<Map<String, dynamic>?> retrieveGameById(String gameId) async {
+    try {
+      final doc = await _db.collection('games').doc(gameId).get();
+      if (!doc.exists) return {};
+      return doc.data();
+    } catch (e) {
+      print('Error getting game: $e');
+      rethrow;
+    }
   }
 
   /// Retrieve games from Firestore for the current user (descending timestamp).
@@ -282,6 +298,7 @@ class FirestoreService {
     required String toUserId,
     required int teamNumber,
     required int playerIndex,
+    required String gameId,
   }) async {
     final docRef = await _db.collection('invitations').add({
       'fromUserId': fromUserId,
@@ -290,7 +307,7 @@ class FirestoreService {
       'playerIndex': playerIndex,
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
-      'gameId': '',
+      'gameId': gameId,
     });
     return docRef.id;
   }

@@ -161,7 +161,7 @@ class NewGameDialogState extends State<NewGameDialog> {
           toUserId: selectedPlayer.id,
           teamNumber: widget.team,
           playerIndex: rowIndex,
-          // optionally pass a separate "gameId" if needed
+          gameId: "",
         );
 
         // Mark this row as "pending" invitation
