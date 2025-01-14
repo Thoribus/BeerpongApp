@@ -453,9 +453,9 @@ class DialogHelpers {
 
   /// Shows the game-over dialog and navigates to Stats or Home screen.
   static Future<void> showGameEndDialog(
-      GameScreenState state, List<Player> players) async {
+      BuildContext context, List<Player> players) async {
     AwesomeDialog(
-      context: state.context,
+      context: context,
       dialogType: DialogType.warning,
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
@@ -489,7 +489,7 @@ class DialogHelpers {
       btnOkOnPress: () {
         // Go to Stats
         Navigator.push(
-          state.context,
+          context,
           MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 3)),
         );
       },
@@ -497,7 +497,7 @@ class DialogHelpers {
       btnCancelOnPress: () {
         // Go to Home
         Navigator.push(
-          state.context,
+          context,
           MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 2)),
         );
       },

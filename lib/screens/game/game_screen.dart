@@ -491,7 +491,7 @@ class GameScreenState extends State<GameScreen> {
     User oldUser = await _saveGameStatistics();
 
     // Instead of showGameEndDialog, let’s push GameHighlightsScreen
-    await DialogHelpers.showGameEndDialog(this, currentTeam.players);
+    await DialogHelpers.showGameEndDialog(context, currentTeam.players);
 
     //await DialogHelpers.showGameEndDialog(this, currentTeam.players);
   }
