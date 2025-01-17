@@ -43,20 +43,10 @@ class ActivityScreenState extends State<ActivityScreen> {
     final player = game.player;
     if (player.user == null) return;
     final user = player.user!;
-    int won = player.isWinner ? 1 : 0;
-    double preWinRate = user.winRate;
-    double postWinRate = (user.wins + won) > 0
-        ? user.wins + won / (user.wins + user.losses + 1)
-        : 0.0;
+    final newUser = FirestoreService.mapPlayerToUser(player);
 
-    double winRateDelta = postWinRate - preWinRate;
-
-    // For hit rate we use score/throws (with a check against 0 throws).
-    double preHitRate = user.totalThrows > 0 ? user.totalScore / user.totalThrows : 0.0;
-    double postHitRate =
-        user.totalThrows + player.throws > 0 ? (user.totalScore + player.score) / (user.totalThrows + player.throws) : 0.0;
-    double hitRateDelta = postHitRate - preHitRate;
-
+    double winRateDelta = newUser.winRate - user.winRate;
+    double hitRateDelta = newUser.hitRate - user.hitRate;
     num scoreIncrease = player.score;
 
     print(scoreIncrease);
