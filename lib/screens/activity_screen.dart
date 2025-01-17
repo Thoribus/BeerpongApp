@@ -1,12 +1,10 @@
-import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/screens/achievements_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:provider/provider.dart';
 import '../models/game_statistics.dart';
-import '../models/player.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -39,6 +37,33 @@ class ActivityScreenState extends State<ActivityScreen> {
         isLoading = false;
       });
     }
+  }
+
+  static void calculateActivity(UserStatsInGame game) {
+    final player = game.player;
+    if (player.user == null) return;
+    final user = player.user!;
+    int won = player.isWinner ? 1 : 0;
+    double preWinRate = user.winRate;
+    double postWinRate = (user.wins + won) > 0
+        ? user.wins + won / (user.wins + user.losses + 1)
+        : 0.0;
+
+    double winRateDelta = postWinRate - preWinRate;
+
+    // For hit rate we use score/throws (with a check against 0 throws).
+    double preHitRate = user.totalThrows > 0 ? user.totalScore / user.totalThrows : 0.0;
+    double postHitRate =
+        user.totalThrows + player.throws > 0 ? (user.totalScore + player.score) / (user.totalThrows + player.throws) : 0.0;
+    double hitRateDelta = postHitRate - preHitRate;
+
+    num scoreIncrease = player.score;
+
+    print(scoreIncrease);
+    print(hitRateDelta);
+    print(winRateDelta);
+    List<Map<String, String>> upgrades = AchievementsScreen.getUpgradedAchivements(player);
+    print(upgrades);
   }
 
   // Track the progress towards achievements for each game
@@ -112,7 +137,7 @@ class ActivityScreenState extends State<ActivityScreen> {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () {
-                _progressEachGame(game);
+                calculateActivity(game);
               },
               child: const Text('Track progress'),
             ),

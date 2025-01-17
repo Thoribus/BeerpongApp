@@ -2,7 +2,6 @@ import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
-import 'package:beerpongapp/screens/live_game_stats_screen.dart';
 import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
   bool _hasInvitations = false;
-  List<Invitation> _invitations = [];
+  final List<Invitation> _invitations = [];
   double _progress = 0.0;
 
   @override

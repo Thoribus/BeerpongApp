@@ -3,7 +3,7 @@ import 'user.dart';
 /// A class representing a player in the game.
 class Player {
   final String name;        // The player's name
-  num score;             // The player's score
+  num score;                // The player's score
   int throws;               // Number of throws the player made
   int misses;               // Number of misses by the player
   int airballs;             // Number of airballs by the player
@@ -15,6 +15,7 @@ class Player {
   int consecutiveHits;      // Tracks consecutive hits
   int onFire;               // Times the player triggered "On Fire"
   User? user;               // Optional reference to a User object (DB, stats, etc.)
+  bool isWinner;            // Whether the player is on the winning team
 
   Player({
     required this.name,
@@ -30,6 +31,7 @@ class Player {
     this.islandShotUsed = false,
     this.lastCupHit = false,
     this.user,
+    this.isWinner = false,
   }) : 
     consecutiveHits = consecutiveHits ?? 0,
     cupsHit = cupsHit ?? [];
@@ -47,7 +49,9 @@ class Player {
       ..hitThisRound = hitThisRound
       ..islandShotUsed = islandShotUsed
       ..lastCupHit = lastCupHit
-      ..cupsHit = List.from(cupsHit);
+      ..cupsHit = List.from(cupsHit)
+      ..isWinner = isWinner
+      ..user = user;
   }
 
   /// Increments the player's score by 1.
@@ -128,6 +132,7 @@ class Player {
       'defended': defended,
       'consecutiveHits': consecutiveHits,
       'onFire': onFire,
+      'isWinner': isWinner,
       'user': user?.toJson(), // Only if user is non-null
     };
   }
@@ -153,12 +158,13 @@ class Player {
       onFire: json['onFire'] ?? 0,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       lastCupHit: json['lastCupHit'] ?? false,
+      isWinner: json['isWinner'] ?? false,
     );
   }
 
   @override
   String toString() {
-    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, user: $user)';
+    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, isWinner: $isWinner, user: $user)';
   }
 
   /// Equality based on name (and potentially user).

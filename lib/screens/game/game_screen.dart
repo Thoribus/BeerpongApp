@@ -1,6 +1,4 @@
 import 'dart:async';
-
-import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -488,7 +486,7 @@ class GameScreenState extends State<GameScreen> {
     _setPlayerHitLastCup(player);
 
     await GamePersistence.clearGameState(false);
-    User oldUser = await _saveGameStatistics();
+    await _saveGameStatistics();
 
     // Instead of showGameEndDialog, let’s push GameHighlightsScreen
     await DialogHelpers.showGameEndDialog(context, currentTeam.players);
@@ -639,13 +637,26 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Saving Stats to Firestore -----
-  Future<User> _saveGameStatistics() async {
+  Future<void> _saveGameStatistics() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final User oldUser = userProvider.user!;
+
+    if (winner == "Team 1") {
+      for (final player in team1.players) {
+        setState(() {
+          player.isWinner = true;
+        });
+      }
+    }
+    else {
+      for (final player in team2.players) {
+        setState(() {
+          player.isWinner = true;
+        });
+      }
+    }
     final updatedUsers = await FirestoreService().saveGame(
       team1: team1.players,
       team2: team2.players,
-      winner: winner,
     );
 
     // Give new titles to players if they unlocked any
@@ -670,8 +681,6 @@ class GameScreenState extends State<GameScreen> {
           updatedUsers.firstWhere((u) => u.id == userProvider.user?.id);
       userProvider.updateUser(currentUser);
     }
-
-    return oldUser;
   }
   //endregion
 

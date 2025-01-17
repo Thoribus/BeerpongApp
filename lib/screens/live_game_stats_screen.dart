@@ -3,7 +3,6 @@
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
-import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -17,10 +16,10 @@ class LiveGameStatsScreen extends StatefulWidget {
   const LiveGameStatsScreen({super.key, required this.gameId});
 
   @override
-  _LiveGameStatsScreenState createState() => _LiveGameStatsScreenState();
+  LiveGameStatsScreenState createState() => LiveGameStatsScreenState();
 }
 
-class _LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
+class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
 
   @override
