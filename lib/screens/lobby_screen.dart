@@ -69,7 +69,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
   @override
   void dispose() {
     // Cancel all listeners
-/*     for (final docId in _blueInvitationDocIds.values) {
+    for (final docId in _blueInvitationDocIds.values) {
       if (docId.isNotEmpty) {
         FirestoreService().deleteGameInvitation(docId);
       }
@@ -79,7 +79,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
         FirestoreService().deleteGameInvitation(docId);
       }
     }
-    if (_gameId != null) FirestoreService().deleteGameDoc(_gameId!); */
+    if (_gameId != null) FirestoreService().deleteGameDoc(_gameId!);
     super.dispose();
   }
 
@@ -330,14 +330,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
     final players = isBlue ? _playersBlue : _playersRed;
 
     // If user picks themselves => fill immediately, no invitation
-/*     if (selected.id == currentUser.id) {
+    if (selected.id == currentUser.id) {
       setState(() {
         players[rowIndex] = players[rowIndex].copyWithName(selected.username);
         players[rowIndex] = players[rowIndex].copyWithUser(selected);
       });
       _updateGameDoc();
       return;
-    } */
+    }
 
     // Otherwise => friend. fill name + user, create invitation doc
     setState(() {

@@ -66,15 +66,12 @@ class FirestoreService {
   Future<List<User>> saveGame({
     required List<Player> team1,
     required List<Player> team2,
-    required String winner,
   }) async {
     final updatedUsers = <User>[];
     for (final player in [...team1, ...team2]) {
       if (player.user == null) continue;
-      final isWinner = (winner == 'Team 1' && team1.contains(player)) ||
-          (winner == 'Team 2' && team2.contains(player));
 
-      final updatedUser = _mapPlayerToUser(player, isWinner);
+      final updatedUser = mapPlayerToUser(player);
       await updateUser(updatedUser);
       updatedUsers.add(updatedUser);
     }
@@ -98,7 +95,7 @@ class FirestoreService {
       ],
       'invitations': [],
       'specialRules': [],
-      'gamemode': 'Single Game',
+      'gameMode': 'Single Game',
       'started': false,
       'startingTeam': 'Team Blue',
     });
@@ -150,7 +147,7 @@ class FirestoreService {
   }
 
   /// Helper to copy relevant stats from Player => existing User, incrementing them.
-  User _mapPlayerToUser(Player player, bool isWinner) {
+  static User mapPlayerToUser(Player player) {
     final oldUser = player.user!;
     // increment stats
     final newTotalScore = oldUser.totalScore + player.score;
@@ -161,8 +158,8 @@ class FirestoreService {
     final newDefended = oldUser.defended + player.defended;
     final newHitLastCup = oldUser.hitLastCup + (player.lastCupHit ? 1 : 0);
     final newCupsHit = [...oldUser.cupsHit, ...player.cupsHit];
-    final newWins = oldUser.wins + (isWinner ? 1 : 0);
-    final newLosses = oldUser.losses + (isWinner ? 0 : 1);
+    final newWins = oldUser.wins + (player.isWinner ? 1 : 0);
+    final newLosses = oldUser.losses + (player.isWinner ? 0 : 1);
 
     return oldUser.copyWith(
       totalScore: newTotalScore,

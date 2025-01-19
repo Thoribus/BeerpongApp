@@ -2,7 +2,6 @@ import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
-import 'package:beerpongapp/screens/live_game_stats_screen.dart';
 import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
   bool _hasInvitations = false;
-  List<Invitation> _invitations = [];
+  final List<Invitation> _invitations = [];
   double _progress = 0.0;
 
   @override
@@ -58,15 +57,9 @@ class HomeScreenState extends State<HomeScreen> {
 
     if (invites.isNotEmpty) {
       for (Invitation invite in invites) {
-        if (invite.status == "pending") {
-          setState(() {
-            _invitations.add(invite);
-          });
-        } else if (invite.status == "accepted") {
-          // Listen for when the game starts
-          _listenToGameStart(invite.id);
-          return;
-        }
+        setState(() {
+          _invitations.add(invite);
+        });
       }
       setState(() {
         _hasInvitations = true;
@@ -76,33 +69,6 @@ class HomeScreenState extends State<HomeScreen> {
         _hasInvitations = false;
       });
     }
-  }
-
-  // Listen for when the invitation has a gameId so we can show a stats screen for each user
-  Future<void> _listenToGameStart(String docId) async {
-    FirebaseFirestore.instance
-        .collection('games')
-        .doc(docId)
-        .snapshots()
-        .listen((snapshot) async {
-      if (!snapshot.exists) {
-        // Possibly the doc was deleted
-        return;
-      }
-      final data = snapshot.data()!;
-      final gameId = "";
-
-      if (gameId != '') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => LiveGameStatsScreen(
-              gameId: gameId,
-            ),
-          ),
-        );
-      }
-    });
   }
 
   Future<void> _showNewGameConfirmationDialog(BuildContext context) async {
@@ -345,7 +311,9 @@ class HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ReadOnlyLobbyScreen(gameId: _invitations[0].gameId,)),
+                        builder: (context) => ReadOnlyLobbyScreen(
+                              gameId: _invitations[0].gameId,
+                            )),
                   );
                 },
                 style: ElevatedButton.styleFrom(

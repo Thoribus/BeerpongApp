@@ -1,12 +1,10 @@
-import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/screens/achievements_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:provider/provider.dart';
 import '../models/game_statistics.dart';
-import '../models/player.dart';
 
 class ActivityScreen extends StatefulWidget {
   const ActivityScreen({super.key});
@@ -39,6 +37,23 @@ class ActivityScreenState extends State<ActivityScreen> {
         isLoading = false;
       });
     }
+  }
+
+  static void calculateActivity(UserStatsInGame game) {
+    final player = game.player;
+    if (player.user == null) return;
+    final user = player.user!;
+    final newUser = FirestoreService.mapPlayerToUser(player);
+
+    double winRateDelta = newUser.winRate - user.winRate;
+    double hitRateDelta = newUser.hitRate - user.hitRate;
+    num scoreIncrease = player.score;
+
+    print(scoreIncrease);
+    print(hitRateDelta);
+    print(winRateDelta);
+    List<Map<String, String>> upgrades = AchievementsScreen.getUpgradedAchivements(player);
+    print(upgrades);
   }
 
   // Track the progress towards achievements for each game
@@ -112,7 +127,7 @@ class ActivityScreenState extends State<ActivityScreen> {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () {
-                _progressEachGame(game);
+                calculateActivity(game);
               },
               child: const Text('Track progress'),
             ),

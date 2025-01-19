@@ -52,6 +52,10 @@ class User {
     return wins / totalGames;
   }
 
+  double get hitRate {
+    return totalThrows > 0 ? totalScore / totalThrows : 0.0;
+  }
+
   /// Encode this user into a JSON-compatible map for Firestore.
   Map<String, dynamic> toJson() {
     return {

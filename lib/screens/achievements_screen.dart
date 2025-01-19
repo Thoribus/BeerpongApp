@@ -1,3 +1,4 @@
+import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/user.dart';
@@ -167,6 +168,31 @@ class AchievementsScreen extends StatelessWidget {
     if (changed) {
       await FirestoreService().updateUser(user);
     }
+  }
+
+  static List<Map<String, String>> getUpgradedAchivements(Player player) {
+    if (player.user == null) {
+      return [];
+    }
+    List<Map<String, String>> upgradedAchievements = [];
+    List<Map<String, Object>> achievements = getAchievements(player.user!);
+    List<Map<String, Object>> updatedAchivements = getAchievements(FirestoreService.mapPlayerToUser(player));
+
+    for (var ach in achievements) {
+      List<int> stages = ach['stages'] as List<int>;
+      int currentStage = _getCurrentStageIndex(ach['currentProgress'] as int, stages);
+      final achievement = updatedAchivements.firstWhere((element) => element['title'] == ach['title']);
+      int newStage = _getCurrentStageIndex(achievement['currentProgress'] as int, stages);
+      if (newStage > currentStage) {
+        upgradedAchievements.add({
+          'title': ach['title'] as String,
+          'oldStage': currentStage.toString(),
+          'newStage': newStage.toString(),
+        });
+      }
+    }
+
+    return upgradedAchievements;
   }
 
   static List<Map<String, Object>> getAchievements(User user) {

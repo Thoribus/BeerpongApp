@@ -2,6 +2,7 @@
 
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
+import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -15,10 +16,10 @@ class LiveGameStatsScreen extends StatefulWidget {
   const LiveGameStatsScreen({super.key, required this.gameId});
 
   @override
-  _LiveGameStatsScreenState createState() => _LiveGameStatsScreenState();
+  LiveGameStatsScreenState createState() => LiveGameStatsScreenState();
 }
 
-class _LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
+class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
 
   @override
@@ -56,6 +57,23 @@ class _LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
 
           Team team1 = Team.fromJson(gameData['team1']);
           Team team2 = Team.fromJson(gameData['team2']);
+
+          final winnerField = gameData['winner'];
+          if (winnerField != null && winnerField is String && winnerField.isNotEmpty) {
+            List<Player> winningPlayers = [];
+              if (winnerField == "Team Blue") {
+                winningPlayers = team1.players;
+              } else if (winnerField == "Team Red") {
+                winningPlayers = team2.players;
+              } else {
+                print('Invalid winner field: $winnerField');
+              }
+
+              // Show the game end dialog
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                DialogHelpers.showGameEndDialog(context, winningPlayers);
+              });
+          }
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
