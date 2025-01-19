@@ -1,14 +1,12 @@
-// lib/screens/game/live_game_stats_screen.dart
-
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:beerpongapp/util/firestoreservice.dart';
-import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/constants.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:beerpongapp/models/player.dart';
 
 class LiveGameStatsScreen extends StatefulWidget {
   final String gameId;
@@ -25,10 +23,19 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Game Stats'),
-        backgroundColor: AppConstants.primaryColor,
-      ),
+      appBar: PreferredSize(
+          preferredSize: Size.fromHeight(50.0), // here the desired height
+          child: AppBar(
+            backgroundColor: const Color(0xFFF0AE1D),
+            title: const Text(
+              'Live Game Stats',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            centerTitle: true,
+          )),
       backgroundColor: Colors.black,
       body: StreamBuilder<DocumentSnapshot>(
         stream: _firestoreService.getGameDocStream(widget.gameId),
@@ -54,123 +61,229 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
 
           // Extract game data
           final gameData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-
           Team team1 = Team.fromJson(gameData['team1']);
           Team team2 = Team.fromJson(gameData['team2']);
 
+          // Display game-end dialog if applicable
           final winnerField = gameData['winner'];
-          if (winnerField != null && winnerField is String && winnerField.isNotEmpty) {
+          if (winnerField != null &&
+              winnerField is String &&
+              winnerField.isNotEmpty) {
             List<Player> winningPlayers = [];
-              if (winnerField == "Team Blue") {
-                winningPlayers = team1.players;
-              } else if (winnerField == "Team Red") {
-                winningPlayers = team2.players;
-              } else {
-                print('Invalid winner field: $winnerField');
-              }
+            if (winnerField == "Team Blue") {
+              winningPlayers = team1.players;
+            } else if (winnerField == "Team Red") {
+              winningPlayers = team2.players;
+            }
 
-              // Show the game end dialog
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                DialogHelpers.showGameEndDialog(context, winningPlayers);
-              });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              DialogHelpers.showGameEndDialog(context, winningPlayers);
+            });
           }
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                _buildBracket(team1, team2),
-                const SizedBox(height: 20),
-                _buildCupLayouts(team1, team2),
-                _buildTeamStats('Team Blue', team1.players, team1.color),
-                const SizedBox(height: 20),
-                _buildTeamStats('Team Red', team2.players, team2.color),
-              ],
-            ),
+          return Column(
+            children: [
+              _buildTopBracket(team1, team2),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildCupLayoutsRow(team1, team2),
+                      const SizedBox(height: 20),
+                      _buildMatchStats(team1, team2),
+                      _buildPlayer(team1, team2)
+                    ],
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  /// Displays both CupLayout widgets next to each other and scaled to fit the screen width
-  /// Displays both CupLayout widgets next to each other and rotated by 90 degrees
-  Widget _buildCupLayouts(Team team1, Team team2) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-
-        // Calculate scale factor based on screen width
-        final scaleFactor =
-            screenWidth / (screenWidth * 0.8); // Adjust this factor as needed
-
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal, // Enable horizontal scrolling
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              // Apply scaling and rotation to the first cup layout
-              Transform.rotate(
-                angle:
-                    -90 * 3.14159 / 180, // Rotate 90 degrees counterclockwise
-                child: Transform.scale(
-                  scale: scaleFactor * 0.4,
-                  child: CupLayout.buildCupsArea(team: team1),
-                ),
-              ),
-              const SizedBox(width: 10), // Space between the two cup layouts
-              // Apply scaling and rotation to the second cup layout
-              Transform.rotate(
-                angle: 90 * 3.14159 / 180, // Rotate 90 degrees clockwise
-                child: Transform.scale(
-                  scale: scaleFactor * 0.4,
-                  child: CupLayout.buildCupsArea(team: team2),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  /// Builds the top bracket with rounded corners, background image (SVG), and team avatars
-  Widget _buildBracket(Team team1, Team team2) {
+  Widget _buildTopBracket(Team team1, Team team2) {
     return Container(
-      padding: const EdgeInsets.all(8.0),
-      child: Stack(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [const Color(0xFFF0AE1D), Color.fromARGB(255, 214, 176, 60)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
         children: [
-          // SVG Background
-          Positioned.fill(
-            child: SvgPicture.asset(
-              'assets/liquid-cheese.svg', // Path to your SVG
-              fit: BoxFit.cover,
+          const Text(
+            'Round 16',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          // Content on top of the SVG
-          Column(
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              _buildTeamLogo('assets/avatars/avatar_catbeer.svg', 'Team Blue'),
+              Column(
                 children: [
-                  _buildTeamAvatar(team1),
-                  const Text(
-                    'VS',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
+                  Text(
+                    '${team1.players[0].score} - ${team2.players[0].score}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  _buildTeamAvatar(team2),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 10),
+              _buildTeamLogo('assets/avatars/avatar_catbeer.svg', 'Team Red'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamLogo(String assetPath, String teamName) {
+    return Column(
+      children: [
+        SvgPicture.asset(
+          assetPath,
+          height: 60,
+          width: 60,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          teamName,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMatchStats(Team team1, Team team2) {
+    // Define stats with their corresponding titles and values for each team
+    final stats = [
+      {
+        'title': 'Score',
+        'team1': '${team1.players[0].score}',
+        'team2': '${team2.players[0].score}'
+      },
+      {
+        'title': 'Throws',
+        'team1': '${team1.players[0].throws}',
+        'team2': '${team2.players[0].throws}'
+      },
+      {
+        'title': 'Airballs',
+        'team1': '${team1.players[0].airballs}',
+        'team2': '${team2.players[0].airballs}'
+      },
+      {
+        'title': 'Misses',
+        'team1': '${team1.players[0].misses}',
+        'team2': '${team2.players[0].misses}'
+      },
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'Match Stats',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Column(
+            children: stats.map((stat) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Team Blue's stat value
+                    Text(
+                      stat['team1']!,
+                      style: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    // Stat title
+                    Text(
+                      stat['title']!,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                      ),
+                    ),
+                    // Team Red's stat value
+                    Text(
+                      stat['team2']!,
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayer(Team team1, Team team2) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          const Text(
+            'Players',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
               Text(
-                '${team1.players[0].score} - ${team2.players[0].score}',
+                '${team1.players[0].name}',
                 style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 20,
+                  color: Colors.redAccent,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -181,79 +294,52 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
     );
   }
 
-  /// Builds a round avatar for each team
-  Widget _buildTeamAvatar(Team team) {
-    return CircleAvatar(
-      child: ClipOval(
-        child: SvgPicture.asset(
-          'assets/avatars/avatar_catbeer.svg',
-          fit: BoxFit.cover,
-          width: 45,
-          height: 45,
-        ),
-      ), // Replace with your team avatar URL
-    );
-  }
-
-  /// Builds the stats section for a team
-  Widget _buildTeamStats(
-      String teamName, List<Player> players, Color teamColor) {
-    return Expanded(
+  Widget _buildCupLayoutsRow(Team team1, Team team2) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Container(
+        height: 200, // Adjust height for the cup layouts
         decoration: BoxDecoration(
-          color: teamColor.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12.0),
+          color: Colors.brown[900], // Background color for the container
+          borderRadius: BorderRadius.circular(20.0), // Rounded corners
         ),
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Text(
-              teamName,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            // Left Cup Layout
+            Positioned(
+              left: -90, // tricked the padding but overflows in the middle
+              top: 10,
+              bottom: 10,
+              child: Transform.rotate(
+                angle: -90 * 3.14159 / 180, // Rotate counterclockwise
+                child: Transform.scale(
+                  scale: 0.5, // Scale to fit within the bounds
+                  child: CupLayout.buildCupsArea(team: team1),
+                ),
               ),
             ),
-            const Divider(color: Colors.white),
-            Expanded(
-              child: players.isEmpty
-                  ? const Text('No players in this team.',
-                      style: TextStyle(color: Colors.white))
-                  : ListView.builder(
-                      itemCount: players.length,
-                      itemBuilder: (context, index) {
-                        final player = players[index];
-                        return _buildPlayerStat(player);
-                      },
-                    ),
+            // Right Cup Layout
+            Positioned(
+              right: -90, // tricked the padding but overflows in the middle
+              top: 10,
+              bottom: 10,
+              child: Transform.rotate(
+                angle: 90 * 3.14159 / 180, // Rotate clockwise
+                child: Transform.scale(
+                  scale: 0.5, // Scale to fit within the bounds
+                  child: CupLayout.buildCupsArea(team: team2),
+                ),
+              ),
+            ),
+            // Divider
+            Center(
+              child: Container(
+                width: 1,
+                color: Colors.white.withOpacity(0.6),
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// Builds the stat row for a single player
-  Widget _buildPlayerStat(Player player) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          const Icon(Icons.person, color: AppConstants.secondaryColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              player.name,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-          Text(
-            'Score: ${player.score}',
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
-        ],
       ),
     );
   }
