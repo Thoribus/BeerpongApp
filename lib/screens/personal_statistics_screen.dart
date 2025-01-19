@@ -177,6 +177,14 @@ class PersonalStatisticsScreen extends StatelessWidget {
 
   /// Builds the line chart with the selected x-axis type
   Widget _buildLineChart(List<UserStatsInGame> userStats, String xAxis) {
+    if (userStats.isEmpty) {
+      return const Center(
+        child: Text(
+          'No data available',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
     final gradientColors = [
       const Color(0xff23b6e6),
       const Color(0xff02d39a),

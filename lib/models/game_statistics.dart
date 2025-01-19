@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'player.dart'; // Import your Player class here
 
 class GameStatistics {
+  final String id;
   final DateTime date;
   final String winningTeam;
   final List<Player> team1Players;
@@ -9,6 +10,7 @@ class GameStatistics {
   final List<String> participants;
 
   GameStatistics({
+    required this.id,
     required this.date,
     required this.winningTeam,
     required this.team1Players,
@@ -16,8 +18,9 @@ class GameStatistics {
     required this.participants,
   });
 
-  factory GameStatistics.fromFirestore(Map<String, dynamic> data) {
+  factory GameStatistics.fromFirestore(String id, Map<String, dynamic> data) {
     return GameStatistics(
+      id: id,
       date: (data['timestamp'] as Timestamp).toDate(),
       winningTeam: data['winner'],
       team1Players: (data['team1']['players'] as List<dynamic>)

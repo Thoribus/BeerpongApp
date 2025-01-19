@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
-import 'package:beerpongapp/screens/selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/screens/lobby_screen.dart';
@@ -122,7 +121,7 @@ class HomeScreenState extends State<HomeScreen> {
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          SelectionScreen(onReturn: _onReturnFromNextScreen)),
+                          const LobbyScreen()), // Navigate to the lobby
                 );
               },
             ),
