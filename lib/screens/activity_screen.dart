@@ -56,21 +56,6 @@ class ActivityScreenState extends State<ActivityScreen> {
     print(upgrades);
   }
 
-  // Track the progress towards achievements for each game
-  void _progressEachGame(UserStatsInGame game) {
-    // Now you can track the user's progress in each game
-    for (final stats in games) {
-      print(
-          "Old Score: ${user!.totalScore - stats.player.score} New Score: ${user!.totalScore}");
-      print(
-          "Old Misses: ${user!.totalMisses - stats.player.misses} New Misses: ${user!.totalMisses}");
-      print(
-          "Old Airballs: ${user!.totalAirballs - stats.player.airballs} New Airballs: ${user!.totalAirballs}");
-      // Track the user's progress in this game
-      // ...
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
