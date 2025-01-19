@@ -323,7 +323,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => LiveGameStatsScreen(
-              gameId: 'jGohntj2v8JWQXOTF4vM'), //placeholder game
+              gameId: game.id),
         ));
       },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),

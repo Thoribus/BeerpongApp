@@ -196,8 +196,7 @@ class FirestoreService {
           .get();
 
       return snapshot.docs.map((doc) {
-        print(doc.id);
-        return GameStatistics.fromFirestore(doc.data());
+        return GameStatistics.fromFirestore(doc.id, doc.data());
       }).toList();
     } catch (e) {
       print('Error retrieving games: $e');
@@ -215,7 +214,7 @@ class FirestoreService {
           .get();
 
       final allGames = snapshot.docs.map((doc) {
-        return GameStatistics.fromFirestore(doc.data());
+        return GameStatistics.fromFirestore(doc.id, doc.data());
       }).toList();
 
       final userStatsList = <UserStatsInGame>[];
