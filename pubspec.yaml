@@ -17,10 +17,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 
-version: 1.0.1+10
+version: 1.0.1+11
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  sdk: '>=3.3.0 <4.0.0'
   flutter: 3.19.0
 
 # Dependencies specify other packages that your package needs in order to work.
@@ -34,6 +34,7 @@ dependencies:
     sdk: flutter
   flutter_svg: ^2.0.10+1
   percent_indicator: ^4.2.2  # Check for the latest version on pub.dev
+  awesome_dialog: ^3.2.1
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -90,12 +91,38 @@ flutter:
     - assets/freinds-playing-beerpong-together.jpg
     - assets/amber_fullscreen_home.svg
     - assets/two_cats.svg
+    - assets/home_animals.svg
     - assets/cat_boxing.svg
     - assets/frog_island.svg
     - assets/racoon_winner.svg
     - assets/otter_canvas.svg
     - assets/podium.svg
-  #   - images/a_dot_ham.jpeg
+    - assets/avatars/bunny.png
+    - assets/avatars/cat.png
+    - assets/avatars/dog.png
+    - assets/avatars/raccoon.png
+    - assets/avatars/eagle.png
+    - assets/avatars/frog.png
+    - assets/avatars/avatar_catbeer.svg
+    - assets/avatars/avatar_catpants.svg
+    - assets/avatars/avatar_cheering.svg
+    - assets/avatars/avatar_frogisland.svg
+    - assets/avatars/avatar_aggroracoon.svg
+    - assets/avatars/avatar_cupbeer.svg
+    - assets/avatar_border.svg
+    - assets/slanted-gradient.svg
+    - assets/cat_avatar_profile.svg
+    - assets/liquid-cheese.svg
+    - assets/liquid-cheese.png
+    - assets/ach_wins.png
+    - assets/ach_loses.png
+    - assets/ach_friends.png
+    - assets/ach_lost.png
+    - assets/ach_airball.png
+    - assets/ach_champion.png
+    - assets/background_achievement.png
+       #   - images/a_dot_ham.jpeg
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,14 +1,17 @@
-import 'package:beerpongapp/constants.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/user.dart';
+import 'package:beerpongapp/constants.dart'; // For AppConstants.primaryColor (optional)
+import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
-import 'compare_stats_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../util/user_provider.dart';
+
+import 'compare_stats_screen.dart';
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
@@ -20,6 +23,7 @@ class FriendsListScreen extends StatefulWidget {
 class FriendsListScreenState extends State<FriendsListScreen> {
   late Future<List<User>> _friends;
   String _selectedAttribute = 'Total Score';
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -38,6 +42,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     super.dispose();
   }
 
+  /// Prompts the user to add a friend by ID or by scanning a QR code.
   Future<void> _showAddFriendDialog(BuildContext context) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final TextEditingController controller = TextEditingController();
@@ -50,8 +55,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
-      builder: (BuildContext context) {
+      builder: (BuildContext ctx) {
         return AlertDialog(
+          backgroundColor: Colors.amberAccent,
           title: const Text('Add Friend'),
           content: _buildAddFriendDialogContent(controller, userProvider),
           actions: _buildAddFriendDialogActions(controller, userProvider),
@@ -61,7 +67,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Widget _buildAddFriendDialogContent(
-      TextEditingController controller, UserProvider userProvider) {
+    TextEditingController controller,
+    UserProvider userProvider,
+  ) {
     return SingleChildScrollView(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -73,14 +81,16 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           children: [
             TextField(
               controller: controller,
-              decoration: const InputDecoration(hintText: 'Enter friend\'s ID'),
+              decoration: const InputDecoration(hintText: "Enter friend's ID"),
             ),
             const SizedBox(height: 10),
             GestureDetector(
               onTap: () {
-                FlutterClipboard.copy(userProvider.user!.id).then((value) =>
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Copied to Clipboard'))));
+                FlutterClipboard.copy(userProvider.user!.id).then(
+                  (value) => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Copied to Clipboard')),
+                  ),
+                );
               },
               child: Text(
                 'Your ID: ${userProvider.user!.id}',
@@ -108,13 +118,13 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   List<Widget> _buildAddFriendDialogActions(
-      TextEditingController controller, UserProvider userProvider) {
+    TextEditingController controller,
+    UserProvider userProvider,
+  ) {
     return [
       TextButton(
         child: const Text('Cancel'),
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
+        onPressed: () => Navigator.of(context).pop(),
       ),
       TextButton(
         child: const Text('Add'),
@@ -129,22 +139,27 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     ];
   }
 
+  /// Scans a QR code and attempts to add a friend with the scanned ID.
   Future<void> _scanQRCode() async {
     try {
-      var result = await BarcodeScanner.scan();
+      final result = await BarcodeScanner.scan();
       if (!mounted) return;
       if (result.type == ResultType.Barcode) {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         _addFriend(context, result.rawContent, userProvider);
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // close the dialog
       }
     } catch (e) {
       _showErrorSnackBar('Error scanning QR code: $e');
     }
   }
 
+  /// Adds a friend by ID, refreshes the Future list.
   Future<void> _addFriend(
-      BuildContext context, String friendId, UserProvider userProvider) async {
+    BuildContext ctx,
+    String friendId,
+    UserProvider userProvider,
+  ) async {
     try {
       await FirestoreService().addFriend(userProvider.user!.id, friendId);
       setState(() {
@@ -155,12 +170,14 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     }
   }
 
+  /// Shows a red error SnackBar with the given message.
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
+  /// Navigates to the comparison screen for the friend and the current user.
   void _showComparisonScreen(User friend) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.user == null) {
@@ -168,22 +185,23 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       return;
     }
 
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => ComparisonScreen(
-        currentUser: userProvider.user!,
-        friend: friend,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ComparisonScreen(
+          currentUser: userProvider.user!,
+          friend: friend,
+        ),
       ),
-    ));
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-
     if (userProvider.user == null) {
       return const Scaffold(
         backgroundColor: Colors.black,
-        body: const Center(
+        body: Center(
           child: Text(
             'You must be signed in to view your friends.',
             style: TextStyle(color: Colors.white),
@@ -201,6 +219,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
             child: PageView(
               controller: _pageController,
               scrollDirection: Axis.horizontal,
+              onPageChanged: (index) {
+                setState(() => _currentPage = index);
+              },
               children: [
                 _buildFriendsListPage(),
                 _buildRankingPage(),
@@ -209,18 +230,15 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddFriendDialog(context),
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
+  /// Builds the top row for switching between “Friends” and “Leaderboard” pages.
   Widget _buildPageSelector() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildPageSelectorButton('Friends', 0),
+        _buildPageSelectorButton('Friendlist', 0),
         const VerticalDivider(
           color: Colors.white,
           width: 20,
@@ -237,159 +255,376 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     return TextButton(
       onPressed: _currentPage == pageIndex
           ? null
-          : () {
-              _pageController.jumpToPage(pageIndex);
-            },
+          : () => _pageController.jumpToPage(pageIndex),
       child: Text(
         title,
         style: TextStyle(
-          color: _currentPage == pageIndex ? AppConstants.primaryColor : Colors.white,
+          color: _currentPage == pageIndex
+              ? AppConstants.primaryColor
+              : Colors.white,
         ),
       ),
     );
   }
 
+  /// Shows the “Friends” page with a FutureBuilder of the user’s friends.
   Widget _buildFriendsListPage() {
     return FutureBuilder<List<User>>(
       future: _friends,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No friends found.'));
-        } else {
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              User friend = snapshot.data![index];
-              return ListTile(
-                leading: GestureDetector(
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: friend.iconColor,
-                    child: Icon(friend.icon, size: 30, color: Colors.white),
-                  ),
-                ),
-                title: Text(
-                  friend.username,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                subtitle: Text(
-                  'Total Score: ${friend.totalScore}',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-                onTap: () => _showComparisonScreen(friend),
-              );
-            },
-          );
         }
+        if (snapshot.hasError) {
+          return Center(
+              child: Text('Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.white)));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+              child: Text('No friends found.',
+                  style: TextStyle(color: Colors.white)));
+        }
+
+        final friends = snapshot.data!;
+
+        final userProvider = Provider.of<UserProvider>(context);
+
+        return ListView(
+          children: [
+            // Insert the ListTile for the current user data here
+            // Insert the ListTile for the current user data here
+            if (userProvider.user != null)
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.amber,
+                    width: 0.5,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListTile(
+                  leading: _buildFriendAvatar(userProvider.user!),
+                  title: Text(
+                    userProvider.user!.username,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    'Title: ${userProvider.user!.title}',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  trailing: GestureDetector(
+                    onTap: () => _showAddFriendDialog(
+                        context), // Trigger the add friend dialog
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.amber,
+                      radius: 20, // Adjust size as needed
+                      child: Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20, // Adjust icon size as needed
+                      ),
+                    ),
+                  ),
+                  onTap: () => _showComparisonScreen(userProvider.user!),
+                ),
+              ),
+
+            // Insert the ListTiles for friends below
+            ListView.builder(
+              shrinkWrap: true, // To prevent nested scrolling
+              physics:
+                  const NeverScrollableScrollPhysics(), // Disable scrolling in the inner ListView
+              itemCount: friends.length,
+              itemBuilder: (ctx, index) {
+                final friend = friends[index];
+                return FutureBuilder<List<UserStatsInGame>>(
+                  future: FirestoreService().retrieveUserStatsWithDate(friend),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                          child: Text('Error: ${snapshot.error}',
+                              style: const TextStyle(color: Colors.white)));
+                    }
+                    final lastGame = snapshot.data ?? [];
+                    return Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.grey.withOpacity(0.5),
+                          width: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        leading: _buildFriendAvatar(friend),
+                        title: Text(
+                          friend.username,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          'Title: ${friend.title}',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        trailing: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'last seen',
+                              style: TextStyle(
+                                  color: Colors.grey, fontSize: 12),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              lastGame.isNotEmpty
+                                  ? DateFormat('dd.MM.yyyy')
+                                      .format(lastGame.first.date)
+                                  : 'No games',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _showComparisonScreen(friend),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
       },
     );
   }
 
+  /// Builds the “Leaderboard” page, which includes the user + friends sorted by an attribute.
   Widget _buildRankingPage() {
     return FutureBuilder<List<User>>(
       future: _fetchFriendsAndUser(),
-      builder: (context, snapshot) {
+      builder: (ctx, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No friends found.'));
-        } else {
-          return _buildRankingList(snapshot.data!);
         }
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+            child: Text(
+              'No friends found.',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
+
+        final friends = snapshot.data!;
+        // Sort the users based on the selected attribute
+        friends.sort((a, b) {
+          switch (_selectedAttribute) {
+            case 'Total Score':
+              return b.totalScore.compareTo(a.totalScore);
+            case 'Win Rate':
+              return b.winRate.compareTo(a.winRate);
+            default:
+              return 0;
+          }
+        });
+
+        return Column(
+          children: [
+            // Top 3 users displayed in table format
+            Container(
+              color: Colors.grey[900],
+              child: Column(
+                children: [
+                  for (int i = 0; i < 3; i++)
+                    if (i < friends.length) _buildTopUserRow(friends[i], i + 1),
+                ],
+              ),
+            ),
+
+            // Sorting dropdown
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: DropdownButton<String>(
+                value: _selectedAttribute,
+                items: <String>['Total Score', 'Win Rate']
+                    .map<DropdownMenuItem<String>>((val) {
+                  return DropdownMenuItem<String>(
+                    value: val,
+                    child:
+                        Text(val, style: const TextStyle(color: Colors.white)),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() => _selectedAttribute = newValue!);
+                },
+                dropdownColor: Colors.black,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+
+            // Remaining users displayed in a scrollable list
+            Expanded(
+              child: ListView.builder(
+                itemCount: (friends.length <= 3) ? 0 : (friends.length - 3),
+                itemBuilder: (ctx2, index) {
+                  final user = friends[index + 3];
+                  return ListTile(
+                    leading: Text(
+                      '${index + 4}',
+                      style: const TextStyle(
+                        color: Colors.amber,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    title: Row(
+                      children: [
+                        _buildFriendAvatar(user, radius: 20),
+                        const SizedBox(width: 10),
+                        Text(
+                          user.username,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    trailing: Text(
+                      _selectedAttribute == 'Total Score'
+                          ? user.totalScore.toString()
+                          : '${(user.winRate * 100).toStringAsFixed(2)}%',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
       },
     );
   }
 
-  Widget _buildRankingList(List<User> users) {
-    users.sort((a, b) {
-      switch (_selectedAttribute) {
-        case 'Total Score':
-          return b.totalScore.compareTo(a.totalScore);
-        case 'Win Rate':
-          return b.winRate.compareTo(a.winRate);
-        default:
-          return 0;
-      }
-    });
-
-    return SingleChildScrollView(
-      child: Column(
+// Build a row for the top 3 users
+  Widget _buildTopUserRow(User user, int rank) {
+    return Container(
+      decoration: BoxDecoration(
+        color: rank == 1 ? Colors.amber : Colors.transparent,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey.shade800,
+            width: 1.0,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      child: Row(
         children: [
-          SvgPicture.asset(
-            'assets/podium.svg',
-            width: double.infinity,
-            height: 150,
+          // Rank
+          SizedBox(
+            width: 40,
+            child: Text(
+              '$rank',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
-          const SizedBox(height: 10),
-          DropdownButton<String>(
-            value: _selectedAttribute,
-            items: ['Total Score', 'Win Rate']
-                .map<DropdownMenuItem<String>>((value) =>
-                    DropdownMenuItem(value: value, child: Text(value)))
-                .toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedAttribute = newValue!;
-              });
-            },
-            dropdownColor: Colors.black,
-            style: const TextStyle(color: Colors.white),
+
+          // Avatar with existing function
+          _buildFriendAvatar(user, radius: 25),
+          const SizedBox(width: 10),
+
+          // Username
+          Expanded(
+            child: Text(
+              user.username,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: users.length,
-            itemBuilder: (context, index) {
-              User user = users[index];
-              return ListTile(
-                leading: Text('${index + 1}',
-                    style: const TextStyle(color: AppConstants.primaryColor, fontSize: 24)),
-                title: Text(
-                  user.username,
-                  style: TextStyle(
-                    color: user.id ==
-                            Provider.of<UserProvider>(context, listen: false)
-                                .user!
-                                .id
-                        ? AppConstants.primaryColor
-                        : Colors.white,
-                    fontWeight: user.id ==
-                            Provider.of<UserProvider>(context, listen: false)
-                                .user!
-                                .id
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-                subtitle: Text(
-                  _selectedAttribute == 'Total Score'
-                      ? 'Total Score: ${user.totalScore}'
-                      : 'Win Rate: ${(user.winRate * 100).toStringAsFixed(2)}%',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              );
-            },
+
+          // Points
+          SizedBox(
+            width: 80,
+            child: Text(
+              _selectedAttribute == 'Total Score'
+                  ? user.totalScore.toString()
+                  : '${(user.winRate * 100).toStringAsFixed(2)}%',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
+  /// Builds a circle avatar for a friend based on `avatarKey`.
+  Widget _buildFriendAvatar(User friend, {double radius = 30}) {
+    final assetPath = _mapAvatarKeyToAsset(friend.avatarKey);
+    if (assetPath.isEmpty) {
+      // fallback if no avatarKey
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.white24,
+        child: const Icon(Icons.person, color: Colors.white),
+      );
+    } else {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.white24,
+        child: ClipOval(
+          child: SvgPicture.asset(
+            assetPath,
+            fit: BoxFit.cover,
+            width: radius * 2,
+            height: radius * 2,
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Returns a combined list of currentUser + their friends, for the leaderboard.
   Future<List<User>> _fetchFriendsAndUser() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.user == null) {
       return [];
     }
 
-    List<User> friends =
-        await FirestoreService().getFriends(userProvider.user!.id);
-    friends.insert(0, userProvider.user!);
-    return friends;
+    final userId = userProvider.user!.id;
+    final friends = await FirestoreService().getFriends(userId);
+
+    // Insert the current user at index 0
+    return [userProvider.user!, ...friends];
+  }
+
+  /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
+  String _mapAvatarKeyToAsset(String avatarKey) {
+    if (avatarKey.isEmpty) return '';
+    return 'assets/avatars/$avatarKey.svg';
   }
 }

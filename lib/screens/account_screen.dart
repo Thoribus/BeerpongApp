@@ -1,12 +1,14 @@
-import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/screens/activity_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/models/user.dart';
 import 'package:provider/provider.dart';
-import 'achievements_screen.dart';
-import 'personal_statistics_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'package:beerpongapp/models/user.dart';
+import 'achievements_screen.dart';
+import 'personal_statistics_screen.dart';
+
+/// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 
@@ -14,20 +16,37 @@ class AccountScreen extends StatefulWidget {
   AccountScreenState createState() => AccountScreenState();
 }
 
-class AccountScreenState extends State<AccountScreen> {
+class AccountScreenState extends State<AccountScreen>
+    with SingleTickerProviderStateMixin {
   User? user;
-  IconData? selectedIcon = Icons.person;
-  Color? selectedColor = Colors.blue;
+
+  /// A list of possible avatar keys that map to local assets in your `assets` folder.
+  final List<String> _avatarKeys = [
+    'avatar_catbeer',
+    'avatar_catpants',
+    'avatar_cupbeer',
+    'avatar_aggroracoon',
+    'avatar_frogisland',
+    'avatar_cheering',
+  ];
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     user = userProvider.user;
-
-    if (user != null) {
-      selectedIcon = user!.icon;
-      selectedColor = user!.iconColor;
-    }
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -35,111 +54,216 @@ class AccountScreenState extends State<AccountScreen> {
           ? Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  userProvider.signIn();
+                  await userProvider.signIn();
                 },
                 child: const Text('Sign in with Google'),
               ),
             )
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildUserCard(),
-                  const SizedBox(height: 20),
-                  _buildSectionTitle("Achievements"),
-                  _buildAchievementsCard(),
-                  _buildSectionTitle("Statistics"),
-                  _buildStatisticsCard(),
-                  _buildSectionTitle("Privacy"),
-                  _buildPrivacyCard(),
-                  _buildSectionTitle("Dark Mode"),
-                  _buildDarkModeCard(),
-                  const SizedBox(height: 20),
-                  _buildSignOutButton(userProvider),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildUserCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Left section with user icon and names
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          : Column(
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: selectedColor,
-                      child: Icon(
-                        selectedIcon,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.username ?? 'Username',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Text(
-                          'dummy data',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _showIconPicker, // Opens the appearance picker
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Custom',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const SizedBox(height: 20),
+                _buildUserCard(),
+                const SizedBox(height: 10),
+                _buildTabBar(),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      PersonalStatisticsScreen(user: user!),
+                      AchievementsScreen(user: user!),
+                      const ActivityScreen(),
+                    ],
                   ),
                 ),
               ],
             ),
+    );
+  }
 
-            // Right section with SVG image
-            SizedBox(
-              width: 150,
-              height: 150,
+  void _showTitlePicker() {
+    final currentUser = user;
+    if (currentUser == null) return;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    if (currentUser.unlockedTitles.isEmpty) {
+      // They have no unlocked titles
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No unlocked titles yet')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black87,
+      builder: (BuildContext context) {
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              const Text(
+                'Choose a Title',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              const Divider(color: Colors.white70),
+              ...currentUser.unlockedTitles.map((titleToGrant) {
+                final color =
+                    AchievementsScreen.getColorForUnlockedTitle(titleToGrant, currentUser);
+                return ListTile(
+                  title: Text(
+                    titleToGrant,
+                    style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                  ),
+                  onTap: () {
+                    // Update the user’s active title
+                    final updatedUser =
+                        currentUser.copyWith(title: titleToGrant);
+                    userProvider.updateUser(updatedUser);
+                    Navigator.pop(context); // Close the sheet
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Builds the card at the top displaying the user’s avatar and username/title.
+  Widget _buildUserCard() {
+    final currentUser = user;
+    if (currentUser == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Determine which asset to load for the avatar
+    final avatarAsset = _mapAvatarKeyToAsset(currentUser.avatarKey);
+
+    return Card(
+      color: Colors.transparent, // Transparent background
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(
+            20), // More rounded corners for a credit card look
+      ),
+      elevation: 5.0,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+            // Background image using slanted-gradient.svg
+            Positioned.fill(
               child: SvgPicture.asset(
-                'assets/otter_canvas.svg',
-                fit: BoxFit.contain,
+                'assets/slanted-gradient.svg',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Upper part - Winner icons on the left
+                  Row(
+                    children: [
+                      // Winner icons on the left (3 amber icons with circular background)
+                      Row(
+                        children: List.generate(3, (index) {
+                          return Container(
+                            margin: const EdgeInsets.only(right: 8.0),
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.amber,
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.star,
+                                size: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10), // Space to push content down
+                  // Bottom part - User data on the left and CircleAvatar on the right
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left side - User text and username at the bottom-left
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _showTitlePicker(),
+                            child: Text(
+                              currentUser.title.isNotEmpty
+                                  ? currentUser.title
+                                  : 'No Title Yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: currentUser.title.isNotEmpty
+                                    ? AchievementsScreen.getColorForUnlockedTitle(
+                                        currentUser.title, currentUser)
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            currentUser.username,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Right side - CircleAvatar with either icon or SVG background
+                      GestureDetector(
+                        onTap: _showAvatarPicker, // Trigger the icon picker
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Display an icon or SVG based on selectedAvatar
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white24,
+                              child: avatarAsset.isNotEmpty
+                                  ? ClipOval(
+                                      child: SvgPicture.asset(
+                                        avatarAsset,
+                                        fit: BoxFit.cover,
+                                        width: 56,
+                                        height: 56,
+                                        placeholderBuilder:
+                                            (BuildContext context) => Container(
+                                          color: Colors.grey,
+                                          child: const Icon(
+                                            Icons.error,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.white,
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -148,157 +272,99 @@ class AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
+  Widget _buildTabBar() {
+    return TabBar(
+      controller: _tabController,
+      indicatorColor: Colors.amber,
+      labelColor: Colors.amber,
+      unselectedLabelColor: Colors.white70,
+      tabs: const [
+        Tab(icon: Icon(Icons.pie_chart), text: "Stats"),
+        Tab(icon: Icon(Icons.emoji_events), text: "Achievements"),
+        Tab(icon: Icon(Icons.history), text: "Activity"),
+      ],
     );
   }
 
-  Widget _buildAchievementsCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(BeerpongIcons.medal, color: Colors.amber),
-        title: const Text("Collectables"),
-        subtitle: const Text("See what you got"),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AchievementsScreen(user: user!),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildStatisticsCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(BeerpongIcons.medal, color: Colors.amber),
-        title: const Text("Performance"),
-        subtitle: const Text("I see what you did there..."),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PersonalStatisticsScreen(user: user!),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildPrivacyCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(Icons.lock, color: Colors.red),
-        title: const Text("Privacy"),
-        subtitle: const Text("Manage your privacy settings"),
-        onTap: () {
-          // Privacy settings logic here
-        },
-      ),
-    );
-  }
-
-  Widget _buildDarkModeCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: SwitchListTile(
-        title: const Text("Dark Mode"),
-        value: false, // Set this to a variable if needed
-        onChanged: (bool value) {
-          // Dark mode toggle logic here
-        },
-      ),
-    );
-  }
-
+  /// Displays a sign out button at the bottom.
   Widget _buildSignOutButton(UserProvider userProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.red,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
         ),
         onPressed: () async {
-          userProvider.signOut();
-          setState(() {}); // Refresh the UI after signing out
+          await userProvider.signOut();
+          setState(() {}); // Refresh UI
         },
         child: const Text(
           'Sign Out',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
-  void _showIconPicker() {
+  /// Opens a bottom sheet where the user can pick an avatarKey from a predefined list.
+  void _showAvatarPicker() {
+    final currentUser = user;
+    if (currentUser == null) return;
+
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return SizedBox(
-          height: 400,
+        return Container(
+          color: Colors.black87,
+          height: 350,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Text(
-                  'Select Icon and Color',
+                  'Select an Avatar',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
               ),
               Expanded(
                 child: GridView.builder(
+                  padding: const EdgeInsets.all(16.0),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
+                    crossAxisCount: 3, // Adjust as you like
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
                   ),
-                  itemCount: _iconList.length,
+                  itemCount: _avatarKeys.length,
                   itemBuilder: (BuildContext context, int index) {
-                    IconData icon = _iconList[index];
+                    final key = _avatarKeys[index];
+                    final assetPath = _mapAvatarKeyToAsset(key);
+                    final isSelected = (currentUser.avatarKey == key);
+
                     return GestureDetector(
                       onTap: () {
-                        setState(() {
-                          selectedIcon = icon;
-                          final userProvider =
-                              Provider.of<UserProvider>(context, listen: false);
-                          userProvider.updateUser(user!.copyWith(icon: icon));
-                        });
+                        final userProvider =
+                            Provider.of<UserProvider>(context, listen: false);
+                        final updatedUser =
+                            currentUser.copyWith(avatarKey: key);
+                        userProvider.updateUser(updatedUser);
+                        Navigator.pop(context); // Close the bottom sheet
                       },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor:
-                            selectedIcon == icon ? Colors.amber : Colors.grey,
-                        child: Icon(icon, color: Colors.white),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: isSelected
+                              ? Border.all(color: Colors.amber, width: 3)
+                              : Border.all(color: Colors.transparent),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: assetPath.isNotEmpty
+                            ? SvgPicture.asset(assetPath, fit: BoxFit.cover)
+                            : const Icon(Icons.person, color: Colors.white),
                       ),
                     );
                   },
@@ -311,12 +377,11 @@ class AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  final List<IconData> _iconList = [
-    BeerpongIcons.bunny_avatar,
-    BeerpongIcons.cat_avatar,
-    BeerpongIcons.dog_avatar,
-    BeerpongIcons.racoon_avatar,
-    BeerpongIcons.eagle_avatar,
-    BeerpongIcons.frog_avatar,
-  ];
+  /// Maps a given avatarKey to the actual local asset path.
+  /// For example: 'bunny' -> 'assets/avatars/bunny.png'
+  String _mapAvatarKeyToAsset(String avatarKey) {
+    if (avatarKey.isEmpty) return '';
+    // Adjust as needed for your file naming structure
+    return 'assets/avatars/$avatarKey.svg';
+  }
 }

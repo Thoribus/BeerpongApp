@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/screens/settings_screen.dart';
 import 'package:beerpongapp/constants.dart'; // Use centralized constants
 import 'package:beerpongapp/screens/account_screen.dart';
 import 'package:beerpongapp/screens/friendlist.dart';
@@ -43,14 +44,15 @@ class BaseScreenState extends State<BaseScreen> {
       ),
       body: PageView(
         controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
+        physics:
+            const NeverScrollableScrollPhysics(), // Disable swipe to change pages
         onPageChanged: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
         children: const [
-          HomeScreen(),
+          SettingsScreen(),
           FriendsListScreen(),
           HomeScreen(),
           StatisticsScreen(),
@@ -78,7 +80,7 @@ class BaseScreenState extends State<BaseScreen> {
   String _getAppBarTitle(int index) => [
         'Settings',
         'Friends',
-        '',
+        'Beerpong Campagnion',
         'Statistics',
         'Profile'
       ][index];
@@ -86,7 +88,10 @@ class BaseScreenState extends State<BaseScreen> {
   BottomNavigationBarItem _createNavBarItem(
       IconData icon, String label, int index) {
     return BottomNavigationBarItem(
-      icon: Icon(icon, color: _selectedIndex == index ? AppConstants.primaryColor : Colors.grey),
+      icon: Icon(icon,
+          color: _selectedIndex == index
+              ? AppConstants.primaryColor
+              : Colors.grey),
       label: label,
     );
   }

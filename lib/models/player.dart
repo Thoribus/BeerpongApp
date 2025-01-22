@@ -1,110 +1,123 @@
-import 'dart:convert';
 import 'user.dart';
 
-// Class representing a player in the game
+/// A class representing a player in the game.
 class Player {
-  final String name; // The name of the player
-  double score; // The score of the player
-  int throws;
-  int misses; // The number of misses by the player
-  int airballs; // The number of airballs by the player
-  int hitThisRound; // Whether the player has hit a cup this round
-  List<int> cupsHit = []; // List of cup indices hit by the player
-  bool lastCupHit = false;
-  bool islandShotUsed = false;
-  int defended;
-  int consecuteiveHits;
-  int onFire;
-  User? user;
+  final String name;        // The player's name
+  num score;                // The player's score
+  int throws;               // Number of throws the player made
+  int misses;               // Number of misses by the player
+  int airballs;             // Number of airballs by the player
+  int hitThisRound;         // Hits in the current round
+  List<int> cupsHit;        // List of cup indices that the player has hit
+  bool lastCupHit;          // Whether the player hit the last cup
+  bool islandShotUsed;      // Whether the player used an island shot
+  int defended;             // Number of successful defenses
+  int consecutiveHits;      // Tracks consecutive hits
+  int onFire;               // Times the player triggered "On Fire"
+  User? user;               // Optional reference to a User object (DB, stats, etc.)
+  bool isWinner;            // Whether the player is on the winning team
 
-  // Constructor initializing the player's name and setting initial values for score, misses, airballs, and hitThisRound
   Player({
     required this.name,
-    this.score = 0,
+    this.score = 0.0,
     this.throws = 0,
     this.misses = 0,
     this.airballs = 0,
     this.defended = 0,
-    this.consecuteiveHits = 0,
-    cupsHit,
+    int? consecutiveHits,
+    List<int>? cupsHit,
     this.hitThisRound = 0,
     this.onFire = 0,
     this.islandShotUsed = false,
+    this.lastCupHit = false,
     this.user,
-  }) : cupsHit = cupsHit ?? [];
+    this.isWinner = false,
+  }) : 
+    consecutiveHits = consecutiveHits ?? 0,
+    cupsHit = cupsHit ?? [];
 
+  /// Clone this player into a new object.
   Player clone() {
     return Player(name: name, user: user)
       ..score = score
-      ..misses = misses
       ..throws = throws
+      ..misses = misses
       ..airballs = airballs
       ..defended = defended
+      ..consecutiveHits = consecutiveHits
       ..onFire = onFire
       ..hitThisRound = hitThisRound
       ..islandShotUsed = islandShotUsed
       ..lastCupHit = lastCupHit
-      ..consecuteiveHits = consecuteiveHits
-      ..cupsHit = List.from(cupsHit);
+      ..cupsHit = List.from(cupsHit)
+      ..isWinner = isWinner
+      ..user = user;
   }
 
-  // Method to increment the player's score
+  /// Increments the player's score by 1.
   void incrementScore() {
-    score++; // Increase the score by 1
+    score++;
   }
 
+  /// Increments the player's hit count this round & consecutive hits.
   void incrementHitThisRound() {
     hitThisRound++;
-    consecuteiveHits++;
+    consecutiveHits++;
   }
 
+  /// Increments the player's score by a specific amount.
   void incrementScoreBy(double points) {
     score += points;
   }
 
+  /// Decrements the player's score by 1.
   void decrementScore() {
     score--;
   }
 
-  // Method to increment the player's misses
+  /// Increments the player's miss count and resets consecutive hits.
   void incrementMisses() {
-    misses++; // Increase the misses count by 1
-    consecuteiveHits = 0;
+    misses++;
+    consecutiveHits = 0;
   }
 
+  /// Increments the player's total throws count.
   void incrementThrows() {
     throws++;
   }
 
+  /// Sets the lastCupHit flag.
   void hitLastCup() {
     lastCupHit = true;
   }
 
-  // Method to reset the hitThisRound flag
+  /// Resets the hits for this round.
   void resetHitThisRound() {
-    hitThisRound = 0; // Reset the flag to false
+    hitThisRound = 0;
   }
 
+  /// Checks if the player has 3 consecutive hits and triggers "On Fire".
   bool isOnFire() {
-    if (consecuteiveHits == 3) {
+    if (consecutiveHits == 3) {
       onFire++;
-      consecuteiveHits = 0;
+      consecutiveHits = 0;
       return true;
     }
     return false;
   }
 
-  // Method to increment the player's airballs
+  /// Increments the player's airballs (and also increments misses).
   void incrementAirballs() {
-    misses++; // Increase the misses count by 1
-    airballs++; // Increase the airballs count by 1
+    misses++;
+    airballs++;
   }
 
+  /// Records that this player hit a cup of given index.
   void hitCup(int cupIndex) {
     cupsHit.add(cupIndex);
   }
 
-  // Method to encode Player instance to JSON
+  /// Encode this Player into a JSON-compatible map.
   Map<String, dynamic> toJson() {
     return {
       'name': name,
@@ -117,49 +130,44 @@ class Player {
       'lastCupHit': lastCupHit,
       'islandShotUsed': islandShotUsed,
       'defended': defended,
-      'consecuteiveHits': consecuteiveHits,
+      'consecutiveHits': consecutiveHits,
       'onFire': onFire,
-      'user': user?.toJson(), // Assuming User class has a toJson() method
+      'isWinner': isWinner,
+      'user': user?.toJson(), // Only if user is non-null
     };
   }
 
-  // Method to decode Player instance from JSON
+  /// Decode a Player from a JSON map.
   factory Player.fromJson(Map<String, dynamic> json) {
+    // Handle cases where 'hitThisRound' might be stored as a bool
     if (json["hitThisRound"] is bool) {
       json["hitThisRound"] = json["hitThisRound"] ? 1 : 0;
     }
+
     return Player(
       name: json['name'],
       score: json['score'],
       throws: json['throws'],
       misses: json['misses'],
       airballs: json['airballs'],
-      cupsHit: List<int>.from(json['cupsHit']),
+      cupsHit: List<int>.from(json['cupsHit'] ?? []),
       hitThisRound: json['hitThisRound'],
-      islandShotUsed: json['islandShotUsed'],
+      islandShotUsed: json['islandShotUsed'] ?? false,
       defended: json['defended'] ?? 0,
-      consecuteiveHits: json['consecuteiveHits'] ?? 0,
+      consecutiveHits: json['consecutiveHits'] ?? json['consecuteiveHits'] ?? 0,
       onFire: json['onFire'] ?? 0,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
-    )
-      ..lastCupHit = json['lastCupHit'];
-  }
-
-  // Method to encode a list of Player instances to JSON
-  static String encodeList(List<Player> players) {
-    return json.encode(
-      players.map<Map<String, dynamic>>((player) => player.toJson()).toList(),
+      lastCupHit: json['lastCupHit'] ?? false,
+      isWinner: json['isWinner'] ?? false,
     );
   }
 
-  // Method to decode a list of Player instances from JSON
-  static List<Player> decodeList(String players) {
-    return (json.decode(players) as List<dynamic>)
-        .map<Player>((item) => Player.fromJson(item))
-        .toList();
+  @override
+  String toString() {
+    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, isWinner: $isWinner, user: $user)';
   }
 
-  // Override the == operator
+  /// Equality based on name (and potentially user).
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -167,7 +175,6 @@ class Player {
     return name == other.name;
   }
 
-  // Override the hashCode getter
   @override
   int get hashCode => name.hashCode ^ score.hashCode;
 }

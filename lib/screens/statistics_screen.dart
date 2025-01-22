@@ -1,7 +1,11 @@
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/screens/live_game_stats_screen.dart';
+import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:provider/provider.dart';
 import '../models/game_statistics.dart';
 import '../models/player.dart';
 
@@ -16,16 +20,19 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   List<GameStatistics> games = [];
   bool isLoading = true;
   bool hasError = false;
+  late User user;
 
   @override
   void initState() {
     super.initState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    user = userProvider.user!;
     _retrieveGames();
   }
 
   Future<void> _retrieveGames() async {
     try {
-      games = await FirestoreService().retrieveGames();
+      games = await FirestoreService().retrieveGames(user);
     } catch (e) {
       hasError = true;
     } finally {
@@ -300,7 +307,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
               controller: _pageController,
               scrollDirection: Axis.horizontal,
               children: [
-                _buildTeamViewPage(),
+                _buildViewTableButton(widget.game),
                 _buildGameStatsPage(widget.game),
               ],
             ),
@@ -311,90 +318,19 @@ class GameDetailsPageState extends State<GameDetailsPage> {
     );
   }
 
-  Widget _buildTeamViewPage() {
-    return Container(
-      color: Colors.black,
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Team View',
-                style: TextStyle(
-                  color: Colors.amber,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Divider(
-                color: Colors.amber,
-                thickness: 1,
-              ),
-              const SizedBox(height: 10),
-              _buildTeamToggleButtons(),
-              const SizedBox(height: 20),
-              _buildTeamData(),
-              const SizedBox(height: 50),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTeamToggleButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildToggleButton('Team Blue', Colors.blue),
-        _buildToggleButton('Team Red', Colors.red),
-        _buildToggleButton('Both Teams', Colors.amber),
-      ],
-    );
-  }
-
-  Widget _buildToggleButton(String team, Color color) {
-    return TextButton(
+  Widget _buildViewTableButton(GameStatistics game) {
+    return ElevatedButton(
       onPressed: () {
-        setState(() {
-          selectedTeam = team;
-        });
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => LiveGameStatsScreen(
+              gameId: game.id),
+        ));
       },
-      style: TextButton.styleFrom(
-        backgroundColor: selectedTeam == team ? color : Colors.grey,
+      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+      child: const Text(
+        'View Table',
+        style: TextStyle(color: Colors.black),
       ),
-      child: Text(
-        team,
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTeamData() {
-    List<Player> players = [];
-    if (selectedTeam == 'Team Blue') {
-      players = widget.game.team1Players;
-    } else if (selectedTeam == 'Team Red') {
-      players = widget.game.team2Players;
-    } else {
-      players = widget.game.team1Players + widget.game.team2Players;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          selectedTeam,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-        ),
-        const SizedBox(height: 10),
-        _buildTeamStatsTable(selectedTeam, Colors.amber, players),
-      ],
     );
   }
 
