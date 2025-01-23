@@ -589,6 +589,21 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Undo/Redo Stack -----
+
+  List<Map<String, dynamic>> convertActionStackToJson(List<Map<String, dynamic>> actionStack) {
+    final List<Map<String, dynamic>> actionStackJson = [];
+    for (final state in actionStack) {
+      actionStackJson.add({
+        'team1': state['team1'].toJson(),
+        'team2': state['team2'].toJson(),
+        'isTeamOneTurn': state['isTeamOneTurn'],
+        'islandShotActive': state['islandShotActive'],
+        'currentIslandShooter': state['currentIslandShooter']?.toJson(),
+      });
+    }
+    return actionStackJson;
+  }
+
   void saveCurrentState() async {
     _actionStack.add({
       'team1': team1.clone(),
@@ -599,10 +614,10 @@ class GameScreenState extends State<GameScreen> {
     });
 
     await FirestoreService()
-        .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
+        .updateGameDoc(id, team1: team1, team2: team2, winner: winner, actionStack: convertActionStackToJson(_actionStack));
   }
 
-  void _undoLastAction() {
+  void _undoLastAction() async {
     if (_actionStack.isEmpty) return;
 
     final lastState = _actionStack.removeLast();
@@ -617,6 +632,9 @@ class GameScreenState extends State<GameScreen> {
       WidgetsBinding.instance
           .addPostFrameCallback((_) => _updateIslandBackgroundColor());
     });
+
+    await FirestoreService()
+        .updateGameDoc(id, team1: team1, team2: team2, winner: winner, actionStack: convertActionStackToJson(_actionStack));
   }
   //endregion
 

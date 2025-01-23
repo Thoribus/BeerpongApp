@@ -71,7 +71,7 @@ class AccountScreenState extends State<AccountScreen>
                     children: [
                       PersonalStatisticsScreen(user: user!),
                       AchievementsScreen(user: user!),
-                      ActivityScreen(),
+                      const ActivityScreen(),
                     ],
                   ),
                 ),

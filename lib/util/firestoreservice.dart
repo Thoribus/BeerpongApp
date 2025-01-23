@@ -98,6 +98,7 @@ class FirestoreService {
       'gameMode': 'Single Game',
       'started': false,
       'startingTeam': 'Team Blue',
+      'actionStack': [],
     });
     return docRef.id; // Return the new document ID
   }
@@ -113,6 +114,7 @@ class FirestoreService {
     String? gameMode,
     bool? started = false,
     String? startingTeam = 'Team Blue',
+    List<Map<String, dynamic>>? actionStack,
     // any other fields you need to update
   }) async {
     await _db.collection('games').doc(gameId).update({
@@ -133,6 +135,9 @@ class FirestoreService {
       'gameMode': gameMode ?? 'Single Game',
       'started': started,
       'startingTeam': startingTeam,
+      'actionStack': [
+        ...actionStack ?? [],
+      ],
     });
   }
 

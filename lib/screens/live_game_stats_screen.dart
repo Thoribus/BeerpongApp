@@ -5,7 +5,6 @@ import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
-import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/models/player.dart';
 
 class LiveGameStatsScreen extends StatefulWidget {
@@ -20,11 +19,89 @@ class LiveGameStatsScreen extends StatefulWidget {
 class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
   final FirestoreService _firestoreService = FirestoreService();
 
+    /// Recursively computes the difference between two dynamic objects.
+  /// If `a` and `b` are equal, returns null. Otherwise, returns a structure
+  /// that shows the differences.
+  ///
+  /// For maps, the returned diff is a map keyed by differing keys with values:
+  ///   { 'old': oldValue, 'new': newValue }
+  ///
+  /// For lists, the diff is a list of changes at each index.
+  /// For other types, the diff is simply a map {'old': a, 'new': b}.
+  dynamic deepDiff(dynamic a, dynamic b) {
+    if (a == b) {
+      return null;
+    }
+
+    // If both are maps, compare key by key.
+    if (a is Map && b is Map) {
+      Map<String, dynamic> diffMap = {};
+      // Keys present in a or b
+      final keys = <String>{...a.keys.cast<String>(), ...b.keys.cast<String>()};
+      for (final key in keys) {
+        final valueA = a[key];
+        final valueB = b[key];
+        final diffResult = deepDiff(valueA, valueB);
+        if (diffResult != null) {
+          diffMap[key] = diffResult;
+        }
+      }
+      return diffMap.isNotEmpty ? diffMap : null;
+    }
+
+    // If both are lists, compare element by element.
+    if (a is List && b is List) {
+      int maxLen = a.length > b.length ? a.length : b.length;
+      List<dynamic> diffList = [];
+      for (int i = 0; i < maxLen; i++) {
+        dynamic itemA = i < a.length ? a[i] : null;
+        dynamic itemB = i < b.length ? b[i] : null;
+        final diffResult = deepDiff(itemA, itemB);
+        diffList.add(diffResult);
+      }
+      // Remove trailing nulls if they indicate no changes in the tail
+      while (diffList.isNotEmpty && diffList.last == null) {
+        diffList.removeLast();
+      }
+      return diffList.isNotEmpty ? diffList : null;
+    }
+
+    // For other types: return a map with the old and new value.
+    return {'old': a, 'new': b};
+  }
+
+  /// Example function comparing two actions (as maps) using deepDiff.
+  /// If no differences are found, returns an empty map.
+  Map<String, dynamic> compareActions(
+      Map<String, dynamic> previous, Map<String, dynamic> current) {
+    final diffResult = deepDiff(previous, current);
+    return diffResult is Map<String, dynamic> ? diffResult : {};
+  }
+
+  /// Example usage:
+  void compareLastTwoActions(List<Map<String, dynamic>> actionStack) {
+    if (actionStack.length < 2) {
+      print("Not enough actions to compare.");
+      return;
+    }
+    print("Comparing last two actions...");
+    final previous = actionStack[actionStack.length - 2];
+    final current = actionStack.last;
+    final differences = compareActions(previous, current);
+
+    if (differences.isEmpty) {
+      print("No differences found.");
+    } else {
+      print("Differences between last two actions:");
+      print(differences);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-          preferredSize: Size.fromHeight(50.0), // here the desired height
+          preferredSize: const Size.fromHeight(50.0), // here the desired height
           child: AppBar(
             backgroundColor: const Color(0xFFF0AE1D),
             title: const Text(
@@ -63,6 +140,13 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
           final gameData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
           Team team1 = Team.fromJson(gameData['team1']);
           Team team2 = Team.fromJson(gameData['team2']);
+
+          List<Map<String, dynamic>> actionStack = [];
+          for (final action in gameData['actionStack']) {
+            actionStack.add(Map<String, dynamic>.from(action));
+          }
+          compareLastTwoActions(actionStack);
+
 
           // Display game-end dialog if applicable
           final winnerField = gameData['winner'];
@@ -109,7 +193,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [const Color(0xFFF0AE1D), Color.fromARGB(255, 214, 176, 60)],
+          colors: [ Color(0xFFF0AE1D), Color.fromARGB(255, 214, 176, 60)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -280,7 +364,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Text(
-                '${team1.players[0].name}',
+                team1.players[0].name,
                 style: const TextStyle(
                   color: Colors.redAccent,
                   fontSize: 18,
