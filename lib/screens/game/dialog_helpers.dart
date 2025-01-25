@@ -7,6 +7,7 @@ import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/base_screen.dart';
 import 'package:flutter/material.dart';
 import 'game_screen.dart';
+import 'package:flutter_svg/svg.dart';
 
 /// A utility class to hold all the AwesomeDialog-based methods.
 class DialogHelpers {
@@ -48,42 +49,7 @@ class DialogHelpers {
                   Navigator.of(context).pop();
                   onSelected(player);
                 },
-                child: Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  elevation: 4.0,
-                  child: SizedBox(
-                    width: 120.0,
-                    height: 150.0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 35.0,
-                            backgroundColor: Colors.grey.shade300,
-                            child: const Icon(
-                              Icons.person,
-                              size: 50.0,
-                              color: Colors.brown,
-                            ),
-                          ),
-                          const SizedBox(height: 8.0),
-                          Text(
-                            player.name,
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                child: _buildPlayerName(player),
               );
             }).toList(),
           ),
@@ -504,4 +470,70 @@ class DialogHelpers {
       btnCancelText: "Go to Home",
     ).show();
   }
+}
+
+Widget _buildPlayerName(Player player) {
+  return Container(
+    padding: const EdgeInsets.all(8.0), // Inner padding
+    decoration: BoxDecoration(
+      color: Colors.brown.shade600, // Background color for card
+      border: Border.all(
+        color: Colors.grey.withOpacity(0.5), // Semi-transparent border
+        width: 0.5,
+      ),
+      borderRadius: BorderRadius.circular(8.0), // Rounded corners
+    ),
+    child: Row(
+      children: [
+        player.user == null
+            ? const CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.white24,
+                child: Icon(Icons.person, color: Colors.white),
+              )
+            : CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.white24,
+                child: ClipOval(
+                  child: SvgPicture.asset(
+                    _mapAvatarKeyToAsset(player.user!.avatarKey),
+                    fit: BoxFit.cover,
+                    width: 20 * 2,
+                    height: 20 * 2,
+                  ),
+                ),
+              ),
+        const SizedBox(width: 8.0), // Space between avatar and text
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                player.name.length > 13
+                    ? '${player.name.substring(0, 12)}...' // Truncate long names
+                    : player.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14.0,
+                ),
+                overflow: TextOverflow.ellipsis, // Handles very long names
+              ),
+              const SizedBox(height: 4.0),
+              const Text(
+                'Title: X', // Dummy level
+                style: TextStyle(color: Colors.grey, fontSize: 12.0),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+String _mapAvatarKeyToAsset(String avatarKey) {
+  if (avatarKey.isEmpty) return '';
+  return 'assets/avatars/$avatarKey.svg';
 }

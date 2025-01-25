@@ -16,10 +16,12 @@ class LiveGameStatsScreen extends StatefulWidget {
   LiveGameStatsScreenState createState() => LiveGameStatsScreenState();
 }
 
-class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
+class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
+    with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
+  late TabController _tabController;
 
-    /// Recursively computes the difference between two dynamic objects.
+  /// Recursively computes the difference between two dynamic objects.
   /// If `a` and `b` are equal, returns null. Otherwise, returns a structure
   /// that shows the differences.
   ///
@@ -98,6 +100,39 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  void _showInfoDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.amber,
+          title: Text(
+            'Select $title',
+            style: const TextStyle(
+              color: Colors.amber,
+              fontWeight: FontWeight.bold, // Make the title text bold
+            ),
+          ),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Back'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
@@ -147,7 +182,6 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
           }
           compareLastTwoActions(actionStack);
 
-
           // Display game-end dialog if applicable
           final winnerField = gameData['winner'];
           if (winnerField != null &&
@@ -168,17 +202,27 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
           return Column(
             children: [
               _buildTopBracket(team1, team2),
+              TabBar(
+                controller: _tabController,
+                indicatorColor: Colors.white,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                tabs: const [
+                  Tab(text: 'Table'),
+                  Tab(text: 'Statistics'),
+                  Tab(text: 'Timeline'),
+                  Tab(text: 'Settings'),
+                ],
+              ),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildCupLayoutsRow(team1, team2),
-                      const SizedBox(height: 20),
-                      _buildMatchStats(team1, team2),
-                      _buildPlayer(team1, team2)
-                    ],
-                  ),
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildCupLayoutTab(team1, team2),
+                    _buildStatisticsTab(team1, team2),
+                    _buildTimelineTab(gameData['actionStack'] ?? []),
+                    _buildSettingsTab(gameData),
+                  ],
                 ),
               ),
             ],
@@ -188,12 +232,217 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
     );
   }
 
+  Widget _buildCupLayoutTab(Team team1, Team team2) {
+    return Column(
+      children: [
+        // Left Team Players above the cup layout
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: team1.players
+              .map(
+                (player) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    player.name,
+                    style: const TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+
+        const SizedBox(height: 16),
+
+        _buildCupLayoutsRow(team1, team2),
+
+        const SizedBox(height: 16),
+
+        // Right Team Players beneath the cup layout
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: team2.players
+              .map(
+                (player) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Text(
+                    player.name,
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatisticsTab(Team team1, Team team2) {
+    return _buildMatchStats(team1, team2);
+  }
+
+  Widget _buildTimelineTab(List<dynamic> actionStack) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: actionStack.length,
+      itemBuilder: (context, index) {
+        final action = actionStack[index];
+
+        return Card(
+          color: Colors.black.withOpacity(0.8),
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(12.0),
+            title: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20.0,
+                  backgroundImage: NetworkImage(action['playerIcon'] ??
+                      'assets/avatars/avatar_catbeer.svg'),
+                ),
+                const SizedBox(width: 10.0),
+                Text(
+                  action['playerName'] ?? 'Unknown Player',
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                Text(
+                  action['timestamp'] ?? '',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                action['description'] ?? 'Unknown action',
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void main() {
+    runApp(MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text("Beer Pong Game Timeline"),
+        ),
+        body: _buildTimelineTab([
+          {
+            'playerName': 'John Doe',
+            'playerIcon': 'assets/avatars/avatar_catbeer.svg',
+            'description': 'John made a successful shot!',
+            'timestamp': '12:05 PM',
+          },
+          {
+            'playerName': 'Jane Smith',
+            'playerIcon': 'assets/avatars/avatar_catbeer.svg',
+            'description': 'Jane missed the shot!',
+            'timestamp': '12:07 PM',
+          },
+          {
+            'playerName': 'John Doe',
+            'playerIcon': 'assets/avatars/avatar_catbeer.svg',
+            'description': 'John scores again!',
+            'timestamp': '12:09 PM',
+          },
+        ]),
+      ),
+    ));
+  }
+
+  Widget _buildSettingsTab(Map<String, dynamic> gameData) {
+    return SingleChildScrollView(
+      // To make the content scrollable if needed
+      child: Center(
+        child: Column(
+          children: [
+            // Add the Bracket Section
+            _buildBracketSection(
+              title: 'Deathcup',
+              imagePath:
+                  'assets/racoon_winner.svg', // Replace with your image path
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'When a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.\n',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    'The team that hits the deathcup automatically wins!',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  // Add more rules as needed
+                ],
+              ),
+              infoMessage: 'This section explains the game rules in detail.',
+            ),
+            _buildBracketSection(
+              title: 'Island',
+              imagePath:
+                  'assets/frog_island.svg', // Replace with your image path
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'A player can declare an island-shot (once per game) when a single cup has no surrounding cups.\n',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    'When an ISLAND is hit, an additional cup is cleared from the field!',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  // Add more player info as needed
+                ],
+              ),
+              infoMessage: 'This section provides player details and stats.',
+            ),
+            _buildBracketSection(
+              title: 'Putback',
+              imagePath:
+                  'assets/cat_boxing.svg', // Replace with your image path
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'When the last cup is hit, the enemy team has a chance to revoke the cuphit.\n',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    'Each player of the losing team has the chance to score a putback!',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  // Add more player info as needed
+                ],
+              ),
+              infoMessage: 'This section provides player details and stats.',
+            ),
+            // You can add more sections as needed
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTopBracket(Team team1, Team team2) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [ Color(0xFFF0AE1D), Color.fromARGB(255, 214, 176, 60)],
+          colors: [Color(0xFFF0AE1D), Color.fromARGB(255, 214, 176, 60)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -264,27 +513,42 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
   }
 
   Widget _buildMatchStats(Team team1, Team team2) {
-    // Define stats with their corresponding titles and values for each team
     final stats = [
       {
         'title': 'Score',
-        'team1': '${team1.players[0].score}',
-        'team2': '${team2.players[0].score}'
+        'team1': team1.players[0].score.toDouble(),
+        'team2': team2.players[0].score.toDouble()
       },
       {
         'title': 'Throws',
-        'team1': '${team1.players[0].throws}',
-        'team2': '${team2.players[0].throws}'
+        'team1': team1.players[0].throws.toDouble(),
+        'team2': team2.players[0].throws.toDouble()
       },
       {
         'title': 'Airballs',
-        'team1': '${team1.players[0].airballs}',
-        'team2': '${team2.players[0].airballs}'
+        'team1': team1.players[0].airballs.toDouble(),
+        'team2': team2.players[0].airballs.toDouble()
       },
       {
         'title': 'Misses',
-        'team1': '${team1.players[0].misses}',
-        'team2': '${team2.players[0].misses}'
+        'team1': team1.players[0].misses.toDouble(),
+        'team2': team2.players[0].misses.toDouble()
+      },
+      // New placeholder stats
+      {
+        'title': 'Accuracy',
+        'team1': 65.0,
+        'team2': 58.0,
+      },
+      {
+        'title': 'Rebounds',
+        'team1': 12.0,
+        'team2': 15.0,
+      },
+      {
+        'title': 'Blocks',
+        'team1': 3.0,
+        'team2': 5.0,
       },
     ];
 
@@ -298,43 +562,83 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 18, // Reduced font size
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12), // Reduced spacing
           Column(
             children: stats.map((stat) {
+              double team1Value = stat['team1'] as double;
+              double team2Value = stat['team2'] as double;
+              double maxStatValue =
+                  team1Value > team2Value ? team1Value : team2Value;
+
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                padding: const EdgeInsets.symmetric(
+                    vertical: 6.0), // Compact vertical padding
+                child: Column(
                   children: [
-                    // Team Blue's stat value
-                    Text(
-                      stat['team1']!,
-                      style: const TextStyle(
-                        color: Colors.blueAccent,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          team1Value.toString(),
+                          style: const TextStyle(
+                            color: Colors.blueAccent,
+                            fontSize: 14, // Smaller font
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          stat['title'] as String,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14, // Smaller font
+                          ),
+                        ),
+                        Text(
+                          team2Value.toString(),
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 14, // Smaller font
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
-                    // Stat title
-                    Text(
-                      stat['title']!,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
-                    ),
-                    // Team Red's stat value
-                    Text(
-                      stat['team2']!,
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: (((team1Value + 1) / (maxStatValue + 1)) * 100)
+                              .round(),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(
+                                  4), // Rounded edge on the left
+                            ),
+                            child: Container(
+                              height: 6, // Thinner bar
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: (((team2Value + 1) / (maxStatValue + 1)) * 100)
+                              .round(),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.horizontal(
+                              right: Radius.circular(
+                                  4), // Rounded edge on the right
+                            ),
+                            child: Container(
+                              height: 6, // Thinner bar
+                              color: Colors.redAccent,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -427,4 +731,74 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
       ),
     );
   }
+}
+
+Widget _buildBracketSection({
+  required String title,
+  required String imagePath,
+  required Widget content,
+  required String infoMessage,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber,
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              //_showInfoDialog(title, infoMessage);
+            },
+            child: Container(
+              width: 15,
+              height: 15,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.amber,
+              ),
+              child: const Icon(
+                Icons.info,
+                color: Colors.amber,
+                size: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 10),
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[800],
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                SvgPicture.asset(
+                  imagePath,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: content),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+      const SizedBox(height: 20),
+    ],
+  );
 }

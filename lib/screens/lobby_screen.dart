@@ -10,6 +10,7 @@ import '../models/player.dart';
 import '../models/team.dart';
 import '../models/cup.dart';
 import 'game/game_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class LobbyScreen extends StatefulWidget {
   const LobbyScreen({super.key});
@@ -199,7 +200,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
                 _updateGameDoc(); // update Firestore after adding
               },
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text("Add Player", style: TextStyle(color: Colors.white)),
+              label: const Text("Add Player",
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ],
@@ -209,7 +211,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
   Widget _buildPlayerRow({required bool isBlue, required int rowIndex}) {
     final players = isBlue ? _playersBlue : _playersRed;
-    final invitationStatuses = isBlue ? _blueInvitationStatuses : _redInvitationStatuses;
+    final invitationStatuses =
+        isBlue ? _blueInvitationStatuses : _redInvitationStatuses;
     final status = invitationStatuses[rowIndex];
 
     final player = players[rowIndex];
@@ -262,7 +265,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
       ),
       child: Text(
         player.name,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -371,141 +375,135 @@ class _LobbyScreenState extends State<LobbyScreen> {
     );
   }
 
-  Future<User?> _showPickPlayerDialog(User currentUser, List<User> friends) async {
+  Future<User?> _showPickPlayerDialog(
+      User currentUser, List<User> friends) async {
     final completer = Completer<User?>();
     final bodyWidget = _buildPickPlayerBody(currentUser, friends, completer);
 
-    AwesomeDialog(
+    await showDialog<User?>(
       context: context,
-      dialogType: DialogType.noHeader,
-      animType: AnimType.scale,
-      dialogBackgroundColor: Colors.amber,
-      width: 500,
-      body: bodyWidget,
-      btnCancelOnPress: () => completer.complete(null),
-      btnCancelText: "Cancel",
-    ).show();
+      barrierDismissible: true, // Close dialog when tapping outside
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.grey[850],
+          insetPadding: EdgeInsets.symmetric(
+              horizontal: 30,
+              vertical: 40), // Reduced padding for smaller dialog
+          child: Container(
+            height: 400, // Adjust the height of the dialog
+            padding: const EdgeInsets.all(12),
+            child: bodyWidget,
+          ),
+        );
+      },
+    );
 
-    return completer.future;
+    return completer.future; // Return the selected player from the dialog
   }
 
-  Widget _buildPickPlayerBody(User currentUser, List<User> friends, Completer<User?> completer) {
+  Widget _buildPickPlayerBody(
+      User currentUser, List<User> friends, Completer<User?> completer) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(8.0),
+          // Header Section
+          Padding(
+            padding: const EdgeInsets.all(8.0),
             child: Text(
-              'Choose a Player',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              'Select a Player',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
             ),
           ),
-          // Option: pick yourself
+          Divider(color: Colors.grey.shade300),
+
+          // Self-Selection Option (You)
           GestureDetector(
             onTap: () {
               if (!completer.isCompleted) completer.complete(currentUser);
               Navigator.pop(context);
             },
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              padding: const EdgeInsets.all(12.0),
-              decoration: BoxDecoration(
-                color: Colors.amber[100],
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.account_circle, size: 36.0, color: Colors.amber),
-                  const SizedBox(width: 16.0),
-                  Text(
-                    currentUser.username,
-                    style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
+            child: _buildPlayerOptionCard(
+                currentUser, "You", Icons.account_circle, Colors.amber),
           ),
-          GridView.builder(
+
+          // Friends List
+          ListView.builder(
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 1.0,
-              crossAxisSpacing: 8.0,
-              mainAxisSpacing: 8.0,
-            ),
-            itemCount: (friends.length > 6) ? 6 : friends.length,
-            itemBuilder: (ctx, i) {
-              final friend = friends[i];
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: friends.length,
+            itemBuilder: (ctx, index) {
+              final friend = friends[index];
               return GestureDetector(
                 onTap: () {
                   if (!completer.isCompleted) completer.complete(friend);
                   Navigator.pop(context);
                 },
-                child: Container(
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[100],
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.account_circle, size: 36.0, color: Colors.blue),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        friend.username,
-                        style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
+                child: _buildPlayerOptionCard(
+                    friend, "Friend", Icons.person, Colors.blue),
               );
             },
           ),
-          if (friends.length > 6)
-            SizedBox(
-              height: 250,
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const AlwaysScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.0,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                ),
-                itemCount: friends.length,
-                itemBuilder: (ctx, i) {
-                  final friend = friends[i];
-                  return GestureDetector(
-                    onTap: () {
-                      if (!completer.isCompleted) completer.complete(friend);
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.account_circle, size: 36.0, color: Colors.blue),
-                          const SizedBox(height: 8.0),
-                          Text(
-                            friend.username,
-                            style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayerOptionCard(
+      User player, String label, IconData icon, Color color) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.white24,
+            child: ClipOval(
+              child: SvgPicture.asset(
+                _mapAvatarKeyToAsset(player.avatarKey),
+                fit: BoxFit.cover,
+                width: 36,
+                height: 36,
               ),
             ),
+          ),
+          const SizedBox(width: 10.0),
+
+          // Player Username and Role (You/Friend)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  player.username,
+                  style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4.0),
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 12.0, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+
+          // Icon on the Right (Account Circle for You, Person for Friends)
+          Icon(
+            icon,
+            size: 24.0,
+            color: color,
+          ),
         ],
       ),
     );
@@ -530,15 +528,19 @@ class _LobbyScreenState extends State<LobbyScreen> {
           if (isBlue) {
             final friend = _blueFriendMap[rowIndex];
             if (friend != null) {
-              _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithName(friend.username);
-              _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithUser(friend);
+              _playersBlue[rowIndex] =
+                  _playersBlue[rowIndex].copyWithName(friend.username);
+              _playersBlue[rowIndex] =
+                  _playersBlue[rowIndex].copyWithUser(friend);
             }
             _blueInvitationStatuses.remove(rowIndex);
           } else {
             final friend = _redFriendMap[rowIndex];
             if (friend != null) {
-              _playersRed[rowIndex] = _playersRed[rowIndex].copyWithName(friend.username);
-              _playersRed[rowIndex] = _playersRed[rowIndex].copyWithUser(friend);
+              _playersRed[rowIndex] =
+                  _playersRed[rowIndex].copyWithName(friend.username);
+              _playersRed[rowIndex] =
+                  _playersRed[rowIndex].copyWithUser(friend);
             }
             _redInvitationStatuses.remove(rowIndex);
           }
@@ -577,7 +579,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
   }
 
   void _cancelInvitation(bool isBlue, int rowIndex) async {
-    final docId = isBlue ? _blueInvitationDocIds[rowIndex] : _redInvitationDocIds[rowIndex];
+    final docId = isBlue
+        ? _blueInvitationDocIds[rowIndex]
+        : _redInvitationDocIds[rowIndex];
     if (docId == null || docId.isEmpty) return;
 
     await FirestoreService().deleteGameInvitation(docId);
@@ -617,7 +621,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text("Game Settings",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber)),
             const SizedBox(height: 16),
             _buildGameModeToggle(),
             const SizedBox(height: 16),
@@ -634,7 +641,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Game Mode", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        const Text("Game Mode",
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Row(
           children: _gameModes.map((mode) {
@@ -648,7 +659,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
               },
               child: Container(
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 decoration: BoxDecoration(
                   color: selected ? Colors.amber : Colors.grey[700],
                   borderRadius: BorderRadius.circular(8),
@@ -672,7 +684,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Special Rules", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        const Text("Special Rules",
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 10,
@@ -686,7 +702,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
                 _updateGameDoc();
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 decoration: BoxDecoration(
                   color: isActive ? Colors.amber : Colors.grey[700],
                   borderRadius: BorderRadius.circular(8),
@@ -710,7 +727,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Starting Team", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+        const Text("Starting Team",
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Row(
           children: ["Team Blue", "Team Red"].map((team) {
@@ -725,7 +746,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
               },
               child: Container(
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 decoration: BoxDecoration(
                   color: selected ? color : Colors.grey[700],
                   borderRadius: BorderRadius.circular(8),
@@ -773,7 +795,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
       team1: teamBlue,
       team2: teamRed,
       gameMode: _selectedGameMode,
-      rules: _selectedRules.entries.where((entry) => entry.value).map((entry) => entry.key).toList(),
+      rules: _selectedRules.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList(),
       startingTeam: _startingTeam,
       invitations: _acceptedInvites,
       started: _started,
@@ -871,4 +896,9 @@ extension PlayerExtensions on Player {
       lastCupHit: lastCupHit,
     );
   }
+}
+
+String _mapAvatarKeyToAsset(String avatarKey) {
+  if (avatarKey.isEmpty) return '';
+  return 'assets/avatars/$avatarKey.svg';
 }
