@@ -1,3 +1,4 @@
+import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -233,52 +234,104 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
   }
 
   Widget _buildCupLayoutTab(Team team1, Team team2) {
-    return Column(
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          // Left Team Players above the cup layout
+
+          const SizedBox(height: 16),
+
+          _buildPlayerTable(team1, isLeft: true),
+
+          const SizedBox(height: 16),
+
+          _buildCupLayoutsRow(team1, team2),
+
+          const SizedBox(height: 16),
+
+          // Right Team Players beneath the cup layout
+          _buildPlayerTable(team2, isLeft: false, mirrored: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlayerTable(Team team,
+      {required bool isLeft, bool mirrored = false}) {
+    return Table(
+      columnWidths: {
+        0: FlexColumnWidth(mirrored ? 2 : 3),
+        1: FlexColumnWidth(2),
+        2: FlexColumnWidth(2),
+        3: FlexColumnWidth(2),
+        4: FlexColumnWidth(mirrored ? 3 : 2),
+      },
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
-        // Left Team Players above the cup layout
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: team1.players
-              .map(
-                (player) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Text(
-                    player.name,
-                    style: const TextStyle(
-                      color: Colors.blueAccent,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
+        // Table Header
+        TableRow(
+          children: [
+            const SizedBox(), // Empty header for player name column
+            const Icon(Icons.sports_bar, color: Colors.amber, size: 16), // Cups
+            const Icon(BeerpongIcons.airball, color: Colors.amber, size: 20),
+            // Airball
+            const Icon(Icons.sports_handball,
+                color: Colors.amber, size: 16), // Throws
+            const Icon(Icons.close, color: Colors.amber, size: 16), // Misses
+          ],
         ),
 
-        const SizedBox(height: 16),
-
-        _buildCupLayoutsRow(team1, team2),
-
-        const SizedBox(height: 16),
-
-        // Right Team Players beneath the cup layout
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: team2.players
-              .map(
-                (player) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Text(
-                    player.name,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+        // Player Rows
+        ...team.players.map(
+          (player) => TableRow(
+            children: mirrored
+                ? [
+                    Text((player.cupsHit).length.toString(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.white)),
+                    Text(player.airballs.toString(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.white)),
+                    Text(player.throws.toString(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.white)),
+                    Text(player.misses.toString(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: _buildPlayerName(player),
                     ),
-                  ),
-                ),
-              )
-              .toList(),
+                  ]
+                : [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: _buildPlayerName(player),
+                    ),
+                    Text(
+                      (player.cupsHit).length.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14, color: Colors.white),
+                    ),
+                    Text(
+                      player.airballs.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14, color: Colors.white),
+                    ),
+                    Text(player.throws.toString(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.white)),
+                    Text(player.misses.toString(),
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.white)),
+                  ],
+          ),
         ),
       ],
     );
@@ -465,7 +518,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
               Column(
                 children: [
                   Text(
-                    '${team1.players[0].score} - ${team2.players[0].score}',
+                    '${totalScore(team1)} - ${totalScore(team2)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 30,
@@ -489,6 +542,10 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         ],
       ),
     );
+  }
+
+  num totalScore(Team team) {
+    return team.players.map((player) => player.score).reduce((a, b) => a + b);
   }
 
   Widget _buildTeamLogo(String assetPath, String teamName) {
@@ -686,16 +743,17 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
       child: Container(
-        height: 200, // Adjust height for the cup layouts
+        height: 200,
         decoration: BoxDecoration(
-          color: Colors.brown[900], // Background color for the container
+          color: Color.fromARGB(
+              255, 214, 176, 60), // Background color for the container
           borderRadius: BorderRadius.circular(20.0), // Rounded corners
         ),
         child: Stack(
           children: [
             // Left Cup Layout
             Positioned(
-              left: -90, // tricked the padding but overflows in the middle
+              right: 180, // tricked the padding but overflows in the middle
               top: 10,
               bottom: 10,
               child: Transform.rotate(
@@ -708,7 +766,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
             ),
             // Right Cup Layout
             Positioned(
-              right: -90, // tricked the padding but overflows in the middle
+              left: 180, // tricked the padding but overflows in the middle
               top: 10,
               bottom: 10,
               child: Transform.rotate(
@@ -801,4 +859,74 @@ Widget _buildBracketSection({
       const SizedBox(height: 20),
     ],
   );
+}
+
+Widget _buildPlayerName(Player player) {
+  return Container(
+    padding: const EdgeInsets.all(8.0), // Inner padding
+    decoration: BoxDecoration(
+      color: Colors.brown.shade600, // Background color for card
+      border: Border.all(
+        color: Colors.grey.withOpacity(0.5), // Semi-transparent border
+        width: 0.5,
+      ),
+      borderRadius: BorderRadius.circular(8.0), // Rounded corners
+    ),
+    child: Row(
+      children: [
+        player.user == null
+            ? const CircleAvatar(
+                radius: 10,
+                backgroundColor: Colors.white24,
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 8,
+                ),
+              )
+            : CircleAvatar(
+                radius: 10,
+                backgroundColor: Colors.white24,
+                child: ClipOval(
+                  child: SvgPicture.asset(
+                    _mapAvatarKeyToAsset(player.user!.avatarKey),
+                    fit: BoxFit.cover,
+                    width: 10 * 2,
+                    height: 10 * 2,
+                  ),
+                ),
+              ),
+        const SizedBox(width: 8.0), // Space between avatar and text
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                player.name.length > 13
+                    ? '${player.name.substring(0, 12)}...' // Truncate long names
+                    : player.name,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10.0,
+                ),
+                overflow: TextOverflow.ellipsis, // Handles very long names
+              ),
+              const SizedBox(height: 4.0),
+              const Text(
+                'Title: X', // Dummy level
+                style: TextStyle(color: Colors.grey, fontSize: 8.0),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+String _mapAvatarKeyToAsset(String avatarKey) {
+  if (avatarKey.isEmpty) return '';
+  return 'assets/avatars/$avatarKey.svg';
 }
