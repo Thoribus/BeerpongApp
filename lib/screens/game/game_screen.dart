@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:beerpongapp/models/event.dart';
 import 'package:beerpongapp/screens/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -60,6 +61,7 @@ class GameScreenState extends State<GameScreen> {
 
   //region ----- Page/Undo/Loading State -----
   final List<Map<String, dynamic>> _actionStack = [];
+  final List<GameEvent> _events = [];
   final PageController _pageController = PageController();
   int _currentPage = 0;
   late Future<void> _loadGameFuture;
@@ -285,8 +287,7 @@ class GameScreenState extends State<GameScreen> {
       DialogHelpers.showRearrangeErrorDialog(this);
       return;
     }
-
-    saveCurrentState();
+    saveCurrentState(GameEvent(eventType: "Rearranged", team: currentTeam.color.value.toString()));
     setState(() {
       if (!currentTeam.isRearranged) {
         // Filter only cups that match the current color & are visible
@@ -333,7 +334,7 @@ class GameScreenState extends State<GameScreen> {
       'Select Player',
       currentTeam.currentPlayers.where((p) => !p.islandShotUsed).toList(),
       (player) {
-        saveCurrentState();
+        saveCurrentState(GameEvent(eventType: "Hightlight Island", player: player.name));
         setState(() {
           currentIslandShooter = player;
           player.islandShotUsed = true;
@@ -385,7 +386,7 @@ class GameScreenState extends State<GameScreen> {
       'Select Player and Shot Result',
       currentTeam.currentPlayers,
       (player) {
-        saveCurrentState();
+        saveCurrentState(GameEvent(eventType: "Island Shot", player: player.name));
         // If chosen player == currentIslandShooter => island “power shot”
         if (player == currentIslandShooter) {
           setState(() {
@@ -508,7 +509,7 @@ class GameScreenState extends State<GameScreen> {
     // If chosenPlayer != null => enemyHit = true => revert the last cup
     if (chosenPlayer != null) {
       setState(() => chosenPlayer.defended++);
-      saveCurrentState();
+      saveCurrentState(GameEvent(eventType: "Defended", player: chosenPlayer.name));
       _removeLastCupHit(cupIndex);
       return true; // enemyHit
     } else {
@@ -557,13 +558,13 @@ class GameScreenState extends State<GameScreen> {
 
   /// Handle what happens when a player throws an airball.
   void _handleAirballRule(Player player) {
-    saveCurrentState();
+    saveCurrentState(GameEvent(eventType: "Airball", player: player.name));
     _incrementPlayerAirballs(player);
   }
 
   /// Handle what happens when a player hits a cup.
   void _handleNormalHit(Player player, int cupIndex) {
-    saveCurrentState();
+    saveCurrentState(GameEvent(eventType: "Normal Hit", player: player.name));
     _addCupToPlayer(player, cupIndex);
     _incrementPlayerThrows(player);
     _incrementPlayerHitThisRound(player);
@@ -575,7 +576,7 @@ class GameScreenState extends State<GameScreen> {
 
   /// Handle what happens when a player hits the Death Cup.
   void _handleDeathCup(Player player) {
-    saveCurrentState();
+    saveCurrentState(GameEvent(eventType: "Death Cup", player: player.name));
     for (final cup in currentTeam.cups) {
       if (cup.color == currentTeam.color) {
         _addCupToPlayer(player, cup.index);
@@ -589,22 +590,7 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Undo/Redo Stack -----
-
-  List<Map<String, dynamic>> convertActionStackToJson(List<Map<String, dynamic>> actionStack) {
-    final List<Map<String, dynamic>> actionStackJson = [];
-    for (final state in actionStack) {
-      actionStackJson.add({
-        'team1': state['team1'].toJson(),
-        'team2': state['team2'].toJson(),
-        'isTeamOneTurn': state['isTeamOneTurn'],
-        'islandShotActive': state['islandShotActive'],
-        'currentIslandShooter': state['currentIslandShooter']?.toJson(),
-      });
-    }
-    return actionStackJson;
-  }
-
-  void saveCurrentState() async {
+  void saveCurrentState(GameEvent event) async {
     _actionStack.add({
       'team1': team1.clone(),
       'team2': team2.clone(),
@@ -612,9 +598,14 @@ class GameScreenState extends State<GameScreen> {
       'islandShotActive': islandShotActive,
       'currentIslandShooter': currentIslandShooter,
     });
+    _events.add(event);
+    List<Map<String, dynamic>> eventsJson = [];
+    for (final event in _events) {
+      eventsJson.add(event.toJson());
+    }
 
-    await FirestoreService()
-        .updateGameDoc(id, team1: team1, team2: team2, winner: winner, actionStack: convertActionStackToJson(_actionStack));
+    await FirestoreService().updateGameDoc(id,
+        team1: team1, team2: team2, winner: winner, events: eventsJson);
   }
 
   void _undoLastAction() async {
@@ -627,14 +618,20 @@ class GameScreenState extends State<GameScreen> {
       isTeamOneTurn = lastState['isTeamOneTurn'];
       islandShotActive = lastState['islandShotActive'];
       currentIslandShooter = lastState['currentIslandShooter'];
+      _events.removeLast();
 
       currentTeam = isTeamOneTurn ? team1 : team2;
       WidgetsBinding.instance
           .addPostFrameCallback((_) => _updateIslandBackgroundColor());
     });
 
-    await FirestoreService()
-        .updateGameDoc(id, team1: team1, team2: team2, winner: winner, actionStack: convertActionStackToJson(_actionStack));
+    List<Map<String, dynamic>> eventsJson = [];
+    for (final event in _events) {
+      eventsJson.add(event.toJson());
+    }
+
+    FirestoreService().updateGameDoc(id,
+        team1: team1, team2: team2, winner: winner, events: eventsJson);
   }
   //endregion
 
@@ -664,8 +661,7 @@ class GameScreenState extends State<GameScreen> {
           player.isWinner = true;
         });
       }
-    }
-    else {
+    } else {
       for (final player in team2.players) {
         setState(() {
           player.isWinner = true;
@@ -682,7 +678,6 @@ class GameScreenState extends State<GameScreen> {
       AchievementsScreen.checkAchievements(user);
     }
 
-
     FirestoreService()
         .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
 
@@ -690,7 +685,6 @@ class GameScreenState extends State<GameScreen> {
     for (String invitationId in invitations) {
       FirestoreService().deleteGameInvitation(invitationId);
     }
-
 
     // Update current user in UserProvider if found in updatedUsers
     final userExists = updatedUsers.any((u) => u.id == userProvider.user?.id);
