@@ -70,7 +70,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen> {
                 .map((eventData) => GameEvent.fromJson(eventData))
                 .toList();
           }
-          print(events);
+          print(events.toString());
 
 
           // Display game-end dialog if applicable

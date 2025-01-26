@@ -28,4 +28,8 @@ class GameEvent {
       team: json["team"] as String?,
     );
   }
+
+  String toString() {
+    return "GameEvent($eventType, player: $player, team: $team)";
+  }
 }

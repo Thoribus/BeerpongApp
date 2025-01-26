@@ -105,41 +105,76 @@ class FirestoreService {
 
   // Update the game doc with new team arrays or other fields
   Future<void> updateGameDoc(
-    String gameId, {
-    required Team team1,
-    required Team team2,
-    String? winner,
-    List<String>? invitations,
-    List<String>? rules,
-    String? gameMode,
-    bool? started = false,
-    String? startingTeam = 'Team Blue',
-    List<Map<String, dynamic>>? events,
-    // any other fields you need to update
-  }) async {
-    await _db.collection('games').doc(gameId).update({
-      'team1': team1.toJson(),
-      'team2': team2.toJson(),
-      'winner': winner ?? '',
-      'participants': [
-        // Maybe gather user IDs from team1+team2 if they're actual accounts
-        ...team1.players.where((p) => p.user != null).map((p) => p.user!.id),
-        ...team2.players.where((p) => p.user != null).map((p) => p.user!.id),
-      ],
-      'invitations': [
-        ...invitations ?? [],
-      ],
-      'specialRules': [
-        ...rules ?? [],
-      ],
-      'gameMode': gameMode ?? 'Single Game',
-      'started': started,
-      'startingTeam': startingTeam,
-      'events': [
-        ...events ?? [],
-      ],
-    });
+  String gameId, {
+  Team? team1,
+  Team? team2,
+  String? winner,
+  List<String>? invitations,
+  List<String>? rules,
+  String? gameMode,
+  bool? started,
+  String? startingTeam,
+  List<Map<String, dynamic>>? events,
+}) async {
+  // 1) Build a map for the fields you actually want to update
+  final Map<String, dynamic> updates = {};
+
+  // If these fields are non-null, add them to the map:
+  if (team1 != null) {
+    updates['team1'] = team1.toJson();
+    // If your logic always wants to recalc participants from team1/team2, do it conditionally, etc.
   }
+  if (team2 != null) {
+    updates['team2'] = team2.toJson();
+  }
+  if (winner != null) {
+    updates['winner'] = winner;
+  }
+  if (invitations != null) {
+    updates['invitations'] = invitations;
+  }
+  if (rules != null) {
+    updates['specialRules'] = rules;
+  }
+  if (gameMode != null) {
+    updates['gameMode'] = gameMode;
+  }
+  if (started != null) {
+    updates['started'] = started;
+  }
+  if (startingTeam != null) {
+    updates['startingTeam'] = startingTeam;
+  }
+  if (events != null) {
+    updates['events'] = events;
+  }
+
+  // Optionally, recalc participants if you do want them always updated
+  // e.g. if team1 or team2 was given, re-derive participants from them
+  if (team1 != null || team2 != null) {
+    final participants = <String>[];
+    if (team1 != null) {
+      participants.addAll(
+        team1.players.where((p) => p.user != null).map((p) => p.user!.id),
+      );
+    }
+    if (team2 != null) {
+      participants.addAll(
+        team2.players.where((p) => p.user != null).map((p) => p.user!.id),
+      );
+    }
+    updates['participants'] = participants;
+  }
+
+  // 2) If there's nothing to update, just return
+  if (updates.isEmpty) {
+    return;
+  }
+
+  // 3) Perform the partial update
+  await _db.collection('games').doc(gameId).update(updates);
+}
+
 
   /// Returns a stream of game document snapshots
   Stream<DocumentSnapshot> getGameDocStream(String gameId) {

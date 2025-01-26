@@ -605,7 +605,7 @@ class GameScreenState extends State<GameScreen> {
     }
 
     await FirestoreService().updateGameDoc(id,
-        team1: team1, team2: team2, winner: winner, events: eventsJson);
+        team1: team1, team2: team2, events: eventsJson);
   }
 
   void _undoLastAction() async {
@@ -631,7 +631,7 @@ class GameScreenState extends State<GameScreen> {
     }
 
     FirestoreService().updateGameDoc(id,
-        team1: team1, team2: team2, winner: winner, events: eventsJson);
+        team1: team1, team2: team2, events: eventsJson);
   }
   //endregion
 
