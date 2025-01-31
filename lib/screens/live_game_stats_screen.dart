@@ -146,7 +146,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                   children: [
                     _buildCupLayoutTab(team1, team2),
                     _buildStatisticsTab(team1, team2),
-                    _buildTimelineTab(gameData['actionStack'] ?? []),
+                    _buildTimelineTab(events),
                     _buildSettingsTab(gameData),
                   ],
                 ),
@@ -266,79 +266,29 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     return _buildMatchStats(team1, team2);
   }
 
-  Widget _buildTimelineTab(List<dynamic> actionStack) {
+  Widget _buildTimelineTab(List<GameEvent> events) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: actionStack.length,
+      itemCount: events.length,
       itemBuilder: (context, index) {
-        final action = actionStack[index];
-
-        return Card(
-          color: Colors.black.withOpacity(0.8),
-          margin: const EdgeInsets.symmetric(vertical: 8.0),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(12.0),
-            title: Row(
-              children: [
-                CircleAvatar(
-                  radius: 20.0,
-                  backgroundImage: NetworkImage(action['playerIcon'] ??
-                      'assets/avatars/avatar_catbeer.svg'),
-                ),
-                const SizedBox(width: 10.0),
-                Text(
-                  action['playerName'] ?? 'Unknown Player',
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                Text(
-                  action['timestamp'] ?? '',
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: Text(
-                action['description'] ?? 'Unknown action',
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ),
-          ),
-        );
+        final event = events[index];
+        return _buildEventItem(event);
       },
     );
   }
 
-  void main() {
-    runApp(MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Beer Pong Game Timeline"),
+  Widget _buildEventItem(GameEvent event) {
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      child: ListTile(
+        title: Text(event.eventType),
+        subtitle: Text(
+          event.player != null
+              ? 'Player: ${event.player}'
+              : 'Team: ${event.team}',
         ),
-        body: _buildTimelineTab([
-          {
-            'playerName': 'John Doe',
-            'playerIcon': 'assets/avatars/avatar_catbeer.svg',
-            'description': 'John made a successful shot!',
-            'timestamp': '12:05 PM',
-          },
-          {
-            'playerName': 'Jane Smith',
-            'playerIcon': 'assets/avatars/avatar_catbeer.svg',
-            'description': 'Jane missed the shot!',
-            'timestamp': '12:07 PM',
-          },
-          {
-            'playerName': 'John Doe',
-            'playerIcon': 'assets/avatars/avatar_catbeer.svg',
-            'description': 'John scores again!',
-            'timestamp': '12:09 PM',
-          },
-        ]),
+        trailing: Icon(Icons.sports),
       ),
-    ));
+    );
   }
 
   Widget _buildSettingsTab(Map<String, dynamic> gameData) {
@@ -589,8 +539,83 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 10),
                     Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 10,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                                Positioned(
+                                  right: 0,
+                                  left:
+                                      (((team1Value + 1) / (maxStatValue + 1)) *
+                                              100)
+                                          .toDouble(),
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    height: 10,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: team1.color,
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: SizedBox(
+                            height: 10,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  height: 10,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                                Positioned(
+                                  right:
+                                      (((team2Value + 1) / (maxStatValue + 1)) *
+                                              100)
+                                          .toDouble(),
+                                  left: 0,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    height: 10,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: team2.color,
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    /*
                       children: [
                         Expanded(
                           flex: (((team1Value + 1) / (maxStatValue + 1)) * 100)
@@ -620,44 +645,11 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ],*/
                   ],
                 ),
               );
             }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlayer(Team team1, Team team2) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          const Text(
-            'Players',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Text(
-                team1.players[0].name,
-                style: const TextStyle(
-                  color: Colors.redAccent,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
           ),
         ],
       ),
