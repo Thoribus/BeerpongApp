@@ -80,7 +80,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
         FirestoreService().deleteGameInvitation(docId);
       }
     }
-    if (_gameId != null) FirestoreService().deleteGameDoc(_gameId!);
+    if (!_started && _gameId != null) FirestoreService().deleteGameDoc(_gameId!);
     super.dispose();
   }
 
@@ -841,7 +841,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
     _updateGameDoc(); // update Firestore with started=true
 
     // Move to the actual game screen
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => GameScreen(
