@@ -26,7 +26,7 @@ class ComparisonScreen extends StatelessWidget {
         backgroundColor: Colors.amber,
       ),
       body: Container(
-        color: Colors.black, // Set the background color to black
+        color: Colors.black, // Full-screen background color
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -45,9 +45,9 @@ class ComparisonScreen extends StatelessWidget {
 
   Widget _buildHeader() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildUserInfo(currentUser),
+        _buildPlayerCard(currentUser),
         const Text(
           'VS',
           style: TextStyle(
@@ -56,112 +56,140 @@ class ComparisonScreen extends StatelessWidget {
             color: Colors.amber,
           ),
         ),
-        _buildUserInfo(friend),
+        _buildPlayerCard(friend),
       ],
     );
   }
 
-  Widget _buildUserInfo(User user) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 40,
-          backgroundColor: Colors.white24,
-          child: ClipOval(
-            child: SvgPicture.asset(
-              _mapAvatarKeyToAsset(user.avatarKey),
-              fit: BoxFit.cover,
-              width: 40 * 2,
-              height: 40 * 2,
-            ),
+  Widget _buildPlayerCard(User user) {
+    return SizedBox(
+      width: 150, // Fixed width for player cards
+      height: 280, // Fixed height for player cards
+      child: Card(
+        color: Colors.grey[900],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Colors.white24,
+                child: ClipOval(
+                  child: SvgPicture.asset(
+                    _mapAvatarKeyToAsset(user.avatarKey),
+                    fit: BoxFit.cover,
+                    width: 40 * 2,
+                    height: 40 * 2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                user.username,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                maxLines: 2, // Allow up to 2 lines for the name
+                overflow:
+                    TextOverflow.ellipsis, // Truncate with ellipsis if too long
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                user.title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          user.username,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildComparisonTable() {
-    return Column(
-      children: [
-        _buildStatRow('Total Score', currentUser.totalScore, friend.totalScore),
-        _buildStatRow(
-            'Total Misses', currentUser.totalMisses, friend.totalMisses,
-            lowerIsBetter: true),
-        _buildStatRow(
-            'Total Airballs', currentUser.totalAirballs, friend.totalAirballs,
-            lowerIsBetter: true),
-        _buildStatRow(
-            'Total Throws', currentUser.totalThrows, friend.totalThrows),
-        _buildStatRow('Wins', currentUser.wins, friend.wins),
-        _buildStatRow('Losses', currentUser.losses, friend.losses,
-            lowerIsBetter: true),
-        _buildStatRow('Win Rate', currentUser.winRate, friend.winRate,
-            isPercentage: true),
-      ],
+    return Card(
+      color: Colors.grey[900],
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildStatRow(
+                'Total Score', currentUser.totalScore, friend.totalScore),
+            _buildDivider(),
+            _buildStatRow(
+                'Total Misses', currentUser.totalMisses, friend.totalMisses,
+                lowerIsBetter: true),
+            _buildDivider(),
+            _buildStatRow('Total Airballs', currentUser.totalAirballs,
+                friend.totalAirballs,
+                lowerIsBetter: true),
+            _buildDivider(),
+            _buildStatRow(
+                'Total Throws', currentUser.totalThrows, friend.totalThrows),
+            _buildDivider(),
+            _buildStatRow('Wins', currentUser.wins, friend.wins),
+            _buildDivider(),
+            _buildStatRow('Losses', currentUser.losses, friend.losses,
+                lowerIsBetter: true),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildStatRow(
       String stat, dynamic currentUserValue, dynamic friendValue,
-      {bool lowerIsBetter = false, bool isPercentage = false}) {
+      {bool lowerIsBetter = false}) {
     final bool isCurrentUserWinner = lowerIsBetter
         ? currentUserValue < friendValue
         : currentUserValue > friendValue;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Current User Value
-          Expanded(
-            child: Text(
-              isPercentage
-                  ? '${(currentUserValue * 100).toStringAsFixed(2)}%'
-                  : currentUserValue.toString(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isCurrentUserWinner ? Colors.green : Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+          Text(
+            currentUserValue.toString(),
+            style: TextStyle(
+              color: isCurrentUserWinner ? Colors.green : Colors.red,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
           // Stat Name
-          Expanded(
-            child: Text(
-              stat,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
+          Text(
+            stat,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
             ),
           ),
           // Friend Value
-          Expanded(
-            child: Text(
-              isPercentage
-                  ? '${(friendValue * 100).toStringAsFixed(2)}%'
-                  : friendValue.toString(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isCurrentUserWinner ? Colors.red : Colors.green,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+          Text(
+            friendValue.toString(),
+            style: TextStyle(
+              color: isCurrentUserWinner ? Colors.red : Colors.green,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      color: Colors.grey[800],
+      thickness: 1,
     );
   }
 }
