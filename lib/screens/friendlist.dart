@@ -376,8 +376,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                           children: [
                             const Text(
                               'last seen',
-                              style: TextStyle(
-                                  color: Colors.grey, fontSize: 12),
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 12),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -415,216 +415,210 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Error: ${snapshot.error}',
-              style: const TextStyle(color: Colors.white),
-            ),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(
-            child: Text(
-              'No friends found.',
-              style: TextStyle(color: Colors.white),
-            ),
-          );
+          return const Center(child: Text('No friends found.'));
         }
 
         final friends = snapshot.data!;
-        // Sort the users based on the selected attribute
-        friends.sort((a, b) {
-          switch (_selectedAttribute) {
-            case 'Total Score':
-              return b.totalScore.compareTo(a.totalScore);
-            case 'Win Rate':
-              return b.winRate.compareTo(a.winRate);
-            default:
-              return 0;
-          }
-        });
+        friends.sort((a, b) => _selectedAttribute == 'Total Score'
+            ? b.totalScore.compareTo(a.totalScore)
+            : b.winRate.compareTo(a.winRate));
 
         return Column(
           children: [
-            // Top 3 users displayed in table format
-            Container(
-              color: Colors.grey[900],
-              child: Column(
-                children: [
-                  for (int i = 0; i < 3; i++)
-                    if (i < friends.length) _buildTopUserRow(friends[i], i + 1),
-                ],
-              ),
-            ),
-
-            // Sorting dropdown
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: DropdownButton<String>(
-                value: _selectedAttribute,
-                items: <String>['Total Score', 'Win Rate']
-                    .map<DropdownMenuItem<String>>((val) {
-                  return DropdownMenuItem<String>(
-                    value: val,
-                    child:
-                        Text(val, style: const TextStyle(color: Colors.white)),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() => _selectedAttribute = newValue!);
-                },
-                dropdownColor: Colors.black,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-
-            // Remaining users displayed in a scrollable list
-            Expanded(
-              child: ListView.builder(
-                itemCount: (friends.length <= 3) ? 0 : (friends.length - 3),
-                itemBuilder: (ctx2, index) {
-                  final user = friends[index + 3];
-                  return ListTile(
-                    leading: Text(
-                      '${index + 4}',
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    title: Row(
-                      children: [
-                        _buildFriendAvatar(user, radius: 20),
-                        const SizedBox(width: 10),
-                        Text(
-                          user.username,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    trailing: Text(
-                      _selectedAttribute == 'Total Score'
-                          ? user.totalScore.toString()
-                          : '${(user.winRate * 100).toStringAsFixed(2)}%',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  );
-                },
-              ),
-            ),
+            _buildPodium(friends),
+            _buildSortingDropdown(),
+            Expanded(child: _buildRankingList(friends)),
           ],
         );
       },
     );
   }
 
-// Build a row for the top 3 users
-  Widget _buildTopUserRow(User user, int rank) {
-    return Container(
-      decoration: BoxDecoration(
-        color: rank == 1 ? Colors.amber : Colors.transparent,
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.shade800,
-            width: 1.0,
+  Widget _buildPodium(List<User> friends) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 270,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.grey[800], // Fallback background color
+          ),
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              // SVG Background
+              Positioned.fill(
+                child: SvgPicture.asset(
+                  'assets/podium_background.svg', // Replace with your SVG path
+                  fit: BoxFit.cover,
+                ),
+              ),
+
+              // Second place (Left)
+              if (friends.length > 1)
+                Positioned(
+                  left: 40,
+                  bottom: 100, // Adjust height of podium
+                  child:
+                      _buildPodiumUser(friends[1], 2, Colors.blue, height: 100),
+                ),
+
+              // First place (Center, Highest)
+              if (friends.isNotEmpty)
+                Positioned(
+                  left: MediaQuery.of(context).size.width / 2 - 50, // Center
+                  bottom: 130, // Highest podium height
+                  child: _buildPodiumUser(friends[0], 1, Colors.amber,
+                      crown: true, height: 120),
+                ),
+
+              // Third place (Right)
+              if (friends.length > 2)
+                Positioned(
+                  right: 20,
+                  bottom: 90, // Lowest podium position
+                  child:
+                      _buildPodiumUser(friends[2], 3, Colors.green, height: 80),
+                ),
+            ],
           ),
         ),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      child: Row(
-        children: [
-          // Rank
-          SizedBox(
-            width: 40,
-            child: Text(
-              '$rank',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-
-          // Avatar with existing function
-          _buildFriendAvatar(user, radius: 25),
-          const SizedBox(width: 10),
-
-          // Username
-          Expanded(
-            child: Text(
-              user.username,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ),
-
-          // Points
-          SizedBox(
-            width: 80,
-            child: Text(
-              _selectedAttribute == 'Total Score'
-                  ? user.totalScore.toString()
-                  : '${(user.winRate * 100).toStringAsFixed(2)}%',
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  /// Builds a circle avatar for a friend based on `avatarKey`.
-  Widget _buildFriendAvatar(User friend, {double radius = 30}) {
-    final assetPath = _mapAvatarKeyToAsset(friend.avatarKey);
-    if (assetPath.isEmpty) {
-      // fallback if no avatarKey
-      return CircleAvatar(
-        radius: radius,
-        backgroundColor: Colors.white24,
-        child: const Icon(Icons.person, color: Colors.white),
-      );
-    } else {
-      return CircleAvatar(
-        radius: radius,
-        backgroundColor: Colors.white24,
-        child: ClipOval(
-          child: SvgPicture.asset(
-            assetPath,
-            fit: BoxFit.cover,
-            width: radius * 2,
-            height: radius * 2,
+  Widget _buildPodiumUser(User user, int rank, Color borderColor,
+      {bool crown = false, double height = 100}) {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: borderColor,
+              child: CircleAvatar(
+                radius: 38,
+                backgroundColor: Colors.black,
+                child: ClipOval(
+                  child: SvgPicture.asset(
+                    _mapAvatarKeyToAsset(user.avatarKey),
+                    width: 76,
+                    height: 76,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+            if (crown)
+              Positioned(
+                top: -5,
+                child: Icon(Icons.emoji_events, color: Colors.amber, size: 24),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 80,
+          child: Text(
+            user.username,
+            style: const TextStyle(color: Colors.white),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            textAlign: TextAlign.center,
           ),
         ),
-      );
-    }
+        Text(
+          _selectedAttribute == 'Total Score'
+              ? user.totalScore.toString()
+              : '${(user.winRate * 100).toStringAsFixed(2)}%',
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
   }
 
-  /// Returns a combined list of currentUser + their friends, for the leaderboard.
+  Widget _buildSortingDropdown() {
+    return // Sorting dropdown
+        ListTile(
+      tileColor: Colors.amber,
+      leading: const Text(
+        'Rank',
+        style: TextStyle(color: Colors.black, fontSize: 16),
+      ),
+      trailing: DropdownButton<String>(
+        value: _selectedAttribute,
+        items: <String>['Total Score', 'Win Rate']
+            .map<DropdownMenuItem<String>>((val) {
+          return DropdownMenuItem<String>(
+            value: val,
+            child: Text(val, style: const TextStyle(color: Colors.black)),
+          );
+        }).toList(),
+        onChanged: (newValue) {
+          setState(() => _selectedAttribute = newValue!);
+        },
+        dropdownColor: Colors.amber,
+        style: const TextStyle(color: Colors.black),
+      ),
+    );
+  }
+
+  Widget _buildRankingList(List<User> friends) {
+    return ListView.builder(
+      itemCount: friends.length - 3,
+      itemBuilder: (ctx, index) {
+        final user = friends[index + 3];
+        return ListTile(
+          leading: Text('${index + 4}',
+              style: const TextStyle(color: Colors.amber, fontSize: 18)),
+          title: Row(
+            children: [
+              _buildFriendAvatar(user, radius: 20),
+              const SizedBox(width: 10),
+              Text(user.username, style: const TextStyle(color: Colors.white)),
+            ],
+          ),
+          trailing: Text(
+            _selectedAttribute == 'Total Score'
+                ? user.totalScore.toString()
+                : '${(user.winRate * 100).toStringAsFixed(2)}%',
+            style: const TextStyle(color: Colors.grey),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFriendAvatar(User friend, {double radius = 30}) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: Colors.white24,
+      child: ClipOval(
+        child: SvgPicture.asset(
+          _mapAvatarKeyToAsset(friend.avatarKey),
+          fit: BoxFit.cover,
+          width: radius * 2,
+          height: radius * 2,
+        ),
+      ),
+    );
+  }
+
   Future<List<User>> _fetchFriendsAndUser() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.user == null) {
-      return [];
-    }
-
-    final userId = userProvider.user!.id;
-    final friends = await FirestoreService().getFriends(userId);
-
-    // Insert the current user at index 0
+    if (userProvider.user == null) return [];
+    final friends = await FirestoreService().getFriends(userProvider.user!.id);
     return [userProvider.user!, ...friends];
   }
 
-  /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
   String _mapAvatarKeyToAsset(String avatarKey) {
-    if (avatarKey.isEmpty) return '';
     return 'assets/avatars/$avatarKey.svg';
   }
 }
