@@ -62,13 +62,25 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(50.0), // here the desired height
           child: AppBar(
-            backgroundColor: const Color(0xFFF0AE1D),
-            title: const Text(
-              'Live Game Stats',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
+            backgroundColor: Colors.white,
+            title: Column(
+              children: [
+                Text(
+                  'Live Ticker',
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  'Current Game',
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
             ),
             centerTitle: true,
           )),
@@ -146,7 +158,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                   children: [
                     _buildCupLayoutTab(team1, team2),
                     _buildStatisticsTab(team1, team2),
-                    _buildTimelineTab(events),
+                    _buildTimelineTab(events, team1, team2),
                     _buildSettingsTab(gameData),
                   ],
                 ),
@@ -185,11 +197,11 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
       {required bool isLeft, bool mirrored = false}) {
     return Table(
       columnWidths: {
-        0: FlexColumnWidth(mirrored ? 2 : 3),
-        1: FlexColumnWidth(2),
-        2: FlexColumnWidth(2),
-        3: FlexColumnWidth(2),
-        4: FlexColumnWidth(mirrored ? 3 : 2),
+        0: FlexColumnWidth(mirrored ? 1 : 2.5),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(1),
+        3: FlexColumnWidth(1),
+        4: FlexColumnWidth(mirrored ? 2.5 : 1),
       },
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
@@ -266,356 +278,442 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     return _buildMatchStats(team1, team2);
   }
 
-  Widget _buildTimelineTab(List<GameEvent> events) {
+  Widget _buildTimelineTab(List<GameEvent> events, Team team1, Team team2) {
     return ListView.builder(
       itemCount: events.length,
       itemBuilder: (context, index) {
         final event = events[index];
-        return _buildEventItem(event);
+        final isTeam1 = event.team == null;
+        print(team1);
+
+        return _buildEventRow(event, isTeam1);
       },
     );
   }
 
-  Widget _buildEventItem(GameEvent event) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-      child: ListTile(
-        title: Text(event.eventType),
-        subtitle: Text(
-          event.player != null
-              ? 'Player: ${event.player}'
-              : 'Team: ${event.team}',
-        ),
-        trailing: Icon(Icons.sports),
-      ),
-    );
-  }
+  Widget _buildEventRow(GameEvent event, bool isTeam1) {
+    Color eventColor = _getEventColor(event.eventType);
+    IconData eventIcon = _getEventIcon(event.eventType);
 
-  Widget _buildSettingsTab(Map<String, dynamic> gameData) {
-    return SingleChildScrollView(
-      // To make the content scrollable if needed
-      child: Center(
-        child: Column(
-          children: [
-            // Add the Bracket Section
-            _buildBracketSection(
-              title: 'Deathcup',
-              imagePath:
-                  'assets/racoon_winner.svg', // Replace with your image path
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'When a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.\n',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    'The team that hits the deathcup automatically wins!',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  // Add more rules as needed
-                ],
-              ),
-              infoMessage: 'This section explains the game rules in detail.',
-            ),
-            _buildBracketSection(
-              title: 'Island',
-              imagePath:
-                  'assets/frog_island.svg', // Replace with your image path
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'A player can declare an island-shot (once per game) when a single cup has no surrounding cups.\n',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    'When an ISLAND is hit, an additional cup is cleared from the field!',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  // Add more player info as needed
-                ],
-              ),
-              infoMessage: 'This section provides player details and stats.',
-            ),
-            _buildBracketSection(
-              title: 'Putback',
-              imagePath:
-                  'assets/cat_boxing.svg', // Replace with your image path
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'When the last cup is hit, the enemy team has a chance to revoke the cuphit.\n',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    'Each player of the losing team has the chance to score a putback!',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  // Add more player info as needed
-                ],
-              ),
-              infoMessage: 'This section provides player details and stats.',
-            ),
-            // You can add more sections as needed
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopBracket(Team team1, Team team2) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFFF0AE1D), Color.fromARGB(255, 214, 176, 60)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Column(
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Round 16',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildTeamLogo('assets/avatars/avatar_catbeer.svg', 'Team Blue'),
-              Column(
-                children: [
-                  Text(
-                    '${totalScore(team1)} - ${totalScore(team2)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'LIVE',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              _buildTeamLogo('assets/avatars/avatar_catbeer.svg', 'Team Red'),
-            ],
-          ),
+          Expanded(
+              child:
+                  isTeam1 ? _buildPlayerInfo(event, eventColor) : SizedBox()),
+          Expanded(child: isTeam1 ? _buildTimestamp(event) : SizedBox()),
+          Icon(eventIcon, color: eventColor),
+          Expanded(child: !isTeam1 ? _buildTimestamp(event) : SizedBox()),
+          Expanded(
+              child:
+                  !isTeam1 ? _buildPlayerInfo(event, eventColor) : SizedBox()),
         ],
       ),
     );
   }
 
-  num totalScore(Team team) {
-    return team.players.map((player) => player.score).reduce((a, b) => a + b);
-  }
-
-  Widget _buildTeamLogo(String assetPath, String teamName) {
-    return Column(
-      children: [
-        SvgPicture.asset(
-          assetPath,
-          height: 60,
-          width: 60,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          teamName,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
+  Widget _buildPlayerInfo(GameEvent event, Color color) {
+    return Text(
+      event.player ?? 'End Turn',
+      style: TextStyle(fontWeight: FontWeight.bold, color: color),
+      textAlign: TextAlign.center,
     );
   }
 
-  Widget _buildMatchStats(Team team1, Team team2) {
-    final stats = [
-      {
-        'title': 'Score',
-        'team1': team1.players[0].score.toDouble(),
-        'team2': team2.players[0].score.toDouble()
-      },
-      {
-        'title': 'Throws',
-        'team1': team1.players[0].throws.toDouble(),
-        'team2': team2.players[0].throws.toDouble()
-      },
-      {
-        'title': 'Airballs',
-        'team1': team1.players[0].airballs.toDouble(),
-        'team2': team2.players[0].airballs.toDouble()
-      },
-      {
-        'title': 'Misses',
-        'team1': team1.players[0].misses.toDouble(),
-        'team2': team2.players[0].misses.toDouble()
-      },
-      // New placeholder stats
-      {
-        'title': 'Accuracy',
-        'team1': 65.0,
-        'team2': 58.0,
-      },
-      {
-        'title': 'Rebounds',
-        'team1': 12.0,
-        'team2': 15.0,
-      },
-      {
-        'title': 'Blocks',
-        'team1': 3.0,
-        'team2': 5.0,
-      },
-    ];
+  Widget _buildTimestamp(GameEvent event) {
+    return Text(
+      '5\'',
+      style: TextStyle(fontSize: 12, color: Colors.grey),
+      textAlign: TextAlign.center,
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+  Color _getEventColor(String eventType) {
+    switch (eventType) {
+      case "Airball":
+        return Colors.blue;
+      case "Bitchcup":
+        return Colors.red;
+      case "Normal Hit":
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getEventIcon(String eventType) {
+    switch (eventType) {
+      case "Airball":
+        return BeerpongIcons.airball;
+      case "Bitchcup":
+        return Icons.warning;
+      case "Normal Hit":
+        return Icons.sports_bar;
+      default:
+        return Icons.sports;
+    }
+  }
+}
+
+IconData _getEventIcon(String eventType) {
+  switch (eventType) {
+    case "Airball":
+      return Icons.sports_basketball;
+    case "Bitchcup":
+      return Icons.warning;
+    case "Normal Hit":
+      return Icons.sports_soccer;
+    default:
+      return Icons.sports;
+  }
+}
+
+Widget _buildSettingsTab(Map<String, dynamic> gameData) {
+  return SingleChildScrollView(
+    // To make the content scrollable if needed
+    child: Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Match Stats',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18, // Reduced font size
-              fontWeight: FontWeight.bold,
+          // Add the Bracket Section
+          _buildBracketSection(
+            title: 'Deathcup',
+            imagePath:
+                'assets/racoon_winner.svg', // Replace with your image path
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'When a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.\n',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'The team that hits the deathcup automatically wins!',
+                  style: TextStyle(color: Colors.white),
+                ),
+                // Add more rules as needed
+              ],
             ),
+            infoMessage: 'This section explains the game rules in detail.',
           ),
-          const SizedBox(height: 12), // Reduced spacing
-          Column(
-            children: stats.map((stat) {
-              double team1Value = stat['team1'] as double;
-              double team2Value = stat['team2'] as double;
-              double maxStatValue =
-                  team1Value > team2Value ? team1Value : team2Value;
+          _buildBracketSection(
+            title: 'Island',
+            imagePath: 'assets/frog_island.svg', // Replace with your image path
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'A player can declare an island-shot (once per game) when a single cup has no surrounding cups.\n',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'When an ISLAND is hit, an additional cup is cleared from the field!',
+                  style: TextStyle(color: Colors.white),
+                ),
+                // Add more player info as needed
+              ],
+            ),
+            infoMessage: 'This section provides player details and stats.',
+          ),
+          _buildBracketSection(
+            title: 'Putback',
+            imagePath: 'assets/cat_boxing.svg', // Replace with your image path
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text(
+                  'When the last cup is hit, the enemy team has a chance to revoke the cuphit.\n',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Each player of the losing team has the chance to score a putback!',
+                  style: TextStyle(color: Colors.white),
+                ),
+                // Add more player info as needed
+              ],
+            ),
+            infoMessage: 'This section provides player details and stats.',
+          ),
+          // You can add more sections as needed
+        ],
+      ),
+    ),
+  );
+}
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 6.0), // Compact vertical padding
-                child: Column(
+Widget _buildTopBracket(Team team1, Team team2) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(
+        horizontal: 16.0, vertical: 20), // Add side margins
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(12), // Rounded corners for the box
+      child: Container(
+        height: 150,
+        decoration: BoxDecoration(
+          color: Colors.grey[800], // Fallback background color
+        ),
+        child: Stack(
+          children: [
+            // SVG Background
+            Positioned.fill(
+              child: SvgPicture.asset(
+                'assets/sun-tornado.svg', // Replace with your SVG path
+                fit: BoxFit.cover, // Ensure the SVG fills the container
+              ),
+            ),
+            Column(
+              children: [
+                const Text(
+                  'Round 16',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    _buildTeamLogo('assets/avatars/blue_team.svg', 'Team Blue'),
+                    Column(
                       children: [
                         Text(
-                          team1Value.toString(),
+                          '${totalScore(team1).round()} : ${totalScore(team2).round()}',
                           style: const TextStyle(
-                            color: Colors.blueAccent,
-                            fontSize: 14, // Smaller font
-                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text(
-                          stat['title'] as String,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14, // Smaller font
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                        ),
-                        Text(
-                          team2Value.toString(),
-                          style: const TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 14, // Smaller font
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 10,
-                            child: Stack(
-                              children: [
-                                Container(
-                                  height: 10,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  left:
-                                      (((team1Value + 1) / (maxStatValue + 1)) *
-                                              100)
-                                          .toDouble(),
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    height: 10,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: team1.color,
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: SizedBox(
-                            height: 10,
-                            child: Stack(
-                              children: [
-                                Container(
-                                  height: 10,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                                Positioned(
-                                  right:
-                                      (((team2Value + 1) / (maxStatValue + 1)) *
-                                              100)
-                                          .toDouble(),
-                                  left: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    height: 10,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: team2.color,
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                )
-                              ],
+                          child: const Text(
+                            'LIVE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
                       ],
                     ),
+                    _buildTeamLogo('assets/avatars/red_team.svg', 'Team Red'),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
-                    /*
+num totalScore(Team team) {
+  return team.players.map((player) => player.score).reduce((a, b) => a + b);
+}
+
+Widget _buildTeamLogo(String assetPath, String teamName) {
+  return Column(
+    children: [
+      SvgPicture.asset(
+        assetPath,
+        height: 60,
+        width: 60,
+      ),
+      const SizedBox(height: 8),
+      Text(
+        teamName,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ],
+  );
+}
+
+Widget _buildMatchStats(Team team1, Team team2) {
+  final stats = [
+    {
+      'title': 'Score',
+      'team1': team1.players[0].score.toDouble(),
+      'team2': team2.players[0].score.toDouble()
+    },
+    {
+      'title': 'Throws',
+      'team1': team1.players[0].throws.toDouble(),
+      'team2': team2.players[0].throws.toDouble()
+    },
+    {
+      'title': 'Airballs',
+      'team1': team1.players[0].airballs.toDouble(),
+      'team2': team2.players[0].airballs.toDouble()
+    },
+    {
+      'title': 'Misses',
+      'team1': team1.players[0].misses.toDouble(),
+      'team2': team2.players[0].misses.toDouble()
+    },
+    // New placeholder stats
+    {
+      'title': 'Accuracy',
+      'team1': 65.0,
+      'team2': 58.0,
+    },
+    {
+      'title': 'Rebounds',
+      'team1': 12.0,
+      'team2': 15.0,
+    },
+    {
+      'title': 'Blocks',
+      'team1': 3.0,
+      'team2': 5.0,
+    },
+  ];
+
+  return Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Match Stats',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18, // Reduced font size
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12), // Reduced spacing
+        Column(
+          children: stats.map((stat) {
+            double team1Value = stat['team1'] as double;
+            double team2Value = stat['team2'] as double;
+            double maxStatValue =
+                team1Value > team2Value ? team1Value : team2Value;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 6.0), // Compact vertical padding
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        team1Value.toString(),
+                        style: const TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 14, // Smaller font
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        stat['title'] as String,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14, // Smaller font
+                        ),
+                      ),
+                      Text(
+                        team2Value.toString(),
+                        style: const TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 14, // Smaller font
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 10,
+                          child: Stack(
+                            children: [
+                              Container(
+                                height: 10,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              Positioned(
+                                right: 0,
+                                left: (((team1Value + 1) / (maxStatValue + 1)) *
+                                        100)
+                                    .toDouble(),
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  height: 10,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: team1.color,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 10,
+                          child: Stack(
+                            children: [
+                              Container(
+                                height: 10,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                              Positioned(
+                                right:
+                                    (((team2Value + 1) / (maxStatValue + 1)) *
+                                            100)
+                                        .toDouble(),
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  height: 10,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: team2.color,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  /*
                       children: [
                         Expanded(
                           flex: (((team1Value + 1) / (maxStatValue + 1)) * 100)
@@ -646,66 +744,65 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                           ),
                         ),
                       ],*/
-                  ],
-                ),
-              );
-            }).toList(),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildCupLayoutsRow(Team team1, Team team2) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+    child: Container(
+      height: 200,
+      decoration: BoxDecoration(
+        color: Color.fromARGB(
+            255, 214, 176, 60), // Background color for the container
+        borderRadius: BorderRadius.circular(20.0), // Rounded corners
+      ),
+      child: Stack(
+        children: [
+          // Left Cup Layout
+          Positioned(
+            right: 160, // tricked the padding but overflows in the middle
+            top: 10,
+            bottom: 10,
+            child: Transform.rotate(
+              angle: -90 * 3.14159 / 180, // Rotate counterclockwise
+              child: Transform.scale(
+                scale: 0.5, // Scale to fit within the bounds
+                child: CupLayout.buildCupsArea(team: team1),
+              ),
+            ),
+          ),
+          // Right Cup Layout
+          Positioned(
+            left: 160, // tricked the padding but overflows in the middle
+            top: 10,
+            bottom: 10,
+            child: Transform.rotate(
+              angle: 90 * 3.14159 / 180, // Rotate clockwise
+              child: Transform.scale(
+                scale: 0.5, // Scale to fit within the bounds
+                child: CupLayout.buildCupsArea(team: team2),
+              ),
+            ),
+          ),
+          // Divider
+          Center(
+            child: Container(
+              width: 1,
+              color: Colors.white.withOpacity(0.6),
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCupLayoutsRow(Team team1, Team team2) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          color: Color.fromARGB(
-              255, 214, 176, 60), // Background color for the container
-          borderRadius: BorderRadius.circular(20.0), // Rounded corners
-        ),
-        child: Stack(
-          children: [
-            // Left Cup Layout
-            Positioned(
-              right: 180, // tricked the padding but overflows in the middle
-              top: 10,
-              bottom: 10,
-              child: Transform.rotate(
-                angle: -90 * 3.14159 / 180, // Rotate counterclockwise
-                child: Transform.scale(
-                  scale: 0.5, // Scale to fit within the bounds
-                  child: CupLayout.buildCupsArea(team: team1),
-                ),
-              ),
-            ),
-            // Right Cup Layout
-            Positioned(
-              left: 180, // tricked the padding but overflows in the middle
-              top: 10,
-              bottom: 10,
-              child: Transform.rotate(
-                angle: 90 * 3.14159 / 180, // Rotate clockwise
-                child: Transform.scale(
-                  scale: 0.5, // Scale to fit within the bounds
-                  child: CupLayout.buildCupsArea(team: team2),
-                ),
-              ),
-            ),
-            // Divider
-            Center(
-              child: Container(
-                width: 1,
-                color: Colors.white.withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
 }
 
 Widget _buildBracketSection({

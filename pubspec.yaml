@@ -109,9 +109,13 @@ flutter:
     - assets/avatars/avatar_frogisland.svg
     - assets/avatars/avatar_aggroracoon.svg
     - assets/avatars/avatar_cupbeer.svg
+    - assets/avatars/blue_team.svg
+    - assets/avatars/red_team.svg
     - assets/avatar_border.svg
     - assets/slanted-gradient.svg
     - assets/cat_avatar_profile.svg
+    - assets/sun-tornado.svg
+    - assets/sun-tornado.png
     - assets/liquid-cheese.svg
     - assets/liquid-cheese.png
     - assets/ach_wins.png
