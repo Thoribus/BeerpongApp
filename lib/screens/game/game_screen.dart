@@ -287,7 +287,8 @@ class GameScreenState extends State<GameScreen> {
       DialogHelpers.showRearrangeErrorDialog(this);
       return;
     }
-    saveCurrentState(GameEvent(eventType: "Rearranged", team: currentTeam.color.value.toString()));
+    saveCurrentState(GameEvent(
+        eventType: "Rearranged", team: currentTeam.color.value.toString()));
     setState(() {
       if (!currentTeam.isRearranged) {
         // Filter only cups that match the current color & are visible
@@ -334,7 +335,8 @@ class GameScreenState extends State<GameScreen> {
       'Select Player',
       currentTeam.currentPlayers.where((p) => !p.islandShotUsed).toList(),
       (player) {
-        saveCurrentState(GameEvent(eventType: "Hightlight Island", player: player.name));
+        saveCurrentState(
+            GameEvent(eventType: "Hightlight Island", player: player.name));
         setState(() {
           currentIslandShooter = player;
           player.islandShotUsed = true;
@@ -386,7 +388,8 @@ class GameScreenState extends State<GameScreen> {
       'Select Player and Shot Result',
       currentTeam.currentPlayers,
       (player) {
-        saveCurrentState(GameEvent(eventType: "Island Shot", player: player.name));
+        saveCurrentState(
+            GameEvent(eventType: "Island Shot", player: player.name));
         // If chosen player == currentIslandShooter => island “power shot”
         if (player == currentIslandShooter) {
           setState(() {
@@ -509,7 +512,8 @@ class GameScreenState extends State<GameScreen> {
     // If chosenPlayer != null => enemyHit = true => revert the last cup
     if (chosenPlayer != null) {
       setState(() => chosenPlayer.defended++);
-      saveCurrentState(GameEvent(eventType: "Defended", player: chosenPlayer.name));
+      saveCurrentState(
+          GameEvent(eventType: "Defended", player: chosenPlayer.name));
       _removeLastCupHit(cupIndex);
       return true; // enemyHit
     } else {
@@ -604,8 +608,8 @@ class GameScreenState extends State<GameScreen> {
       eventsJson.add(event.toJson());
     }
 
-    await FirestoreService().updateGameDoc(id,
-        team1: team1, team2: team2, events: eventsJson);
+    await FirestoreService()
+        .updateGameDoc(id, team1: team1, team2: team2, events: eventsJson);
   }
 
   void _undoLastAction() async {
@@ -630,8 +634,8 @@ class GameScreenState extends State<GameScreen> {
       eventsJson.add(event.toJson());
     }
 
-    FirestoreService().updateGameDoc(id,
-        team1: team1, team2: team2, events: eventsJson);
+    FirestoreService()
+        .updateGameDoc(id, team1: team1, team2: team2, events: eventsJson);
   }
   //endregion
 
@@ -741,7 +745,7 @@ class GameScreenState extends State<GameScreen> {
         style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
-      backgroundColor: Colors.amber.withOpacity(0.75),
+      backgroundColor: Color(0xFFF0AE1D),
       actions: [
         IconButton(
           icon: const Icon(Icons.scatter_plot_outlined),
@@ -969,7 +973,7 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// The “Game Stats” page showing a DataTable and hit rate chart.
+  /// The "Game Stats" page showing possible game actions and team brackets.
   Widget _buildGameStatsPage(Color teamColor) {
     return Container(
       color: Colors.black,
@@ -980,63 +984,24 @@ class GameScreenState extends State<GameScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Team Statistic',
+                'Upcoming Actions',
                 style: TextStyle(
                     color: Colors.amber,
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold),
               ),
-              const Divider(color: Colors.amber, thickness: 1),
               const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(
-                        label: Text('Player',
-                            style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('S', style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('M', style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('T', style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('A', style: TextStyle(color: Colors.white))),
-                  ],
-                  rows: currentTeam.players.map((player) {
-                    return DataRow(
-                      cells: [
-                        DataCell(Row(
-                          children: [
-                            Icon(Icons.person, color: teamColor),
-                            const SizedBox(width: 8),
-                            Text(
-                              player.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        )),
-                        DataCell(Text('${player.score}',
-                            style: const TextStyle(color: Colors.white))),
-                        DataCell(Text('${player.misses}',
-                            style: const TextStyle(color: Colors.white))),
-                        DataCell(Text('${player.throws}',
-                            style: const TextStyle(color: Colors.white))),
-                        DataCell(Text('${player.airballs}',
-                            style: const TextStyle(color: Colors.white))),
-                      ],
-                    );
-                  }).toList(),
-                ),
+              _buildGameActions(currentTeam.players),
+              const SizedBox(height: 10),
+              const Text(
+                'Team Statistics',
+                style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 50),
-              _buildHitRateChart(teamColor),
+              const SizedBox(height: 10),
+              _buildTeamBrackets(),
             ],
           ),
         ),
@@ -1044,59 +1009,266 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// Builds a grid of CircularPercentIndicators for each player’s hit rate.
-  Widget _buildHitRateChart(Color teamColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Hit Rate (%)',
-          style: TextStyle(
-              color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const Divider(color: Colors.amber, thickness: 1),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 200,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: currentTeam.players.length,
-            itemBuilder: (context, index) {
-              final player = currentTeam.players[index];
-              final hitRate = _calculateHitRate(player.score, player.throws);
-              final displayHitRate = hitRate.clamp(0, 100);
+  /// Displays possible game actions for this turn.
+  Widget _buildGameActions(List<Player> players) {
+    // Define actions with their properties
+    List<Map<String, dynamic>> actions = [
+      {
+        'actionTitle': 'Bitchcup',
+        'progressText': 'loosen your belt',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': 'Team Blue',
+        'playerIcon': Icons.dry_cleaning_outlined,
+        'progressValue': 0.7, // create when 2 of 3 airballs are hit
+        'isActive': false,
+      },
+      {
+        'actionTitle': 'On fire',
+        'progressText': 'get your balls back',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': '2 in a row',
+        'playerIcon': Icons.local_fire_department,
+        'progressValue': 0.7, // create when 2 of 3 airballs are hit
+        'isActive': true,
+      },
+      {
+        'actionTitle': '3rd Airball',
+        'progressText': '1 airball until shot',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': 'Team Red',
+        'playerIcon': BeerpongIcons.airball,
+        'progressValue': 0.5,
+        'isActive': false,
+      },
+      {
+        'actionTitle': 'Island',
+        'progressText': 'One hit for two cups',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': '2 ready',
+        'playerIcon': BeerpongIcons.palm_tree,
+        'progressValue': 0.8,
+        'isActive': currentTeam.canIslandShot,
+      },
+    ];
 
-              return Column(
-                children: [
-                  Text(player.name,
-                      style: const TextStyle(color: Colors.white)),
-                  Expanded(
-                    child: CircularPercentIndicator(
-                      radius: 50.0,
-                      lineWidth: 10.0,
-                      animation: true,
-                      percent: displayHitRate / 100.0, // clamp to [0..1]
-                      center: Text(
-                        "${hitRate.toStringAsFixed(1)}%",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.0,
-                            color: teamColor),
-                      ),
-                      circularStrokeCap: CircularStrokeCap.round,
-                      progressColor: teamColor,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+    return Column(
+      children: actions
+          .where((action) => action['isActive'] == true)
+          .map((action) => _buildActionBracket(action))
+          .toList(),
+    );
+  }
+
+  /// Builds an individual action bracket.
+  Widget _buildActionBracket(Map<String, dynamic> actionData) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.amberAccent, Colors.grey],
         ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  actionData['actionTitle'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: actionData['progressText'],
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: actionData['teamColor'],
+                        ),
+                      ),
+                      const TextSpan(
+                        text: ' - ',
+                        style: TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                      TextSpan(
+                        text: '${actionData['playerName']} is making a move',
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: actionData['teamColor'].withOpacity(0.2),
+                child: Icon(actionData['playerIcon'],
+                    color: actionData['teamColor']),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                actionData['teamName'],
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Displays team brackets at the bottom.
+  Widget _buildTeamBrackets() {
+    return Column(
+      children: [
+        _buildTeamBracket('Team Blue', Colors.blue, team1.players),
+        const SizedBox(height: 20),
+        _buildTeamBracket('Team Red', Colors.red, team2.players),
       ],
+    );
+  }
+
+  /// Builds a single team bracket section with a gradient background.
+  Widget _buildTeamBracket(String teamName, Color color, List<Player> players) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color, Colors.grey],
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              teamName,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Table(
+              border: TableBorder.symmetric(
+                  outside: BorderSide.none, inside: BorderSide.none),
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(1),
+                2: FlexColumnWidth(1),
+                3: FlexColumnWidth(1),
+                4: FlexColumnWidth(1),
+              },
+              children: [
+                TableRow(
+                  decoration:
+                      BoxDecoration(color: Colors.white.withOpacity(0.2)),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('Player',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('S',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('A',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('T',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('M',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                  ],
+                ),
+                ...players.map((player) => TableRow(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(player.name,
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.score}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.airballs}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.throws}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.misses}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                      ],
+                    )),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 

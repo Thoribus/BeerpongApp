@@ -62,13 +62,13 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(50.0), // here the desired height
           child: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Color(0xFFF0AE1D),
             title: Column(
               children: [
                 Text(
                   'Live Ticker',
                   style: TextStyle(
-                    color: Colors.amber,
+                    color: Colors.black,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -76,7 +76,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                 Text(
                   'Current Game',
                   style: TextStyle(
-                    color: Colors.amber,
+                    color: Colors.black,
                     fontSize: 10,
                   ),
                 ),

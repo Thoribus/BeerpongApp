@@ -22,8 +22,16 @@ class ComparisonScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Compare Stats'),
+        title: const Text(
+          'Compare Stats',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
         backgroundColor: Colors.amber,
+        centerTitle: true,
       ),
       body: Container(
         color: Colors.black, // Full-screen background color
@@ -64,7 +72,7 @@ class ComparisonScreen extends StatelessWidget {
   Widget _buildPlayerCard(User user) {
     return SizedBox(
       width: 150, // Fixed width for player cards
-      height: 280, // Fixed height for player cards
+      height: 220, // Fixed height for player cards
       child: Card(
         color: Colors.grey[900],
         child: Padding(
