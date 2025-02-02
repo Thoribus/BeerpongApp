@@ -68,11 +68,29 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Lifecycle -----
+
+  //animation testing
+  late Alignment beginAlignment;
+  late Alignment endAlignment;
+
   @override
   void initState() {
     super.initState();
     _loadGameFuture = _loadGameState();
     _pageController.addListener(_handlePageChange);
+
+    // Initialize the gradient direction
+    beginAlignment = Alignment.topLeft;
+    endAlignment = Alignment.bottomRight;
+  }
+
+  // Function to toggle gradient direction
+  void toggleGradientDirection() {
+    setState(() {
+      final temp = beginAlignment;
+      beginAlignment = endAlignment;
+      endAlignment = temp;
+    });
   }
 
   @override
@@ -806,11 +824,14 @@ class GameScreenState extends State<GameScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16.0),
                 gradient: LinearGradient(
-                  colors: [Colors.brown.shade700, Colors.brown.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.amber.withOpacity(0.2),
+                    Colors.grey.shade600,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                border: Border.all(color: Colors.white, width: 4.0),
+                border: Border.all(color: Colors.white, width: 2.0),
               ),
               child: Column(
                 children: [
@@ -854,122 +875,177 @@ class GameScreenState extends State<GameScreen> {
             top: 20.0,
             left: 16.0,
             right: 16.0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Deathcup (if applicable) or placeholder
-                if (selectedRules["Deathcup"] == true)
-                  FloatingActionButton(
-                    onPressed: () => DialogHelpers.showDeathcupSelectionDialog(
-                        this, currentTeam, (player) => _handleDeathCup(player)),
-                    backgroundColor: Colors.amber,
-                    heroTag: "Deathcup",
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(20),
-                        bottomLeft: Radius.circular(100),
-                        bottomRight: Radius.circular(100),
-                        topLeft: Radius.circular(100),
-                      ),
-                    ),
-                    child: const Icon(BeerpongIcons.skull, size: 35),
-                  )
-                else
-                  const SizedBox(width: 56.0), // placeholder
-
-                // Airball button in the middle
-                FloatingActionButton.extended(
-                  backgroundColor: Colors.amber,
-                  heroTag: "airball",
-                  onPressed: () =>
-                      DialogHelpers.showAirballPlayerSelectionDialog(this,
-                          currentTeam, (player) => _handleAirballRule(player)),
-                  tooltip: 'Airball',
-                  label: const Text('Airball'),
-                  icon: const Icon(BeerpongIcons.airball, size: 45),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.0), // Rounded corners
+                border:
+                    Border.all(color: Colors.white, width: 2.0), // White border
+                gradient: LinearGradient(
+                  colors: [
+                    currentTeam == team1 ? team2.color : team1.color,
+                    Colors.grey
+                  ], // Gradient colors
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
                 ),
+              ),
+              padding: const EdgeInsets.all(8.0), // Padding around the buttons
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Deathcup (if applicable) or placeholder
+                  if (selectedRules["Deathcup"] == true)
+                    FloatingActionButton(
+                      onPressed: () =>
+                          DialogHelpers.showDeathcupSelectionDialog(this,
+                              currentTeam, (player) => _handleDeathCup(player)),
+                      backgroundColor:
+                          currentTeam == team1 ? team2.color : team1.color,
+                      heroTag: "Deathcup",
+                      shape: const CircleBorder(
+                        side: BorderSide(
+                            color: Colors.white,
+                            width: 2.0), // White border with width 2
+                      ),
+                      child: const Icon(
+                        BeerpongIcons.skull,
+                        size: 35,
+                        color: Colors.black,
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 56.0), // Placeholder
 
-                // Island (if applicable) or placeholder
-                if (selectedRules["Island"] == true)
-                  FloatingActionButton(
-                    backgroundColor: islandBackgroundColor,
-                    heroTag: "Island",
-                    onPressed: currentTeam.canIslandShot &&
-                            currentTeam.cups
-                                .any((c) => c.isVisible && _isIslandCup(c))
-                        ? _highlightIslandCups
-                        : null, // disable if not available
-                    child: const Icon(BeerpongIcons.palm_tree, size: 45),
-                  )
-                else
-                  const SizedBox(width: 56.0), // placeholder
-              ],
+                  // Airball button in the middle
+                  FloatingActionButton.extended(
+                    heroTag: "airball",
+                    onPressed: () =>
+                        DialogHelpers.showAirballPlayerSelectionDialog(
+                            this,
+                            currentTeam,
+                            (player) => _handleAirballRule(player)),
+                    tooltip: 'Airball',
+                    backgroundColor:
+                        Colors.transparent, // Clear the background color
+                    elevation: 0, // Remove the shadow
+                    label: const Text(
+                      'Airball Area',
+                      style: TextStyle(
+                          color: Colors.black), // Text color can be customized
+                    ),
+                  ),
+
+                  // Island (if applicable) or placeholder
+                  if (selectedRules["Island"] == true)
+                    FloatingActionButton(
+                      backgroundColor: islandBackgroundColor,
+                      heroTag: "Island",
+                      shape: const CircleBorder(
+                        side: BorderSide(
+                            color: Colors.white,
+                            width: 2.0), // White border with width 2
+                      ),
+                      onPressed: currentTeam.canIslandShot &&
+                              currentTeam.cups
+                                  .any((c) => c.isVisible && _isIslandCup(c))
+                          ? _highlightIslandCups
+                          : null, // Disable if not available
+                      child: const Icon(BeerpongIcons.palm_tree, size: 45),
+                    )
+                  else
+                    const SizedBox(width: 56.0), // Placeholder
+                ],
+              ),
             ),
-          ),
+          )
         ],
       );
     });
   }
 
-  /// Builds a player name widget with consistent styling.
   Widget _buildPlayerName(Player player) {
-    return Container(
-      padding: const EdgeInsets.all(8.0), // Inner padding
-      decoration: BoxDecoration(
-        color: Colors.brown.shade600, // Background color for card
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.5), // Semi-transparent border
-          width: 0.5,
-        ),
-        borderRadius: BorderRadius.circular(8.0), // Rounded corners
+    return TweenAnimationBuilder<Alignment>(
+      tween: AlignmentTween(
+        begin: beginAlignment, // Add your starting alignment
+        end: endAlignment, // Add your ending alignment
       ),
-      child: Row(
-        children: [
-          player.user == null
-              ? const CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.white24,
-                  child: Icon(Icons.person, color: Colors.white),
-                )
-              : CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.white24,
-                  child: ClipOval(
-                    child: SvgPicture.asset(
-                      _mapAvatarKeyToAsset(player.user!.avatarKey),
-                      fit: BoxFit.cover,
-                      width: 20 * 2,
-                      height: 20 * 2,
-                    ),
-                  ),
-                ),
-          const SizedBox(width: 8.0), // Space between avatar and text
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  player.name.length > 13
-                      ? '${player.name.substring(0, 12)}...' // Truncate long names
-                      : player.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.0,
-                  ),
-                  overflow: TextOverflow.ellipsis, // Handles very long names
-                ),
-                const SizedBox(height: 4.0),
-                const Text(
-                  'Level: 1', // Dummy level
-                  style: TextStyle(color: Colors.grey, fontSize: 12.0),
-                ),
+      duration: const Duration(seconds: 5),
+      onEnd: () {
+        setState(() {
+          // Swap gradient direction after animation ends
+          final temp = beginAlignment;
+          beginAlignment = endAlignment;
+          endAlignment = temp;
+        });
+      },
+      builder: (context, alignment, child) {
+        return Container(
+          padding: const EdgeInsets.all(8.0), // Inner padding
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                currentTeam.color,
+                Colors.grey.shade600,
               ],
+              begin: alignment,
+              end: Alignment.center,
             ),
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.5), // Semi-transparent border
+              width: 0.5,
+            ),
+            borderRadius: BorderRadius.circular(8.0), // Rounded corners
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              player.user == null
+                  ? const CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white24,
+                      child: Icon(Icons.person, color: Colors.white),
+                    )
+                  : CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white24,
+                      child: ClipOval(
+                        child: SvgPicture.asset(
+                          _mapAvatarKeyToAsset(player.user!.avatarKey),
+                          fit: BoxFit.cover,
+                          width: 20 * 2,
+                          height: 20 * 2,
+                        ),
+                      ),
+                    ),
+              const SizedBox(width: 8.0), // Space between avatar and text
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      player.name.length > 13
+                          ? '${player.name.substring(0, 12)}...' // Truncate long names
+                          : player.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.0,
+                      ),
+                      overflow:
+                          TextOverflow.ellipsis, // Handles very long names
+                    ),
+                    const SizedBox(height: 4.0),
+                    const Text(
+                      'Level: 1', // Dummy level
+                      style: TextStyle(color: Colors.grey, fontSize: 12.0),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1272,40 +1348,101 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// Bottom navigation with Undo, Rearrange, End Turn.
   Widget _buildBottomAppBar() {
     return BottomAppBar(
-      color: Colors.black,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // Undo
-          FloatingActionButton(
-            backgroundColor: Colors.amber,
-            heroTag: "undo",
-            onPressed: _undoLastAction,
-            tooltip: 'Go Back one turn.',
-            child: const Icon(Icons.undo),
+      color: Colors
+          .transparent, // Make the background transparent for a cleaner look
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Undo
+            _buildBottomButton(
+              onPressed: _undoLastAction,
+              tooltip: 'Go Back one turn.',
+              icon: Icons.undo,
+              label: 'undo', //Undo
+              gradient: LinearGradient(
+                colors: [Colors.blue.shade700, Colors.blue.shade300],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            // Rearrange
+            _buildBottomButton(
+              onPressed: toggleRearranged,
+              tooltip: 'Rearrange the current cups.',
+              icon: Icons.scatter_plot_outlined,
+              label: 'arrange', //Rearrange
+              gradient: LinearGradient(
+                colors: [Colors.green.shade700, Colors.green.shade300],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            // End Turn
+            _buildBottomButton(
+              onPressed: () => DialogHelpers.confirmEndTurn(this),
+              tooltip: 'All cups selected. Next turn.',
+              icon: Icons.check_rounded,
+              label: 'end', //End Turn
+              gradient: LinearGradient(
+                colors: [Colors.red.shade700, Colors.red.shade300],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomButton({
+    required VoidCallback onPressed,
+    required String tooltip,
+    required IconData icon,
+    required String label,
+    required Gradient gradient,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: FloatingActionButton(
+        backgroundColor:
+            Colors.transparent, // Remove solid color to show the gradient
+        onPressed: onPressed,
+        heroTag: label.isEmpty
+            ? 'undo'
+            : label.toLowerCase(), // Unique heroTag for each button
+        elevation: 6, // Slight elevation for depth
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30)), // Rounded edges
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: gradient, // Apply the gradient here
+            borderRadius: BorderRadius.circular(30), // Rounded corners
           ),
-          // Rearrange
-          FloatingActionButton.extended(
-            backgroundColor: Colors.amber,
-            heroTag: "rearrange",
-            onPressed: toggleRearranged,
-            tooltip: 'Rearrange the current cups.',
-            label: const Text('Rearrange'),
-            icon: const Icon(BeerpongIcons.umstellen, size: 35),
+          child: Container(
+            width: 56,
+            height: 56,
+            alignment: Alignment.center,
+            child: label.isEmpty
+                ? Icon(icon, size: 30, color: Colors.white)
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 30, color: Colors.white),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ],
+                  ),
           ),
-          // End Turn
-          FloatingActionButton.extended(
-            backgroundColor: Colors.amber,
-            heroTag: "end",
-            onPressed: () => DialogHelpers.confirmEndTurn(this),
-            tooltip: 'All cups selected. Next turn.',
-            label: const Text('End Turn'),
-            icon: const Icon(Icons.check_rounded),
-          ),
-        ],
+        ),
       ),
     );
   }

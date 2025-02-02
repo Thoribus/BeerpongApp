@@ -174,11 +174,16 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Left Team Players above the cup layout
-
           const SizedBox(height: 16),
 
-          _buildPlayerTable(team1, isLeft: true),
+          // Team Stat Brackets Above Cup Layout
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildTeamStatBracket(team1, isLeft: true),
+              _buildTeamStatBracket(team2, isLeft: false),
+            ],
+          ),
 
           const SizedBox(height: 16),
 
@@ -186,89 +191,162 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
 
           const SizedBox(height: 16),
 
-          // Right Team Players beneath the cup layout
-          _buildPlayerTable(team2, isLeft: false, mirrored: true),
+          // Player Tables Beneath Cup Layout
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildPlayerTable(team1, isLeft: true),
+              _buildPlayerTable(team2, isLeft: false, mirrored: true),
+            ],
+          ),
+
+          const SizedBox(height: 16),
         ],
+      ),
+    );
+  }
+
+  /// Builds the team stat bracket with a gradient background
+  Widget _buildTeamStatBracket(Team team, {required bool isLeft}) {
+    return Expanded(
+      child: Container(
+        margin:
+            const EdgeInsets.symmetric(horizontal: 16), // Margin to the sides
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isLeft
+                ? [Colors.blue.shade700, Colors.grey]
+                : [Colors.grey, Colors.red.shade700],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: team.players.map((player) {
+            return Expanded(
+              child: Column(
+                children: [
+                  player.user == null
+                      ? const CircleAvatar(
+                          radius: 10,
+                          backgroundColor: Colors.white24,
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 8,
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 10,
+                          backgroundColor: Colors.white24,
+                          child: ClipOval(
+                            child: SvgPicture.asset(
+                              _mapAvatarKeyToAsset(player.user!.avatarKey),
+                              fit: BoxFit.cover,
+                              width: 10 * 2,
+                              height: 10 * 2,
+                            ),
+                          ),
+                        ),
+                  const SizedBox(height: 4),
+                  Text(
+                    player.name.length > 10
+                        ? "${player.name.substring(0, 9)}…" // Truncate long names
+                        : player.name,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
   Widget _buildPlayerTable(Team team,
       {required bool isLeft, bool mirrored = false}) {
-    return Table(
-      columnWidths: {
-        0: FlexColumnWidth(mirrored ? 1 : 2.5),
-        1: FlexColumnWidth(1),
-        2: FlexColumnWidth(1),
-        3: FlexColumnWidth(1),
-        4: FlexColumnWidth(mirrored ? 2.5 : 1),
-      },
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+    return Column(
       children: [
-        // Table Header
-        TableRow(
-          children: [
-            const SizedBox(), // Empty header for player name column
-            const Icon(Icons.sports_bar, color: Colors.amber, size: 16), // Cups
-            const Icon(BeerpongIcons.airball, color: Colors.amber, size: 20),
-            // Airball
-            const Icon(Icons.sports_handball,
-                color: Colors.amber, size: 16), // Throws
-            const Icon(Icons.close, color: Colors.amber, size: 16), // Misses
-          ],
-        ),
+        // Player Cards
+        ...team.players.map((player) {
+          return Card(
+            margin: const EdgeInsets.symmetric(
+                horizontal: 16), // Margin to the sides
+            elevation: 4.0,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            color: isLeft ? Colors.blue.shade700 : Colors.red.shade700,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  player.user == null
+                      ? const CircleAvatar(
+                          radius: 10,
+                          backgroundColor: Colors.white24,
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                            size: 8,
+                          ),
+                        )
+                      : CircleAvatar(
+                          radius: 10,
+                          backgroundColor: Colors.white24,
+                          child: ClipOval(
+                            child: SvgPicture.asset(
+                              _mapAvatarKeyToAsset(player.user!.avatarKey),
+                              fit: BoxFit.cover,
+                              width: 10 * 2,
+                              height: 10 * 2,
+                            ),
+                          ),
+                        ),
+                  // Stats
+                  _buildStatBadge(player.cupsHit.length.toString(), "Cups Hit"),
+                  _buildStatBadge(player.airballs.toString(), "Airballs"),
+                  _buildStatBadge(player.throws.toString(), "Throws"),
+                  _buildStatBadge(player.misses.toString(), "Misses"),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
 
-        // Player Rows
-        ...team.players.map(
-          (player) => TableRow(
-            children: mirrored
-                ? [
-                    Text((player.cupsHit).length.toString(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.white)),
-                    Text(player.airballs.toString(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.white)),
-                    Text(player.throws.toString(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.white)),
-                    Text(player.misses.toString(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.white)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: _buildPlayerName(player),
-                    ),
-                  ]
-                : [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: _buildPlayerName(player),
-                    ),
-                    Text(
-                      (player.cupsHit).length.toString(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, color: Colors.white),
-                    ),
-                    Text(
-                      player.airballs.toString(),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, color: Colors.white),
-                    ),
-                    Text(player.throws.toString(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.white)),
-                    Text(player.misses.toString(),
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.white)),
-                  ],
+  /// A widget to show stats in a badge style
+  Widget _buildStatBadge(String statValue, String statName) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800,
+            borderRadius: BorderRadius.circular(8),
           ),
+          child: Text(
+            statValue,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          statName,
+          style: const TextStyle(fontSize: 8, color: Colors.white70),
         ),
       ],
     );
@@ -760,8 +838,16 @@ Widget _buildCupLayoutsRow(Team team1, Team team2) {
     child: Container(
       height: 200,
       decoration: BoxDecoration(
-        color: Color.fromARGB(
-            255, 214, 176, 60), // Background color for the container
+        gradient: LinearGradient(
+          colors: [
+            Colors.amber.withOpacity(0.2),
+            Colors.grey.shade600,
+            Colors.amber.withOpacity(0.2)
+          ],
+          stops: [0.0, 0.5, 1.0], // Ensures the center color is at the midpoint
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ), // Background color for the container
         borderRadius: BorderRadius.circular(20.0), // Rounded corners
       ),
       child: Stack(
@@ -830,6 +916,8 @@ Widget _buildBracketSection({
               //_showInfoDialog(title, infoMessage);
             },
             child: Container(
+              margin: const EdgeInsets.symmetric(
+                  horizontal: 16), // Margin to the sides
               width: 15,
               height: 15,
               decoration: const BoxDecoration(
@@ -838,7 +926,7 @@ Widget _buildBracketSection({
               ),
               child: const Icon(
                 Icons.info,
-                color: Colors.amber,
+                color: Colors.white,
                 size: 14,
               ),
             ),
@@ -847,6 +935,8 @@ Widget _buildBracketSection({
       ),
       const SizedBox(height: 10),
       Container(
+        margin:
+            const EdgeInsets.symmetric(horizontal: 16), // Margin to the sides
         decoration: BoxDecoration(
           color: Colors.grey[800],
           borderRadius: BorderRadius.circular(12.0),
