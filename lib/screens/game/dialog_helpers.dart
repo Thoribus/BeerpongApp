@@ -1,8 +1,6 @@
 import 'dart:async';
-
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
-import 'package:beerpongapp/models/event.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/base_screen.dart';
@@ -258,7 +256,7 @@ class DialogHelpers {
       btnCancelOnPress: () {},
       btnCancelText: "Cancel",
       btnOkOnPress: () {
-        state.saveCurrentState(GameEvent(eventType: "End Turn", team: state.currentTeam.color.value.toString()));
+        state.saveCurrentState();
         state.endTurn();
       },
       btnOkText: "End Turn",

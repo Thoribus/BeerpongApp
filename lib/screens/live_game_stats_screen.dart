@@ -118,6 +118,8 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                 .map((eventData) => GameEvent.fromJson(eventData))
                 .toList();
           }
+          DateTime gameStart = gameData['timestamp'].toDate();
+          print(gameStart);
           print(events.toString());
 
           // Display game-end dialog if applicable
