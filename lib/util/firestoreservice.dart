@@ -1,3 +1,4 @@
+import 'package:beerpongapp/models/event.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
@@ -105,76 +106,75 @@ class FirestoreService {
 
   // Update the game doc with new team arrays or other fields
   Future<void> updateGameDoc(
-  String gameId, {
-  Team? team1,
-  Team? team2,
-  String? winner,
-  List<String>? invitations,
-  List<String>? rules,
-  String? gameMode,
-  bool? started,
-  String? startingTeam,
-  List<Map<String, dynamic>>? events,
-}) async {
-  // 1) Build a map for the fields you actually want to update
-  final Map<String, dynamic> updates = {};
+    String gameId, {
+    Team? team1,
+    Team? team2,
+    String? winner,
+    List<String>? invitations,
+    List<String>? rules,
+    String? gameMode,
+    bool? started,
+    String? startingTeam,
+    bool? timestamp,
+  }) async {
+    // 1) Build a map for the fields you actually want to update
+    final Map<String, dynamic> updates = {};
 
-  // If these fields are non-null, add them to the map:
-  if (team1 != null) {
-    updates['team1'] = team1.toJson();
-    // If your logic always wants to recalc participants from team1/team2, do it conditionally, etc.
-  }
-  if (team2 != null) {
-    updates['team2'] = team2.toJson();
-  }
-  if (winner != null) {
-    updates['winner'] = winner;
-  }
-  if (invitations != null) {
-    updates['invitations'] = invitations;
-  }
-  if (rules != null) {
-    updates['specialRules'] = rules;
-  }
-  if (gameMode != null) {
-    updates['gameMode'] = gameMode;
-  }
-  if (started != null) {
-    updates['started'] = started;
-  }
-  if (startingTeam != null) {
-    updates['startingTeam'] = startingTeam;
-  }
-  if (events != null) {
-    updates['events'] = events;
-  }
-
-  // Optionally, recalc participants if you do want them always updated
-  // e.g. if team1 or team2 was given, re-derive participants from them
-  if (team1 != null || team2 != null) {
-    final participants = <String>[];
+    // If these fields are non-null, add them to the map:
     if (team1 != null) {
-      participants.addAll(
-        team1.players.where((p) => p.user != null).map((p) => p.user!.id),
-      );
+      updates['team1'] = team1.toJson();
+      // If your logic always wants to recalc participants from team1/team2, do it conditionally, etc.
     }
     if (team2 != null) {
-      participants.addAll(
-        team2.players.where((p) => p.user != null).map((p) => p.user!.id),
-      );
+      updates['team2'] = team2.toJson();
     }
-    updates['participants'] = participants;
+    if (winner != null) {
+      updates['winner'] = winner;
+    }
+    if (invitations != null) {
+      updates['invitations'] = invitations;
+    }
+    if (rules != null) {
+      updates['specialRules'] = rules;
+    }
+    if (gameMode != null) {
+      updates['gameMode'] = gameMode;
+    }
+    if (started != null) {
+      updates['started'] = started;
+    }
+    if (startingTeam != null) {
+      updates['startingTeam'] = startingTeam;
+    }
+    if (timestamp == true) {
+      updates['timestamp'] = FieldValue.serverTimestamp();
+    }
+
+    // Optionally, recalc participants if you do want them always updated
+    // e.g. if team1 or team2 was given, re-derive participants from them
+    if (team1 != null || team2 != null) {
+      final participants = <String>[];
+      if (team1 != null) {
+        participants.addAll(
+          team1.players.where((p) => p.user != null).map((p) => p.user!.id),
+        );
+      }
+      if (team2 != null) {
+        participants.addAll(
+          team2.players.where((p) => p.user != null).map((p) => p.user!.id),
+        );
+      }
+      updates['participants'] = participants;
+    }
+
+    // 2) If there's nothing to update, just return
+    if (updates.isEmpty) {
+      return;
+    }
+
+    // 3) Perform the partial update
+    await _db.collection('games').doc(gameId).update(updates);
   }
-
-  // 2) If there's nothing to update, just return
-  if (updates.isEmpty) {
-    return;
-  }
-
-  // 3) Perform the partial update
-  await _db.collection('games').doc(gameId).update(updates);
-}
-
 
   /// Returns a stream of game document snapshots
   Stream<DocumentSnapshot> getGameDocStream(String gameId) {
@@ -280,6 +280,66 @@ class FirestoreService {
     } catch (e) {
       print('Error retrieving user stats: $e');
       return [];
+    }
+  }
+  //endregion
+
+  //region ----- Event Functions -----
+  Future<String> addEvent(String gameId, String eventType, Team team, Player? player) async {
+    try {
+      final eventsRef = FirebaseFirestore.instance
+          .collection('games')
+          .doc(gameId)
+          .collection('events');
+
+      final docRef = eventsRef.doc();
+
+      await docRef.set({
+        'eventType': eventType,
+        'team': team.color.value.toString(),
+        'player': player?.name,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      return docRef.id;
+    } catch (e) {
+      print('Error adding event: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<GameEvent>> getEvents(String gameId) async {
+    try {
+      final snapshot = await _db
+          .collection('games')
+          .doc(gameId)
+          .collection('events')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return GameEvent.fromJson({
+          ...data,
+        });
+      }).toList();
+    } catch (e) {
+      print('Error fetching events: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteEvent(String gameId, String eventId) async {
+    try {
+      await _db
+          .collection('games')
+          .doc(gameId)
+          .collection('events')
+          .doc(eventId)
+          .delete();
+    } catch (e) {
+      print('Error deleting event: $e');
+      rethrow;
     }
   }
   //endregion
