@@ -256,7 +256,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSvgBracket() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -275,8 +275,7 @@ class HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(16.0),
                   child: SvgPicture.asset(
                     'assets/home_animals.svg', // Adjust the path as needed
-                    height: 245.0,
-                    width: MediaQuery.of(context).size.width,
+                    height: 230.0,
                     fit: BoxFit.cover,
                   ),
                 ),

@@ -124,7 +124,9 @@ class StatisticsScreenState extends State<StatisticsScreen> {
         ),
         ElevatedButton(
           onPressed: () {
-            _showGameDetails(game);
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => LiveGameStatsScreen(gameId: game.id),
+            ));
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.amber,
@@ -322,8 +324,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
     return ElevatedButton(
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => LiveGameStatsScreen(
-              gameId: game.id),
+          builder: (context) => LiveGameStatsScreen(gameId: game.id),
         ));
       },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),

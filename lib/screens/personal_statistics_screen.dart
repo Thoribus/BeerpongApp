@@ -75,11 +75,6 @@ class PersonalStatisticsScreen extends StatelessWidget {
               child: _buildPyramidHeatMap(),
             ),
             const SizedBox(height: 20),
-            _buildSectionTitle("Score Overview"),
-            _buildCard(
-              child: _buildScoreChart(),
-            ),
-            const SizedBox(height: 20),
             _buildSectionTitle("Game History"),
             _buildCard(
               child: FutureBuilder<List<UserStatsInGame>>(
@@ -218,7 +213,8 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   if (xAxis == 'Date') {
                     int index = value.toInt();
-                    if (index < 0 || index >= userStats.length) return const Text('');
+                    if (index < 0 || index >= userStats.length)
+                      return const Text('');
                     return Text(
                       userStats[index]
                           .date
@@ -258,8 +254,10 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 },
               ),
             ),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           borderData: FlBorderData(
             show: true,
@@ -414,83 +412,6 @@ class PersonalStatisticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildScoreChart() {
-    return SizedBox(
-      height: 200,
-      child: BarChart(
-        BarChartData(
-          backgroundColor: Colors.grey[800],
-          barTouchData: BarTouchData(enabled: true),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 28,
-                getTitlesWidget: (value, _) => Text(
-                  '${value.toInt()}',
-                  style: TextStyle(color: Colors.amber[200]),
-                ),
-              ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, _) {
-                  switch (value.toInt()) {
-                    case 0:
-                      return Text('Score',
-                          style: TextStyle(color: Colors.amber[200]));
-                    case 1:
-                      return Text('Misses',
-                          style: TextStyle(color: Colors.amber[200]));
-                    case 2:
-                      return Text('Cups',
-                          style: TextStyle(color: Colors.amber[200]));
-                    default:
-                      return const Text('');
-                  }
-                },
-              ),
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          barGroups: [
-            BarChartGroupData(
-              x: 0,
-              barRods: [
-                BarChartRodData(
-                  toY: user.totalScore.toDouble(),
-                  color: Colors.amber,
-                  width: 18,
-                ),
-              ],
-            ),
-            BarChartGroupData(
-              x: 1,
-              barRods: [
-                BarChartRodData(
-                  toY: user.totalMisses.toDouble(),
-                  color: Colors.redAccent,
-                  width: 18,
-                ),
-              ],
-            ),
-            BarChartGroupData(
-              x: 2,
-              barRods: [
-                BarChartRodData(
-                  toY: user.cupsHit.reduce((a, b) => a + b).toDouble(),
-                  color: Colors.greenAccent,
-                  width: 18,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildPyramidHeatMap() {
     List<int> cupCounts = _countCupsHit();
 
@@ -555,58 +476,125 @@ class StatisticsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: DataTable(
-        columnSpacing: 24,
-        headingRowHeight: 0, // Remove header row for minimalism
-        dividerThickness: 0, // Remove horizontal dividers
-        columns: const [
-          DataColumn(
-              label: SizedBox
-                  .shrink()), // Empty label for icon and attribute column
-          DataColumn(label: SizedBox.shrink()), // Empty label for value column
-        ],
-        rows: [
-          _buildDataRow(Icons.score, 'Total Score', '${user.totalScore}'),
-          _buildDataRow(Icons.close, 'Total Misses', '${user.totalMisses}'),
-          _buildDataRow(Icons.air, 'Total Airballs', '${user.totalAirballs}'),
-          _buildDataRow(Icons.sports_bar, 'Cups Hit', '${user.cupsHit.length}'),
-          _buildDataRow(Icons.emoji_events, 'Wins', '${user.wins}'),
-          _buildDataRow(Icons.cancel, 'Losses', '${user.losses}'),
-        ],
-      ),
+    return ListView(
+      shrinkWrap: true, // Prevents infinite height issue
+      physics: NeverScrollableScrollPhysics(), // Disables internal scrolling
+      children: [
+        _buildStatRow(
+            context, 'Total Score', user.totalScore.toInt(), Icons.score, 0.02),
+        _buildStatRow(
+            context, 'Total Misses', user.totalMisses, Icons.close, -1.5),
+        _buildStatRow(
+            context, 'Total Airballs', user.totalAirballs, Icons.air, 0.5),
+        _buildStatRow(
+            context, 'Cups Hit', user.cupsHit.length, Icons.sports_bar, -0.3),
+        _buildStatRow(context, 'Wins', user.wins, Icons.emoji_events, 1.2),
+        _buildStatRow(context, 'Losses', user.losses, Icons.cancel, -0.8),
+      ],
     );
   }
 
-  DataRow _buildDataRow(IconData icon, String attribute, String value) {
-    return DataRow(
-      cells: [
-        DataCell(
-          Row(
-            children: [
-              Icon(icon, color: Colors.amber, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  attribute,
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.left,
-                ),
+  Widget _buildStatRow(BuildContext context, String attribute, int value,
+      IconData icon, double change) {
+    List<FlSpot> trendData = _generatePlaceholderData(value);
+    bool isPositive = change >= 0;
+    Color trendColor = isPositive ? Colors.green : Colors.red;
+
+    return ListTile(
+      leading: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(attribute,
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Icon(icon, color: Colors.amber, size: 20),
+        ],
+      ),
+      title: SizedBox(
+        height: 30,
+        width: 80,
+        child: LineChart(
+          LineChartData(
+            borderData: FlBorderData(show: false),
+            gridData: FlGridData(show: false),
+            titlesData: FlTitlesData(show: false),
+            lineBarsData: [
+              LineChartBarData(
+                spots: trendData,
+                isCurved: true,
+                color: trendColor,
+                barWidth: 2,
+                isStrokeCapRound: true,
+                belowBarData: BarAreaData(show: false),
               ),
             ],
           ),
         ),
-        DataCell(
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              value,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w600),
+      ),
+      trailing: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            value.toInt().toString(),
+            style: TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          Text(
+            '${change.toStringAsFixed(2)}%',
+            style: TextStyle(
+                color: trendColor, fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+        ],
+      ),
+      onTap: () => _showDetailChart(context, attribute, trendData, trendColor),
+    );
+  }
+
+  void _showDetailChart(
+      BuildContext context, String attribute, List<FlSpot> data, Color color) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.black87,
+          title: Text(attribute, style: TextStyle(color: Colors.white)),
+          content: SizedBox(
+            height: 250,
+            width: 300,
+            child: LineChart(
+              LineChartData(
+                borderData: FlBorderData(show: true),
+                gridData: FlGridData(
+                    drawVerticalLine: true, drawHorizontalLine: true),
+                titlesData: FlTitlesData(
+                  leftTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: true)),
+                  bottomTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: true)),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: data,
+                    isCurved: true,
+                    color: color,
+                    barWidth: 2,
+                    isStrokeCapRound: true,
+                    belowBarData:
+                        BarAreaData(show: true, color: color.withOpacity(0.3)),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        );
+      },
     );
+  }
+
+  List<FlSpot> _generatePlaceholderData(int value) {
+    return List.generate(
+        10,
+        (index) =>
+            FlSpot(index.toDouble(), (value * (0.9 + (index % 3) * 0.05))));
   }
 }
