@@ -285,7 +285,8 @@ class FirestoreService {
   //endregion
 
   //region ----- Event Functions -----
-  Future<String> addEvent(String gameId, String eventType, Team team, Player? player) async {
+  Future<String> addEvent(
+      String gameId, String eventType, Team team, Player? player) async {
     try {
       final eventsRef = FirebaseFirestore.instance
           .collection('games')
@@ -321,7 +322,7 @@ class FirestoreService {
         final data = doc.data();
         return GameEvent.fromJson({
           ...data,
-        });
+        }, doc.id, gameId);
       }).toList();
     } catch (e) {
       print('Error fetching events: $e');

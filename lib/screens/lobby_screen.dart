@@ -385,7 +385,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.grey[850],
-          insetPadding: EdgeInsets.symmetric(
+          insetPadding: const EdgeInsets.symmetric(
               horizontal: 30,
               vertical: 40), // Reduced padding for smaller dialog
           child: Container(
@@ -408,8 +408,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Header Section
-          Padding(
-            padding: const EdgeInsets.all(8.0),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text(
               'Select a Player',
               style: TextStyle(
@@ -433,7 +433,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
           // Friends List
           ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: friends.length,
             itemBuilder: (ctx, index) {
               final friend = friends[index];
@@ -469,7 +469,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
             backgroundColor: Colors.white24,
             child: ClipOval(
               child: SvgPicture.asset(
-                _mapAvatarKeyToAsset(player.avatarKey),
+                player.mapAvatarKeyToAsset(),
                 fit: BoxFit.cover,
                 width: 36,
                 height: 36,
@@ -485,13 +485,13 @@ class _LobbyScreenState extends State<LobbyScreen> {
               children: [
                 Text(
                   player.username,
-                  style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4.0),
                 Text(
                   label,
-                  style: TextStyle(fontSize: 12.0, color: Colors.grey),
+                  style: const TextStyle(fontSize: 12.0, color: Colors.grey),
                 ),
               ],
             ),
@@ -896,9 +896,4 @@ extension PlayerExtensions on Player {
       lastCupHit: lastCupHit,
     );
   }
-}
-
-String _mapAvatarKeyToAsset(String avatarKey) {
-  if (avatarKey.isEmpty) return '';
-  return 'assets/avatars/$avatarKey.svg';
 }

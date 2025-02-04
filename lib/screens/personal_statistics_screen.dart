@@ -213,8 +213,9 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   if (xAxis == 'Date') {
                     int index = value.toInt();
-                    if (index < 0 || index >= userStats.length)
+                    if (index < 0 || index >= userStats.length) {
                       return const Text('');
+                    }
                     return Text(
                       userStats[index]
                           .date
@@ -478,7 +479,7 @@ class StatisticsTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       shrinkWrap: true, // Prevents infinite height issue
-      physics: NeverScrollableScrollPhysics(), // Disables internal scrolling
+      physics: const NeverScrollableScrollPhysics(), // Disables internal scrolling
       children: [
         _buildStatRow(
             context, 'Total Score', user.totalScore.toInt(), Icons.score, 0.02),
@@ -506,7 +507,7 @@ class StatisticsTable extends StatelessWidget {
         children: [
           Text(attribute,
               style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           Icon(icon, color: Colors.amber, size: 20),
         ],
       ),
@@ -516,8 +517,8 @@ class StatisticsTable extends StatelessWidget {
         child: LineChart(
           LineChartData(
             borderData: FlBorderData(show: false),
-            gridData: FlGridData(show: false),
-            titlesData: FlTitlesData(show: false),
+            gridData: const FlGridData(show: false),
+            titlesData: const FlTitlesData(show: false),
             lineBarsData: [
               LineChartBarData(
                 spots: trendData,
@@ -536,7 +537,7 @@ class StatisticsTable extends StatelessWidget {
         children: [
           Text(
             value.toInt().toString(),
-            style: TextStyle(
+            style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
           Text(
@@ -557,16 +558,16 @@ class StatisticsTable extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.black87,
-          title: Text(attribute, style: TextStyle(color: Colors.white)),
+          title: Text(attribute, style: const TextStyle(color: Colors.white)),
           content: SizedBox(
             height: 250,
             width: 300,
             child: LineChart(
               LineChartData(
                 borderData: FlBorderData(show: true),
-                gridData: FlGridData(
+                gridData: const FlGridData(
                     drawVerticalLine: true, drawHorizontalLine: true),
-                titlesData: FlTitlesData(
+                titlesData: const FlTitlesData(
                   leftTitles:
                       AxisTitles(sideTitles: SideTitles(showTitles: true)),
                   bottomTitles:

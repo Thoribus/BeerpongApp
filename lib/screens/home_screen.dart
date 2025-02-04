@@ -482,7 +482,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   Widget _buildPlayerAvatar(Player player, Color color) {
     if (player.user == null) return _buildEmptyAvatar();
-    final avatarAsset = _mapAvatarKeyToAsset(player.user!.avatarKey);
+    final avatarAsset = player.user!.mapAvatarKeyToAsset();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: CircleAvatar(
@@ -558,13 +558,5 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _onReturnFromNextScreen() {
     _checkSavedGame();
-  }
-
-  /// Maps a given avatarKey to the actual local asset path.
-  /// For example: 'bunny' -> 'assets/avatars/bunny.png'
-  String _mapAvatarKeyToAsset(String avatarKey) {
-    if (avatarKey.isEmpty) return '';
-    // Adjust as needed for your file naming structure
-    return 'assets/avatars/$avatarKey.svg';
   }
 }
