@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:provider/provider.dart';
 import '../util/firestoreservice.dart';
 import '../util/user_provider.dart';
@@ -802,6 +801,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
       startingTeam: _startingTeam,
       invitations: _acceptedInvites,
       started: _started,
+      timestamp: true,
       // winner: null if not decided
     );
 
