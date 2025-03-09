@@ -71,6 +71,9 @@ class GameScreenState extends State<GameScreen> {
   late Alignment beginAlignment;
   late Alignment endAlignment;
 
+  //new button arrangement
+  bool _showExpandedButtons = false;
+
   @override
   void initState() {
     super.initState();
@@ -107,6 +110,11 @@ class GameScreenState extends State<GameScreen> {
     super.dispose();
   }
   //endregion
+
+  // Custom WaterSplash Animation widget
+  Widget _buildWaterSplash() {
+    return const WaterSplashAnimation(); // The widget handling the splash
+  }
 
   //region ----- Page Controller Logic -----
   void _handlePageChange() {
@@ -756,7 +764,7 @@ class GameScreenState extends State<GameScreen> {
           }
         },
       ),
-      bottomNavigationBar: _buildBottomAppBar(),
+      bottomNavigationBar: _buildBottomAppBar(), // Existing bottom ba
     );
   }
 
@@ -815,7 +823,6 @@ class GameScreenState extends State<GameScreen> {
     }
   }
 
-  /// The main “Game Table” page: cups layout, players, special rules.
   Widget _buildCurrentGamePage() {
     return LayoutBuilder(builder: (context, constraints) {
       return Stack(
@@ -882,6 +889,9 @@ class GameScreenState extends State<GameScreen> {
             left: 16.0,
             right: 16.0,
             child: Container(
+              width: constraints.maxWidth -
+                  32.0, // Explicit width based on parent container
+              height: 77.0, // Adjust height to avoid overlap with table area
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16.0), // Rounded corners
                 border:
@@ -896,74 +906,46 @@ class GameScreenState extends State<GameScreen> {
                 ),
               ),
               padding: const EdgeInsets.all(8.0), // Padding around the buttons
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Stack(
                 children: [
-                  // Deathcup (if applicable) or placeholder
-                  if (selectedRules["Deathcup"] == true)
-                    FloatingActionButton(
-                      onPressed: () =>
-                          DialogHelpers.showDeathcupSelectionDialog(this,
-                              currentTeam, (player) => _handleDeathCup(player)),
-                      backgroundColor:
-                          currentTeam == team1 ? team2.color : team1.color,
-                      heroTag: "Deathcup",
-                      shape: const CircleBorder(
-                        side: BorderSide(
-                            color: Colors.white,
-                            width: 2.0), // White border with width 2
-                      ),
-                      child: const Icon(
-                        BeerpongIcons.skull,
-                        size: 35,
-                        color: Colors.black,
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 56.0), // Placeholder
-
-                  // Airball button in the middle
-                  FloatingActionButton.extended(
-                    heroTag: "airball",
-                    onPressed: () =>
-                        DialogHelpers.showAirballPlayerSelectionDialog(
-                            this,
-                            currentTeam,
-                            (player) => _handleAirballRule(player)),
-                    tooltip: 'Airball',
-                    backgroundColor:
-                        Colors.transparent, // Clear the background color
-                    elevation: 0, // Remove the shadow
-                    label: const Text(
-                      'Airball Area',
-                      style: TextStyle(
-                          color: Colors.black), // Text color can be customized
+                  // Water splash animation (placed behind the Airball button)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: const WaterSplashAnimation(
+                        splashColor:
+                            Colors.white, // Set the splash color to white
+                      ), // Splash effect only in this area
                     ),
                   ),
 
-                  // Island (if applicable) or placeholder
-                  if (selectedRules["Island"] == true)
-                    FloatingActionButton(
-                      backgroundColor: islandBackgroundColor,
-                      heroTag: "Island",
-                      shape: const CircleBorder(
-                        side: BorderSide(
-                            color: Colors.white,
-                            width: 2.0), // White border with width 2
+                  // Airball button in the middle
+                  Positioned.fill(
+                    child: Center(
+                      child: FloatingActionButton.extended(
+                        heroTag: "airball",
+                        onPressed: () =>
+                            DialogHelpers.showAirballPlayerSelectionDialog(
+                          this,
+                          currentTeam,
+                          (player) => _handleAirballRule(player),
+                        ),
+                        tooltip: 'Airball',
+                        backgroundColor:
+                            Colors.transparent, // Clear the background color
+                        elevation: 0, // Remove the shadow
+                        label: const Text(
+                          'Airball Area',
+                          style: TextStyle(
+                              color:
+                                  Colors.black), // Text color can be customized
+                        ),
                       ),
-                      onPressed: currentTeam.canIslandShot &&
-                              currentTeam.cups
-                                  .any((c) => c.isVisible && _isIslandCup(c))
-                          ? _highlightIslandCups
-                          : null, // Disable if not available
-                      child: const Icon(BeerpongIcons.palm_tree, size: 45),
-                    )
-                  else
-                    const SizedBox(width: 56.0), // Placeholder
+                    ),
+                  ),
                 ],
               ),
             ),
-          )
+          ),
         ],
       );
     });
@@ -1356,51 +1338,133 @@ class GameScreenState extends State<GameScreen> {
 
   Widget _buildBottomAppBar() {
     return BottomAppBar(
-      color: Colors
-          .transparent, // Make the background transparent for a cleaner look
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // Undo
-            _buildBottomButton(
-              onPressed: _undoLastAction,
-              tooltip: 'Go Back one turn.',
-              icon: Icons.undo,
-              label: 'undo', //Undo
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade700, Colors.blue.shade300],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          // Main row of buttons (Undo, Rearrange, End Turn)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildBottomButton(
+                  onPressed: _undoLastAction,
+                  tooltip: 'Undo last move',
+                  icon: Icons.undo,
+                  label: 'undo',
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                _buildBottomButton(
+                  onPressed: () {
+                    setState(() {
+                      _showExpandedButtons = !_showExpandedButtons;
+                    });
+                  },
+                  tooltip: 'More Options',
+                  icon: Icons.scatter_plot_outlined,
+                  label: 'action',
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.green.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                _buildBottomButton(
+                  onPressed: () => DialogHelpers.confirmEndTurn(this),
+                  tooltip: 'End turn',
+                  icon: Icons.check_rounded,
+                  label: 'end',
+                  gradient: LinearGradient(
+                    colors: [Colors.red.shade700, Colors.red.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Expanded Buttons (Appears on top of the BottomAppBar, like a dialog)
+          if (_showExpandedButtons)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showExpandedButtons =
+                      false; // Dismiss the buttons when tapping outside
+                });
+              },
+              child: Container(
+                color: Colors.black.withOpacity(
+                    0.5), // Semi-transparent overlay to close on tap
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (selectedRules["Deathcup"] == true)
+                        _buildExpandedButton(
+                          onPressed: () =>
+                              DialogHelpers.showDeathcupSelectionDialog(
+                                  this,
+                                  currentTeam,
+                                  (player) => _handleDeathCup(player)),
+                          tooltip: 'Deathcup',
+                          icon: BeerpongIcons.skull,
+                          color:
+                              currentTeam == team1 ? team2.color : team1.color,
+                        ),
+                      const SizedBox(width: 20),
+                      _buildExpandedButton(
+                        onPressed: toggleRearranged,
+                        tooltip: 'Rearrange the cups.',
+                        icon: Icons.scatter_plot_outlined,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 20),
+                      if (selectedRules["Island"] == true)
+                        _buildExpandedButton(
+                          onPressed: currentTeam.canIslandShot &&
+                                  currentTeam.cups.any(
+                                      (c) => c.isVisible && _isIslandCup(c))
+                              ? _highlightIslandCups
+                              : null,
+                          tooltip: 'Island Cup',
+                          icon: BeerpongIcons.palm_tree,
+                          color: islandBackgroundColor,
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
-            // Rearrange
-            _buildBottomButton(
-              onPressed: toggleRearranged,
-              tooltip: 'Rearrange the current cups.',
-              icon: Icons.scatter_plot_outlined,
-              label: 'arrange', //Rearrange
-              gradient: LinearGradient(
-                colors: [Colors.green.shade700, Colors.green.shade300],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            // End Turn
-            _buildBottomButton(
-              onPressed: () => DialogHelpers.confirmEndTurn(this),
-              tooltip: 'All cups selected. Next turn.',
-              icon: Icons.check_rounded,
-              label: 'end', //End Turn
-              gradient: LinearGradient(
-                colors: [Colors.red.shade700, Colors.red.shade300],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandedButton({
+    required VoidCallback? onPressed,
+    required String tooltip,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: FloatingActionButton(
+        onPressed: onPressed,
+        backgroundColor: color,
+        heroTag: tooltip,
+        elevation: 4,
+        shape: const CircleBorder(
+          side: BorderSide(
+            color: Colors.white, // White border with width 2
+            width: 2.0, // Border width
+          ),
         ),
+        child: Icon(icon, color: Colors.black, size: 30),
       ),
     );
   }
@@ -1452,5 +1516,86 @@ class GameScreenState extends State<GameScreen> {
       ),
     );
   }
-  //endregion
+}
+//endregion
+
+class WaterSplashAnimation extends StatefulWidget {
+  final Color splashColor; // Add splashColor parameter
+
+  const WaterSplashAnimation({Key? key, this.splashColor = Colors.blue})
+      : super(key: key);
+
+  @override
+  _WaterSplashAnimationState createState() => _WaterSplashAnimationState();
+}
+
+class _WaterSplashAnimationState extends State<WaterSplashAnimation> {
+  final List<WaterSplash> _splashes = [];
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 100), _addSplash);
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _addSplash(Timer timer) {
+    if (mounted) {
+      setState(() {
+        _splashes.add(WaterSplash(
+          x: Random().nextDouble(),
+          y: Random().nextDouble(),
+        ));
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: _splashes
+          .map((splash) => Positioned(
+                left: splash.x * MediaQuery.of(context).size.width,
+                top: splash.y * MediaQuery.of(context).size.height,
+                child: _buildSplashEffect(),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildSplashEffect() {
+    return TweenAnimationBuilder(
+      duration: const Duration(seconds: 2), // Duration for shrinking and fading
+      tween: Tween<double>(begin: 1.0, end: 0.0),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.scale(
+            scale: value,
+            child: Container(
+              width: 50 * value, // Shrinking effect
+              height: 50 * value,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.splashColor
+                    .withOpacity(0.5), // Use the splashColor passed
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class WaterSplash {
+  final double x, y;
+
+  WaterSplash({required this.x, required this.y});
 }
