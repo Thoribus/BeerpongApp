@@ -22,11 +22,11 @@ class GameEvent {
 
   /// Construct from Firestore data. 
   /// Firestore returns a `Timestamp` object, so we convert it to DateTime in Dart.
-  factory GameEvent.fromJson(Map<String, dynamic> json) {
+  factory GameEvent.fromJson(Map<String, dynamic> json, String id, String gameId) {
     return GameEvent(
-      eventId: json["eventId"] as String,
+      eventId: id,
       eventType: json["eventType"] as String,
-      gameId: json["gameId"] as String,
+      gameId: gameId,
       player: json["player"] as String?,
       team: json["team"] as String,
       timestamp: (json["timestamp"] as Timestamp).toDate(),

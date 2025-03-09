@@ -15,8 +15,7 @@ class CupLayout {
     if (state != null) {
       isRearranged = state.currentTeam.isRearranged;
       cups = state.currentTeam.cups;
-    }
-    else {
+    } else {
       isRearranged = team!.isRearranged;
       cups = team.cups;
     }
@@ -91,9 +90,9 @@ class CupLayout {
       mainAxisAlignment: MainAxisAlignment.center,
       children: cups.map((cup) {
         if (state != null) {
-          return cup.widget(() => state.onCupTap(cup.index));
+          return cup.widget(onTap: () => state.onCupTap(cup.index));
         } else {
-          return cup.widget(() => {});
+          return cup.widget(onTap: () => {});
         }
       }).toList(),
     );

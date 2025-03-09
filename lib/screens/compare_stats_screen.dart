@@ -12,12 +12,6 @@ class ComparisonScreen extends StatelessWidget {
     required this.friend,
   });
 
-  /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
-  String _mapAvatarKeyToAsset(String avatarKey) {
-    if (avatarKey.isEmpty) return '';
-    return 'assets/avatars/$avatarKey.svg';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,7 +79,7 @@ class ComparisonScreen extends StatelessWidget {
                 backgroundColor: Colors.white24,
                 child: ClipOval(
                   child: SvgPicture.asset(
-                    _mapAvatarKeyToAsset(user.avatarKey),
+                    user.mapAvatarKeyToAsset(),
                     fit: BoxFit.cover,
                     width: 40 * 2,
                     height: 40 * 2,

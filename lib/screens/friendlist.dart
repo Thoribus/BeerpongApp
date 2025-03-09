@@ -507,7 +507,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 backgroundColor: Colors.black,
                 child: ClipOval(
                   child: SvgPicture.asset(
-                    _mapAvatarKeyToAsset(user.avatarKey),
+                    user.mapAvatarKeyToAsset(),
                     width: 76,
                     height: 76,
                     fit: BoxFit.cover,
@@ -516,7 +516,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               ),
             ),
             if (crown)
-              Positioned(
+              const Positioned(
                 top: -5,
                 child: Icon(Icons.emoji_events, color: Colors.amber, size: 24),
               ),
@@ -602,7 +602,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       backgroundColor: Colors.white24,
       child: ClipOval(
         child: SvgPicture.asset(
-          _mapAvatarKeyToAsset(friend.avatarKey),
+          friend.mapAvatarKeyToAsset(),
           fit: BoxFit.cover,
           width: radius * 2,
           height: radius * 2,
@@ -616,9 +616,5 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     if (userProvider.user == null) return [];
     final friends = await FirestoreService().getFriends(userProvider.user!.id);
     return [userProvider.user!, ...friends];
-  }
-
-  String _mapAvatarKeyToAsset(String avatarKey) {
-    return 'assets/avatars/$avatarKey.svg';
   }
 }

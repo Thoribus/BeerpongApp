@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 /// A class representing a cup in the game.
 class Cup {
-  final int index;            // The index of the cup
-  bool isVisible;            // Whether the cup is currently visible
-  final GlobalKey key;       // The key to identify the cup widget
-  Color color;               // The cup's color
+  final int index; // The index of the cup
+  bool isVisible; // Whether the cup is currently visible
+  final GlobalKey key; // The key to identify the cup widget
+  Color color; // The cup's color
 
   /// Constructor initializing the cup.
   Cup({
@@ -27,7 +27,7 @@ class Cup {
   }
 
   /// Builds the widget representing this cup.
-  Widget widget(VoidCallback onTap) {
+  Widget widget({required VoidCallback onTap, int? hitCount}) {
     return Visibility(
       visible: isVisible,
       maintainSize: true,
@@ -45,6 +45,15 @@ class Cup {
             color: color,
             shape: BoxShape.circle,
           ),
+          child: hitCount != null
+              ? Center(
+                  child: Text(
+                    '$hitCount', // Display the count in the cup
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                )
+              : null,
         ),
       ),
     );
@@ -64,7 +73,7 @@ class Cup {
     return Cup(
       index: json['index'],
       isVisible: json['isVisible'],
-      color: Color(json['color']), 
+      color: Color(json['color']),
     );
   }
 }
