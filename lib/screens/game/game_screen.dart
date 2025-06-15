@@ -8,7 +8,6 @@ import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
-import 'package:percent_indicator/percent_indicator.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 

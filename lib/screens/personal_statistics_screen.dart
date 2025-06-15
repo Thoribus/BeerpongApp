@@ -1,52 +1,10 @@
+import 'package:beerpongapp/models/cup.dart';
+import 'package:beerpongapp/models/player.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
-
-// Class representing a cup in the game
-class Cup {
-  final int index; // The index of the cup
-  bool isVisible; // Visibility status of the cup
-  GlobalKey key; // Key to identify the cup widget
-  Color color;
-
-  // Constructor initializing the cup's index and setting it as visible by default
-  Cup({required this.index, this.color = Colors.red, isVisible, key})
-      : isVisible = isVisible ?? true,
-        key = key ?? GlobalKey();
-
-  // Method to create a widget representing the cup
-  Widget widget(int hitCount) {
-    return Visibility(
-      visible: isVisible, // Determines whether the cup is visible
-      maintainSize:
-          true, // Maintains the size of the widget even when it's not visible
-      maintainAnimation:
-          true, // Maintains the animation state when visibility changes
-      maintainState:
-          true, // Maintains the state of the widget when visibility changes
-      child: Container(
-        key: key, // Key to identify the cup widget
-        margin: const EdgeInsets.all(8.0), // Margin around the cup
-        width: 60.0, // Width of the cup
-        height: 60.0, // Height of the cup
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.white, width: 2),
-          color: color, // Color of the cup
-          shape: BoxShape.circle, // Shape of the cup
-        ),
-        child: Center(
-          child: Text(
-            '$hitCount', // Display the count in the cup
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class PersonalStatisticsScreen extends StatelessWidget {
   final User user;
@@ -60,243 +18,46 @@ class PersonalStatisticsScreen extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 16),
-            _buildStatisticsTiles(user), // 2x2 rectangle brackets layout
-            const SizedBox(height: 24),
-            _buildSectionTitle("Performance Summary"),
-            _buildCard(
-              child: StatisticsTable(user: user),
-            ),
-            const SizedBox(height: 16),
-            _buildSectionTitle("Cups Hit Heat Map"),
-            _buildCard(
-              child: _buildPyramidHeatMap(),
-            ),
-            const SizedBox(height: 20),
-            _buildSectionTitle("Game History"),
-            _buildCard(
-              child: FutureBuilder<List<UserStatsInGame>>(
-                future: FirestoreService().retrieveUserStatsWithDate(user),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-                  final userStats = snapshot.data ?? [];
-                  return _buildGameHistoryChart(userStats);
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
+            // 1) Load userStatsInGame from Firestore
+            FutureBuilder<List<UserStatsInGame>>(
+              future: FirestoreService().retrieveUserStatsWithDate(user),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                final userStatsList = snapshot.data ?? [];
 
-  Widget _buildGameHistoryChart(List<UserStatsInGame> userStats) {
-    String selectedXAxis = 'Date'; // Default x-axis option
-    final List<String> xAxisOptions = [
-      'Date',
-      'Game Number'
-    ]; // Dropdown options
+                // 2) Now we have userStatsList for line charts etc.
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 16),
+                    // Example "Statistics Tiles" if you want them:
+                    _buildStatisticsTiles(user),
+                    const SizedBox(height: 24),
 
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Brackets with Data and Dropdown
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Left Bracket: "Data"
-                _buildBracket(
-                  content: const Text(
-                    'Data',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-                // Right Bracket: Dropdown Menu
-                _buildBracket(
-                  content: DropdownButton<String>(
-                    value: selectedXAxis,
-                    dropdownColor: Colors.grey[800],
-                    icon:
-                        const Icon(Icons.arrow_drop_down, color: Colors.white),
-                    underline: Container(height: 0), // Remove underline
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedXAxis = newValue!;
-                      });
-                    },
-                    items: xAxisOptions
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Line Chart
-            _buildLineChart(userStats, selectedXAxis),
-          ],
-        );
-      },
-    );
-  }
+                    // "Performance Summary": use a custom card
+                    _buildSectionTitle("Performance Summary"),
+                    _buildCard(
+                      child: StatisticsTable(
+                        user: user,
+                        userStatsList: userStatsList, // pass it here
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-  /// Builds a bracket-style container with custom content
-  Widget _buildBracket({required Widget content}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: content,
-    );
-  }
-
-  /// Builds the line chart with the selected x-axis type
-  Widget _buildLineChart(List<UserStatsInGame> userStats, String xAxis) {
-    if (userStats.isEmpty) {
-      return const Center(
-        child: Text(
-          'No data available',
-          style: TextStyle(color: Colors.white),
-        ),
-      );
-    }
-    final gradientColors = [
-      const Color(0xff23b6e6),
-      const Color(0xff02d39a),
-    ];
-
-    List<FlSpot> spots = userStats.asMap().entries.map((entry) {
-      double xValue = xAxis == 'Date'
-          ? entry.key.toDouble()
-          : entry.value.date.millisecondsSinceEpoch.toDouble();
-      return FlSpot(xValue, entry.value.player.score.toDouble());
-    }).toList();
-
-    return SizedBox(
-      height: 300,
-      child: LineChart(
-        LineChartData(
-          minX: 0,
-          maxX: userStats.length.toDouble() - 1,
-          minY: 0,
-          maxY: userStats
-                  .map((e) => e.player.score)
-                  .reduce((a, b) => a > b ? a : b) +
-              10,
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 1,
-                reservedSize: 30,
-                getTitlesWidget: (value, meta) {
-                  if (xAxis == 'Date') {
-                    int index = value.toInt();
-                    if (index < 0 || index >= userStats.length)
-                      return const Text('');
-                    return Text(
-                      userStats[index]
-                          .date
-                          .toLocal()
-                          .toIso8601String()
-                          .split('T')[0],
-                      style: const TextStyle(
-                          color: Color(0xff68737d),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12),
-                    );
-                  } else {
-                    return Text(
-                      '${value.toInt()}',
-                      style: const TextStyle(
-                          color: Color(0xff68737d),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12),
-                    );
-                  }
-                },
-              ),
-            ),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 10,
-                reservedSize: 42,
-                getTitlesWidget: (value, meta) {
-                  return Text(
-                    '${value.toInt()}',
-                    style: const TextStyle(
-                        color: Color(0xff67727d),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14),
-                  );
-                },
-              ),
-            ),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          ),
-          borderData: FlBorderData(
-            show: true,
-            border: Border.all(color: const Color(0xff37434d), width: 1),
-          ),
-          gridData: FlGridData(
-            show: true,
-            drawVerticalLine: true,
-            horizontalInterval: 10,
-            verticalInterval: 1,
-            getDrawingHorizontalLine: (value) {
-              return const FlLine(color: Color(0xff37434d), strokeWidth: 1);
-            },
-            getDrawingVerticalLine: (value) {
-              return const FlLine(color: Color(0xff37434d), strokeWidth: 1);
-            },
-          ),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              barWidth: 6,
-              isStrokeCapRound: true,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  colors: gradientColors
-                      .map((color) => color.withOpacity(0.3))
-                      .toList(),
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                ),
-              ),
+                    // Heat Map
+                    _buildSectionTitle("Cups Hit Heat Map"),
+                    _buildCard(
+                      child: _buildPyramidHeatMap(),
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -423,22 +184,19 @@ class PersonalStatisticsScreen extends StatelessWidget {
       [9]
     ];
 
-    return SizedBox(
-      height: 300,
-      child: Column(
-        children: pyramidRows.map((row) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: row.map((index) {
-              Cup cup = Cup(
-                index: index,
-                color: _getHeatColor(cupCounts[index], cupCounts),
-              );
-              return cup.widget(cupCounts[index]);
-            }).toList(),
-          );
-        }).toList(),
-      ),
+    return Column(
+      children: pyramidRows.map((row) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: row.map((index) {
+            Cup cup = Cup(
+              index: index,
+              color: _getHeatColor(cupCounts[index], cupCounts),
+            );
+            return cup.widget(onTap: () => {}, hitCount: cupCounts[index]);
+          }).toList(),
+        );
+      }).toList(),
     );
   }
 
@@ -469,58 +227,131 @@ class PersonalStatisticsScreen extends StatelessWidget {
   }
 }
 
+/// The table widget
 class StatisticsTable extends StatelessWidget {
   final User user;
+  final List<UserStatsInGame> userStatsList; // All the user’s games
 
-  const StatisticsTable({super.key, required this.user});
+  const StatisticsTable({
+    super.key,
+    required this.user,
+    required this.userStatsList,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // 1) Build spots for each measure
+    final scoreSpots = _buildTrend((p) => p.score.toDouble());
+    final missesSpots = _buildTrend((p) => p.misses.toDouble());
+    final airballsSpots = _buildTrend((p) => p.airballs.toDouble());
+    final cupsHitSpots = _buildTrend((p) => p.cupsHit.length.toDouble());
+    final hitRateSpots =
+        _buildTrend((p) => p.throws == 0 ? 0.0 : (p.score / p.throws) * 100.0);
+    final winRateSpots = _buildTrendWinRate();
+
+    // 2) Compute slope-based "change" for each measure
+    final scoreChange = _computeSlopeAsPercentChange(scoreSpots);
+    final missesChange = _computeSlopeAsPercentChange(missesSpots);
+    final airballsChange = _computeSlopeAsPercentChange(airballsSpots);
+    final cupsHitChange = _computeSlopeAsPercentChange(cupsHitSpots);
+    final hitRateChange = _computeSlopeAsPercentChange(hitRateSpots);
+    final winRateChange = _computeSlopeAsPercentChange(winRateSpots);
+
+    // 3) Build the rows
     return ListView(
-      shrinkWrap: true, // Prevents infinite height issue
-      physics: NeverScrollableScrollPhysics(), // Disables internal scrolling
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildStatRow(
-            context, 'Total Score', user.totalScore.toInt(), Icons.score, 0.02),
+          context,
+          'Total Score',
+          user.totalScore.toInt(),
+          Icons.score,
+          scoreChange,
+          scoreSpots,
+        ),
         _buildStatRow(
-            context, 'Total Misses', user.totalMisses, Icons.close, -1.5),
+          context,
+          'Total Misses',
+          user.totalMisses,
+          Icons.close,
+          missesChange,
+          missesSpots,
+        ),
         _buildStatRow(
-            context, 'Total Airballs', user.totalAirballs, Icons.air, 0.5),
+          context,
+          'Total Airballs',
+          user.totalAirballs,
+          Icons.air,
+          airballsChange,
+          airballsSpots,
+        ),
         _buildStatRow(
-            context, 'Cups Hit', user.cupsHit.length, Icons.sports_bar, -0.3),
-        _buildStatRow(context, 'Wins', user.wins, Icons.emoji_events, 1.2),
-        _buildStatRow(context, 'Losses', user.losses, Icons.cancel, -0.8),
+          context,
+          'Cups Hit',
+          user.cupsHit.length,
+          Icons.sports_bar,
+          cupsHitChange,
+          cupsHitSpots,
+        ),
+        _buildStatRow(
+          context,
+          'Hit Rate',
+          _hitRateUserLevel(user).round(),
+          Icons.auto_fix_high,
+          hitRateChange,
+          hitRateSpots,
+        ),
+        _buildStatRow(
+          context,
+          'Win Rate',
+          _winRateUserLevel(user).round(),
+          Icons.emoji_events,
+          winRateChange,
+          winRateSpots,
+        ),
       ],
     );
   }
 
-  Widget _buildStatRow(BuildContext context, String attribute, int value,
-      IconData icon, double change) {
-    List<FlSpot> trendData = _generatePlaceholderData(value);
-    bool isPositive = change >= 0;
-    Color trendColor = isPositive ? Colors.green : Colors.red;
+  //region -- Building Each Stat Row --
+
+  Widget _buildStatRow(
+    BuildContext context,
+    String attribute,
+    int value,
+    IconData icon,
+    double changePercent,
+    List<FlSpot> rawData,
+  ) {
+    final isPositive =
+        _lessIsBetter(attribute) ? changePercent < 0 : changePercent >= 0;
+    final trendColor = isPositive ? Colors.green : Colors.red;
 
     return ListTile(
       leading: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(attribute,
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          Text(
+            attribute,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           Icon(icon, color: Colors.amber, size: 20),
         ],
       ),
+      // The small sparkline (just raw data)
       title: SizedBox(
         height: 30,
         width: 80,
         child: LineChart(
           LineChartData(
             borderData: FlBorderData(show: false),
-            gridData: FlGridData(show: false),
-            titlesData: FlTitlesData(show: false),
+            gridData: const FlGridData(show: false),
+            titlesData: const FlTitlesData(show: false),
             lineBarsData: [
               LineChartBarData(
-                spots: trendData,
+                spots: rawData,
                 isCurved: true,
                 color: trendColor,
                 barWidth: 2,
@@ -535,52 +366,86 @@ class StatisticsTable extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            value.toInt().toString(),
-            style: TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            '$value',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
           Text(
-            '${change.toStringAsFixed(2)}%',
+            '${changePercent.toStringAsFixed(2)}%',
             style: TextStyle(
-                color: trendColor, fontWeight: FontWeight.bold, fontSize: 14),
+              color: trendColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
         ],
       ),
-      onTap: () => _showDetailChart(context, attribute, trendData, trendColor),
+      onTap: () => _showDetailChart(context, attribute, rawData),
     );
   }
 
+  bool _lessIsBetter(String attribute) {
+    // If the attribute name is "Total Misses" or "Total Airballs", returning true
+    // means we’ll invert the color logic (negative slope => green).
+    return attribute == "Total Misses" || attribute == "Total Airballs";
+  }
+
+  /// On tap, show a bigger chart with BOTH raw data and the regression line
   void _showDetailChart(
-      BuildContext context, String attribute, List<FlSpot> data, Color color) {
+    BuildContext context,
+    String attribute,
+    List<FlSpot> rawData,
+  ) {
+    final line = _createRegressionLine(rawData);
+    const slopeColor = Colors.orange;
+
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (ctx) {
         return AlertDialog(
           backgroundColor: Colors.black87,
-          title: Text(attribute, style: TextStyle(color: Colors.white)),
+          title: Text(attribute, style: const TextStyle(color: Colors.white)),
           content: SizedBox(
-            height: 250,
-            width: 300,
+            height: 300,
+            width: 400,
             child: LineChart(
               LineChartData(
                 borderData: FlBorderData(show: true),
-                gridData: FlGridData(
-                    drawVerticalLine: true, drawHorizontalLine: true),
-                titlesData: FlTitlesData(
-                  leftTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: true)),
-                  bottomTitles:
-                      AxisTitles(sideTitles: SideTitles(showTitles: true)),
+                gridData: const FlGridData(
+                  drawVerticalLine: true,
+                  drawHorizontalLine: true,
+                ),
+                titlesData: const FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 lineBarsData: [
+                  // Raw data line
                   LineChartBarData(
-                    spots: data,
+                    spots: rawData,
                     isCurved: true,
-                    color: color,
+                    color: Colors.blue,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(show: false),
+                  ),
+                  // Regression line
+                  LineChartBarData(
+                    spots: line,
+                    isCurved: false,
+                    color: slopeColor,
                     barWidth: 2,
                     isStrokeCapRound: true,
-                    belowBarData:
-                        BarAreaData(show: true, color: color.withOpacity(0.3)),
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(show: false),
                   ),
                 ],
               ),
@@ -590,11 +455,95 @@ class StatisticsTable extends StatelessWidget {
       },
     );
   }
+  //endregion
 
-  List<FlSpot> _generatePlaceholderData(int value) {
-    return List.generate(
-        10,
-        (index) =>
-            FlSpot(index.toDouble(), (value * (0.9 + (index % 3) * 0.05))));
+  // --- Trend Builders using Linear Regression ---
+  List<FlSpot> _buildTrend(num Function(Player) extractor) {
+    final sorted = _sortByDate(userStatsList);
+    return List.generate(sorted.length, (i) {
+      final value = extractor(sorted[i].player);
+      return FlSpot(i.toDouble(), value.toDouble());
+    });
   }
+
+  List<FlSpot> _buildTrendWinRate() {
+    final sorted = _sortByDate(userStatsList);
+    int cumulativeWins = 0;
+    return List.generate(sorted.length, (i) {
+      if (sorted[i].player.isWinner) cumulativeWins++;
+      double winRate = (cumulativeWins / (i + 1)) * 100.0;
+      return FlSpot(i.toDouble(), winRate);
+    });
+  }
+
+  List<UserStatsInGame> _sortByDate(List<UserStatsInGame> list) {
+    final copy = [...list];
+    copy.sort((a, b) => a.date.compareTo(b.date));
+    return copy;
+  }
+
+  /// Compute the slope from linear regression and return the percent change relative to the average.
+  double _computeSlopeAsPercentChange(List<FlSpot> spots) {
+    if (spots.length < 2) return 0.0;
+    final regression = _computeLinearRegression(spots);
+    final slope = regression.first;
+    final avg = spots.map((s) => s.y).reduce((a, b) => a + b) / spots.length;
+    if (avg.abs() < 1e-9) return 0.0;
+    return (slope / avg) * 100.0;
+  }
+
+  /// Compute a simple linear regression on the given spots.
+  Pair<double, double> _computeLinearRegression(List<FlSpot> spots) {
+    final n = spots.length;
+    if (n < 2) {
+      final avgY = n == 1 ? spots[0].y : 0.0;
+      return Pair(0.0, avgY);
+    }
+    double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (final s in spots) {
+      sumX += s.x;
+      sumY += s.y;
+      sumXY += s.x * s.y;
+      sumX2 += s.x * s.x;
+    }
+    final numerator = n * sumXY - sumX * sumY;
+    final denominator = n * sumX2 - sumX * sumX;
+    if (denominator.abs() < 1e-9) return Pair(0.0, sumY / n);
+    final slope = numerator / denominator;
+    final intercept = (sumY - slope * sumX) / n;
+    return Pair(slope, intercept);
+  }
+
+  /// Create two points representing the regression line (from minX to maxX).
+  List<FlSpot> _createRegressionLine(List<FlSpot> raw) {
+    if (raw.length < 2) return [];
+    final regression = _computeLinearRegression(raw);
+    final slope = regression.first;
+    final intercept = regression.second;
+    final minX = raw.first.x;
+    final maxX = raw.last.x;
+    return [
+      FlSpot(minX, slope * minX + intercept),
+      FlSpot(maxX, slope * maxX + intercept),
+    ];
+  }
+
+  // --- Final User-Level Computations ---
+  double _winRateUserLevel(User user) {
+    final totalGames = user.wins + user.losses;
+    if (totalGames == 0) return 0.0;
+    return (user.wins / totalGames) * 100.0;
+  }
+
+  double _hitRateUserLevel(User user) {
+    if (user.totalThrows == 0) return 0.0;
+    return (user.totalScore / user.totalThrows) * 100.0;
+  }
+}
+
+/// Helper class for pairing two values.
+class Pair<A, B> {
+  final A first;
+  final B second;
+  Pair(this.first, this.second);
 }

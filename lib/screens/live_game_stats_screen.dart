@@ -22,38 +22,12 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
   late TabController _tabController;
+  late DateTime gameStart;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-  }
-
-  void _showInfoDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.amber,
-          title: Text(
-            'Select $title',
-            style: const TextStyle(
-              color: Colors.amber,
-              fontWeight: FontWeight.bold, // Make the title text bold
-            ),
-          ),
-          content: Text(message),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Back'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -62,8 +36,8 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
       appBar: PreferredSize(
           preferredSize: const Size.fromHeight(50.0), // here the desired height
           child: AppBar(
-            backgroundColor: Color(0xFFF0AE1D),
-            title: Column(
+            backgroundColor: const Color(0xFFF0AE1D),
+            title: const Column(
               children: [
                 Text(
                   'Live Ticker',
@@ -112,15 +86,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
           Team team1 = Team.fromJson(gameData['team1']);
           Team team2 = Team.fromJson(gameData['team2']);
 
-          List<GameEvent> events = [];
-          if (gameData['events'] != null) {
-            events = List<Map<String, dynamic>>.from(gameData['events'])
-                .map((eventData) => GameEvent.fromJson(eventData))
-                .toList();
-          }
-          DateTime gameStart = gameData['timestamp'].toDate();
-          print(gameStart);
-          print(events.toString());
+          gameStart = gameData['timestamp'].toDate();
 
           // Display game-end dialog if applicable
           final winnerField = gameData['winner'];
@@ -160,7 +126,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                   children: [
                     _buildCupLayoutTab(team1, team2),
                     _buildStatisticsTab(team1, team2),
-                    _buildTimelineTab(events, team1, team2),
+                    _buildTimelineTab(team1, team2),
                     _buildSettingsTab(gameData),
                   ],
                 ),
@@ -246,7 +212,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                           backgroundColor: Colors.white24,
                           child: ClipOval(
                             child: SvgPicture.asset(
-                              _mapAvatarKeyToAsset(player.user!.avatarKey),
+                              player.user!.mapAvatarKeyToAsset(),
                               fit: BoxFit.cover,
                               width: 10 * 2,
                               height: 10 * 2,
@@ -308,7 +274,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                           backgroundColor: Colors.white24,
                           child: ClipOval(
                             child: SvgPicture.asset(
-                              _mapAvatarKeyToAsset(player.user!.avatarKey),
+                              player.user!.mapAvatarKeyToAsset(),
                               fit: BoxFit.cover,
                               width: 10 * 2,
                               height: 10 * 2,
@@ -324,7 +290,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -358,13 +324,33 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     return _buildMatchStats(team1, team2);
   }
 
-  Widget _buildTimelineTab(List<GameEvent> events, Team team1, Team team2) {
+  Widget _buildTimelineTab(Team team1, Team team2) {
+    return StreamBuilder(
+        stream: FirebaseFirestore.instance
+            .collection("games")
+            .doc(widget.gameId)
+            .collection("events")
+            .orderBy('timestamp', descending: false)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          List<GameEvent> events = snapshot.data!.docs
+              .map((doc) => GameEvent.fromJson(doc.data(), doc.id, widget.gameId))
+              .toList();
+
+          return _buildEventList(events, team1, team2);
+        });
+  }
+
+  Widget _buildEventList(List<GameEvent> events, Team team1, Team team2) {
     return ListView.builder(
       itemCount: events.length,
       itemBuilder: (context, index) {
         final event = events[index];
-        final isTeam1 = event.team == null;
-        print(team1);
+        final isTeam1 = event.team != "4294198070";
 
         return _buildEventRow(event, isTeam1);
       },
@@ -376,19 +362,19 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     IconData eventIcon = _getEventIcon(event.eventType);
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
               child:
-                  isTeam1 ? _buildPlayerInfo(event, eventColor) : SizedBox()),
-          Expanded(child: isTeam1 ? _buildTimestamp(event) : SizedBox()),
+                  isTeam1 ? _buildPlayerInfo(event, eventColor) : const SizedBox()),
+          Expanded(child: isTeam1 ? _buildTimestamp(event) : const SizedBox()),
           Icon(eventIcon, color: eventColor),
-          Expanded(child: !isTeam1 ? _buildTimestamp(event) : SizedBox()),
+          Expanded(child: !isTeam1 ? _buildTimestamp(event) : const SizedBox()),
           Expanded(
               child:
-                  !isTeam1 ? _buildPlayerInfo(event, eventColor) : SizedBox()),
+                  !isTeam1 ? _buildPlayerInfo(event, eventColor) : const SizedBox()),
         ],
       ),
     );
@@ -403,9 +389,11 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
   }
 
   Widget _buildTimestamp(GameEvent event) {
+    Duration eventDuration = event.timestamp.difference(gameStart);
+    String eventTime = "${(eventDuration.inMinutes % 60).toString().padLeft(2, '0')}:${(eventDuration.inSeconds % 60).toString().padLeft(2, '0')}";
     return Text(
-      '5\'',
-      style: TextStyle(fontSize: 12, color: Colors.grey),
+      eventTime,
+      style: const TextStyle(fontSize: 12, color: Colors.grey),
       textAlign: TextAlign.center,
     );
   }
@@ -437,19 +425,6 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
   }
 }
 
-IconData _getEventIcon(String eventType) {
-  switch (eventType) {
-    case "Airball":
-      return Icons.sports_basketball;
-    case "Bitchcup":
-      return Icons.warning;
-    case "Normal Hit":
-      return Icons.sports_soccer;
-    default:
-      return Icons.sports;
-  }
-}
-
 Widget _buildSettingsTab(Map<String, dynamic> gameData) {
   return SingleChildScrollView(
     // To make the content scrollable if needed
@@ -461,9 +436,9 @@ Widget _buildSettingsTab(Map<String, dynamic> gameData) {
             title: 'Deathcup',
             imagePath:
                 'assets/racoon_winner.svg', // Replace with your image path
-            content: Column(
+            content: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'When a cup is hit and not cleared from the field or a cup that someone holding is hit, it is declared as a deathcup.\n',
                   style: TextStyle(color: Colors.white),
@@ -480,9 +455,9 @@ Widget _buildSettingsTab(Map<String, dynamic> gameData) {
           _buildBracketSection(
             title: 'Island',
             imagePath: 'assets/frog_island.svg', // Replace with your image path
-            content: Column(
+            content: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'A player can declare an island-shot (once per game) when a single cup has no surrounding cups.\n',
                   style: TextStyle(color: Colors.white),
@@ -499,9 +474,9 @@ Widget _buildSettingsTab(Map<String, dynamic> gameData) {
           _buildBracketSection(
             title: 'Putback',
             imagePath: 'assets/cat_boxing.svg', // Replace with your image path
-            content: Column(
+            content: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'When the last cup is hit, the enemy team has a chance to revoke the cuphit.\n',
                   style: TextStyle(color: Colors.white),
@@ -846,7 +821,7 @@ Widget _buildCupLayoutsRow(Team team1, Team team2) {
             Colors.grey.shade600,
             Colors.amber.withOpacity(0.2)
           ],
-          stops: [0.0, 0.5, 1.0], // Ensures the center color is at the midpoint
+          stops: const [0.0, 0.5, 1.0], // Ensures the center color is at the midpoint
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ), // Background color for the container
@@ -965,74 +940,4 @@ Widget _buildBracketSection({
       const SizedBox(height: 20),
     ],
   );
-}
-
-Widget _buildPlayerName(Player player) {
-  return Container(
-    padding: const EdgeInsets.all(8.0), // Inner padding
-    decoration: BoxDecoration(
-      color: Colors.brown.shade600, // Background color for card
-      border: Border.all(
-        color: Colors.grey.withOpacity(0.5), // Semi-transparent border
-        width: 0.5,
-      ),
-      borderRadius: BorderRadius.circular(8.0), // Rounded corners
-    ),
-    child: Row(
-      children: [
-        player.user == null
-            ? const CircleAvatar(
-                radius: 10,
-                backgroundColor: Colors.white24,
-                child: Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 8,
-                ),
-              )
-            : CircleAvatar(
-                radius: 10,
-                backgroundColor: Colors.white24,
-                child: ClipOval(
-                  child: SvgPicture.asset(
-                    _mapAvatarKeyToAsset(player.user!.avatarKey),
-                    fit: BoxFit.cover,
-                    width: 10 * 2,
-                    height: 10 * 2,
-                  ),
-                ),
-              ),
-        const SizedBox(width: 8.0), // Space between avatar and text
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                player.name.length > 13
-                    ? '${player.name.substring(0, 12)}...' // Truncate long names
-                    : player.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10.0,
-                ),
-                overflow: TextOverflow.ellipsis, // Handles very long names
-              ),
-              const SizedBox(height: 4.0),
-              const Text(
-                'Title: X', // Dummy level
-                style: TextStyle(color: Colors.grey, fontSize: 8.0),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-String _mapAvatarKeyToAsset(String avatarKey) {
-  if (avatarKey.isEmpty) return '';
-  return 'assets/avatars/$avatarKey.svg';
 }
