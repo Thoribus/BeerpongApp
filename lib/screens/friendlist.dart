@@ -200,18 +200,18 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     final userProvider = Provider.of<UserProvider>(context);
     if (userProvider.user == null) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         body: Center(
           child: Text(
             'You must be signed in to view your friends.',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Colors.black),
           ),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           _buildPageSelector(),
@@ -240,7 +240,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       children: [
         _buildPageSelectorButton('Friendlist', 0),
         const VerticalDivider(
-          color: Colors.white,
+          color: Colors.black,
           width: 20,
           thickness: 2,
           indent: 5,
@@ -261,7 +261,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         style: TextStyle(
           color: _currentPage == pageIndex
               ? AppConstants.primaryColor
-              : Colors.white,
+              : Colors.black,
         ),
       ),
     );
@@ -278,12 +278,12 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         if (snapshot.hasError) {
           return Center(
               child: Text('Error: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.white)));
+                  style: const TextStyle(color: Colors.black)));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(
               child: Text('No friends found.',
-                  style: TextStyle(color: Colors.white)));
+                  style: TextStyle(color: Colors.black)));
         }
 
         final friends = snapshot.data!;
@@ -308,7 +308,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                   leading: _buildFriendAvatar(userProvider.user!),
                   title: Text(
                     userProvider.user!.username,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black),
                   ),
                   subtitle: Text(
                     'Title: ${userProvider.user!.title}',
@@ -322,7 +322,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                       radius: 20, // Adjust size as needed
                       child: Icon(
                         Icons.add,
-                        color: Colors.white,
+                        color: Colors.black,
                         size: 20, // Adjust icon size as needed
                       ),
                     ),
@@ -348,7 +348,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                     if (snapshot.hasError) {
                       return Center(
                           child: Text('Error: ${snapshot.error}',
-                              style: const TextStyle(color: Colors.white)));
+                              style: const TextStyle(color: Colors.black)));
                     }
                     final lastGame = snapshot.data ?? [];
                     return Container(
@@ -364,7 +364,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                         leading: _buildFriendAvatar(friend),
                         title: Text(
                           friend.username,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: Colors.black),
                         ),
                         subtitle: Text(
                           'Title: ${friend.title}',
@@ -386,7 +386,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                                       .format(lastGame.first.date)
                                   : 'No games',
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: Colors.black,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -527,7 +527,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           width: 80,
           child: Text(
             user.username,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.black),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             textAlign: TextAlign.center,
@@ -538,7 +538,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               ? user.totalScore.toString()
               : '${(user.winRate * 100).toStringAsFixed(2)}%',
           style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -582,7 +582,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
             children: [
               _buildFriendAvatar(user, radius: 20),
               const SizedBox(width: 10),
-              Text(user.username, style: const TextStyle(color: Colors.white)),
+              Text(user.username, style: const TextStyle(color: Colors.black)),
             ],
           ),
           trailing: Text(

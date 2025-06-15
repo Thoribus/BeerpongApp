@@ -2,6 +2,7 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:async';
 
 class SettingsScreen extends StatefulWidget {
@@ -12,304 +13,129 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class SettingsScreenState extends State<SettingsScreen> {
-  User? currentUser;
-  double _progress = 0.0;
-  Timer? _timer;
+  final List<Product> products = [
+    Product(
+      name: 'Beach Volleyball',
+      description: 'Durable outdoor ball, ideal for beach games.',
+      price: 24.99,
+      imagePath: 'assets/volleyball.svg',
+    ),
+    Product(
+      name: 'Hiking Backpack',
+      description: 'Lightweight with 30L capacity and waterproof design.',
+      price: 59.99,
+      imagePath: 'assets/backpack.svg',
+    ),
+    Product(
+      name: 'Tennis Racket',
+      description: 'Carbon-fiber frame with high tension strings.',
+      price: 89.00,
+      imagePath: 'assets/racket.svg',
+    ),
+    Product(
+      name: 'Running Shoes',
+      description: 'Breathable shoes for trail and road runs.',
+      price: 74.50,
+      imagePath: 'assets/shoes.svg',
+    ),
+  ];
 
-  void _startProgressBar() {
-    setState(() {
-      _progress = 0.0;
-    });
-
-    const duration =
-        Duration(milliseconds: 16); // High-frequency updates (60 FPS)
-    _timer?.cancel();
-    _timer = Timer.periodic(duration, (timer) {
-      setState(() {
-        if (_progress < 1.0) {
-          _progress += 1 /
-              (10 * 60); // Smoothly increment progress over 30 seconds (60 FPS)
-          _progress =
-              _progress.clamp(0.0, 1.0); // Ensure progress stays within bounds
-        } else {
-          _timer?.cancel();
-          _progress = 1.0; // Finalize the progress at 100%
-        }
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
+  final Color grey = Colors.grey;
+  final Color orange = Colors.orange;
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    currentUser = userProvider.user;
-
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: currentUser == null
-          ? _buildSignInPrompt(userProvider)
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  _buildSectionTitle("Privacy"),
-                  _buildPrivacyCard(),
-                  _buildSectionTitle("Dark Mode"),
-                  _buildDarkModeCard(),
-                  const SizedBox(height: 20),
-                  _buildBattleSection(), // New section for "Create battle" UI
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildSignInPrompt(UserProvider userProvider) {
-    return Center(
-      child: ElevatedButton(
-        onPressed: () async {
-          await userProvider.signIn();
-        },
-        child: const Text('Sign in with Google'),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPrivacyCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: const Icon(Icons.lock, color: Colors.red),
-        title: const Text(
-          "Privacy",
-          style: TextStyle(color: Colors.white),
-        ),
-        subtitle: const Text(
-          "Manage your privacy settings",
-          style: TextStyle(color: Colors.white70),
-        ),
-        onTap: () {
-          // TODO: Implement privacy settings logic here
-        },
-      ),
-    );
-  }
-
-  Widget _buildDarkModeCard() {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: SwitchListTile(
-        title: const Text("Dark Mode", style: TextStyle(color: Colors.white)),
-        value:
-            false, // Replace with an actual variable if you implement theme switching
-        onChanged: (bool value) {
-          // TODO: Implement dark mode toggle logic here
-        },
-      ),
-    );
-  }
-
-  Widget _buildBattleSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "BEERPONG BATTLE",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              DropdownButton<String>(
-                dropdownColor: Colors.grey[900],
-                value: "Popular",
-                items: const [
-                  DropdownMenuItem(
-                    value: "Popular",
-                    child:
-                        Text("Popular", style: TextStyle(color: Colors.white)),
-                  ),
-                  DropdownMenuItem(
-                    value: "Newest",
-                    child:
-                        Text("Newest", style: TextStyle(color: Colors.white)),
+      body: Container(
+        color: grey,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final product = products[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
                   ),
                 ],
-                onChanged: (value) {
-                  // TODO: Handle sorting logic here
-                },
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
-              ),
-            ),
-            onPressed: () {
-              _startProgressBar(); // Start progress bar animation on button click
-              // TODO: Add create battle logic
-            },
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text("Create game"),
-          ),
-          const SizedBox(height: 20),
-          _buildProgressBar(), // Add progress bar here
-          const SizedBox(height: 20),
-          Card(
-            color: Colors.grey[900],
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text("ROUND 5",
+                  SvgPicture.asset(
+                    'assets/otter_canvas.svg',
+                    width: 80,
+                    height: 80,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          product.description,
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${product.price.toStringAsFixed(2)} €',
                               style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
-                          Text("2 VS 2",
-                              style: TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Icon(Icons.star_border_outlined, color: Colors.amber),
-                          Icon(Icons.star_border_outlined, color: Colors.green),
-                          Icon(Icons.star_border_outlined, color: Colors.blue),
-                        ],
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _buildPlayerAvatar(1, Colors.purple),
-                      const Text(" VS ", style: TextStyle(color: Colors.white)),
-                      _buildPlayerAvatar(9, Colors.green),
-                      _buildEmptyAvatar(),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Stack(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 50, // Same height as the button
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8.0),
-                          gradient: LinearGradient(
-                            begin: Alignment.centerRight,
-                            end: Alignment.centerLeft,
-                            stops: [_progress, _progress + 0.01],
-                            colors: [
-                              Colors
-                                  .grey, // Gradually appears as progress increases
-                              Colors.amber,
-                            ],
-                          ),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                // TODO: Add buy functionality or link
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: orange,
+                              ),
+                              child: const Text('BUY'),
+                            ),
+                          ],
                         ),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors
-                              .transparent, // Transparent to show the gradient
-                          shadowColor:
-                              Colors.transparent, // Removes button shadow
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: () {
-                          // TODO: Join battle logic
-                        },
-                        child: const Text(
-                          "You got 30s to join. Hurry up!",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressBar() {
-    return LinearProgressIndicator(
-      value: _progress,
-      backgroundColor: Colors.grey[800],
-      color: Colors.amberAccent,
-      minHeight: 6,
-    );
-  }
-
-  Widget _buildPlayerAvatar(int number, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: CircleAvatar(
-        radius: 20,
-        backgroundColor: color,
-        child: Text(
-          number.toString(),
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            );
+          },
         ),
       ),
     );
   }
+}
 
-  Widget _buildEmptyAvatar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: CircleAvatar(
-        radius: 20,
-        backgroundColor: Colors.grey[800],
-        child: const Icon(Icons.add, color: Colors.white70),
-      ),
-    );
-  }
+class Product {
+  final String name;
+  final String description;
+  final double price;
+  final String imagePath;
+
+  Product({
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imagePath,
+  });
 }
