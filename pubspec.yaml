@@ -55,6 +55,7 @@ dependencies:
   provider: ^6.1.2
   mockito: ^5.4.4
   build_runner: ^2.4.9
+  radar_chart: ^2.1.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.2
