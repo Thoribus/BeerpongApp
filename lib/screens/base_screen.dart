@@ -238,7 +238,7 @@ class BaseScreenState extends State<BaseScreen> {
                     _buildNavItem(Icons.shopping_bag_outlined, 'Shop', 0),
                     _buildNavItem(Icons.favorite_outline, 'Friends', 1),
                     _buildNavItem(Icons.sports_bar_outlined, 'Home', 2),
-                    _buildNavItem(Icons.bar_chart_outlined, 'Stats', 3),
+                    _buildNavItem(Icons.workspaces_outlined, 'Games', 3),
                     _buildNavItem(Icons.account_circle_outlined, 'Profile', 4),
                   ],
                 ),
@@ -316,7 +316,7 @@ class BaseScreenState extends State<BaseScreen> {
         'Shop',
         'Friends',
         'Beerpong Companion',
-        'Statistics',
+        'Games',
         'Profile',
       ][index];
 }

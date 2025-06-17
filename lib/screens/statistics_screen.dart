@@ -89,121 +89,186 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     final Color winColor = Colors.greenAccent.shade400;
     final Color loseColor = Colors.redAccent.shade200;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors:
-              userWon ? [winColor, Colors.white] : [loseColor, Colors.white],
-          begin: Alignment.bottomRight,
-          end: Alignment.topLeft,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          /// Date and Win/Loss icon
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Game ${index + 1}',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              Icon(
-                userWon ? Icons.emoji_events : Icons.cancel,
-                color: userWon ? Colors.green.shade700 : Colors.red.shade600,
-                size: 24,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+    int team1Cups =
+        game.team1Players.fold(0, (sum, p) => sum + (p.cupsHit?.length ?? 0));
+    int team2Cups =
+        game.team2Players.fold(0, (sum, p) => sum + (p.cupsHit?.length ?? 0));
 
-          /// Avatars Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ..._buildAvatarList(game.team1Players),
-              const SizedBox(width: 12),
-              const Text("VS", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(width: 12),
-              ..._buildAvatarList(game.team2Players),
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: userWon
+                  ? [winColor, Colors.white]
+                  : [loseColor, Colors.white],
+              begin: Alignment.bottomRight,
+              end: Alignment.topLeft,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(4, 6), // bottom-right style
+              )
             ],
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                DateFormat('dd.MM.yyyy – kk:mm').format(game.date),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  tooltip: 'Details',
-                  icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.black87,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.all(8),
+              /// Top Row: Game title + Win/Lose icon (left), Date centered
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        userWon ? Icons.emoji_events : Icons.cancel,
+                        color: userWon
+                            ? Colors.green.shade700
+                            : Colors.red.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Game ${index + 1}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) =>
-                          LiveGameStatsScreen(gameId: game.id),
-                    ));
-                  },
-                ),
+                  Text(
+                    DateFormat('dd.MM.yyyy – kk:mm').format(game.date),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 12),
+
+              /// Avatars Row with Team CupsHit on edges
+              Row(
+                children: [
+                  /// Team 1 CupsHit - left aligned
+                  Text(
+                    '$team1Cups',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+
+                  /// Centered avatars + VS
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ..._buildAvatarList(game.team1Players),
+                        const SizedBox(width: 12),
+                        const Text("VS",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 12),
+                        ..._buildAvatarList(game.team2Players),
+                      ],
+                    ),
+                  ),
+
+                  /// Team 2 CupsHit - right aligned
+                  Text(
+                    '$team2Cups',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
             ],
           ),
+        ),
 
-          /// Details Button (Small IconButton)
-        ],
-      ),
+        /// Floating details button in top-right
+        Positioned(
+          top: 4,
+          right: 8,
+          child: IconButton(
+            tooltip: 'Details',
+            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.black87,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(8),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => LiveGameStatsScreen(gameId: game.id),
+              ));
+            },
+          ),
+        ),
+      ],
     );
   }
 
   List<Widget> _buildAvatarList(List<dynamic> players) {
     return players.map((player) {
       String? avatarPath;
+      int cupsHitCount = 0;
+      String playerName = 'Unknown';
 
-      if (player is User && player.avatarKey.isNotEmpty) {
-        avatarPath = player.mapAvatarKeyToAsset();
+      if (player is User) {
+        if (player.avatarKey.isNotEmpty) {
+          avatarPath = player.mapAvatarKeyToAsset();
+        }
+        cupsHitCount = player.cupsHit.length;
+        playerName = player.username;
+      } else if (player != null) {
+        cupsHitCount = player.cupsHit?.length ?? 0;
+        playerName = player.name ?? 'Unknown';
       }
 
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: CircleAvatar(
-          radius: 16,
-          backgroundColor: Colors.white24,
-          child: avatarPath != null && avatarPath.isNotEmpty
-              ? ClipOval(
-                  child: SvgPicture.asset(
-                    avatarPath,
-                    fit: BoxFit.cover,
-                    width: 32,
-                    height: 32,
-                  ),
-                )
-              : const Icon(Icons.person, size: 18, color: Colors.grey),
+      return GestureDetector(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(playerName),
+              duration: const Duration(seconds: 1),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.white24,
+                child: avatarPath != null && avatarPath.isNotEmpty
+                    ? ClipOval(
+                        child: SvgPicture.asset(
+                          avatarPath,
+                          fit: BoxFit.cover,
+                          width: 32,
+                          height: 32,
+                        ),
+                      )
+                    : const Icon(Icons.person, size: 18, color: Colors.grey),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$cupsHitCount',
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
         ),
       );
     }).toList();

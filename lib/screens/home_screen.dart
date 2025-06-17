@@ -540,7 +540,7 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -549,6 +549,35 @@ class HomeScreenState extends State<HomeScreen> {
               _buildGameButton(context),
               _buildSvgBracket(),
               _buildBracketExample(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildWelcomeTile(),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Game Modes',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildGameModeTiles(context),
+                  const SizedBox(height: 30),
+                  const Text(
+                    'Rulebook',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildRulebookSection(),
+                  const SizedBox(height: 10),
+                ],
+              ),
             ],
           ),
         ),
@@ -559,4 +588,317 @@ class HomeScreenState extends State<HomeScreen> {
   void _onReturnFromNextScreen() {
     _checkSavedGame();
   }
+}
+
+Widget _buildWelcomeTile() {
+  return Consumer<UserProvider>(
+    builder: (context, userProvider, child) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.amber[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.waving_hand, color: Colors.black),
+            const SizedBox(width: 10),
+            Text(
+              'Welcome Back, ${userProvider.user?.username ?? "User"}',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildGameModeTiles(BuildContext context) {
+  final gameModes = [
+    {
+      'title': 'Classic Mode',
+      'subtitle': 'Play the original game',
+      'color': Colors.blue,
+      'details': 'Quick, fun rounds',
+      'icon': 'racoon_winner.svg',
+    },
+    {
+      'title': 'Tournament Mode',
+      'subtitle': 'Compete with others',
+      'color': Colors.deepPurple,
+      'details': 'Coming Soon!',
+      'icon': 'racoon_winner.svg',
+    },
+    {
+      'title': 'Practice Mode',
+      'subtitle': 'Sharpen your skills',
+      'color': Colors.orange,
+      'details': 'No pressure',
+      'icon': 'racoon_winner.svg',
+    },
+  ];
+
+  return SizedBox(
+    height: 300,
+    child: ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: gameModes.length,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemBuilder: (context, index) {
+        final mode = gameModes[index];
+        return Container(
+          width: 200,
+          margin: const EdgeInsets.only(right: 16),
+          decoration: BoxDecoration(
+            color: mode['color'] as Color,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: (mode['color'] as Color).withOpacity(0.4),
+                blurRadius: 10,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      mode['title'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      mode['subtitle'] as String,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const Spacer(),
+                    Center(
+                      child: SvgPicture.asset(
+                        'assets/${mode['icon']}',
+                        width: 80,
+                        height: 80,
+                        colorFilter: const ColorFilter.mode(
+                            Colors.white, BlendMode.srcIn),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      mode['details'] as String,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 48), // leave space for the button
+                  ],
+                ),
+              ),
+              Positioned(
+                bottom: 12,
+                right: 12,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    backgroundColor: Colors.black.withOpacity(0.8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Start ${mode['title']}')),
+                    );
+                  },
+                  child: const Text(
+                    'Play Now',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Widget _buildRulebookSection() {
+  final rules = [
+    {
+      'title': 'Overtime Rules',
+      'description': 'Learn what happens in a tie situation.',
+      'longDescription':
+          'In the event of a tie, the game proceeds to an overtime round. Each team gets an additional turn to try and outscore the opponent. If still tied, the game continues until one team leads after a complete round.',
+      'iconName': 'frog_island',
+      'rating': 4,
+    },
+    {
+      'title': 'Re-Rack Mechanics',
+      'description': 'Understand how re-racks work mid-game.',
+      'longDescription':
+          'Re-racks are allowed at designated points during the game. Teams may request a rearrangement of cups, with standard formations such as "diamond", "line", or "triangle". Misuse may result in forfeiture of turn.',
+      'iconName': 'frog_island',
+      'rating': 3,
+    },
+    {
+      'title': 'Redemption Rules',
+      'description': 'See how redemption throws are handled.',
+      'longDescription':
+          'When one team clears the opponent’s cups, the losing team is granted redemption throws. Each player gets one chance to bring the game into overtime. Missing any results in an immediate loss.',
+      'iconName': 'frog_island',
+      'rating': 5,
+    },
+  ];
+
+  return SizedBox(
+    height: 160,
+    child: ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: rules.length,
+      itemBuilder: (context, index) {
+        final rule = rules[index];
+        final int rating = (rule['rating'] as int?) ?? 0;
+
+        return GestureDetector(
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) => Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/${rule['iconName']}.svg',
+                          width: 80,
+                          height: 80,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          rule['title'] as String,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(5, (starIndex) {
+                            return Icon(
+                              starIndex < rating
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              size: 24,
+                              color: Colors.amber,
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          rule['longDescription'] as String,
+                          textAlign: TextAlign.justify,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black87,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+          child: Container(
+            width: 220,
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.15),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/${rule['iconName']}.svg',
+                      width: 30,
+                      height: 30,
+                    ),
+                    const SizedBox(width: 8),
+                    Row(
+                      children: List.generate(5, (starIndex) {
+                        return Icon(
+                          starIndex < rating ? Icons.star : Icons.star_border,
+                          size: 20,
+                          color: Colors.amber,
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  rule['title'] as String,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  rule['description'] as String,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black54,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
 }
