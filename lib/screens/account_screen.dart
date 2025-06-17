@@ -49,7 +49,7 @@ class AccountScreenState extends State<AccountScreen>
     user = userProvider.user;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: user == null
           ? Center(
               child: ElevatedButton(
@@ -107,8 +107,8 @@ class AccountScreenState extends State<AccountScreen>
               ),
               const Divider(color: Colors.white70),
               ...currentUser.unlockedTitles.map((titleToGrant) {
-                final color =
-                    AchievementsScreen.getColorForUnlockedTitle(titleToGrant, currentUser);
+                final color = AchievementsScreen.getColorForUnlockedTitle(
+                    titleToGrant, currentUser);
                 return ListTile(
                   title: Text(
                     titleToGrant,
@@ -208,8 +208,9 @@ class AccountScreenState extends State<AccountScreen>
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: currentUser.title.isNotEmpty
-                                    ? AchievementsScreen.getColorForUnlockedTitle(
-                                        currentUser.title, currentUser)
+                                    ? AchievementsScreen
+                                        .getColorForUnlockedTitle(
+                                            currentUser.title, currentUser)
                                     : Colors.white,
                               ),
                             ),
@@ -277,7 +278,7 @@ class AccountScreenState extends State<AccountScreen>
       controller: _tabController,
       indicatorColor: Colors.amber,
       labelColor: Colors.amber,
-      unselectedLabelColor: Colors.white70,
+      unselectedLabelColor: Colors.grey,
       tabs: const [
         Tab(icon: Icon(Icons.pie_chart), text: "Stats"),
         Tab(icon: Icon(Icons.emoji_events), text: "Achievements"),
