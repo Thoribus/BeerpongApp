@@ -12,6 +12,7 @@ import 'package:beerpongapp/util/user_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/screens/lobby_screen.dart';
+import 'package:beerpongapp/screens/game_mode_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -131,26 +132,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWelcomeText(BuildContext context) {
-    return Consumer<UserProvider>(
-      builder: (context, userProvider, child) {
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Welcome Back, ${userProvider.user?.username ?? "User"}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildGameButton(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -248,39 +229,6 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSvgBracket() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.amber,
-                    width: 4.0,
-                  ),
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.0),
-                  child: SvgPicture.asset(
-                    'assets/home_animals.svg', // Adjust the path as needed
-                    height: 230.0,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -528,15 +476,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProgressBar() {
-    return LinearProgressIndicator(
-      value: _progress,
-      backgroundColor: Colors.grey[800],
-      color: Colors.amberAccent,
-      minHeight: 6,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -545,15 +484,14 @@ class HomeScreenState extends State<HomeScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildWelcomeText(context),
+              const SizedBox(height: 20),
+              _buildWelcomeTile(),
+              const SizedBox(height: 20),
               _buildGameButton(context),
-              _buildSvgBracket(),
               _buildBracketExample(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildWelcomeTile(),
-                  const SizedBox(height: 20),
                   const Text(
                     'Game Modes',
                     style: TextStyle(
@@ -723,8 +661,17 @@ Widget _buildGameModeTiles(BuildContext context) {
                     ),
                   ),
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Start ${mode['title']}')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => GameModeDetailsScreen(
+                          title: mode['title'] as String,
+                          subtitle: mode['subtitle'] as String,
+                          details: mode['details'] as String,
+                          iconPath: 'assets/${mode['icon']}',
+                          color: mode['color'] as Color,
+                        ),
+                      ),
                     );
                   },
                   child: const Text(
