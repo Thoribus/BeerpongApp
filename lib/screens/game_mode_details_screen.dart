@@ -25,6 +25,8 @@ class GameModeDetailsScreen extends StatefulWidget {
 class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  final PageController _bottomPageController = PageController();
+  int _bottomCurrentPage = 0;
   final Set<int> _selectedTiles = {};
 
   final List<String> infoPages = [
@@ -118,13 +120,47 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  alignment: WrapAlignment.center,
+                SizedBox(
+                  height: 180, // Adjust height as needed
+                  child: PageView(
+                    controller: _bottomPageController,
+                    onPageChanged: (index) =>
+                        setState(() => _bottomCurrentPage = index),
+                    children: [
+                      // Page 1: Rule tiles
+                      Center(
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: List.generate(
+                            tiles.length,
+                            (index) => _buildSelectableTile(index),
+                          ),
+                        ),
+                      ),
+
+                      // Page 2: Lobby mock-up
+                      _buildLobbySection(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
-                    tiles.length,
-                    (index) => _buildSelectableTile(index),
+                    2,
+                    (index) => Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _bottomCurrentPage == index
+                            ? Colors.white
+                            : Colors.white30,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -182,6 +218,52 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLobbySection() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'Lobby',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildTeamBox('Team 1'),
+            const SizedBox(width: 16),
+            _buildTeamBox('Team 2'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTeamBox(String title) {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white30),
+      ),
+      child: Center(
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }

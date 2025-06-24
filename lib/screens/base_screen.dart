@@ -5,6 +5,10 @@ import 'package:beerpongapp/screens/friendlist.dart';
 import 'package:beerpongapp/screens/home_screen.dart';
 import 'package:beerpongapp/screens/settings_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/widgets/user_card.dart';
+
+import 'package:beerpongapp/util/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class BaseScreen extends StatefulWidget {
   final int selectedIndex;
@@ -40,100 +44,126 @@ class BaseScreenState extends State<BaseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider.user;
     return Scaffold(
       backgroundColor: const Color(0xFF0E0F11),
       drawer: Drawer(
         backgroundColor:
             isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFEDEDED),
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? const Color(0xFF2C2F36)
-                    : const Color(0xFFDCDCDC),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.grey,
-                    child: Icon(Icons.person, size: 28, color: Colors.white),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Peppa Wutz',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: isDarkMode ? Colors.white : Colors.black,
+            // === Top Section: Header + UserCard ===
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    DrawerHeader(
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? const Color(0xFF2C2F36)
+                            : const Color(0xFFDCDCDC),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Colors.grey,
+                            child: Icon(Icons.person,
+                                size: 28, color: Colors.white),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user?.username ?? 'Peppa Wutz',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '@wutzi',
+                                style: TextStyle(
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (user != null)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: UserCard(
+                          user: user,
+                          onTitleTap: () {},
+                          onAvatarTap: () {},
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '@wutzi',
-                        style: TextStyle(
-                          color:
-                              isDarkMode ? Colors.grey[400] : Colors.grey[700],
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+
+            // === Bottom Section: Settings Toggles ===
+            Column(
+              children: [
+                const Divider(color: Colors.grey),
+                SwitchListTile(
+                  title: Text(
+                    language == 'en' ? 'Dark Mode' : 'Dunkelmodus',
+                    style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black),
                   ),
-                ],
-              ),
-            ),
-
-            // 🌗 Dark Mode Toggle
-            SwitchListTile(
-              title: Text(
-                language == 'en' ? 'Dark Mode' : 'Dunkelmodus',
-                style:
-                    TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-              ),
-              value: isDarkMode,
-              onChanged: (value) => setState(() => isDarkMode = value),
-              secondary: Icon(
-                Icons.dark_mode,
-                color: isDarkMode ? Colors.white : Colors.black,
-              ),
-            ),
-
-            // 🌐 Language Toggle
-            SwitchListTile(
-              title: Text(
-                language == 'en' ? 'Language: English' : 'Sprache: Deutsch',
-                style:
-                    TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-              ),
-              value: language == 'en',
-              onChanged: (value) =>
-                  setState(() => language = value ? 'en' : 'de'),
-              secondary: Icon(
-                Icons.language,
-                color: isDarkMode ? Colors.white : Colors.black,
-              ),
-            ),
-
-            // Optional: Add more drawer items here
-            ListTile(
-              leading: Icon(Icons.privacy_tip_outlined,
-                  color: isDarkMode ? Colors.white : Colors.black),
-              title: Text(
-                language == 'en'
-                    ? 'Privacy Settings'
-                    : 'Datenschutzeinstellungen',
-                style:
-                    TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-              ),
-              onTap: () {
-                // Navigate to privacy settings screen (optional)
-              },
+                  value: isDarkMode,
+                  onChanged: (value) => setState(() => isDarkMode = value),
+                  secondary: Icon(
+                    Icons.dark_mode,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+                ),
+                SwitchListTile(
+                  title: Text(
+                    language == 'en' ? 'Language: English' : 'Sprache: Deutsch',
+                    style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black),
+                  ),
+                  value: language == 'en',
+                  onChanged: (value) =>
+                      setState(() => language = value ? 'en' : 'de'),
+                  secondary: Icon(
+                    Icons.language,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.privacy_tip_outlined,
+                      color: isDarkMode ? Colors.white : Colors.black),
+                  title: Text(
+                    language == 'en'
+                        ? 'Privacy Settings'
+                        : 'Datenschutzeinstellungen',
+                    style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black),
+                  ),
+                  onTap: () {
+                    // Optional: navigate to privacy settings
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
           ],
         ),
