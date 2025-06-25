@@ -1,18 +1,14 @@
-import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'dart:async';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+class ShopScreen extends StatefulWidget {
+  const ShopScreen({super.key});
 
   @override
-  SettingsScreenState createState() => SettingsScreenState();
+  ShopScreenState createState() => ShopScreenState();
 }
 
-class SettingsScreenState extends State<SettingsScreen> {
+class ShopScreenState extends State<ShopScreen> {
   final List<Product> products = [
     Product(
       name: 'Beach Volleyball',
@@ -59,7 +55,7 @@ class SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
                     color: Colors.black12,
                     blurRadius: 4,
@@ -97,7 +93,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             Text(
                               '${product.price.toStringAsFixed(2)} €',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),

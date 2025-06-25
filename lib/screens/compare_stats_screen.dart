@@ -167,7 +167,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   Widget _buildAvatarsAndRadar() {
     return Column(
       children: [
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         ),
         const SizedBox(height: 16),
@@ -354,7 +354,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
               ),
             ],
           );
-        }).toList(),
+        }),
       ],
     );
   }

@@ -25,7 +25,7 @@ class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
   bool _hasInvitations = false;
   final List<Invitation> _invitations = [];
-  double _progress = 0.0;
+  final double _progress = 0.0;
 
   @override
   void initState() {

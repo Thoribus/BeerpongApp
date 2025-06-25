@@ -3,7 +3,7 @@ import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/screens/account_screen.dart';
 import 'package:beerpongapp/screens/friendlist.dart';
 import 'package:beerpongapp/screens/home_screen.dart';
-import 'package:beerpongapp/screens/settings_screen.dart';
+import 'package:beerpongapp/screens/shop_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
 
@@ -36,10 +36,6 @@ class BaseScreenState extends State<BaseScreen> {
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
     _pageController.jumpToPage(index);
-  }
-
-  void _openSettingsDrawer() {
-    Scaffold.of(context).openDrawer();
   }
 
   @override
@@ -222,7 +218,7 @@ class BaseScreenState extends State<BaseScreen> {
         physics: const NeverScrollableScrollPhysics(),
         onPageChanged: (index) => setState(() => _selectedIndex = index),
         children: const [
-          SettingsScreen(),
+          ShopScreen(),
           FriendsListScreen(),
           HomeScreen(),
           StatisticsScreen(),
@@ -231,9 +227,9 @@ class BaseScreenState extends State<BaseScreen> {
       ),
       bottomNavigationBar: Container(
         height: 60,
-        decoration: BoxDecoration(
-          color: const Color(0xFF131417),
-          borderRadius: const BorderRadius.only(
+        decoration: const BoxDecoration(
+          color: Color(0xFF131417),
+          borderRadius: BorderRadius.only(
             topLeft: Radius.circular(28),
             topRight: Radius.circular(28),
           ),
@@ -241,7 +237,7 @@ class BaseScreenState extends State<BaseScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final itemWidth = constraints.maxWidth / 5;
-            final indicatorWidth = 42.0;
+            const indicatorWidth = 42.0;
             final indicatorLeft =
                 _selectedIndex * itemWidth + (itemWidth - indicatorWidth) / 2;
 
@@ -304,41 +300,6 @@ class BaseScreenState extends State<BaseScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSettingsDrawer() {
-    return Drawer(
-      backgroundColor: const Color(0xFF1A1D28),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(0xFF0E0F11),
-            ),
-            child: Text(
-              'Settings',
-              style: TextStyle(color: Colors.white, fontSize: 22),
-            ),
-          ),
-          _buildDrawerItem(Icons.dark_mode, 'Dark Mode', () {}),
-          _buildDrawerItem(Icons.lock_outline, 'Privacy Settings', () {}),
-          _buildDrawerItem(Icons.language, 'Language', () {}),
-          _buildDrawerItem(Icons.info_outline, 'About', () {}),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.white),
-      title: Text(
-        title,
-        style: const TextStyle(color: Colors.white),
-      ),
-      onTap: onTap,
     );
   }
 
