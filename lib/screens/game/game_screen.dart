@@ -497,7 +497,7 @@ class GameScreenState extends State<GameScreen> {
     if (!allCupsGone) return; // Not all cups are gone => do nothing
 
     // If “Nachwurf” is active and we’re not on the special extra cup => let enemy defend
-    if (selectedRules['Nachwurf'] == true && cupIndex != 11) {
+    if (selectedRules['Putback'] == true && cupIndex != 11) {
       final enemyHit = await _handleNachwurf(cupIndex);
       if (enemyHit) {
         // The enemy canceled the last cup => revert and do NOT end the game
@@ -777,7 +777,7 @@ class GameScreenState extends State<GameScreen> {
         style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
-      backgroundColor: Color(0xFFF0AE1D),
+      backgroundColor: const Color(0xFFF0AE1D),
       actions: [
         IconButton(
           icon: const Icon(Icons.scatter_plot_outlined),
@@ -909,9 +909,9 @@ class GameScreenState extends State<GameScreen> {
               child: Stack(
                 children: [
                   // Water splash animation (placed behind the Airball button)
-                  Positioned.fill(
+                  const Positioned.fill(
                     child: IgnorePointer(
-                      child: const WaterSplashAnimation(
+                      child: WaterSplashAnimation(
                         splashColor:
                             Colors.white, // Set the splash color to white
                       ), // Splash effect only in this area
@@ -1133,7 +1133,7 @@ class GameScreenState extends State<GameScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Colors.amberAccent, Colors.grey],
@@ -1248,7 +1248,7 @@ class GameScreenState extends State<GameScreen> {
             ),
             const SizedBox(height: 10),
             Table(
-              border: TableBorder.symmetric(
+              border: const TableBorder.symmetric(
                   outside: BorderSide.none, inside: BorderSide.none),
               columnWidths: const {
                 0: FlexColumnWidth(2),
@@ -1522,8 +1522,7 @@ class GameScreenState extends State<GameScreen> {
 class WaterSplashAnimation extends StatefulWidget {
   final Color splashColor; // Add splashColor parameter
 
-  const WaterSplashAnimation({Key? key, this.splashColor = Colors.blue})
-      : super(key: key);
+  const WaterSplashAnimation({super.key, this.splashColor = Colors.blue});
 
   @override
   _WaterSplashAnimationState createState() => _WaterSplashAnimationState();
