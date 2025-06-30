@@ -171,12 +171,12 @@ class BaseScreenState extends State<BaseScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(52),
         child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF151924),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800, //Color(0xFF151924),
+            //borderRadius: BorderRadius.only(
+            //bottomLeft: Radius.circular(16),
+            //bottomRight: Radius.circular(16),
+            //),
           ),
           child: SafeArea(
             child: Padding(

@@ -52,7 +52,8 @@ class ActivityScreenState extends State<ActivityScreen> {
     print(scoreIncrease);
     print(hitRateDelta);
     print(winRateDelta);
-    List<Map<String, String>> upgrades = AchievementsScreen.getUpgradedAchivements(player);
+    List<Map<String, String>> upgrades =
+        AchievementsScreen.getUpgradedAchivements(player);
     print(upgrades);
   }
 
@@ -79,7 +80,7 @@ class ActivityScreenState extends State<ActivityScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Center(
         child: ListView.builder(
           itemCount: games.length,

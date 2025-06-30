@@ -61,10 +61,9 @@ class AccountScreenState extends State<AccountScreen>
             )
           : Column(
               children: [
-                const SizedBox(height: 20),
-                _buildUserCard(),
-                const SizedBox(height: 10),
                 _buildTabBar(),
+                const SizedBox(height: 10),
+                // _buildUserCard(), aktuell raus, soll später auf personal statistics o.ä.
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
@@ -274,16 +273,59 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Widget _buildTabBar() {
-    return TabBar(
-      controller: _tabController,
-      indicatorColor: Colors.amber,
-      labelColor: Colors.amber,
-      unselectedLabelColor: Colors.grey,
-      tabs: const [
-        Tab(icon: Icon(Icons.pie_chart), text: "Stats"),
-        Tab(icon: Icon(Icons.emoji_events), text: "Achievements"),
-        Tab(icon: Icon(Icons.history), text: "Activity"),
-      ],
+    final List<String> tabTitles = ["Stats", "Achievements", "Activity"];
+
+    return Container(
+      height: 48,
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(
+          horizontal: 6, vertical: 4), // Add slight inner padding
+      child: Row(
+        children: tabTitles.asMap().entries.map((entry) {
+          final index = entry.key;
+          final title = entry.value;
+          final isSelected = _tabController.index == index;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 4), // space between tabs
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _tabController.index = index;
+                  });
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.orange : Colors.grey.shade600,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 

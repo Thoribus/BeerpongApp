@@ -14,7 +14,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -36,6 +36,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 16),
+
                     // Example "Statistics Tiles" if you want them:
                     _buildStatisticsTiles(user),
                     const SizedBox(height: 24),
@@ -95,28 +96,35 @@ class PersonalStatisticsScreen extends StatelessWidget {
         final stat = stats[index];
         return Container(
           decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.2),
+            color: Colors.grey[200],
             borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                offset: const Offset(0, 2),
+                blurRadius: 2,
+                spreadRadius: 0,
+              ),
+            ],
           ),
+          margin: const EdgeInsets.symmetric(vertical: 5),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
-              // Icon with circle background
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.3),
+                  color: Colors.grey,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   stat['icon'] as IconData,
-                  color: Colors.amber,
+                  color: Colors.orange,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
-              // Value and title
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,14 +135,14 @@ class PersonalStatisticsScreen extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
                     Text(
                       stat['title'] as String,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.white70,
+                        color: Colors.grey,
                       ),
                     ),
                   ],
@@ -155,7 +163,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
         style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: Colors.black,
         ),
       ),
     );
@@ -163,7 +171,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
 
   Widget _buildCard({required Widget child}) {
     return Card(
-      color: Colors.amber.withOpacity(0.2),
+      color: Colors.grey[200],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 5,
       child: Padding(
@@ -335,9 +343,9 @@ class StatisticsTable extends StatelessWidget {
           Text(
             attribute,
             style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
+                color: Colors.black, fontWeight: FontWeight.bold),
           ),
-          Icon(icon, color: Colors.amber, size: 20),
+          Icon(icon, color: Colors.orange, size: 20),
         ],
       ),
       // The small sparkline (just raw data)
@@ -368,7 +376,7 @@ class StatisticsTable extends StatelessWidget {
           Text(
             '$value',
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.black,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),

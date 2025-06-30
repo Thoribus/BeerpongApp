@@ -176,13 +176,17 @@ class AchievementsScreen extends StatelessWidget {
     }
     List<Map<String, String>> upgradedAchievements = [];
     List<Map<String, Object>> achievements = getAchievements(player.user!);
-    List<Map<String, Object>> updatedAchivements = getAchievements(FirestoreService.mapPlayerToUser(player));
+    List<Map<String, Object>> updatedAchivements =
+        getAchievements(FirestoreService.mapPlayerToUser(player));
 
     for (var ach in achievements) {
       List<int> stages = ach['stages'] as List<int>;
-      int currentStage = _getCurrentStageIndex(ach['currentProgress'] as int, stages);
-      final achievement = updatedAchivements.firstWhere((element) => element['title'] == ach['title']);
-      int newStage = _getCurrentStageIndex(achievement['currentProgress'] as int, stages);
+      int currentStage =
+          _getCurrentStageIndex(ach['currentProgress'] as int, stages);
+      final achievement = updatedAchivements
+          .firstWhere((element) => element['title'] == ach['title']);
+      int newStage =
+          _getCurrentStageIndex(achievement['currentProgress'] as int, stages);
       if (newStage > currentStage) {
         upgradedAchievements.add({
           'title': ach['title'] as String,
@@ -245,7 +249,8 @@ class AchievementsScreen extends StatelessWidget {
 
   /// Given a 'titleToGrant' like "Heavy hitter", find the corresponding
   /// achievements row. E.g., row with 'titleToGrant' == "Heavy hitter".
-  static Map<String, Object>? findAchievementForTitle(String titleToGrant, User user) {
+  static Map<String, Object>? findAchievementForTitle(
+      String titleToGrant, User user) {
     // Build the achievements list for this user
     final achievements = AchievementsScreen.getAchievements(user);
 
@@ -275,7 +280,7 @@ class AchievementsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -292,7 +297,7 @@ class AchievementsScreen extends StatelessWidget {
         (user.wins / 50).clamp(0.0, 1.0); // Assuming 50 is the total
 
     return Card(
-      color: Colors.amber.withOpacity(0.2),
+      color: Colors.grey[200],
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
@@ -303,7 +308,7 @@ class AchievementsScreen extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 30,
-              backgroundColor: Colors.amber,
+              backgroundColor: Colors.orange,
               child: Icon(
                 Icons.one_k,
                 size: 40,
@@ -319,8 +324,8 @@ class AchievementsScreen extends StatelessWidget {
                     user.username,
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      //fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -333,7 +338,7 @@ class AchievementsScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${user.wins} / 50 Achievements Completed',
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black),
                   ),
                 ],
               ),
@@ -400,7 +405,7 @@ class AchievementsScreen extends StatelessWidget {
       },
       child: Card(
         elevation: 4,
-        color: stageColor.withOpacity(0.2),
+        color: stageColor,
         margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
@@ -430,10 +435,12 @@ class AchievementsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               LinearProgressIndicator(
-                value: progressPercentage,
-                backgroundColor: Colors.grey,
-                valueColor: AlwaysStoppedAnimation<Color>(stageColor),
-              ),
+                  value: progressPercentage,
+                  backgroundColor: Colors.grey,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white) // stage color einfügen wenn progress stimmt
+                  //valueColor: AlwaysStoppedAnimation<Color>(stageColor),
+                  ),
               const SizedBox(height: 2),
               Text(
                 '$currentProgress / ${stages[stageIndex + 1]}',

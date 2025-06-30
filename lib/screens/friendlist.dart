@@ -365,36 +365,57 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     );
   }
 
-  /// Builds the top row for switching between “Friends” and “Leaderboard” pages.
   Widget _buildPageSelector() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildPageSelectorButton('Friendlist', 0),
-        const VerticalDivider(
-          color: Colors.black,
-          width: 20,
-          thickness: 2,
-          indent: 5,
-          endIndent: 5,
-        ),
-        _buildPageSelectorButton('Leaderboard', 1),
-      ],
-    );
-  }
+    final List<String> pages = ["Friendlist", "Leaderboard"];
 
-  Widget _buildPageSelectorButton(String title, int pageIndex) {
-    return TextButton(
-      onPressed: _currentPage == pageIndex
-          ? null
-          : () => _pageController.jumpToPage(pageIndex),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: _currentPage == pageIndex
-              ? AppConstants.primaryColor
-              : Colors.black,
-        ),
+    return Container(
+      height: 48,
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Row(
+        children: pages.asMap().entries.map((entry) {
+          final index = entry.key;
+          final title = entry.value;
+          final isSelected = _currentPage == index;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: () {
+                  if (_currentPage != index) {
+                    _pageController.jumpToPage(index);
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.orange : Colors.grey.shade600,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
