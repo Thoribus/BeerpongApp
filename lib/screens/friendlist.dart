@@ -371,10 +371,10 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     return Container(
       height: 48,
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      //margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(12),
+        //borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       child: Row(

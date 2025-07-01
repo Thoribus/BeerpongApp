@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'achievements_screen.dart';
 import 'personal_statistics_screen.dart';
+import 'performance_screen.dart';
 
 /// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
 class AccountScreen extends StatefulWidget {
@@ -29,17 +30,18 @@ class AccountScreenState extends State<AccountScreen>
     'avatar_frogisland',
     'avatar_cheering',
   ];
-  late TabController _tabController;
+  int _currentTabPage = 0;
+  late PageController _tabPageController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabPageController = PageController(initialPage: _currentTabPage);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabPageController.dispose();
     super.dispose();
   }
 
@@ -61,16 +63,21 @@ class AccountScreenState extends State<AccountScreen>
             )
           : Column(
               children: [
-                _buildTabBar(),
+                _buildTabPageSelector(),
                 const SizedBox(height: 10),
-                // _buildUserCard(), aktuell raus, soll später auf personal statistics o.ä.
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
+                  child: PageView(
+                    controller: _tabPageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentTabPage = index;
+                      });
+                    },
                     children: [
                       PersonalStatisticsScreen(user: user!),
                       AchievementsScreen(user: user!),
-                      const ActivityScreen(),
+                      PerformanceScreen(user: user!),
+                      //const ActivityScreen(),
                     ],
                   ),
                 ),
@@ -272,34 +279,39 @@ class AccountScreenState extends State<AccountScreen>
     );
   }
 
-  Widget _buildTabBar() {
-    final List<String> tabTitles = ["Stats", "Achievements", "Activity"];
+  Widget _buildTabPageSelector() {
+    final List<String> tabs = ["Stats", "Achievements", "Performance"];
 
     return Container(
       height: 48,
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      //margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.grey.shade800,
-        borderRadius: BorderRadius.circular(12),
+        //borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.symmetric(
-          horizontal: 6, vertical: 4), // Add slight inner padding
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       child: Row(
-        children: tabTitles.asMap().entries.map((entry) {
+        children: tabs.asMap().entries.map((entry) {
           final index = entry.key;
           final title = entry.value;
-          final isSelected = _tabController.index == index;
+          final isSelected = _currentTabPage == index;
 
           return Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 4), // space between tabs
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    _tabController.index = index;
-                  });
+                  if (_currentTabPage != index) {
+                    setState(() {
+                      _currentTabPage = index;
+                    });
+                    _tabPageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
                 },
                 child: Container(
                   decoration: BoxDecoration(
