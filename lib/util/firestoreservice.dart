@@ -5,6 +5,7 @@ import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/invitation.dart';
+import 'package:beerpongapp/models/tournament.dart';
 
 /// Provides methods to interact with Firestore for users, games, stats, etc.
 class FirestoreService {
@@ -493,4 +494,140 @@ class FirestoreService {
 
   getLastGame(String id) {}
   //endregion
+
+  //region ----- Tournament Functions -----
+
+/// Create a new tournament. Returns the tournament ID.
+Future<String> createTournament(Tournament tournament) async {
+  try {
+    final docRef = await _db.collection('tournaments').add(tournament.toJson());
+    return docRef.id;
+  } catch (e) {
+    print('Error creating tournament: $e');
+    rethrow;
+  }
+}
+
+/// Update an existing tournament.
+Future<void> updateTournament(Tournament tournament) async {
+  try {
+    await _db.collection('tournaments').doc(tournament.id).update(tournament.toJson());
+  } catch (e) {
+    print('Error updating tournament: $e');
+    rethrow;
+  }
+}
+
+/// Fetch a tournament by ID.
+Future<Tournament?> getTournament(String tournamentId) async {
+  try {
+    final doc = await _db.collection('tournaments').doc(tournamentId).get();
+    if (!doc.exists) return null;
+    return Tournament.fromJson({...doc.data()!, 'id': doc.id});
+  } catch (e) {
+    print('Error fetching tournament: $e');
+    rethrow;
+  }
+}
+
+/// Delete a tournament (and optionally its matches).
+Future<void> deleteTournament(String tournamentId) async {
+  try {
+    // Optionally: delete all matches subcollection first if you want
+    final matches = await _db
+        .collection('tournaments')
+        .doc(tournamentId)
+        .collection('matches')
+        .get();
+    for (final doc in matches.docs) {
+      await doc.reference.delete();
+    }
+    await _db.collection('tournaments').doc(tournamentId).delete();
+  } catch (e) {
+    print('Error deleting tournament: $e');
+    rethrow;
+  }
+}
+
+/// List all tournaments for a user (by participant ID)
+Future<List<Tournament>> getTournamentsForUser(String userId) async {
+  try {
+    final snapshot = await _db
+        .collection('tournaments')
+        .where('participantIds', arrayContains: userId)
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snapshot.docs.map((doc) =>
+        Tournament.fromJson({...doc.data(), 'id': doc.id})).toList();
+  } catch (e) {
+    print('Error getting tournaments for user: $e');
+    return [];
+  }
+}
+
+/// Add a match to a tournament (returns match ID)
+Future<String> addMatchToTournament(String tournamentId, TournamentMatch match) async {
+  try {
+    final docRef = await _db
+        .collection('tournaments')
+        .doc(tournamentId)
+        .collection('matches')
+        .add(match.toJson());
+    return docRef.id;
+  } catch (e) {
+    print('Error adding match: $e');
+    rethrow;
+  }
+}
+
+/// Update a match in a tournament
+Future<void> updateTournamentMatch(String tournamentId, TournamentMatch match) async {
+  try {
+    await _db
+        .collection('tournaments')
+        .doc(tournamentId)
+        .collection('matches')
+        .doc(match.id)
+        .update(match.toJson());
+  } catch (e) {
+    print('Error updating match: $e');
+    rethrow;
+  }
+}
+
+/// Get all matches in a tournament (as a list)
+Future<List<TournamentMatch>> getTournamentMatches(String tournamentId) async {
+  try {
+    final snapshot = await _db
+        .collection('tournaments')
+        .doc(tournamentId)
+        .collection('matches')
+        .orderBy('round')
+        .get();
+    return snapshot.docs.map((doc) =>
+        TournamentMatch.fromJson({...doc.data(), 'id': doc.id})).toList();
+  } catch (e) {
+    print('Error fetching matches: $e');
+    return [];
+  }
+}
+
+/// Get a single match by ID
+Future<TournamentMatch?> getTournamentMatch(String tournamentId, String matchId) async {
+  try {
+    final doc = await _db
+        .collection('tournaments')
+        .doc(tournamentId)
+        .collection('matches')
+        .doc(matchId)
+        .get();
+    if (!doc.exists) return null;
+    return TournamentMatch.fromJson({...doc.data()!, 'id': doc.id});
+  } catch (e) {
+    print('Error fetching match: $e');
+    rethrow;
+  }
+}
+//endregion
+
 }

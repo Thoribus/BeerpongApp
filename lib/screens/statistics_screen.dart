@@ -1,4 +1,3 @@
-import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/live_game_stats_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -81,8 +80,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildGameCard(GameStatistics game, int index) {
-    final bool userWon = game.winningTeam != null &&
-        (game.winningTeam == 'Team 1'
+    final bool userWon = (game.winningTeam == 'Team 1'
             ? game.team1Players.any((p) => p.name == user.username)
             : game.team2Players.any((p) => p.name == user.username));
 
@@ -90,9 +88,9 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     final Color loseColor = Colors.redAccent.shade200;
 
     int team1Cups =
-        game.team1Players.fold(0, (sum, p) => sum + (p.cupsHit?.length ?? 0));
+        game.team1Players.fold(0, (sum, p) => sum + p.cupsHit.length);
     int team2Cups =
-        game.team2Players.fold(0, (sum, p) => sum + (p.cupsHit?.length ?? 0));
+        game.team2Players.fold(0, (sum, p) => sum + p.cupsHit.length);
 
     return Stack(
       children: [
@@ -221,17 +219,15 @@ class StatisticsScreenState extends State<StatisticsScreen> {
       String? avatarPath;
       int cupsHitCount = 0;
       String playerName = 'Unknown';
+      User? user = player.user;
 
-      if (player is User) {
-        if (player.avatarKey.isNotEmpty) {
-          avatarPath = player.mapAvatarKeyToAsset();
+      if (user != null) {
+        if (user.avatarKey.isNotEmpty) {
+          avatarPath = user.mapAvatarKeyToAsset();
         }
-        cupsHitCount = player.cupsHit.length;
-        playerName = player.username;
-      } else if (player != null) {
-        cupsHitCount = player.cupsHit?.length ?? 0;
-        playerName = player.name ?? 'Unknown';
       }
+      cupsHitCount = player.cupsHit?.length;
+      playerName = player.name;
 
       return GestureDetector(
         onTap: () {
@@ -274,128 +270,6 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     }).toList();
   }
 
-  String _formatPlayerNames(List<Player> players) {
-    return players.map((p) => p.name.split(' ').first).join(', ');
-  }
-
-  Widget _buildGameHeader(GameStatistics game, int index) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Game ${index + 1}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('dd.MM.yyyy – kk:mm').format(game.date),
-              style: TextStyle(
-                color: Colors.grey[300],
-              ),
-            ),
-          ],
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => LiveGameStatsScreen(gameId: game.id),
-            ));
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber,
-          ),
-          child: const Text(
-            'Details',
-            style: TextStyle(color: Colors.black),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTeamSection(GameStatistics game, String team) {
-    bool isWinningTeam = game.winningTeam == team;
-    List<Player> players =
-        team == 'Team 1' ? game.team1Players : game.team2Players;
-    Color teamColor = team == 'Team 1' ? Colors.blue : Colors.red;
-    List<Player> allPlayer = game.team1Players + game.team2Players;
-    Player topPlayer =
-        allPlayer.reduce((curr, next) => curr.score > next.score ? curr : next);
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                team,
-                style: TextStyle(
-                  color: teamColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              ...players.map(
-                  (player) => _buildPlayerRow(player, player == topPlayer)),
-            ],
-          ),
-        ),
-        const VerticalDivider(
-          color: Colors.grey,
-          thickness: 1,
-          width: 20,
-        ),
-        Icon(
-          isWinningTeam ? Icons.close : Icons.flag,
-          color: teamColor,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlayerRow(Player player, bool isTopPlayer) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            isTopPlayer ? BeerpongIcons.medal : Icons.person,
-            size: 20,
-            color: isTopPlayer ? Colors.amber : Colors.white,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              player.name,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          Text(
-            '${player.cupsHit.length}',
-            style: TextStyle(
-              color: Colors.grey[300],
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showGameDetails(GameStatistics game) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => GameDetailsPage(game: game),
-    ));
-  }
 }
 
 class GameDetailsPage extends StatefulWidget {
