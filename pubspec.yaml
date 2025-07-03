@@ -97,7 +97,7 @@ flutter:
     - assets/frog_island.svg
     - assets/racoon_winner.svg
     - assets/otter_canvas.svg
-    - assets/podium.svg
+    - assets/emblems/podium.svg
     - assets/avatars/bunny.png
     - assets/avatars/cat.png
     - assets/avatars/dog.png
@@ -112,7 +112,7 @@ flutter:
     - assets/avatars/avatar_cupbeer.svg
     - assets/avatars/blue_team.svg
     - assets/avatars/red_team.svg
-    - assets/avatar_border.svg
+    - assets/borders/avatar_border.svg
     - assets/slanted-gradient.svg
     - assets/podium_background.svg
     - assets/podium_nobackground.svg

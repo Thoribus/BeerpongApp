@@ -3,7 +3,7 @@ import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/screens/account_screen.dart';
 import 'package:beerpongapp/screens/friendlist.dart';
 import 'package:beerpongapp/screens/home_screen.dart';
-import 'package:beerpongapp/screens/shop_screen.dart';
+import 'package:beerpongapp/screens/shop/shop_screen.dart';
 import 'package:beerpongapp/screens/statistics_screen.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
 
