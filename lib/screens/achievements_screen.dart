@@ -206,42 +206,84 @@ class AchievementsScreen extends StatelessWidget {
         'title': 'Wins',
         'titleToGrant': 'Beginner Winner',
         'currentProgress': user.wins,
-        'stages': [0, 25, 50, 100], // Bronze, Silver, Amber, Violet
+        'stages': [0, 25, 50, 100, 100], // Bronze, Silver, Amber, Violet
       },
       {
         'imagePath': "ach_lost.png",
         'title': 'Losses',
         'titleToGrant': 'Unlucky Warrior',
         'currentProgress': user.losses,
-        'stages': [0, 25, 50, 100],
+        'stages': [0, 25, 50, 100, 100],
       },
       {
         'imagePath': "ach_friends.png",
         'title': 'Friendships',
         'titleToGrant': 'Social Butterfly',
         'currentProgress': user.friends.length,
-        'stages': [0, 5, 15, 20],
+        'stages': [0, 5, 15, 20, 100],
       },
       {
         'imagePath': "ach_champion.png",
         'title': 'Champion',
         'titleToGrant': 'Heavy hitter',
         'currentProgress': user.totalScore.round(),
-        'stages': [0, 20, 100, 1000],
+        'stages': [0, 20, 100, 1000, 5000],
       },
       {
         'imagePath': "ach_loses.png",
         'title': 'Misses',
         'titleToGrant': 'Clumsy',
         'currentProgress': user.totalMisses,
-        'stages': [0, 25, 50, 1000],
+        'stages': [0, 25, 50, 1000, 5000],
       },
       {
         'imagePath': "ach_airball.png",
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000],
+        'stages': [0, 10, 20, 1000, 5000],
+      },
+      {
+        'imagePath': "ach_airball.png",
+        'title': 'Airballs',
+        'titleToGrant': 'Airballer',
+        'currentProgress': user.totalAirballs,
+        'stages': [0, 10, 20, 1000, 5000],
+      },
+      {
+        'imagePath': "ach_airball.png",
+        'title': 'Airballs',
+        'titleToGrant': 'Airballer',
+        'currentProgress': user.totalAirballs,
+        'stages': [0, 10, 20, 1000, 5000],
+      },
+      {
+        'imagePath': "ach_airball.png",
+        'title': 'Airballs',
+        'titleToGrant': 'Airballer',
+        'currentProgress': user.totalAirballs,
+        'stages': [0, 10, 20, 1000, 5000],
+      },
+      {
+        'imagePath': "ach_airball.png",
+        'title': 'Airballs',
+        'titleToGrant': 'Airballer',
+        'currentProgress': 0, //user.totalAirballs,
+        'stages': [0, 10, 20, 1000, 5000],
+      },
+      {
+        'imagePath': "ach_airball.png",
+        'title': 'Airballs',
+        'titleToGrant': 'Airballer',
+        'currentProgress': 1001, //user.totalAirballs,
+        'stages': [0, 10, 20, 1000, 5000],
+      },
+      {
+        'imagePath': "ach_airball.png",
+        'title': 'Airballs',
+        'titleToGrant': 'Airballer',
+        'currentProgress': user.totalAirballs,
+        'stages': [0, 10, 20, 1000, 5000],
       },
     ];
     return achievements;
@@ -293,55 +335,111 @@ class AchievementsScreen extends StatelessWidget {
   }
 
   Widget _buildUserCard() {
-    double progressPercentage =
-        (user.wins / 50).clamp(0.0, 1.0); // Assuming 50 is the total
+    // Dummy data
+    final String username = "PlayerOne";
+    final int level = 12;
+    final int achievementsCompleted = 32;
+    final int totalAchievements = 50;
+    final double progress =
+        (achievementsCompleted / totalAchievements).clamp(0.0, 1.0);
 
     return Card(
-      color: Colors.grey[200],
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      color: Colors.white,
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.orange,
-              child: Icon(
-                Icons.one_k,
-                size: 40,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user.username,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      //fontWeight: FontWeight.bold,
-                      color: Colors.black,
+            // Top row with avatar and name
+            Row(
+              children: [
+                // Level Badge
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.amber, Colors.orange],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withOpacity(0.6),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Lv $level',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: progressPercentage,
-                    backgroundColor: Colors.grey,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.amber),
+                ),
+                const SizedBox(width: 16),
+                // Username & Stats
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        username,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Progress Bar
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 10,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.amber,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$achievementsCompleted / $totalAchievements Achievements',
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.black54),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${user.wins} / 50 Achievements Completed',
-                    style: const TextStyle(color: Colors.black),
-                  ),
-                ],
-              ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Achievement emblems row
+            Row(
+              children: [
+                const Text(
+                  'Emblems:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.star, color: Colors.amber[800]),
+                const SizedBox(width: 6),
+                Icon(Icons.military_tech, color: Colors.grey[700]),
+                const SizedBox(width: 6),
+                Icon(Icons.emoji_events, color: Colors.deepOrange),
+              ],
             ),
           ],
         ),

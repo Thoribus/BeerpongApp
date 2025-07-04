@@ -253,7 +253,7 @@ class BaseScreenState extends State<BaseScreen> {
                     width: indicatorWidth,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppConstants.primaryColor,
+                      color: Colors.orange, // AppConstants.primaryColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -278,7 +278,8 @@ class BaseScreenState extends State<BaseScreen> {
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
-    final color = isSelected ? AppConstants.primaryColor : Colors.grey.shade500;
+    final color = isSelected ? Colors.orange : Colors.grey.shade500;
+//AppConstants.primaryColor : Colors.grey.shade500;
 
     return GestureDetector(
       onTap: () => _onItemTapped(index),
