@@ -15,8 +15,8 @@ import '../../models/player.dart';
 //----------------------------------------------
 
 //-------------Screens--------------------------
-import '../performance_screen.dart';
-import 'personal_statistics_screen.dart';
+import '../games/performance_screen.dart';
+import '../games/personal_statistics_screen.dart';
 //----------------------------------------------
 
 class StatisticsScreen extends StatefulWidget {

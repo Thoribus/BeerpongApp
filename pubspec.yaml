@@ -87,6 +87,54 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    #---------------- avatars ------------------------------------------
+    - assets/avatars/avatar_catbeer.svg
+    - assets/avatars/avatar_catpants.svg
+    - assets/avatars/avatar_cheering.svg
+    - assets/avatars/avatar_frogisland.svg
+    - assets/avatars/avatar_aggroracoon.svg
+    - assets/avatars/avatar_cupbeer.svg
+    - assets/avatars/blue_team.svg
+    - assets/avatars/red_team.svg
+
+    - assets/avatars/avatar_catbeer.png
+    - assets/avatars/avatar_catpants.png
+    - assets/avatars/avatar_cheering.png
+    - assets/avatars/avatar_frogisland.png
+    - assets/avatars/avatar_aggroracoon.png
+    - assets/avatars/avatar_cupbeer.png
+    #-------------------------------------------------------------------
+
+    #---------------- achievements -------------------------------------
+    - assets/ach_wins.png
+    - assets/ach_loses.png
+    - assets/ach_friends.png
+    - assets/ach_lost.png
+    - assets/ach_airball.png
+    - assets/ach_champion.png
+
+    - assets/achievements/ach_holyknight.png
+    - assets/achievements/ach_animalparty.png
+    - assets/achievements/ach_catblock.png
+    - assets/achievements/ach_catsniper.png
+    - assets/achievements/ach_moletable.png
+    - assets/achievements/ach_racoontrophy.png
+    - assets/achievements/ach_cheersshot.png
+    - assets/achievements/ach_sadlooser.png
+    - assets/achievements/ach_twerkfrog.png
+    - assets/achievements/ach_header.png
+
+    #-------------------------------------------------------------------
+
+    #---------------- ruledesign ---------------------------------------
+    - assets/two_cats.svg
+    - assets/home_animals.svg
+    - assets/cat_boxing.svg
+    - assets/frog_island.svg
+    - assets/racoon_winner.svg
+    - assets/otter_canvas.svg
+
+    #-------------------------------------------------------------------
     - assets/beerpong.jpg
     - assets/animals_beerpong.jpg
     - assets/freinds-playing-beerpong-together.jpg
@@ -104,14 +152,6 @@ flutter:
     - assets/avatars/raccoon.png
     - assets/avatars/eagle.png
     - assets/avatars/frog.png
-    - assets/avatars/avatar_catbeer.svg
-    - assets/avatars/avatar_catpants.svg
-    - assets/avatars/avatar_cheering.svg
-    - assets/avatars/avatar_frogisland.svg
-    - assets/avatars/avatar_aggroracoon.svg
-    - assets/avatars/avatar_cupbeer.svg
-    - assets/avatars/blue_team.svg
-    - assets/avatars/red_team.svg
     - assets/borders/avatar_border.svg
     - assets/slanted-gradient.svg
     - assets/podium_background.svg
