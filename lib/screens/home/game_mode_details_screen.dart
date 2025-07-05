@@ -4,13 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import '../util/firestoreservice.dart';
-import '../util/user_provider.dart';
-import '../models/user.dart';
-import '../models/player.dart';
-import '../models/team.dart';
-import '../models/cup.dart';
-import 'game/game_screen.dart';
+import '../../util/firestoreservice.dart';
+import '../../util/user_provider.dart';
+import '../../models/user.dart';
+import '../../models/player.dart';
+import '../../models/team.dart';
+import '../../models/cup.dart';
+import '../game/game_screen.dart';
 
 class GameModeDetailsScreen extends StatefulWidget {
   final String title;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../models/user.dart';
+import '../../models/user.dart';
 
 class ComparisonScreen extends StatefulWidget {
   final User currentUser;

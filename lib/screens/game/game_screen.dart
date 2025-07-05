@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:beerpongapp/screens/achievements_screen.dart';
+import 'package:beerpongapp/screens/profile/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';

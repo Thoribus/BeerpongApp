@@ -1,11 +1,7 @@
-import 'package:beerpongapp/models/cup.dart';
-import 'package:beerpongapp/models/player.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
-import 'package:beerpongapp/widgets/user_card.dart';
 
 class PersonalStatisticsScreen extends StatelessWidget {
   final User user;
@@ -36,15 +32,6 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (user != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: UserCard(
-                          user: user,
-                          onTitleTap: () {},
-                          onAvatarTap: () {},
-                        ),
-                      ),
                     const SizedBox(height: 16),
                     // Example "Statistics Tiles" if you want them:
                     _buildStatisticsTiles(user),
@@ -145,32 +132,6 @@ class PersonalStatisticsScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCard({required Widget child}) {
-    return Card(
-      color: Colors.grey[200],
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: child,
-      ),
     );
   }
 }

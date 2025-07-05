@@ -13,6 +13,43 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'compare_stats_screen.dart';
 
+class DummyUser {
+  final String username;
+  final String avatarUrl;
+
+  DummyUser({
+    required this.username,
+    required this.avatarUrl,
+  });
+}
+
+enum ActionType { wonGame, achievement }
+
+class _FriendAction {
+  final DummyUser user;
+  final ActionType type;
+  final String description;
+  final DateTime date;
+
+  _FriendAction({
+    required this.user,
+    required this.type,
+    required this.description,
+    required this.date,
+  });
+}
+
+Color _getActionColor(ActionType type) {
+  switch (type) {
+    case ActionType.wonGame:
+      return Colors.greenAccent.shade100;
+    case ActionType.achievement:
+      return Colors.lightBlueAccent.shade100;
+    default:
+      return Colors.grey.shade200;
+  }
+}
+
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
 
@@ -357,6 +394,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               children: [
                 _buildFriendsListPage(),
                 _buildRankingPage(),
+                _buildSocialPage(),
               ],
             ),
           ),
@@ -366,7 +404,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Widget _buildPageSelector() {
-    final List<String> pages = ["Friendlist", "Leaderboard"];
+    final List<String> pages = ["Friendlist", "Leaderboard", "Socials"];
 
     return Container(
       height: 48,
@@ -554,6 +592,82 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               },
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSocialPage() {
+    final List<_FriendAction> dummyActions = [
+      _FriendAction(
+        user: DummyUser(username: 'Alice', avatarUrl: ''),
+        type: ActionType.wonGame,
+        description: 'won a game of Classic Mode',
+        date: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      _FriendAction(
+        user: DummyUser(username: 'Bob', avatarUrl: ''),
+        type: ActionType.achievement,
+        description: 'unlocked the “Sharpshooter” achievement',
+        date: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      _FriendAction(
+        user: DummyUser(username: 'Carol', avatarUrl: ''),
+        type: ActionType.wonGame,
+        description: 'won a game of Speed Mode',
+        date: DateTime.now().subtract(const Duration(days: 2, hours: 3)),
+      ),
+    ];
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      itemCount: dummyActions.length,
+      itemBuilder: (context, index) {
+        final action = dummyActions[index];
+        final bgColor = _getActionColor(action.type);
+
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          color: bgColor,
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            leading: CircleAvatar(
+              backgroundColor: Colors.black12,
+              child: Text(
+                action.user.username[0],
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+            title: Text(
+              action.user.username,
+              style: const TextStyle(fontSize: 13, color: Colors.black),
+            ),
+            subtitle: Text(
+              action.description,
+              style: const TextStyle(fontSize: 11, color: Colors.black87),
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text('Date',
+                    style: TextStyle(fontSize: 10, color: Colors.black54)),
+                const SizedBox(height: 2),
+                Text(
+                  DateFormat('dd.MM.yyyy').format(action.date),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/constants.dart';
-import 'package:beerpongapp/screens/account_screen.dart';
-import 'package:beerpongapp/screens/friendlist.dart';
-import 'package:beerpongapp/screens/home_screen.dart';
+import 'package:beerpongapp/screens/profile/account_screen.dart';
+import 'package:beerpongapp/screens/friends/friendlist.dart';
+import 'package:beerpongapp/screens/home/home_screen.dart';
 import 'package:beerpongapp/screens/shop/shop_screen.dart';
-import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/screens/games/statistics_screen.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
 
 import 'package:beerpongapp/util/user_provider.dart';

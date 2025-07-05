@@ -1,3 +1,4 @@
+//-------------Packages-------------------------
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/live_game_stats_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -5,9 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:provider/provider.dart';
-import '../models/game_statistics.dart';
-import '../models/player.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+//----------------------------------------------
+
+//-------------Models---------------------------
+import '../../models/game_statistics.dart';
+import '../../models/player.dart';
+//----------------------------------------------
+
+//-------------Screens--------------------------
+import 'games/performance_screen.dart';
+import 'games/personal_statistics_screen.dart';
+//----------------------------------------------
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -17,6 +27,9 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class StatisticsScreenState extends State<StatisticsScreen> {
+  int _currentTabPage = 0; // Default to History tab
+  late final PageController _tabPageController;
+
   List<GameStatistics> games = [];
   bool isLoading = true;
   bool hasError = false;
@@ -25,6 +38,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    _tabPageController = PageController(initialPage: _currentTabPage);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     user = userProvider.user!;
     _retrieveGames();
@@ -42,8 +56,61 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     }
   }
 
+  Widget _buildTabPageSelector() {
+    final List<String> tabs = ["Stats", "Performance", "History"];
+
+    return Container(
+      height: 48,
+      width: double.infinity,
+      color: Colors.grey.shade800,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Row(
+        children: tabs.asMap().entries.map((entry) {
+          final index = entry.key;
+          final title = entry.value;
+          final isSelected = _currentTabPage == index;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() => _currentTabPage = index);
+                  _tabPageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.orange : Colors.grey.shade600,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    user = userProvider.user!;
+
     if (isLoading) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -66,23 +133,31 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: ListView.builder(
-          itemCount: games.length,
-          itemBuilder: (context, index) {
-            final game = games[index];
-            return _buildGameCard(game, index);
-          },
-        ),
+      body: Column(
+        children: [
+          _buildTabPageSelector(),
+          Expanded(
+            child: PageView(
+              controller: _tabPageController,
+              onPageChanged: (index) {
+                setState(() => _currentTabPage = index);
+              },
+              children: [
+                PersonalStatisticsScreen(user: user!),
+                PerformanceScreen(user: user!),
+                _buildHistoryTab(), // Your original content
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildGameCard(GameStatistics game, int index) {
     final bool userWon = (game.winningTeam == 'Team 1'
-            ? game.team1Players.any((p) => p.name == user.username)
-            : game.team2Players.any((p) => p.name == user.username));
+        ? game.team1Players.any((p) => p.name == user.username)
+        : game.team2Players.any((p) => p.name == user.username));
 
     final Color winColor = Colors.greenAccent.shade400;
     final Color loseColor = Colors.redAccent.shade200;
@@ -165,12 +240,12 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ..._buildAvatarList(game.team1Players),
+                        ..._buildAvatarList(context, game.team1Players),
                         const SizedBox(width: 12),
                         const Text("VS",
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 12),
-                        ..._buildAvatarList(game.team2Players),
+                        ..._buildAvatarList(context, game.team2Players),
                       ],
                     ),
                   ),
@@ -214,62 +289,71 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  List<Widget> _buildAvatarList(List<dynamic> players) {
-    return players.map((player) {
-      String? avatarPath;
-      int cupsHitCount = 0;
-      String playerName = 'Unknown';
-      User? user = player.user;
-
-      if (user != null) {
-        if (user.avatarKey.isNotEmpty) {
-          avatarPath = user.mapAvatarKeyToAsset();
-        }
-      }
-      cupsHitCount = player.cupsHit?.length;
-      playerName = player.name;
-
-      return GestureDetector(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(playerName),
-              duration: const Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.white24,
-                child: avatarPath != null && avatarPath.isNotEmpty
-                    ? ClipOval(
-                        child: SvgPicture.asset(
-                          avatarPath,
-                          fit: BoxFit.cover,
-                          width: 32,
-                          height: 32,
-                        ),
-                      )
-                    : const Icon(Icons.person, size: 18, color: Colors.grey),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '$cupsHitCount',
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-              ),
-            ],
-          ),
-        ),
-      );
-    }).toList();
+  Widget _buildHistoryTab() {
+    return ListView.builder(
+      itemCount: games.length,
+      itemBuilder: (context, index) {
+        final game = games[index];
+        return _buildGameCard(game, index);
+      },
+    );
   }
+}
 
+List<Widget> _buildAvatarList(BuildContext context, List<dynamic> players) {
+  return players.map((player) {
+    String? avatarPath;
+    int cupsHitCount = 0;
+    String playerName = 'Unknown';
+    User? user = player.user;
+
+    if (user != null) {
+      if (user.avatarKey.isNotEmpty) {
+        avatarPath = user.mapAvatarKeyToAsset();
+      }
+    }
+
+    cupsHitCount = player.cupsHit?.length ?? 0;
+    playerName = player.name;
+
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(playerName),
+            duration: const Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.white24,
+              child: avatarPath != null && avatarPath.isNotEmpty
+                  ? ClipOval(
+                      child: SvgPicture.asset(
+                        avatarPath,
+                        fit: BoxFit.cover,
+                        width: 32,
+                        height: 32,
+                      ),
+                    )
+                  : const Icon(Icons.person, size: 18, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$cupsHitCount',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }).toList();
 }
 
 class GameDetailsPage extends StatefulWidget {

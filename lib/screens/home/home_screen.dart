@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
-import 'package:beerpongapp/screens/game_mode_details_screen.dart';
+import 'package:beerpongapp/screens/home/game_mode_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

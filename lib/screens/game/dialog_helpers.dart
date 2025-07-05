@@ -3,7 +3,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/screens/base_screen.dart';
+import 'package:beerpongapp/screens/base/base_screen.dart';
 import 'package:flutter/material.dart';
 import 'game_screen.dart';
 import 'package:flutter_svg/svg.dart';
