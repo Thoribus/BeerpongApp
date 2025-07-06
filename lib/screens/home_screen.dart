@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
+import 'package:beerpongapp/screens/tournament_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -70,7 +73,8 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _showNewGameConfirmationDialog(BuildContext context, VoidCallback onConfirm) async {
+  Future<void> _showNewGameConfirmationDialog(
+      BuildContext context, VoidCallback onConfirm) async {
     return showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -412,6 +416,11 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _onReturnFromNextScreen() {
+    print("Hola!");
+    _checkSavedGame();
+  }
+
   Widget _buildGameModeTiles(BuildContext context) {
     final gameModes = [
       {
@@ -517,7 +526,7 @@ class HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.all(Radius.circular(20.0)),
                         ),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -528,9 +537,12 @@ class HomeScreenState extends State<HomeScreen> {
                               selectedRules: {},
                               startingTeam: true,
                               invitations: [],
+                              tournamentId: "",
                             ),
                           ),
-                        );
+                        ).then((_) {
+                          _onReturnFromNextScreen();
+                        });
                       },
                       child: const Text(
                         'Resume',
@@ -564,19 +576,36 @@ class HomeScreenState extends State<HomeScreen> {
                       if (_hasSavedGame) {
                         _showNewGameConfirmationDialog(context, () {
                           Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => GameModeDetailsScreen(
-                              title: mode['title'] as String,
-                              subtitle: mode['subtitle'] as String,
-                              details: mode['details'] as String,
-                              iconPath: 'assets/${mode['icon']}',
-                              color: mode['color'] as Color,
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => GameModeDetailsScreen(
+                                title: mode['title'] as String,
+                                subtitle: mode['subtitle'] as String,
+                                details: mode['details'] as String,
+                                iconPath: 'assets/${mode['icon']}',
+                                color: mode['color'] as Color,
+                              ),
                             ),
-                          ),
-                        );
+                          ).then((_) {
+                            _onReturnFromNextScreen();
+                          });
                         });
                       } else {
+                        if (mode['title'] == 'Tournament Mode') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => TournamentLobbyScreen(
+                                title: mode['title'] as String,
+                                subtitle: mode['subtitle'] as String,
+                                details: mode['details'] as String,
+                                iconPath: 'assets/${mode['icon']}',
+                                color: mode['color'] as Color,
+                              ),
+                            ),
+                          );
+                          return;
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -588,7 +617,9 @@ class HomeScreenState extends State<HomeScreen> {
                               color: mode['color'] as Color,
                             ),
                           ),
-                        );
+                        ).then((_) {
+                          _onReturnFromNextScreen();
+                        });
                       }
                     },
                     child: const Text(

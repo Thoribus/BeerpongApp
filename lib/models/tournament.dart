@@ -89,6 +89,8 @@ class TournamentMatch {
   final int round;
   final Team? winner;
   final bool played;
+  final Map<String, bool> selectedRules;
+  final List<String> invitations;
 
   TournamentMatch({
     required this.id,
@@ -97,7 +99,29 @@ class TournamentMatch {
     this.round = 0,
     this.winner,
     this.played = false,
+    this.selectedRules = const {},
+    this.invitations = const [],
   });
+
+  TournamentMatch copyWith(
+      {String? id,
+      Team? team1,
+      Team? team2,
+      int? round,
+      Team? winner,
+      bool? played,
+      Map<String, bool>? selectedRules,
+      List<String>? invitations}) {
+    return TournamentMatch(
+        id: id ?? this.id,
+        team1: team1 ?? this.team1,
+        team2: team2 ?? this.team2,
+        round: round ?? this.round,
+        winner: winner ?? this.winner,
+        played: played ?? this.played,
+        selectedRules: selectedRules ?? this.selectedRules,
+        invitations: invitations ?? this.invitations);
+  }
 
   factory TournamentMatch.fromJson(Map<String, dynamic> json) {
     return TournamentMatch(
@@ -109,6 +133,13 @@ class TournamentMatch {
           ? Team.fromJson(json['winner'] as Map<String, dynamic>)
           : null,
       played: json['played'] ?? false,
+      selectedRules: (json['selectedRules'] as Map<String, dynamic>?)
+              ?.map((key, value) => MapEntry(key, value as bool)) ??
+          {},
+      invitations: (json['invitations'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 
@@ -120,6 +151,8 @@ class TournamentMatch {
       'round': round,
       'winner': winner?.toJson(),
       'played': played,
+      'selectedRules': selectedRules,
+      'invitations': invitations,
     };
   }
 }
@@ -153,7 +186,8 @@ class TeamStanding {
 }
 
 // Generate all unique matchups for round robin
-List<TournamentMatch> generateRoundRobinMatches(List<Team> teams) {
+List<TournamentMatch> generateRoundRobinMatches(List<Team> teams,
+    Map<String, bool> selectedRules, List<String> invitations) {
   final matches = <TournamentMatch>[];
   int matchId = 0;
   for (int i = 0; i < teams.length; i++) {
@@ -184,8 +218,8 @@ List<TeamStanding> computeStandings(
     final keyWinner = match.winner!.color.value.toString() +
         match.winner!.players.map((p) => p.name).join('-');
     final loserTeam = (match.team1 == match.winner) ? match.team2 : match.team1;
-    final keyLoser =
-        loserTeam.color.value.toString() + loserTeam.players.map((p) => p.name).join('-');
+    final keyLoser = loserTeam.color.value.toString() +
+        loserTeam.players.map((p) => p.name).join('-');
 
     standings[keyWinner]!.wins++;
     standings[keyLoser]!.losses++;

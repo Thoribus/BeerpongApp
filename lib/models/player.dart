@@ -175,6 +175,49 @@ class Player {
     return name == other.name;
   }
 
+    Player copyWithResetStats() {
+    return Player(
+      name: name,
+      user: user,
+      score: 0,
+      throws: 0,
+      misses: 0,
+      airballs: 0,
+      hitThisRound: 0,
+      cupsHit: [],
+      lastCupHit: false,
+      islandShotUsed: false,
+      defended: 0,
+      consecutiveHits: 0,
+      onFire: 0,
+      isWinner: false,
+    );
+  }
+
+  /// Merges the stats from another Player into this Player (used for updating tournament totals).
+  Player mergedWith(Player matchResult) {
+    // Names must match, optionally also check user
+    if (name != matchResult.name) {
+      throw Exception('Cannot merge: names do not match ($name != ${matchResult.name})');
+    }
+    return Player(
+      name: name,
+      user: user ?? matchResult.user,
+      score: score + matchResult.score,
+      throws: throws + matchResult.throws,
+      misses: misses + matchResult.misses,
+      airballs: airballs + matchResult.airballs,
+      defended: defended + matchResult.defended,
+      consecutiveHits: 0, // Optional: doesn't carry over in tournaments
+      cupsHit: [...cupsHit, ...matchResult.cupsHit],
+      hitThisRound: 0, // Not relevant for tournament totals
+      onFire: onFire + matchResult.onFire,
+      islandShotUsed: islandShotUsed || matchResult.islandShotUsed,
+      lastCupHit: lastCupHit || matchResult.lastCupHit,
+      isWinner: isWinner || matchResult.isWinner,
+    );
+  }
+
   @override
   int get hashCode => name.hashCode ^ score.hashCode;
 }

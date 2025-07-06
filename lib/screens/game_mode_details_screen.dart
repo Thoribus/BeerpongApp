@@ -780,6 +780,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           selectedRules: _selectedRules,
           invitations: _acceptedInvites,
           startingTeam: _startingTeam == "Team Blue",
+          tournamentId: "",
         ),
       ),
     );

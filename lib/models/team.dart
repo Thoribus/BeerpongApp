@@ -42,7 +42,7 @@ class Team {
       'colorValue': color.value, // store color as int
       'players':
           players.map((p) => p.toJson()).toList(), // store players in JSON
-      'cups': cups.map((c) => c.toJson()).toList(),  // store cups in JSON
+      'cups': cups.map((c) => c.toJson()).toList(), // store cups in JSON
       'isRearranged': isRearranged,
       'canIslandShot': canIslandShot,
     };
@@ -79,6 +79,22 @@ class Team {
       isRearranged: isRearranged,
       canIslandShot: canIslandShot,
     );
+  }
+
+  Team copyWith(
+      {Color? color,
+      List<Player>? players,
+      List<Player>? currentPlayers,
+      List<Cup>? cups,
+      bool? isRearranged,
+      bool? canIslandShot}) {
+    return Team(
+        color: color ?? this.color,
+        players: players ?? this.players,
+        currentPlayers: currentPlayers ?? this.currentPlayers,
+        cups: cups ?? this.cups,
+        isRearranged: isRearranged ?? this.isRearranged,
+        canIslandShot: canIslandShot ?? this.canIslandShot);
   }
 
   @override

@@ -17,6 +17,7 @@ class GamePersistence {
     required bool islandShotActive,
     required List<String> invitations,
     required Map<String, bool> selectedRules,
+    required String tournamendId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -29,6 +30,7 @@ class GamePersistence {
       'islandShotActive': islandShotActive,
       'invitations': invitations,
       'selectedRules': selectedRules,
+      'tournamentId': tournamendId,
     };
 
     final jsonString = json.encode(gameMap);
