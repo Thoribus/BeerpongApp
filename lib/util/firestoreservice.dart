@@ -101,6 +101,7 @@ class FirestoreService {
       'started': false,
       'startingTeam': 'Team Blue',
       'events': [],
+      'tournamendId': "",
     });
     return docRef.id; // Return the new document ID
   }
@@ -117,6 +118,7 @@ class FirestoreService {
     bool? started,
     String? startingTeam,
     bool? timestamp,
+    String? tournamendId,
   }) async {
     // 1) Build a map for the fields you actually want to update
     final Map<String, dynamic> updates = {};
@@ -149,6 +151,9 @@ class FirestoreService {
     }
     if (timestamp == true) {
       updates['timestamp'] = FieldValue.serverTimestamp();
+    }
+    if (tournamendId != null) {
+      updates['tournamendId'] = tournamendId;
     }
 
     // Optionally, recalc participants if you do want them always updated

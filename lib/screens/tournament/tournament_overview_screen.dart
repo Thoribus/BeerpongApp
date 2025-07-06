@@ -3,16 +3,18 @@ import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
-import 'game/game_screen.dart'; // <-- Make sure this import is correct
+import '../game/game_screen.dart'; // <-- Make sure this import is correct
 
 class TournamentOverviewScreen extends StatefulWidget {
   final String tournamentId;
   final Tournament tournament;
+  final void Function(Tournament)? onTournamentUpdated;
 
   const TournamentOverviewScreen({
     super.key,
     required this.tournamentId,
     required this.tournament,
+    this.onTournamentUpdated,
   });
 
   @override
@@ -35,6 +37,8 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       setState(() {
         tournament = latest;
       });
+      _checkIfTournamentComplete();
+      widget.onTournamentUpdated?.call(latest);
     }
   }
 
@@ -207,6 +211,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                                 invitations: match.invitations,
                                 started: true,
                                 timestamp: true,
+                                tournamendId: tournament.id,
                               );
 
                               // 2. (Optional) Save gameId to the TournamentMatch and update the tournament doc in Firestore.
@@ -215,17 +220,19 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                               final cleanTeam1Players = match.team1.players
                                   .map((p) => p.copyWithResetStats())
                                   .toList();
+                              final team1 = Team(color: match.team1.color, players: cleanTeam1Players, cups: match.team1.cups);
                               final cleanTeam2Players = match.team2.players
                                   .map((p) => p.copyWithResetStats())
                                   .toList();
+                              final team2 = Team(color: match.team2.color, players: cleanTeam2Players, cups: match.team2.cups);
 
                               final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => GameScreen(
                                     id: gameId,
-                                    players1: cleanTeam1Players,
-                                    players2: cleanTeam2Players,
+                                    team1: team1,
+                                    team2: team2,
                                     selectedRules: match.selectedRules,
                                     invitations: match.invitations,
                                     startingTeam: chosenTeam == "Team Blue",
@@ -285,9 +292,32 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       if (matchTeam != null) {
         tournamentTeams[i] = tournamentTeam.copyWith(
           players: mergePlayerStats(tournamentTeam.players, matchTeam.players),
+          wins: tournamentTeam.wins + matchTeam.wins,
+          losses: tournamentTeam.losses + matchTeam.losses,
         );
       }
       // else: leave untouched
     }
   }
+
+  void _checkIfTournamentComplete() {
+  if (tournament.matches.every((m) => m.played)) {
+    Future.delayed(Duration.zero, () {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Tournament Complete!"),
+          content: const Text("All matches have been played.\nCheck out the standings!"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
 }
