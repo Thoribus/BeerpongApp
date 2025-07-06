@@ -37,6 +37,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       setState(() {
         tournament = latest;
       });
+      _checkIfTournamentComplete();
       widget.onTournamentUpdated?.call(latest);
     }
   }
@@ -297,4 +298,25 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       // else: leave untouched
     }
   }
+
+  void _checkIfTournamentComplete() {
+  if (tournament.matches.every((m) => m.played)) {
+    Future.delayed(Duration.zero, () {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("Tournament Complete!"),
+          content: const Text("All matches have been played.\nCheck out the standings!"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
 }
