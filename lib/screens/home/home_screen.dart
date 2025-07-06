@@ -1,11 +1,12 @@
 import 'dart:async';
 
+import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
-import 'package:beerpongapp/screens/tournament_lobby_screen.dart';
+import 'package:beerpongapp/screens/tournament/tournament_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -589,10 +590,26 @@ class HomeScreenState extends State<HomeScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const GameScreen(
+                                      builder: (context) => GameScreen(
                                         id: 'Resume Game',
-                                        players1: [],
-                                        players2: [],
+                                        team1: Team(
+                                          color: Colors.blue,
+                                          players: [],
+                                          cups: List.generate(
+                                              10,
+                                              (index) => Cup(
+                                                  index: index,
+                                                  color: Colors.blue)),
+                                        ),
+                                        team2: Team(
+                                          color: Colors.red,
+                                          players: [],
+                                          cups: List.generate(
+                                              10,
+                                              (index) => Cup(
+                                                  index: index,
+                                                  color: Colors.red)),
+                                        ),
                                         selectedRules: {},
                                         startingTeam: true,
                                         invitations: [],

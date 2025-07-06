@@ -770,13 +770,26 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       _startingTeam = chosenTeam;
     });
     _updateGameDoc();
+    Team team1 = Team(
+          color: Colors.blue,
+          players: _playersBlue,
+          cups: List.generate(
+              10, (index) => Cup(index: index, color: Colors.blue)),
+        );
+
+    Team team2 = Team(
+          color: Colors.red,
+          players: _playersRed,
+          cups: List.generate(
+              10, (index) => Cup(index: index, color: Colors.red)),
+        );
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => GameScreen(
           id: _gameId!,
-          players1: _playersBlue,
-          players2: _playersRed,
+          team1: team1,
+          team2: team2,
           selectedRules: _selectedRules,
           invitations: _acceptedInvites,
           startingTeam: _startingTeam == "Team Blue",

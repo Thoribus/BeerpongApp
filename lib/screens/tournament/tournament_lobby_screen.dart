@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/screens/tournament/tournament_page_view.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import '../util/firestoreservice.dart';
-import '../util/user_provider.dart';
-import '../models/user.dart';
-import '../models/player.dart';
-import '../models/team.dart';
-import '../models/cup.dart';
-import '../models/tournament.dart'; // <<- IMPORTANT!
+import '../../util/firestoreservice.dart';
+import '../../util/user_provider.dart';
+import '../../models/user.dart';
+import '../../models/player.dart';
+import '../../models/team.dart';
+import '../../models/cup.dart';
+import '../../models/tournament.dart'; // <<- IMPORTANT!
 import 'tournament_overview_screen.dart'; // <-- You'll have to make this, or point to your actual bracket/overview
 
 class TournamentLobbyScreen extends StatefulWidget {
@@ -624,17 +625,33 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
 
   Future<void> _onStartTournament() async {
     // 1. Each player is a team of one.
-    List<Team> teams = _players.map((player) {
+    final List<Color> teamColors = [
+      Colors.blue,
+      Colors.red,
+      Colors.orange,
+      Colors.purple,
+      Colors.teal,
+      Colors.pink,
+      Colors.brown,
+      Colors.cyan,
+      Colors.indigo,
+      // ...add more if needed!
+    ];
+
+    List<Team> teams = _players.asMap().entries.map((entry) {
+      final i = entry.key;
+      final player = entry.value;
+      final color = teamColors[i % teamColors.length];
       return Team(
-        color: Colors.blue, // or assign unique color if you want
+        color: color,
         players: [player],
-        cups:
-            List.generate(10, (index) => Cup(index: index, color: Colors.blue)),
+        cups: List.generate(10, (index) => Cup(index: index, color: color)),
       );
     }).toList();
 
     // 2. Generate matches (round robin)
-    List<TournamentMatch> matches = generateRoundRobinMatches(teams, _selectedRules, _acceptedInvites);
+    List<TournamentMatch> matches =
+        generateRoundRobinMatches(teams, _selectedRules, _acceptedInvites);
 
     // 3. Build Tournament object
     String tournamentId =
@@ -658,9 +675,9 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => TournamentOverviewScreen(
+        builder: (context) => TournamentPageView(
           tournamentId: tournamentId,
-          tournament: tournament,
+          initialTournament: tournament,
         ),
       ),
     );

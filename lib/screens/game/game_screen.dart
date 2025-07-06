@@ -20,8 +20,8 @@ class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
     required this.id,
-    required this.players1,
-    required this.players2,
+    required this.team1,
+    required this.team2,
     required this.selectedRules,
     required this.startingTeam,
     required this.invitations,
@@ -29,8 +29,8 @@ class GameScreen extends StatefulWidget {
   });
 
   final String id;
-  final List<Player> players1;
-  final List<Player> players2;
+  final Team team1;
+  final Team team2;
   final Map<String, bool> selectedRules;
   final bool startingTeam;
   final List<String> invitations;
@@ -137,18 +137,8 @@ class GameScreenState extends State<GameScreen> {
       // No saved data -> init teams from scratch
       setState(() {
         id = widget.id;
-        team1 = Team(
-          color: Colors.blue,
-          players: widget.players1,
-          cups: List.generate(
-              10, (index) => Cup(index: index, color: Colors.blue)),
-        );
-        team2 = Team(
-          color: Colors.red,
-          players: widget.players2,
-          cups: List.generate(
-              10, (index) => Cup(index: index, color: Colors.red)),
-        );
+        team1 = widget.team1;
+        team2 = widget.team2;
         isTeamOneTurn = widget.startingTeam;
         currentTeam = isTeamOneTurn ? team1 : team2;
         currentTeam.currentPlayers = currentTeam.rotatePlayers();
@@ -521,6 +511,14 @@ class GameScreenState extends State<GameScreen> {
       winner = blueTeamWin ? 'Team 1' : 'Team 2';
     });
     _setPlayerHitLastCup(player);
+    if (winner == 'Team 1') {
+      team1.wins++;
+      team2.losses++;
+    }
+    else{
+      team2.wins++;
+      team1.losses++;
+    }
 
     await GamePersistence.clearGameState(false);
     await _saveGameStatistics();
