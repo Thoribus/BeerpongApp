@@ -11,8 +11,7 @@ import '../../models/user.dart';
 import '../../models/player.dart';
 import '../../models/team.dart';
 import '../../models/cup.dart';
-import '../../models/tournament.dart'; // <<- IMPORTANT!
-import 'tournament_overview_screen.dart'; // <-- You'll have to make this, or point to your actual bracket/overview
+import '../../models/tournament.dart';
 
 class TournamentLobbyScreen extends StatefulWidget {
   final String title;

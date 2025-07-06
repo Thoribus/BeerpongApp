@@ -211,6 +211,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                                 invitations: match.invitations,
                                 started: true,
                                 timestamp: true,
+                                tournamendId: tournament.id,
                               );
 
                               // 2. (Optional) Save gameId to the TournamentMatch and update the tournament doc in Firestore.

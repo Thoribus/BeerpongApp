@@ -1,4 +1,3 @@
-import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
 import 'package:flutter/material.dart';
