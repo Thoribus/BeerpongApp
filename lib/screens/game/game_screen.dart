@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:beerpongapp/models/tournament.dart';
 import 'package:beerpongapp/screens/profile/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -24,6 +25,7 @@ class GameScreen extends StatefulWidget {
     required this.selectedRules,
     required this.startingTeam,
     required this.invitations,
+    required this.tournamentId,
   });
 
   final String id;
@@ -32,6 +34,7 @@ class GameScreen extends StatefulWidget {
   final Map<String, bool> selectedRules;
   final bool startingTeam;
   final List<String> invitations;
+  final String tournamentId;
 
   @override
   State<GameScreen> createState() => GameScreenState();
@@ -42,6 +45,7 @@ class GameScreenState extends State<GameScreen> {
   late String id;
   late Map<String, bool> selectedRules;
   late List<String> invitations;
+  late String tournamentId;
 
   late Team team1;
   late Team team2;
@@ -104,7 +108,8 @@ class GameScreenState extends State<GameScreen> {
           isTeamOneTurn: isTeamOneTurn,
           islandShotActive: islandShotActive,
           invitations: invitations,
-          selectedRules: selectedRules); // Save if the game hasn't ended
+          selectedRules: selectedRules,
+          tournamendId: tournamentId);
     }
     _pageController.dispose();
     super.dispose();
@@ -149,6 +154,7 @@ class GameScreenState extends State<GameScreen> {
         currentTeam.currentPlayers = currentTeam.rotatePlayers();
         invitations = widget.invitations;
         selectedRules = widget.selectedRules;
+        tournamentId = widget.tournamentId;
       });
       return;
     }
@@ -518,6 +524,20 @@ class GameScreenState extends State<GameScreen> {
 
     await GamePersistence.clearGameState(false);
     await _saveGameStatistics();
+
+    // If Tournament, return to tournament overview
+    if (tournamentId != "") {
+      TournamentMatch match = TournamentMatch(
+          id: id,
+          team1: team1,
+          team2: team2,
+          winner: winner == "Team 1" ? team1 : team2,
+          played: true,
+          selectedRules: selectedRules,
+          invitations: invitations);
+      Navigator.pop(context, {'match': match});
+      return;
+    }
 
     // Instead of showGameEndDialog, let’s push GameHighlightsScreen
     await DialogHelpers.showGameEndDialog(context, currentTeam.players);

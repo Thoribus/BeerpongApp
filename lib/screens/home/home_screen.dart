@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
+import 'package:beerpongapp/screens/tournament_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -401,6 +404,11 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _onReturnFromNextScreen() {
+    print("Hola!");
+    _checkSavedGame();
+  }
+
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 30.0),
@@ -588,6 +596,7 @@ class HomeScreenState extends State<HomeScreen> {
                                         selectedRules: {},
                                         startingTeam: true,
                                         invitations: [],
+                                        tournamentId: "",
                                       ),
                                     ),
                                   );
@@ -631,24 +640,40 @@ class HomeScreenState extends State<HomeScreen> {
                                     );
                                   });
                                 } else {
+                                  if (mode['title'] == 'Tournament') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => TournamentLobbyScreen(
+                                          title: mode['title'] as String,
+                                          subtitle: mode['subtitle'] as String,
+                                          details: mode['details'] as String,
+                                          iconPath: 'assets/${mode['icon']}',
+                                          color: mode['color'] as Color,
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => GameModeDetailsScreen(
-                                        title: mode['title']! as String,
-                                        subtitle: mode['subtitle']! as String,
-                                        details: mode['details']! as String,
-                                        iconPath:
-                                            'assets/${mode['icon'] as String}',
+                                        title: mode['title'] as String,
+                                        subtitle: mode['subtitle'] as String,
+                                        details: mode['details'] as String,
+                                        iconPath: 'assets/${mode['icon']}',
                                         color: mode['color'] as Color,
                                       ),
                                     ),
-                                  );
+                                  ).then((_) {
+                                    _onReturnFromNextScreen();
+                                  });
                                 }
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
                                   gradient: const LinearGradient(
                                     colors: [Colors.white, Colors.white70],
