@@ -1,5 +1,5 @@
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/screens/achievements_screen.dart';
+import 'package:beerpongapp/screens/profile/achievements_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -52,7 +52,8 @@ class ActivityScreenState extends State<ActivityScreen> {
     print(scoreIncrease);
     print(hitRateDelta);
     print(winRateDelta);
-    List<Map<String, String>> upgrades = AchievementsScreen.getUpgradedAchivements(player);
+    List<Map<String, String>> upgrades =
+        AchievementsScreen.getUpgradedAchivements(player);
     print(upgrades);
   }
 
@@ -79,7 +80,7 @@ class ActivityScreenState extends State<ActivityScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: Center(
         child: ListView.builder(
           itemCount: games.length,

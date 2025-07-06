@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
-import 'package:beerpongapp/screens/game_mode_details_screen.dart';
+import 'package:beerpongapp/screens/home/game_mode_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -378,37 +378,25 @@ class HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 40), // Give space for SVG overflow
+              _buildSectionTitle("Game Modes"),
               const SizedBox(height: 20),
-              _buildWelcomeTile(),
-              _buildBracketExample(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+
+              // Wrap in Stack to allow overflow
+              Stack(
+                clipBehavior: Clip.none,
                 children: [
-                  const Text(
-                    'Game Modes',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
                   _buildGameModeTiles(context),
-                  const SizedBox(height: 30),
-                  const Text(
-                    'Rulebook',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildRulebookSection(),
-                  const SizedBox(height: 10),
                 ],
               ),
+
+              const SizedBox(height: 30),
+              _buildSectionTitle("Rulebook"),
+              const SizedBox(height: 10),
+              _buildRulebookSection(),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -421,248 +409,329 @@ class HomeScreenState extends State<HomeScreen> {
     _checkSavedGame();
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 30.0),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
   Widget _buildGameModeTiles(BuildContext context) {
     final gameModes = [
       {
-        'title': 'Classic Mode',
-        'subtitle': 'Play the original game',
-        'color': Colors.blue,
-        'details': 'Quick, fun rounds',
-        'icon': 'racoon_winner.svg',
+        'title': 'Play Beerpong',
+        'tag': 'Classic Mode',
+        'subtitle': 'Quick, fun rounds',
+        'details': 'Resume or start a new game',
+        'color': Colors.orange,
+        'icon': 'two_cats.svg',
       },
       {
-        'title': 'Tournament Mode',
-        'subtitle': 'Compete with others',
-        'color': Colors.deepPurple,
+        'title': 'Tournament',
+        'tag': 'Competitive',
+        'subtitle': 'Coming Soon!',
         'details': 'Coming Soon!',
+        'color': Colors.deepPurple,
         'icon': 'racoon_winner.svg',
       },
       {
         'title': 'Practice Mode',
+        'tag': 'Casual',
         'subtitle': 'Sharpen your skills',
-        'color': Colors.orange,
         'details': 'No pressure',
-        'icon': 'racoon_winner.svg',
+        'color': Colors.blue,
+        'icon': 'otter_canvas.svg',
       },
     ];
 
-    return SizedBox(
-      height: 300,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: gameModes.length,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemBuilder: (context, index) {
-          final mode = gameModes[index];
-          return Container(
-            width: 200,
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: mode['color'] as Color,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: (mode['color'] as Color).withOpacity(0.4),
-                  blurRadius: 10,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        mode['title'] as String,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        mode['subtitle'] as String,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Spacer(),
-                      Center(
-                        child: SvgPicture.asset(
-                          'assets/${mode['icon']}',
-                          width: 80,
-                          height: 80,
-                          colorFilter: const ColorFilter.mode(
-                              Colors.white, BlendMode.srcIn),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        mode['details'] as String,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 48), // leave space for the button
-                    ],
-                  ),
-                ),
-                if (_hasSavedGame)
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 24),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                        ),
-                      ),
-                      onPressed: () async {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const GameScreen(
-                              id: 'Resume Game',
-                              players1: [],
-                              players2: [],
-                              selectedRules: {},
-                              startingTeam: true,
-                              invitations: [],
-                              tournamentId: "",
-                            ),
-                          ),
-                        ).then((_) {
-                          _onReturnFromNextScreen();
-                        });
-                      },
-                      child: const Text(
-                        'Resume',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    ),
-                  ),
-                Positioned(
-                  bottom: 12,
-                  right: 12,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      backgroundColor: Colors.black.withOpacity(0.8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    onPressed: () {
-                      if (_hasInvitations) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'You are currently in a game.',
-                            ),
-                          ),
-                        );
-                        //return;
-                      }
-                      if (_hasSavedGame) {
-                        _showNewGameConfirmationDialog(context, () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => GameModeDetailsScreen(
-                                title: mode['title'] as String,
-                                subtitle: mode['subtitle'] as String,
-                                details: mode['details'] as String,
-                                iconPath: 'assets/${mode['icon']}',
-                                color: mode['color'] as Color,
-                              ),
-                            ),
-                          ).then((_) {
-                            _onReturnFromNextScreen();
-                          });
-                        });
-                      } else {
-                        if (mode['title'] == 'Tournament Mode') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => TournamentLobbyScreen(
-                                title: mode['title'] as String,
-                                subtitle: mode['subtitle'] as String,
-                                details: mode['details'] as String,
-                                iconPath: 'assets/${mode['icon']}',
-                                color: mode['color'] as Color,
-                              ),
-                            ),
-                          );
-                          return;
-                        }
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => GameModeDetailsScreen(
-                              title: mode['title'] as String,
-                              subtitle: mode['subtitle'] as String,
-                              details: mode['details'] as String,
-                              iconPath: 'assets/${mode['icon']}',
+    PageController pageController = PageController(viewportFraction: 0.9);
+    ValueNotifier<int> pageIndexNotifier = ValueNotifier<int>(0);
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 250,
+          child: PageView.builder(
+            controller: pageController,
+            itemCount: gameModes.length,
+            onPageChanged: (index) => pageIndexNotifier.value = index,
+            itemBuilder: (context, index) {
+              final mode = gameModes[index];
+              return AnimatedBuilder(
+                animation: pageController,
+                builder: (context, child) {
+                  double scale = 1.0;
+                  if (pageController.position.haveDimensions) {
+                    scale = pageController.page! - index;
+                    scale = (1 - (scale.abs() * 0.1)).clamp(0.9, 1.0);
+                  }
+
+                  return Transform.scale(
+                    scale: scale,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
                               color: mode['color'] as Color,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      (mode['color'] as Color).withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Tag
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: Colors.white, width: 1),
+                                  ),
+                                  child: Text(
+                                    mode['tag'] as String,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  mode['title'] as String,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  mode['subtitle'] as String,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Divider(color: Colors.white24),
+                                Text(
+                                  mode['details'] as String,
+                                  style: const TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 48),
+                              ],
                             ),
                           ),
-                        ).then((_) {
-                          _onReturnFromNextScreen();
-                        });
-                      }
-                    },
-                    child: const Text(
-                      'Play Now',
-                      style: TextStyle(fontSize: 12),
+
+                          // SVG Icon
+                          Positioned(
+                            top: 20,
+                            right: 20,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 12,
+                                    offset: Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: SvgPicture.asset(
+                                'assets/${mode['icon']}',
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+
+                          // Resume Game Button
+                          if (_hasSavedGame)
+                            Positioned(
+                              bottom: 16,
+                              left: 16,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const GameScreen(
+                                        id: 'Resume Game',
+                                        players1: [],
+                                        players2: [],
+                                        selectedRules: {},
+                                        startingTeam: true,
+                                        invitations: [],
+                                        tournamentId: "",
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  'Resume',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+
+                          // Stylized Play Button
+                          Positioned(
+                            bottom: 12,
+                            right: 12,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (_hasInvitations) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('You are currently in a game.'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (_hasSavedGame) {
+                                  _showNewGameConfirmationDialog(context, () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => GameModeDetailsScreen(
+                                          title: mode['title']! as String,
+                                          subtitle: mode['subtitle']! as String,
+                                          details: mode['details']! as String,
+                                          iconPath:
+                                              'assets/${mode['icon'] as String}',
+                                          color: mode['color'] as Color,
+                                        ),
+                                      ),
+                                    );
+                                  });
+                                } else {
+                                  if (mode['title'] == 'Tournament Mode') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => TournamentLobbyScreen(
+                                          title: mode['title'] as String,
+                                          subtitle: mode['subtitle'] as String,
+                                          details: mode['details'] as String,
+                                          iconPath: 'assets/${mode['icon']}',
+                                          color: mode['color'] as Color,
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => GameModeDetailsScreen(
+                                        title: mode['title'] as String,
+                                        subtitle: mode['subtitle'] as String,
+                                        details: mode['details'] as String,
+                                        iconPath: 'assets/${mode['icon']}',
+                                        color: mode['color'] as Color,
+                                      ),
+                                    ),
+                                  ).then((_) {
+                                    _onReturnFromNextScreen();
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [Colors.white, Colors.white70],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 6,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: mode['color'] as Color,
+                                  size: 30,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Page indicators
+        ValueListenableBuilder<int>(
+          valueListenable: pageIndexNotifier,
+          builder: (context, currentIndex, _) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(gameModes.length, (index) {
+                final isActive = index == currentIndex;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: isActive ? 10 : 6,
+                  height: isActive ? 10 : 6,
+                  decoration: BoxDecoration(
+                    color: isActive
+                        ? Colors.orange
+                        : Colors.orange.withOpacity(0.4),
+                    shape: BoxShape.circle,
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+                );
+              }),
+            );
+          },
+        ),
+      ],
     );
   }
-}
-
-Widget _buildWelcomeTile() {
-  return Consumer<UserProvider>(
-    builder: (context, userProvider, child) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.amber[100],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.waving_hand, color: Colors.black),
-            const SizedBox(width: 10),
-            Text(
-              'Welcome Back, ${userProvider.user?.username ?? "User"}',
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
 }
 
 Widget _buildRulebookSection() {
@@ -767,7 +836,7 @@ Widget _buildRulebookSection() {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.grey,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(

@@ -6,15 +6,15 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 
-class PersonalStatisticsScreen extends StatelessWidget {
+class PerformanceScreen extends StatelessWidget {
   final User user;
 
-  const PersonalStatisticsScreen({super.key, required this.user});
+  const PerformanceScreen({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -35,11 +35,6 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 16),
-                    // Example "Statistics Tiles" if you want them:
-                    _buildStatisticsTiles(user),
-                    const SizedBox(height: 24),
-
                     // "Performance Summary": use a custom card
                     _buildSectionTitle("Performance Summary"),
                     _buildCard(
@@ -65,88 +60,6 @@ class PersonalStatisticsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatisticsTiles(User user) {
-    final stats = [
-      {'icon': Icons.score, 'title': 'Total Score', 'value': user.totalScore},
-      {
-        'icon': Icons.air,
-        'title': 'Total Airballs',
-        'value': user.totalAirballs
-      },
-      {
-        'icon': Icons.sports_bar,
-        'title': 'Cups Hit',
-        'value': user.cupsHit.length
-      },
-      {'icon': Icons.emoji_events, 'title': 'Wins', 'value': user.wins},
-    ];
-
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 2.5, // Half the height
-      ),
-      itemCount: stats.length,
-      itemBuilder: (context, index) {
-        final stat = stats[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              // Icon with circle background
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.3),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  stat['icon'] as IconData,
-                  color: Colors.amber,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Value and title
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${stat['value']}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      stat['title'] as String,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -155,7 +68,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
         style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: Colors.black,
         ),
       ),
     );
@@ -163,7 +76,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
 
   Widget _buildCard({required Widget child}) {
     return Card(
-      color: Colors.amber.withOpacity(0.2),
+      color: Colors.grey[200],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 5,
       child: Padding(
@@ -335,9 +248,9 @@ class StatisticsTable extends StatelessWidget {
           Text(
             attribute,
             style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
+                color: Colors.black, fontWeight: FontWeight.bold),
           ),
-          Icon(icon, color: Colors.amber, size: 20),
+          Icon(icon, color: Colors.orange, size: 20),
         ],
       ),
       // The small sparkline (just raw data)
@@ -368,7 +281,7 @@ class StatisticsTable extends StatelessWidget {
           Text(
             '$value',
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.black,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),

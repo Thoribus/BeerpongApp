@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/screens/achievements_screen.dart';
+import 'package:beerpongapp/screens/profile/achievements_screen.dart';
 
 class UserCard extends StatelessWidget {
   final User user;

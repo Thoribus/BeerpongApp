@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/constants.dart';
-import 'package:beerpongapp/screens/account_screen.dart';
-import 'package:beerpongapp/screens/friendlist.dart';
-import 'package:beerpongapp/screens/home_screen.dart';
-import 'package:beerpongapp/screens/shop_screen.dart';
-import 'package:beerpongapp/screens/statistics_screen.dart';
+import 'package:beerpongapp/screens/profile/account_screen.dart';
+import 'package:beerpongapp/screens/friends/friendlist.dart';
+import 'package:beerpongapp/screens/home/home_screen.dart';
+import 'package:beerpongapp/screens/shop/shop_screen.dart';
+import 'package:beerpongapp/screens/games/statistics_screen.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
 
 import 'package:beerpongapp/util/user_provider.dart';
@@ -167,12 +167,12 @@ class BaseScreenState extends State<BaseScreen> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(52),
         child: Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFF151924),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800, //Color(0xFF151924),
+            //borderRadius: BorderRadius.only(
+            //bottomLeft: Radius.circular(16),
+            //bottomRight: Radius.circular(16),
+            //),
           ),
           child: SafeArea(
             child: Padding(
@@ -253,7 +253,7 @@ class BaseScreenState extends State<BaseScreen> {
                     width: indicatorWidth,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppConstants.primaryColor,
+                      color: Colors.orange, // AppConstants.primaryColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -278,7 +278,8 @@ class BaseScreenState extends State<BaseScreen> {
 
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
-    final color = isSelected ? AppConstants.primaryColor : Colors.grey.shade500;
+    final color = isSelected ? Colors.orange : Colors.grey.shade500;
+//AppConstants.primaryColor : Colors.grey.shade500;
 
     return GestureDetector(
       onTap: () => _onItemTapped(index),

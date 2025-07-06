@@ -13,6 +13,43 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'compare_stats_screen.dart';
 
+class DummyUser {
+  final String username;
+  final String avatarUrl;
+
+  DummyUser({
+    required this.username,
+    required this.avatarUrl,
+  });
+}
+
+enum ActionType { wonGame, achievement }
+
+class _FriendAction {
+  final DummyUser user;
+  final ActionType type;
+  final String description;
+  final DateTime date;
+
+  _FriendAction({
+    required this.user,
+    required this.type,
+    required this.description,
+    required this.date,
+  });
+}
+
+Color _getActionColor(ActionType type) {
+  switch (type) {
+    case ActionType.wonGame:
+      return Colors.greenAccent.shade100;
+    case ActionType.achievement:
+      return Colors.lightBlueAccent.shade100;
+    default:
+      return Colors.grey.shade200;
+  }
+}
+
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
 
@@ -357,6 +394,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               children: [
                 _buildFriendsListPage(),
                 _buildRankingPage(),
+                _buildSocialPage(),
               ],
             ),
           ),
@@ -365,36 +403,57 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     );
   }
 
-  /// Builds the top row for switching between “Friends” and “Leaderboard” pages.
   Widget _buildPageSelector() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildPageSelectorButton('Friendlist', 0),
-        const VerticalDivider(
-          color: Colors.black,
-          width: 20,
-          thickness: 2,
-          indent: 5,
-          endIndent: 5,
-        ),
-        _buildPageSelectorButton('Leaderboard', 1),
-      ],
-    );
-  }
+    final List<String> pages = ["Friendlist", "Leaderboard", "Socials"];
 
-  Widget _buildPageSelectorButton(String title, int pageIndex) {
-    return TextButton(
-      onPressed: _currentPage == pageIndex
-          ? null
-          : () => _pageController.jumpToPage(pageIndex),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: _currentPage == pageIndex
-              ? AppConstants.primaryColor
-              : Colors.black,
-        ),
+    return Container(
+      height: 48,
+      width: double.infinity,
+      //margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800,
+        //borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Row(
+        children: pages.asMap().entries.map((entry) {
+          final index = entry.key;
+          final title = entry.value;
+          final isSelected = _currentPage == index;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: () {
+                  if (_currentPage != index) {
+                    _pageController.jumpToPage(index);
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.orange : Colors.grey.shade600,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -533,6 +592,82 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               },
             ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSocialPage() {
+    final List<_FriendAction> dummyActions = [
+      _FriendAction(
+        user: DummyUser(username: 'Alice', avatarUrl: ''),
+        type: ActionType.wonGame,
+        description: 'won a game of Classic Mode',
+        date: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      _FriendAction(
+        user: DummyUser(username: 'Bob', avatarUrl: ''),
+        type: ActionType.achievement,
+        description: 'unlocked the “Sharpshooter” achievement',
+        date: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      _FriendAction(
+        user: DummyUser(username: 'Carol', avatarUrl: ''),
+        type: ActionType.wonGame,
+        description: 'won a game of Speed Mode',
+        date: DateTime.now().subtract(const Duration(days: 2, hours: 3)),
+      ),
+    ];
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      itemCount: dummyActions.length,
+      itemBuilder: (context, index) {
+        final action = dummyActions[index];
+        final bgColor = _getActionColor(action.type);
+
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          color: bgColor,
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            leading: CircleAvatar(
+              backgroundColor: Colors.black12,
+              child: Text(
+                action.user.username[0],
+                style: const TextStyle(color: Colors.black),
+              ),
+            ),
+            title: Text(
+              action.user.username,
+              style: const TextStyle(fontSize: 13, color: Colors.black),
+            ),
+            subtitle: Text(
+              action.description,
+              style: const TextStyle(fontSize: 11, color: Colors.black87),
+            ),
+            trailing: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text('Date',
+                    style: TextStyle(fontSize: 10, color: Colors.black54)),
+                const SizedBox(height: 2),
+                Text(
+                  DateFormat('dd.MM.yyyy').format(action.date),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
