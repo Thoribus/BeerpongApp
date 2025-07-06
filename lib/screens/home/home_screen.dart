@@ -640,7 +640,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     );
                                   });
                                 } else {
-                                  if (mode['title'] == 'Tournament Mode') {
+                                  if (mode['title'] == 'Tournament') {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
