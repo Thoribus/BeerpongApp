@@ -2,23 +2,7 @@ import 'package:beerpongapp/models/tournament.dart';
 import 'package:flutter/material.dart';
 import 'tournament_overview_screen.dart';
 import 'tournament_standings.dart';
-
-// Placeholder for the new Analysis screen (replace with your real one)
-class TournamentAnalysisScreen extends StatelessWidget {
-  final Tournament tournament;
-
-  const TournamentAnalysisScreen({super.key, required this.tournament});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        'Analysis Screen for ${tournament.name}',
-        style: const TextStyle(fontSize: 18),
-      ),
-    );
-  }
-}
+import 'tournament_analysis_screen.dart';
 
 class TournamentPageView extends StatefulWidget {
   final String tournamentId;
@@ -107,7 +91,10 @@ class _TournamentPageViewState extends State<TournamentPageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_tournament.name),
+        title: const Text('Tournament',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        centerTitle: true,
         backgroundColor: Colors.grey.shade700,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),

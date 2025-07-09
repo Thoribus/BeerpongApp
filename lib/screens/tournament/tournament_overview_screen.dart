@@ -117,224 +117,334 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Teams",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            _buildTeamsSection(),
-            const SizedBox(height: 24),
-            const Text("Matches",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Expanded(child: _buildMatchesSection()),
-          ],
-        ),
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildTeamsSection(),
+                const SizedBox(height: 24),
+                _buildMatchesHeader(),
+              ]),
+            ),
+          ),
+          _buildMatchesSection(),
+        ],
       ),
     );
   }
 
   Widget _buildTeamsSection() {
-    return Expanded(
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Teams",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              Expanded(
-                child: GridView.builder(
-                  itemCount: tournament.teams.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // Two columns
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 3.5, // Adjust height vs width
-                  ),
-                  itemBuilder: (context, index) {
-                    final team = tournament.teams[index];
-                    return Card(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      color: team.color.withOpacity(0.15),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: team.color,
-                              child: const Icon(Icons.group,
-                                  size: 16, color: Colors.white),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                team.players.map((p) => p.name).join(', '),
-                                style: const TextStyle(fontSize: 13),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Teams",
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: tournament.teams.length,
+            itemBuilder: (context, index) {
+              final team = tournament.teams[index];
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        _showTeamTooltip(context, team);
+                      },
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: team.color,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2)),
                           ],
                         ),
+                        child: Center(
+                          child: Text(
+                            team.players
+                                .map((p) => p.name.substring(0, 1))
+                                .join(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
+        ),
+      ],
+    );
+  }
+
+  void _showTeamTooltip(BuildContext context, Team team) {
+    // Use a delayed post-frame callback to ensure the widget is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final renderBox = context.findRenderObject();
+      if (renderBox == null || !(renderBox is RenderBox)) return;
+
+      final overlay = Overlay.of(context);
+      final button = renderBox as RenderBox;
+
+      final position = button.localToGlobal(
+        Offset(button.size.width / 2, button.size.height),
+        ancestor: overlay.context.findRenderObject(),
+      );
+
+      OverlayEntry? entry;
+      entry = OverlayEntry(
+        builder: (context) => Positioned(
+          left: position.dx - 60,
+          top: position.dy,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    team.players.map((p) => p.name).join(' & '),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '${team.wins}W - ${team.losses}L',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      overlay.insert(entry);
+      Future.delayed(const Duration(seconds: 2), () {
+        entry?.remove();
+      });
+    });
+  }
+
+  Widget _buildMatchesHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          "Today's Matches",
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        TextButton(
+          onPressed: () {},
+          child: const Text(
+            "See all",
+            style: TextStyle(color: Colors.blue),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMatchesSection() {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final match = tournament.matches[index];
+            return _buildMatchCard(match, index);
+          },
+          childCount: tournament.matches.length,
         ),
       ),
     );
   }
 
-  Widget _buildMatchesSection() {
-    return ListView.separated(
-      itemCount: tournament.matches.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        var match = tournament.matches[index];
-        final team1 = match.team1.players.first;
-        final team2 = match.team2.players.first;
-
-        return Card(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 3,
-          child: Padding(
+  Widget _buildMatchCard(TournamentMatch match, int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "Single Game",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                Text(
+                  "Match",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const Divider(height: 20, thickness: 1),
+                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildPlayerColumn(team1.name, match.team1.color),
-                    const Text("VS",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold)),
-                    _buildPlayerColumn(team2.name, match.team2.color),
-                  ],
-                ),
-                const Divider(height: 20, thickness: 1),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      match.played
-                          ? match.winner != null
-                              ? 'Winner: ${match.winner!.players.map((p) => p.name).join(', ')}'
-                              : 'No winner recorded'
-                          : 'Not played yet',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: match.played ? Colors.green[700] : Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (!match.played)
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber,
-                          foregroundColor: Colors.black,
+                    _buildTeamColumn(match.team1, true),
+                    const Column(
+                      children: [
+                        Text(
+                          "VS",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        onPressed: () async {
-                          final chosenTeam = await _showStartingTeamDialog(
-                            context: context,
-                            team1Players: match.team1.players,
-                            team2Players: match.team2.players,
-                          );
-                          if (chosenTeam == null) return;
-
-                          final gameId =
-                              await FirestoreService().createEmptyGameDoc(
-                            team1: match.team1,
-                            team2: match.team2,
-                          );
-
-                          await FirestoreService().updateGameDoc(
-                            gameId,
-                            rules: match.selectedRules.entries
-                                .where((entry) => entry.value)
-                                .map((entry) => entry.key)
-                                .toList(),
-                            startingTeam: chosenTeam,
-                            invitations: match.invitations,
-                            started: true,
-                            timestamp: true,
-                            tournamendId: tournament.id,
-                          );
-
-                          match = match.copyWith(id: gameId);
-                          final cleanTeam1 = Team(
-                            color: match.team1.color,
-                            players: match.team1.players
-                                .map((p) => p.copyWithResetStats())
-                                .toList(),
-                            cups: match.team1.cups,
-                          );
-                          final cleanTeam2 = Team(
-                            color: match.team2.color,
-                            players: match.team2.players
-                                .map((p) => p.copyWithResetStats())
-                                .toList(),
-                            cups: match.team2.cups,
-                          );
-
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => GameScreen(
-                                id: gameId,
-                                team1: cleanTeam1,
-                                team2: cleanTeam2,
-                                selectedRules: match.selectedRules,
-                                invitations: match.invitations,
-                                startingTeam: chosenTeam == "Team Blue",
-                                tournamentId: widget.tournamentId,
-                              ),
-                            ),
-                          );
-
-                          if (result != null) {
-                            tournament.matches[index] = result["match"];
-                            final List<Team> matchTeams = [
-                              result["match"].team1,
-                              result["match"].team2,
-                            ];
-                            mergeMatchResultsIntoTournament(
-                              tournamentTeams: tournament.teams,
-                              matchTeams: matchTeams,
-                            );
-                            await FirestoreService()
-                                .updateTournament(tournament);
-                            await _reloadTournamentData();
-                          }
-                        },
-                        child: const Text("Start Match"),
-                      ),
+                        SizedBox(height: 8),
+                        Text(
+                          "14:00", // Replace with actual time if available
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    _buildTeamColumn(match.team2, false),
                   ],
                 ),
               ],
             ),
           ),
-        );
-      },
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  match.played
+                      ? match.winner != null
+                          ? 'Winner: ${match.winner!.players.map((p) => p.name).join(', ')}'
+                          : 'Draw'
+                      : 'Not played yet',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: match.played ? Colors.green[700] : Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (!match.played)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                    ),
+                    onPressed: () => _startMatch(index),
+                    child: const Text(
+                      "Start Match",
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamColumn(Team team, bool isLeft) {
+    return Column(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: team.color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              team.players.map((p) => p.name.substring(0, 1)).join(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: 80,
+          child: Text(
+            team.players.map((p) => p.name).join(' & '),
+            textAlign: isLeft ? TextAlign.left : TextAlign.right,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 
@@ -362,6 +472,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
     );
     if (chosenTeam == null) return;
 
+    // 1. Create the Firestore document for the game.
     final gameId = await FirestoreService().createEmptyGameDoc(
       team1: match.team1,
       team2: match.team2,
@@ -379,17 +490,21 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       tournamendId: tournament.id,
     );
 
+    // 2. (Optional) Save gameId to the TournamentMatch and update the tournament doc in Firestore.
+    // If your TournamentMatch has a gameId field, do:
     match = match.copyWith(id: gameId);
+    final cleanTeam1Players =
+        match.team1.players.map((p) => p.copyWithResetStats()).toList();
     final team1 = Team(
-      color: match.team1.color,
-      players: match.team1.players.map((p) => p.copyWithResetStats()).toList(),
-      cups: match.team1.cups,
-    );
+        color: match.team1.color,
+        players: cleanTeam1Players,
+        cups: match.team1.cups);
+    final cleanTeam2Players =
+        match.team2.players.map((p) => p.copyWithResetStats()).toList();
     final team2 = Team(
-      color: match.team2.color,
-      players: match.team2.players.map((p) => p.copyWithResetStats()).toList(),
-      cups: match.team2.cups,
-    );
+        color: match.team2.color,
+        players: cleanTeam2Players,
+        cups: match.team2.cups);
 
     final result = await Navigator.push(
       context,
