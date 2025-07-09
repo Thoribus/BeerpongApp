@@ -14,10 +14,6 @@ class TournamentStandingsScreen extends StatelessWidget {
     teamsSorted.sort((a, b) => b.wins.compareTo(a.wins));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Standings"),
-        backgroundColor: Colors.amber,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
@@ -31,7 +27,6 @@ class TournamentStandingsScreen extends StatelessWidget {
   }
 
   Widget _buildTeamStanding(BuildContext context, Team team, int rank) {
-
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
       child: Padding(
@@ -58,7 +53,8 @@ class TournamentStandingsScreen extends StatelessWidget {
                   '${team.wins} - ${team.losses}',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: team.wins > team.losses ? Colors.green : Colors.red),
+                      color:
+                          team.wins > team.losses ? Colors.green : Colors.red),
                 ),
               ],
             ),
@@ -83,7 +79,8 @@ class TournamentStandingsScreen extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.symmetric(vertical: 2),
-              child: Text('Player', style: TextStyle(fontWeight: FontWeight.bold)),
+              child:
+                  Text('Player', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
             Text('Score', style: TextStyle(fontWeight: FontWeight.bold)),
             Text('Throws', style: TextStyle(fontWeight: FontWeight.bold)),
