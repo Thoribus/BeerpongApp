@@ -9,6 +9,11 @@ import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/models/player.dart';
 
+// new screens/tabs
+import 'package:beerpongapp/screens/liveticker/cup_layout_tab.dart';
+import 'package:beerpongapp/screens/liveticker/match_stats_tab.dart';
+import 'package:beerpongapp/screens/liveticker/timeline_tab.dart';
+
 class LiveGameStatsScreen extends StatefulWidget {
   final String gameId;
 
@@ -18,122 +23,200 @@ class LiveGameStatsScreen extends StatefulWidget {
   LiveGameStatsScreenState createState() => LiveGameStatsScreenState();
 }
 
+class LiveGameData {
+  final Team team1;
+  final Team team2;
+  final String gameId;
+  final DateTime gameStart;
+  final String? winner;
+
+  LiveGameData({
+    required this.team1,
+    required this.team2,
+    required this.gameId,
+    required this.gameStart,
+    this.winner,
+  });
+}
+
 class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     with SingleTickerProviderStateMixin {
   final FirestoreService _firestoreService = FirestoreService();
-  late TabController _tabController;
+  int _currentTabPage = 0;
+  late PageController _tabPageController;
   late DateTime gameStart;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabPageController = PageController(initialPage: _currentTabPage);
+  }
+
+  @override
+  void dispose() {
+    _tabPageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(50.0), // here the desired height
-          child: AppBar(
-            backgroundColor: const Color(0xFFF0AE1D),
-            title: const Column(
-              children: [
-                Text(
-                  'Live Ticker',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  'Current Game',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-            centerTitle: true,
-          )),
-      backgroundColor: Colors.black,
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: _firestoreService.getGameDocStream(widget.gameId),
-        builder:
-            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.red)),
-            );
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(
-              child: Text('Game not found.',
-                  style: TextStyle(color: Colors.white, fontSize: 18)),
-            );
-          }
-
-          // Extract game data
-          final gameData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-          Team team1 = Team.fromJson(gameData['team1']);
-          Team team2 = Team.fromJson(gameData['team2']);
-
-          gameStart = gameData['timestamp'].toDate();
-
-          // Display game-end dialog if applicable
-          final winnerField = gameData['winner'];
-          if (winnerField != null &&
-              winnerField is String &&
-              winnerField.isNotEmpty) {
-            List<Player> winningPlayers = [];
-            if (winnerField == "Team Blue") {
-              winningPlayers = team1.players;
-            } else if (winnerField == "Team Red") {
-              winningPlayers = team2.players;
-            }
-
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              DialogHelpers.showGameEndDialog(context, winningPlayers);
-            });
-          }
-
-          return Column(
+        preferredSize: const Size.fromHeight(50.0),
+        child: AppBar(
+          backgroundColor: const Color(0xFFFF9800),
+          title: const Column(
             children: [
-              _buildTopBracket(team1, team2),
-              TabBar(
-                controller: _tabController,
-                indicatorColor: Colors.white,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white70,
-                tabs: const [
-                  Tab(text: 'Table'),
-                  Tab(text: 'Statistics'),
-                  Tab(text: 'Timeline'),
-                  Tab(text: 'Settings'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildCupLayoutTab(team1, team2),
-                    _buildStatisticsTab(team1, team2),
-                    _buildTimelineTab(team1, team2),
-                    _buildSettingsTab(gameData),
-                  ],
+              Text(
+                'Live Ticker',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
             ],
+          ),
+          centerTitle: true,
+        ),
+      ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          _buildTabPageSelector(), // STATIC – remains fixed
+          Expanded(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: _firestoreService.getGameDocStream(widget.gameId),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Something went wrong'));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return const Center(child: Text('Game not found.'));
+                }
+
+                final gameDataRaw =
+                    snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final team1 = Team.fromJson(gameDataRaw['team1']);
+                final team2 = Team.fromJson(gameDataRaw['team2']);
+                final gameStart = gameDataRaw['timestamp'].toDate();
+                final winner = gameDataRaw['winner'];
+                final gameId = widget.gameId;
+
+                final liveGameData = LiveGameData(
+                  team1: team1,
+                  team2: team2,
+                  gameId: gameId,
+                  gameStart: gameStart,
+                  winner: winner,
+                );
+
+                if (winner != null && winner.toString().isNotEmpty) {
+                  final winningPlayers =
+                      (winner == "Team Blue") ? team1.players : team2.players;
+
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    DialogHelpers.showGameEndDialog(context, winningPlayers);
+                  });
+                }
+
+                return _buildGameTabs(liveGameData);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameTabs(LiveGameData gameData) {
+    return Column(
+      children: [
+        _buildTopBracket(gameData.team1, gameData.team2),
+        Expanded(
+          // ✅ this gives PageView bounded height
+          child: PageView(
+            controller: _tabPageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentTabPage = index;
+              });
+            },
+            children: [
+              CupLayoutTab(gameData: gameData),
+              MatchStatsTab(gameData: gameData),
+              //MatchStatsTab(gameData: gameData),
+              TimelineTab(gameData: gameData),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabPageSelector() {
+    final List<String> tabs = ["Table", "Statistics", "Timeline"];
+
+    return Container(
+      height: 48,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.orange,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Row(
+        children: tabs.asMap().entries.map((entry) {
+          final index = entry.key;
+          final title = entry.value;
+          final isSelected = _currentTabPage == index;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: () {
+                  if (_currentTabPage != index) {
+                    setState(() {
+                      _currentTabPage = index;
+                    });
+                    _tabPageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.grey.shade600
+                        : Colors.orange.shade400,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -320,30 +403,18 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     );
   }
 
-  Widget _buildStatisticsTab(Team team1, Team team2) {
-    return _buildMatchStats(team1, team2);
+  /*Widget _buildStatisticsTab(Team team1, Team team2) {
+    return MatchStatsTab(team1: team1, team2: team2);
   }
 
   Widget _buildTimelineTab(Team team1, Team team2) {
-    return StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection("games")
-            .doc(widget.gameId)
-            .collection("events")
-            .orderBy('timestamp', descending: false)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          List<GameEvent> events = snapshot.data!.docs
-              .map((doc) => GameEvent.fromJson(doc.data(), doc.id, widget.gameId))
-              .toList();
-
-          return _buildEventList(events, team1, team2);
-        });
-  }
+    return TimelineTab(
+      gameId: widget.gameId,
+      gameStart: gameStart,
+      team1: team1,
+      team2: team2,
+    );
+  }*/
 
   Widget _buildEventList(List<GameEvent> events, Team team1, Team team2) {
     return ListView.builder(
@@ -367,14 +438,16 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-              child:
-                  isTeam1 ? _buildPlayerInfo(event, eventColor) : const SizedBox()),
+              child: isTeam1
+                  ? _buildPlayerInfo(event, eventColor)
+                  : const SizedBox()),
           Expanded(child: isTeam1 ? _buildTimestamp(event) : const SizedBox()),
           Icon(eventIcon, color: eventColor),
           Expanded(child: !isTeam1 ? _buildTimestamp(event) : const SizedBox()),
           Expanded(
-              child:
-                  !isTeam1 ? _buildPlayerInfo(event, eventColor) : const SizedBox()),
+              child: !isTeam1
+                  ? _buildPlayerInfo(event, eventColor)
+                  : const SizedBox()),
         ],
       ),
     );
@@ -390,7 +463,8 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
 
   Widget _buildTimestamp(GameEvent event) {
     Duration eventDuration = event.timestamp.difference(gameStart);
-    String eventTime = "${(eventDuration.inMinutes % 60).toString().padLeft(2, '0')}:${(eventDuration.inSeconds % 60).toString().padLeft(2, '0')}";
+    String eventTime =
+        "${(eventDuration.inMinutes % 60).toString().padLeft(2, '0')}:${(eventDuration.inSeconds % 60).toString().padLeft(2, '0')}";
     return Text(
       eventTime,
       style: const TextStyle(fontSize: 12, color: Colors.grey),
@@ -531,7 +605,8 @@ Widget _buildTopBracket(Team team1, Team team2) {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildTeamLogo('assets/avatars/blue_team.svg', 'Team Blue'),
+                    _buildTeamLogo(
+                        'assets/brevard-county-manatees-1.svg', 'Team Blue'),
                     Column(
                       children: [
                         Text(
@@ -561,7 +636,7 @@ Widget _buildTopBracket(Team team1, Team team2) {
                         ),
                       ],
                     ),
-                    _buildTeamLogo('assets/avatars/red_team.svg', 'Team Red'),
+                    _buildTeamLogo('assets/hamilton-bulldogs.svg', 'Team Red'),
                   ],
                 ),
               ],
@@ -582,10 +657,10 @@ Widget _buildTeamLogo(String assetPath, String teamName) {
     children: [
       SvgPicture.asset(
         assetPath,
-        height: 60,
-        width: 60,
+        height: 80,
+        width: 80,
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 4),
       Text(
         teamName,
         style: const TextStyle(
@@ -821,7 +896,11 @@ Widget _buildCupLayoutsRow(Team team1, Team team2) {
             Colors.grey.shade600,
             Colors.amber.withOpacity(0.2)
           ],
-          stops: const [0.0, 0.5, 1.0], // Ensures the center color is at the midpoint
+          stops: const [
+            0.0,
+            0.5,
+            1.0
+          ], // Ensures the center color is at the midpoint
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ), // Background color for the container

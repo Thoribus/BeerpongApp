@@ -1,6 +1,6 @@
 //-------------Packages-------------------------
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/screens/live_game_stats_screen.dart';
+import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
