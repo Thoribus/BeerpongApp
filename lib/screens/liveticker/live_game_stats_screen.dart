@@ -573,26 +573,39 @@ Widget _buildSettingsTab(Map<String, dynamic> gameData) {
 
 Widget _buildTopBracket(Team team1, Team team2) {
   return Padding(
-    padding: const EdgeInsets.symmetric(
-        horizontal: 16.0, vertical: 20), // Add side margins
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(12), // Rounded corners for the box
+    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20),
+    child: Container(
+      // Apply shadow and border radius here
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
       child: Container(
-        height: 150,
+        // Clip only the inner content
         decoration: BoxDecoration(
-          color: Colors.grey[800], // Fallback background color
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(12),
         ),
+        clipBehavior: Clip.hardEdge, // This only affects inner content
         child: Stack(
           children: [
             // SVG Background
             Positioned.fill(
               child: SvgPicture.asset(
-                'assets/sun-tornado.svg', // Replace with your SVG path
-                fit: BoxFit.cover, // Ensure the SVG fills the container
+                'assets/sun-tornado.svg',
+                fit: BoxFit.cover,
               ),
             ),
             Column(
               children: [
+                const SizedBox(height: 8),
                 const Text(
                   'Round 16',
                   style: TextStyle(
@@ -601,7 +614,6 @@ Widget _buildTopBracket(Team team1, Team team2) {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -639,6 +651,7 @@ Widget _buildTopBracket(Team team1, Team team2) {
                     _buildTeamLogo('assets/hamilton-bulldogs.svg', 'Team Red'),
                   ],
                 ),
+                const SizedBox(height: 8),
               ],
             ),
           ],

@@ -16,29 +16,24 @@ class CupLayoutTab extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
 
-          // Team Stat Brackets
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildTeamStatBracket(gameData.team1, isLeft: true),
-              _buildTeamStatBracket(gameData.team2, isLeft: false),
-            ],
+          // Blue Team bracket
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildTeamBracket(context, gameData.team1, isLeftSide: true),
           ),
 
           const SizedBox(height: 16),
 
-          // Placeholder for Cup Layouts Row
+          // Cup layout in center
           _buildCupLayoutsRow(gameData.team1, gameData.team2),
 
           const SizedBox(height: 16),
 
-          // Player Tables Beneath Cup Layout
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildPlayerTable(gameData.team1, isLeft: true),
-              _buildPlayerTable(gameData.team2, isLeft: false, mirrored: true),
-            ],
+          // Red Team bracket (mirrored)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child:
+                _buildTeamBracket(context, gameData.team2, isLeftSide: false),
           ),
 
           const SizedBox(height: 16),
@@ -47,113 +42,114 @@ class CupLayoutTab extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamStatBracket(Team team, {required bool isLeft}) {
+  Widget _buildTeamBracket(BuildContext context, Team team,
+      {required bool isLeftSide}) {
+    final bool isLeft = isLeftSide;
+    final badgeTitles = ["Cups Hit", "Airballs", "Throws", "Misses"];
+
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isLeft
-                ? [Colors.blue.shade700, Colors.grey]
-                : [Colors.grey, Colors.red.shade700],
+                ? [Colors.blue.shade700, Colors.grey.shade800]
+                : [Colors.grey.shade800, Colors.red.shade700],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: team.players.map((player) {
-            return Expanded(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left Column: Avatars + Names stacked vertically
+            Expanded(
+              flex: 4,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment:
+                    isLeft ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                children: team.players.map((player) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: _buildAvatarName(player, alignLeft: isLeft),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            // Right Column: Stat badges stacked vertically aligned with each player
+            Expanded(
+              flex: 6,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  player.user == null
-                      ? const CircleAvatar(
-                          radius: 10,
-                          backgroundColor: Colors.white24,
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 8,
-                          ),
-                        )
-                      : CircleAvatar(
-                          radius: 10,
-                          backgroundColor: Colors.white24,
-                          child: ClipOval(
-                            child: SvgPicture.asset(
-                              player.user!.mapAvatarKeyToAsset(),
-                              fit: BoxFit.cover,
-                              width: 20,
-                              height: 20,
+                  // First row: badge titles above the numbers
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: badgeTitles.map((title) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 8,
+                              color: Colors.white70,
                             ),
                           ),
-                        ),
-                  const SizedBox(height: 4),
-                  Text(
-                    player.name.length > 10
-                        ? "${player.name.substring(0, 9)}…"
-                        : player.name,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                        );
+                      }).toList(),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
                   ),
+
+                  // Then badges rows for each player (only numbers, no labels)
+                  ...team.players.map((player) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: _buildStatBadgesRowOnlyNumbers(player),
+                    );
+                  }),
                 ],
               ),
-            );
-          }).toList(),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPlayerTable(Team team,
-      {required bool isLeft, bool mirrored = false}) {
-    return Column(
-      children: team.players.map((player) {
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          elevation: 4.0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          color: isLeft ? Colors.blue.shade700 : Colors.red.shade700,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                player.user == null
-                    ? const CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.white24,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 8,
-                        ),
-                      )
-                    : CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.white24,
-                        child: ClipOval(
-                          child: SvgPicture.asset(
-                            player.user!.mapAvatarKeyToAsset(),
-                            fit: BoxFit.cover,
-                            width: 20,
-                            height: 20,
-                          ),
-                        ),
-                      ),
-                _buildStatBadge(player.cupsHit.length.toString(), "Cups Hit"),
-                _buildStatBadge(player.airballs.toString(), "Airballs"),
-                _buildStatBadge(player.throws.toString(), "Throws"),
-                _buildStatBadge(player.misses.toString(), "Misses"),
-              ],
+// Build badges row with only numbers, no labels
+  Widget _buildStatBadgesRowOnlyNumbers(Player player) {
+    final stats = [
+      player.cupsHit.length.toString(),
+      player.airballs.toString(),
+      player.throws.toString(),
+      player.misses.toString(),
+    ];
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: stats.map((value) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade800,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
           ),
         );
@@ -161,37 +157,60 @@ class CupLayoutTab extends StatelessWidget {
     );
   }
 
-  Widget _buildStatBadge(String statValue, String statName) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade800,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            statValue,
-            style: const TextStyle(
-                fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
+  Widget _buildAvatarName(Player player, {required bool alignLeft}) {
+    final avatar = player.user == null
+        ? const CircleAvatar(
+            radius: 16,
+            backgroundColor: Colors.white24,
+            child: Icon(Icons.person, color: Colors.white70, size: 18),
+          )
+        : CircleAvatar(
+            radius: 16,
+            backgroundColor: Colors.white24,
+            child: ClipOval(
+              child: SvgPicture.asset(
+                player.user!.mapAvatarKeyToAsset(),
+                fit: BoxFit.cover,
+                width: 32,
+                height: 32,
+              ),
+            ),
+          );
+
+    final nameText = Flexible(
+      child: Text(
+        player.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          fontSize: 12,
+          color: Colors.white,
         ),
-        const SizedBox(height: 4),
-        Text(
-          statName,
-          style: const TextStyle(fontSize: 8, color: Colors.white70),
-        ),
-      ],
+      ),
+    );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: alignLeft
+          ? [
+              avatar,
+              const SizedBox(width: 8),
+              nameText,
+            ]
+          : [
+              nameText,
+              const SizedBox(width: 8),
+              avatar,
+            ],
     );
   }
 
-  /// Placeholder for your actual cup layouts (center content)
   Widget _buildCupLayoutsRow(Team team1, Team team2) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
       child: SizedBox(
         height: 200,
-        width: double.infinity, // 👈 Bounded width to prevent Stack overflow
+        width: double.infinity,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -205,6 +224,13 @@ class CupLayoutTab extends StatelessWidget {
               end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(20.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Stack(
             children: [

@@ -30,142 +30,96 @@ class MatchStatsTab extends StatelessWidget {
         'team1': gameData.team1.players[0].misses.toDouble(),
         'team2': gameData.team2.players[0].misses.toDouble()
       },
-      {
-        'title': 'Accuracy',
-        'team1': 65.0,
-        'team2': 58.0,
-      },
-      {
-        'title': 'Rebounds',
-        'team1': 12.0,
-        'team2': 15.0,
-      },
-      {
-        'title': 'Blocks',
-        'team1': 3.0,
-        'team2': 5.0,
-      },
+      {'title': 'Accuracy', 'team1': 65.0, 'team2': 58.0},
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'Match Stats',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Column(
-            children: stats.map((stat) {
-              double team1Value = stat['team1'] as double;
-              double team2Value = stat['team2'] as double;
-              double maxStatValue =
-                  team1Value > team2Value ? team1Value : team2Value;
+          ...stats.map((stat) {
+            final double team1Value = stat['team1'] as double;
+            final double team2Value = stat['team2'] as double;
+            final double maxValue =
+                (team1Value > team2Value ? team1Value : team2Value)
+                    .clamp(1, double.infinity);
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          team1Value.toString(),
-                          style: const TextStyle(
-                            color: Colors.blueAccent,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+            return Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade600,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.7),
+                    blurRadius: 6,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        team1Value.toInt().toString(),
+                        style: const TextStyle(
+                          color: Colors.white, //Colors.blueAccent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        stat['title'] as String,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        team2Value.toInt().toString(),
+                        style: const TextStyle(
+                          color: Colors.white, // Colors.redAccent,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: (team1Value / maxValue * 100).toInt(),
+                        child: Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: gameData.team1.color,
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        Text(
-                          stat['title'] as String,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        flex: (team2Value / maxValue * 100).toInt(),
+                        child: Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: gameData.team2.color,
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        Text(
-                          team2Value.toString(),
-                          style: const TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 10,
-                            child: Stack(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                                Positioned(
-                                  right: 0,
-                                  left:
-                                      ((team1Value + 1) / (maxStatValue + 1)) *
-                                          100,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: gameData.team1.color,
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: SizedBox(
-                            height: 10,
-                            child: Stack(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey,
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 0,
-                                  right:
-                                      ((team2Value + 1) / (maxStatValue + 1)) *
-                                          100,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: gameData.team2.color,
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
         ],
       ),
     );
