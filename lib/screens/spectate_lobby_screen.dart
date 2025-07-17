@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/screens/live_game_stats_screen.dart';
+import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 
 class ReadOnlyLobbyScreen extends StatelessWidget {
   final String gameId;
@@ -22,7 +22,8 @@ class ReadOnlyLobbyScreen extends StatelessWidget {
             backgroundColor: Colors.black,
             appBar: AppBar(title: const Text("Lobby - Error")),
             body: const Center(
-              child: Text("Error loading game.", style: TextStyle(color: Colors.white)),
+              child: Text("Error loading game.",
+                  style: TextStyle(color: Colors.white)),
             ),
           );
         }
@@ -31,7 +32,8 @@ class ReadOnlyLobbyScreen extends StatelessWidget {
             backgroundColor: Colors.black,
             appBar: AppBar(title: const Text("Lobby")),
             body: const Center(
-              child: Text("Loading game...", style: TextStyle(color: Colors.white)),
+              child: Text("Loading game...",
+                  style: TextStyle(color: Colors.white)),
             ),
           );
         }
@@ -105,7 +107,8 @@ class ReadOnlyLobbyScreen extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: color),
           ),
           const SizedBox(height: 8),
           Column(
@@ -137,14 +140,18 @@ class ReadOnlyLobbyScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("Game Settings",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber)),
           const SizedBox(height: 8),
           Text("Game Mode: $mode", style: const TextStyle(color: Colors.white)),
           const SizedBox(height: 8),
           Text("Special Rules: ${rules.join(', ')}",
               style: const TextStyle(color: Colors.white)),
           const SizedBox(height: 8),
-          Text("Starting Team: $starting", style: const TextStyle(color: Colors.white)),
+          Text("Starting Team: $starting",
+              style: const TextStyle(color: Colors.white)),
         ],
       ),
     );

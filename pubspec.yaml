@@ -135,6 +135,12 @@ flutter:
     - assets/otter_canvas.svg
 
     #-------------------------------------------------------------------
+
+    #---------------- logos --------------------------------------------
+    - assets/hamilton-bulldogs.svg
+    - assets/brevard-county-manatees-1.svg
+
+    #-------------------------------------------------------------------
     - assets/beerpong.jpg
     - assets/animals_beerpong.jpg
     - assets/freinds-playing-beerpong-together.jpg
@@ -168,6 +174,7 @@ flutter:
     - assets/ach_airball.png
     - assets/ach_champion.png
     - assets/background_achievement.png
+    - assets/Meteor.svg
        #   - images/a_dot_ham.jpeg
 
 
