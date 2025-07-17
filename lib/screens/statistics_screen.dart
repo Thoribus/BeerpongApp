@@ -1,13 +1,23 @@
-import 'package:beerpongapp/beerpong_icons_icons.dart';
+//-------------Packages-------------------------
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/screens/live_game_stats_screen.dart';
+import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:provider/provider.dart';
-import '../models/game_statistics.dart';
-import '../models/player.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+//----------------------------------------------
+
+//-------------Models---------------------------
+import '../../models/game_statistics.dart';
+import '../../models/player.dart';
+//----------------------------------------------
+
+//-------------Screens--------------------------
+import 'games/performance_screen.dart';
+import 'games/personal_statistics_screen.dart';
+//----------------------------------------------
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -17,6 +27,9 @@ class StatisticsScreen extends StatefulWidget {
 }
 
 class StatisticsScreenState extends State<StatisticsScreen> {
+  int _currentTabPage = 0; // Default to History tab
+  late final PageController _tabPageController;
+
   List<GameStatistics> games = [];
   bool isLoading = true;
   bool hasError = false;
@@ -25,6 +38,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
+    _tabPageController = PageController(initialPage: _currentTabPage);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     user = userProvider.user!;
     _retrieveGames();
@@ -42,8 +56,61 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     }
   }
 
+  Widget _buildTabPageSelector() {
+    final List<String> tabs = ["Stats", "Performance", "History"];
+
+    return Container(
+      height: 48,
+      width: double.infinity,
+      color: Colors.grey.shade800,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Row(
+        children: tabs.asMap().entries.map((entry) {
+          final index = entry.key;
+          final title = entry.value;
+          final isSelected = _currentTabPage == index;
+
+          return Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() => _currentTabPage = index);
+                  _tabPageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.orange : Colors.grey.shade600,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? Colors.white : Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    user = userProvider.user!;
+
     if (isLoading) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -66,143 +133,20 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: ListView.builder(
-          itemCount: games.length,
-          itemBuilder: (context, index) {
-            final game = games[index];
-            return _buildGameCard(game, index);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGameCard(GameStatistics game, int index) {
-    return Card(
-      color: Colors.amber.withOpacity(0.2),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildGameHeader(game, index),
-            const Divider(color: Colors.grey),
-            _buildTeamSection(game, 'Team 1'),
-            const Divider(color: Colors.grey),
-            _buildTeamSection(game, 'Team 2'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGameHeader(GameStatistics game, int index) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Game ${index + 1}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('dd.MM.yyyy – kk:mm').format(game.date),
-              style: TextStyle(
-                color: Colors.grey[300],
-              ),
-            ),
-          ],
-        ),
-        ElevatedButton(
-          onPressed: () {
-            _showGameDetails(game);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber,
-          ),
-          child: const Text(
-            'Details',
-            style: TextStyle(color: Colors.black),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTeamSection(GameStatistics game, String team) {
-    bool isWinningTeam = game.winningTeam == team;
-    List<Player> players =
-        team == 'Team 1' ? game.team1Players : game.team2Players;
-    Color teamColor = team == 'Team 1' ? Colors.blue : Colors.red;
-    List<Player> allPlayer = game.team1Players + game.team2Players;
-    Player topPlayer =
-        allPlayer.reduce((curr, next) => curr.score > next.score ? curr : next);
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                team,
-                style: TextStyle(
-                  color: teamColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              ...players.map(
-                  (player) => _buildPlayerRow(player, player == topPlayer)),
-            ],
-          ),
-        ),
-        const VerticalDivider(
-          color: Colors.grey,
-          thickness: 1,
-          width: 20,
-        ),
-        Icon(
-          isWinningTeam ? Icons.close : Icons.flag,
-          color: teamColor,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPlayerRow(Player player, bool isTopPlayer) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
+      body: Column(
         children: [
-          Icon(
-            isTopPlayer ? BeerpongIcons.medal : Icons.person,
-            size: 20,
-            color: isTopPlayer ? Colors.amber : Colors.white,
-          ),
-          const SizedBox(width: 8),
+          _buildTabPageSelector(),
           Expanded(
-            child: Text(
-              player.name,
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          Text(
-            '${player.cupsHit.length}',
-            style: TextStyle(
-              color: Colors.grey[300],
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
+            child: PageView(
+              controller: _tabPageController,
+              onPageChanged: (index) {
+                setState(() => _currentTabPage = index);
+              },
+              children: [
+                PersonalStatisticsScreen(user: user!),
+                PerformanceScreen(user: user!),
+                _buildHistoryTab(), // Your original content
+              ],
             ),
           ),
         ],
@@ -210,11 +154,206 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  void _showGameDetails(GameStatistics game) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => GameDetailsPage(game: game),
-    ));
+  Widget _buildGameCard(GameStatistics game, int index) {
+    final bool userWon = (game.winningTeam == 'Team 1'
+        ? game.team1Players.any((p) => p.name == user.username)
+        : game.team2Players.any((p) => p.name == user.username));
+
+    final Color winColor = Colors.greenAccent.shade400;
+    final Color loseColor = Colors.redAccent.shade200;
+
+    int team1Cups =
+        game.team1Players.fold(0, (sum, p) => sum + p.cupsHit.length);
+    int team2Cups =
+        game.team2Players.fold(0, (sum, p) => sum + p.cupsHit.length);
+
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: userWon
+                  ? [winColor, Colors.white]
+                  : [loseColor, Colors.white],
+              begin: Alignment.bottomRight,
+              end: Alignment.topLeft,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(4, 6), // bottom-right style
+              )
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              /// Top Row: Game title + Win/Lose icon (left), Date centered
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        userWon ? Icons.emoji_events : Icons.cancel,
+                        color: userWon
+                            ? Colors.green.shade700
+                            : Colors.red.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Game ${index + 1}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    DateFormat('dd.MM.yyyy – kk:mm').format(game.date),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              /// Avatars Row with Team CupsHit on edges
+              Row(
+                children: [
+                  /// Team 1 CupsHit - left aligned
+                  Text(
+                    '$team1Cups',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+
+                  /// Centered avatars + VS
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ..._buildAvatarList(context, game.team1Players),
+                        const SizedBox(width: 12),
+                        const Text("VS",
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 12),
+                        ..._buildAvatarList(context, game.team2Players),
+                      ],
+                    ),
+                  ),
+
+                  /// Team 2 CupsHit - right aligned
+                  Text(
+                    '$team2Cups',
+                    style: const TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+            ],
+          ),
+        ),
+
+        /// Floating details button in top-right
+        Positioned(
+          top: 4,
+          right: 8,
+          child: IconButton(
+            tooltip: 'Details',
+            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.black87,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.all(8),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => LiveGameStatsScreen(gameId: game.id),
+              ));
+            },
+          ),
+        ),
+      ],
+    );
   }
+
+  Widget _buildHistoryTab() {
+    return ListView.builder(
+      itemCount: games.length,
+      itemBuilder: (context, index) {
+        final game = games[index];
+        return _buildGameCard(game, index);
+      },
+    );
+  }
+}
+
+List<Widget> _buildAvatarList(BuildContext context, List<dynamic> players) {
+  return players.map((player) {
+    String? avatarPath;
+    int cupsHitCount = 0;
+    String playerName = 'Unknown';
+    User? user = player.user;
+
+    if (user != null) {
+      if (user.avatarKey.isNotEmpty) {
+        avatarPath = user.mapAvatarKeyToAsset();
+      }
+    }
+
+    cupsHitCount = player.cupsHit?.length ?? 0;
+    playerName = player.name;
+
+    return GestureDetector(
+      onTap: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(playerName),
+            duration: const Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.white24,
+              child: avatarPath != null && avatarPath.isNotEmpty
+                  ? ClipOval(
+                      child: SvgPicture.asset(
+                        avatarPath,
+                        fit: BoxFit.cover,
+                        width: 32,
+                        height: 32,
+                      ),
+                    )
+                  : const Icon(Icons.person, size: 18, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$cupsHitCount',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }).toList();
 }
 
 class GameDetailsPage extends StatefulWidget {
@@ -322,8 +461,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
     return ElevatedButton(
       onPressed: () {
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => LiveGameStatsScreen(
-              gameId: game.id),
+          builder: (context) => LiveGameStatsScreen(gameId: game.id),
         ));
       },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),

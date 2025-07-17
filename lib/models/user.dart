@@ -6,7 +6,7 @@ class User {
   /// A short descriptor or rank the user can display (e.g., "Beer Pong King").
   String title;
 
-  /// Keys identifying which of your pre-defined images they chose. 
+  /// Keys identifying which of your pre-defined images they chose.
   /// For example, "avatar_1", "avatar_2", "background_blue", etc.
   String avatarKey;
   String backgroundKey;
@@ -87,7 +87,6 @@ class User {
       title: json['title'] ?? '',
       avatarKey: json['avatarKey'] ?? '',
       backgroundKey: json['backgroundKey'] ?? '',
-
       totalScore: (json['totalScore'] ?? 0.0).toDouble(),
       totalMisses: json['totalMisses'] ?? 0,
       totalAirballs: json['totalAirballs'] ?? 0,
@@ -101,6 +100,11 @@ class User {
       friends: List<String>.from(json['friends'] ?? []),
       unlockedTitles: List<String>.from(json['unlockedTitles'] ?? []),
     );
+  }
+
+  String mapAvatarKeyToAsset() {
+    if (avatarKey.isEmpty) return '';
+    return 'assets/avatars/$avatarKey.svg';
   }
 
   /// Creates a copy of this user with optionally updated fields.

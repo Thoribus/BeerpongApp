@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
-import 'package:beerpongapp/screens/base_screen.dart';
+import 'package:beerpongapp/screens/base/base_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 

@@ -55,6 +55,7 @@ dependencies:
   provider: ^6.1.2
   mockito: ^5.4.4
   build_runner: ^2.4.9
+  radar_chart: ^2.1.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.2
@@ -86,6 +87,60 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    #---------------- avatars ------------------------------------------
+    - assets/avatars/avatar_catbeer.svg
+    - assets/avatars/avatar_catpants.svg
+    - assets/avatars/avatar_cheering.svg
+    - assets/avatars/avatar_frogisland.svg
+    - assets/avatars/avatar_aggroracoon.svg
+    - assets/avatars/avatar_cupbeer.svg
+    - assets/avatars/blue_team.svg
+    - assets/avatars/red_team.svg
+
+    - assets/avatars/avatar_catbeer.png
+    - assets/avatars/avatar_catpants.png
+    - assets/avatars/avatar_cheering.png
+    - assets/avatars/avatar_frogisland.png
+    - assets/avatars/avatar_aggroracoon.png
+    - assets/avatars/avatar_cupbeer.png
+    #-------------------------------------------------------------------
+
+    #---------------- achievements -------------------------------------
+    - assets/ach_wins.png
+    - assets/ach_loses.png
+    - assets/ach_friends.png
+    - assets/ach_lost.png
+    - assets/ach_airball.png
+    - assets/ach_champion.png
+
+    - assets/achievements/ach_holyknight.png
+    - assets/achievements/ach_animalparty.png
+    - assets/achievements/ach_catblock.png
+    - assets/achievements/ach_catsniper.png
+    - assets/achievements/ach_moletable.png
+    - assets/achievements/ach_racoontrophy.png
+    - assets/achievements/ach_cheersshot.png
+    - assets/achievements/ach_sadlooser.png
+    - assets/achievements/ach_twerkfrog.png
+    - assets/achievements/ach_header.png
+
+    #-------------------------------------------------------------------
+
+    #---------------- ruledesign ---------------------------------------
+    - assets/two_cats.svg
+    - assets/home_animals.svg
+    - assets/cat_boxing.svg
+    - assets/frog_island.svg
+    - assets/racoon_winner.svg
+    - assets/otter_canvas.svg
+
+    #-------------------------------------------------------------------
+
+    #---------------- logos --------------------------------------------
+    - assets/hamilton-bulldogs.svg
+    - assets/brevard-county-manatees-1.svg
+
+    #-------------------------------------------------------------------
     - assets/beerpong.jpg
     - assets/animals_beerpong.jpg
     - assets/freinds-playing-beerpong-together.jpg
@@ -96,22 +151,20 @@ flutter:
     - assets/frog_island.svg
     - assets/racoon_winner.svg
     - assets/otter_canvas.svg
-    - assets/podium.svg
+    - assets/emblems/podium.svg
     - assets/avatars/bunny.png
     - assets/avatars/cat.png
     - assets/avatars/dog.png
     - assets/avatars/raccoon.png
     - assets/avatars/eagle.png
     - assets/avatars/frog.png
-    - assets/avatars/avatar_catbeer.svg
-    - assets/avatars/avatar_catpants.svg
-    - assets/avatars/avatar_cheering.svg
-    - assets/avatars/avatar_frogisland.svg
-    - assets/avatars/avatar_aggroracoon.svg
-    - assets/avatars/avatar_cupbeer.svg
-    - assets/avatar_border.svg
+    - assets/borders/avatar_border.svg
     - assets/slanted-gradient.svg
+    - assets/podium_background.svg
+    - assets/podium_nobackground.svg
     - assets/cat_avatar_profile.svg
+    - assets/sun-tornado.svg
+    - assets/sun-tornado.png
     - assets/liquid-cheese.svg
     - assets/liquid-cheese.png
     - assets/ach_wins.png
@@ -121,6 +174,7 @@ flutter:
     - assets/ach_airball.png
     - assets/ach_champion.png
     - assets/background_achievement.png
+    - assets/Meteor.svg
        #   - images/a_dot_ham.jpeg
 
 

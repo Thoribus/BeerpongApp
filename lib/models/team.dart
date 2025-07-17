@@ -9,6 +9,8 @@ class Team {
   List<Cup> cups;
   bool isRearranged;
   bool canIslandShot;
+  int wins;
+  int losses;
 
   Team({
     required this.color,
@@ -17,6 +19,8 @@ class Team {
     this.currentPlayers = const [],
     this.isRearranged = false,
     this.canIslandShot = true,
+    this.wins = 0,
+    this.losses = 0,
   });
 
   List<Player> rotatePlayers() {
@@ -42,9 +46,11 @@ class Team {
       'colorValue': color.value, // store color as int
       'players':
           players.map((p) => p.toJson()).toList(), // store players in JSON
-      'cups': cups.map((c) => c.toJson()).toList(),  // store cups in JSON
+      'cups': cups.map((c) => c.toJson()).toList(), // store cups in JSON
       'isRearranged': isRearranged,
       'canIslandShot': canIslandShot,
+      'wins': wins,
+      'losses': losses,
     };
   }
 
@@ -65,6 +71,8 @@ class Team {
           : [],
       isRearranged: data['isRearranged'] as bool? ?? false,
       canIslandShot: data['canIslandShot'] as bool? ?? true,
+      wins: data['wins'] != null ? data['wins'] as int : 0,
+      losses: data['losses'] != null ? data['losses'] as int : 0,
       // currentPlayers is ephemeral; typically rebuilt via rotatePlayers().
       // but you could store it if you want to preserve exact rotation
     );
@@ -78,7 +86,29 @@ class Team {
       currentPlayers: currentPlayers.map((p) => p.clone()).toList(),
       isRearranged: isRearranged,
       canIslandShot: canIslandShot,
+      wins: wins,
+      losses: losses,
     );
+  }
+
+  Team copyWith(
+      {Color? color,
+      List<Player>? players,
+      List<Player>? currentPlayers,
+      List<Cup>? cups,
+      bool? isRearranged,
+      bool? canIslandShot,
+      int? wins,
+      int? losses}) {
+    return Team(
+        color: color ?? this.color,
+        players: players ?? this.players,
+        currentPlayers: currentPlayers ?? this.currentPlayers,
+        cups: cups ?? this.cups,
+        isRearranged: isRearranged ?? this.isRearranged,
+        canIslandShot: canIslandShot ?? this.canIslandShot,
+        wins: wins ?? this.wins,
+        losses: losses ?? this.losses);
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:beerpongapp/screens/achievements_screen.dart';
+import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/screens/profile/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -8,7 +9,6 @@ import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
-import 'package:percent_indicator/percent_indicator.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 
@@ -20,19 +20,21 @@ class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
     required this.id,
-    required this.players1,
-    required this.players2,
+    required this.team1,
+    required this.team2,
     required this.selectedRules,
     required this.startingTeam,
     required this.invitations,
+    required this.tournamentId,
   });
 
   final String id;
-  final List<Player> players1;
-  final List<Player> players2;
+  final Team team1;
+  final Team team2;
   final Map<String, bool> selectedRules;
   final bool startingTeam;
   final List<String> invitations;
+  final String tournamentId;
 
   @override
   State<GameScreen> createState() => GameScreenState();
@@ -43,6 +45,7 @@ class GameScreenState extends State<GameScreen> {
   late String id;
   late Map<String, bool> selectedRules;
   late List<String> invitations;
+  late String tournamentId;
 
   late Team team1;
   late Team team2;
@@ -60,17 +63,39 @@ class GameScreenState extends State<GameScreen> {
 
   //region ----- Page/Undo/Loading State -----
   final List<Map<String, dynamic>> _actionStack = [];
+  final List<String> _events = [];
   final PageController _pageController = PageController();
   int _currentPage = 0;
   late Future<void> _loadGameFuture;
   //endregion
 
   //region ----- Lifecycle -----
+
+  //animation testing
+  late Alignment beginAlignment;
+  late Alignment endAlignment;
+
+  //new button arrangement
+  bool _showExpandedButtons = false;
+
   @override
   void initState() {
     super.initState();
     _loadGameFuture = _loadGameState();
     _pageController.addListener(_handlePageChange);
+
+    // Initialize the gradient direction
+    beginAlignment = Alignment.topLeft;
+    endAlignment = Alignment.bottomRight;
+  }
+
+  // Function to toggle gradient direction
+  void toggleGradientDirection() {
+    setState(() {
+      final temp = beginAlignment;
+      beginAlignment = endAlignment;
+      endAlignment = temp;
+    });
   }
 
   @override
@@ -83,12 +108,18 @@ class GameScreenState extends State<GameScreen> {
           isTeamOneTurn: isTeamOneTurn,
           islandShotActive: islandShotActive,
           invitations: invitations,
-          selectedRules: selectedRules); // Save if the game hasn't ended
+          selectedRules: selectedRules,
+          tournamendId: tournamentId);
     }
     _pageController.dispose();
     super.dispose();
   }
   //endregion
+
+  // Custom WaterSplash Animation widget
+  Widget _buildWaterSplash() {
+    return const WaterSplashAnimation(); // The widget handling the splash
+  }
 
   //region ----- Page Controller Logic -----
   void _handlePageChange() {
@@ -106,23 +137,14 @@ class GameScreenState extends State<GameScreen> {
       // No saved data -> init teams from scratch
       setState(() {
         id = widget.id;
-        team1 = Team(
-          color: Colors.blue,
-          players: widget.players1,
-          cups: List.generate(
-              10, (index) => Cup(index: index, color: Colors.blue)),
-        );
-        team2 = Team(
-          color: Colors.red,
-          players: widget.players2,
-          cups: List.generate(
-              10, (index) => Cup(index: index, color: Colors.red)),
-        );
+        team1 = widget.team1;
+        team2 = widget.team2;
         isTeamOneTurn = widget.startingTeam;
         currentTeam = isTeamOneTurn ? team1 : team2;
         currentTeam.currentPlayers = currentTeam.rotatePlayers();
         invitations = widget.invitations;
         selectedRules = widget.selectedRules;
+        tournamentId = widget.tournamentId;
       });
       return;
     }
@@ -218,6 +240,7 @@ class GameScreenState extends State<GameScreen> {
   /// Checks if a player is “On Fire” (3 consecutive hits) and shows a dialog.
   void _checkOnFire(Player player) {
     if (player.isOnFire()) {
+      addEvent("On Fire", currentTeam, player);
       DialogHelpers.showOnFireDialog(this);
     }
   }
@@ -230,6 +253,7 @@ class GameScreenState extends State<GameScreen> {
           player.resetHitThisRound();
         }
       });
+      addEvent("Balls Back", currentTeam, null);
       DialogHelpers.showBallsBackDialog(this);
     }
   }
@@ -240,6 +264,7 @@ class GameScreenState extends State<GameScreen> {
             .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
         index == 4 &&
         currentTeam.cups.length == 10) {
+      addEvent("Bitchcup", currentTeam, null);
       DialogHelpers.showBitchCupDialog(this);
     }
   }
@@ -285,8 +310,9 @@ class GameScreenState extends State<GameScreen> {
       DialogHelpers.showRearrangeErrorDialog(this);
       return;
     }
-
+    addEvent("Rearranged", currentTeam, null);
     saveCurrentState();
+
     setState(() {
       if (!currentTeam.isRearranged) {
         // Filter only cups that match the current color & are visible
@@ -385,6 +411,7 @@ class GameScreenState extends State<GameScreen> {
       'Select Player and Shot Result',
       currentTeam.currentPlayers,
       (player) {
+        addEvent("Island Shot", currentTeam, player);
         saveCurrentState();
         // If chosen player == currentIslandShooter => island “power shot”
         if (player == currentIslandShooter) {
@@ -466,7 +493,7 @@ class GameScreenState extends State<GameScreen> {
     if (!allCupsGone) return; // Not all cups are gone => do nothing
 
     // If “Nachwurf” is active and we’re not on the special extra cup => let enemy defend
-    if (selectedRules['Nachwurf'] == true && cupIndex != 11) {
+    if (selectedRules['Putback'] == true && cupIndex != 11) {
       final enemyHit = await _handleNachwurf(cupIndex);
       if (enemyHit) {
         // The enemy canceled the last cup => revert and do NOT end the game
@@ -484,9 +511,31 @@ class GameScreenState extends State<GameScreen> {
       winner = blueTeamWin ? 'Team 1' : 'Team 2';
     });
     _setPlayerHitLastCup(player);
+    if (winner == 'Team 1') {
+      team1.wins++;
+      team2.losses++;
+    }
+    else{
+      team2.wins++;
+      team1.losses++;
+    }
 
     await GamePersistence.clearGameState(false);
     await _saveGameStatistics();
+
+    // If Tournament, return to tournament overview
+    if (tournamentId != "") {
+      TournamentMatch match = TournamentMatch(
+          id: id,
+          team1: team1,
+          team2: team2,
+          winner: winner == "Team 1" ? team1 : team2,
+          played: true,
+          selectedRules: selectedRules,
+          invitations: invitations);
+      Navigator.pop(context, {'match': match});
+      return;
+    }
 
     // Instead of showGameEndDialog, let’s push GameHighlightsScreen
     await DialogHelpers.showGameEndDialog(context, currentTeam.players);
@@ -508,6 +557,7 @@ class GameScreenState extends State<GameScreen> {
     // If chosenPlayer != null => enemyHit = true => revert the last cup
     if (chosenPlayer != null) {
       setState(() => chosenPlayer.defended++);
+      addEvent("Defended", currentTeam, chosenPlayer);
       saveCurrentState();
       _removeLastCupHit(cupIndex);
       return true; // enemyHit
@@ -557,12 +607,14 @@ class GameScreenState extends State<GameScreen> {
 
   /// Handle what happens when a player throws an airball.
   void _handleAirballRule(Player player) {
+    addEvent("Airball", currentTeam, player);
     saveCurrentState();
     _incrementPlayerAirballs(player);
   }
 
   /// Handle what happens when a player hits a cup.
   void _handleNormalHit(Player player, int cupIndex) {
+    addEvent("Normal Hit", currentTeam, player);
     saveCurrentState();
     _addCupToPlayer(player, cupIndex);
     _incrementPlayerThrows(player);
@@ -575,6 +627,7 @@ class GameScreenState extends State<GameScreen> {
 
   /// Handle what happens when a player hits the Death Cup.
   void _handleDeathCup(Player player) {
+    addEvent("Death Cup", currentTeam, player);
     saveCurrentState();
     for (final cup in currentTeam.cups) {
       if (cup.color == currentTeam.color) {
@@ -589,21 +642,6 @@ class GameScreenState extends State<GameScreen> {
   //endregion
 
   //region ----- Undo/Redo Stack -----
-
-  List<Map<String, dynamic>> convertActionStackToJson(List<Map<String, dynamic>> actionStack) {
-    final List<Map<String, dynamic>> actionStackJson = [];
-    for (final state in actionStack) {
-      actionStackJson.add({
-        'team1': state['team1'].toJson(),
-        'team2': state['team2'].toJson(),
-        'isTeamOneTurn': state['isTeamOneTurn'],
-        'islandShotActive': state['islandShotActive'],
-        'currentIslandShooter': state['currentIslandShooter']?.toJson(),
-      });
-    }
-    return actionStackJson;
-  }
-
   void saveCurrentState() async {
     _actionStack.add({
       'team1': team1.clone(),
@@ -611,10 +649,23 @@ class GameScreenState extends State<GameScreen> {
       'isTeamOneTurn': isTeamOneTurn,
       'islandShotActive': islandShotActive,
       'currentIslandShooter': currentIslandShooter,
+      'events': _events,
     });
 
-    await FirestoreService()
-        .updateGameDoc(id, team1: team1, team2: team2, winner: winner, actionStack: convertActionStackToJson(_actionStack));
+    setState(() {
+      _events.clear();
+    });
+    await FirestoreService().updateGameDoc(id, team1: team1, team2: team2);
+  }
+
+  void addEvent(String eventType, Team team, Player? player) async {
+    final event =
+        await FirestoreService().addEvent(id, eventType, team, player);
+    _events.add(event);
+  }
+
+  void removeEvent(String event) async {
+    FirestoreService().deleteEvent(id, event);
   }
 
   void _undoLastAction() async {
@@ -627,14 +678,14 @@ class GameScreenState extends State<GameScreen> {
       isTeamOneTurn = lastState['isTeamOneTurn'];
       islandShotActive = lastState['islandShotActive'];
       currentIslandShooter = lastState['currentIslandShooter'];
+      for (final event in lastState['events']) {
+        removeEvent(event);
+      }
 
       currentTeam = isTeamOneTurn ? team1 : team2;
       WidgetsBinding.instance
           .addPostFrameCallback((_) => _updateIslandBackgroundColor());
     });
-
-    await FirestoreService()
-        .updateGameDoc(id, team1: team1, team2: team2, winner: winner, actionStack: convertActionStackToJson(_actionStack));
   }
   //endregion
 
@@ -664,8 +715,7 @@ class GameScreenState extends State<GameScreen> {
           player.isWinner = true;
         });
       }
-    }
-    else {
+    } else {
       for (final player in team2.players) {
         setState(() {
           player.isWinner = true;
@@ -682,7 +732,6 @@ class GameScreenState extends State<GameScreen> {
       AchievementsScreen.checkAchievements(user);
     }
 
-
     FirestoreService()
         .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
 
@@ -690,7 +739,6 @@ class GameScreenState extends State<GameScreen> {
     for (String invitationId in invitations) {
       FirestoreService().deleteGameInvitation(invitationId);
     }
-
 
     // Update current user in UserProvider if found in updatedUsers
     final userExists = updatedUsers.any((u) => u.id == userProvider.user?.id);
@@ -734,7 +782,7 @@ class GameScreenState extends State<GameScreen> {
           }
         },
       ),
-      bottomNavigationBar: _buildBottomAppBar(),
+      bottomNavigationBar: _buildBottomAppBar(), // Existing bottom ba
     );
   }
 
@@ -747,7 +795,7 @@ class GameScreenState extends State<GameScreen> {
         style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
-      backgroundColor: Colors.amber.withOpacity(0.75),
+      backgroundColor: const Color(0xFFF0AE1D),
       actions: [
         IconButton(
           icon: const Icon(Icons.scatter_plot_outlined),
@@ -793,7 +841,6 @@ class GameScreenState extends State<GameScreen> {
     }
   }
 
-  /// The main “Game Table” page: cups layout, players, special rules.
   Widget _buildCurrentGamePage() {
     return LayoutBuilder(builder: (context, constraints) {
       return Stack(
@@ -808,11 +855,14 @@ class GameScreenState extends State<GameScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16.0),
                 gradient: LinearGradient(
-                  colors: [Colors.brown.shade700, Colors.brown.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.amber.withOpacity(0.2),
+                    Colors.grey.shade600,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                border: Border.all(color: Colors.white, width: 4.0),
+                border: Border.all(color: Colors.white, width: 2.0),
               ),
               child: Column(
                 children: [
@@ -856,56 +906,62 @@ class GameScreenState extends State<GameScreen> {
             top: 20.0,
             left: 16.0,
             right: 16.0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Deathcup (if applicable) or placeholder
-                if (selectedRules["Deathcup"] == true)
-                  FloatingActionButton(
-                    onPressed: () => DialogHelpers.showDeathcupSelectionDialog(
-                        this, currentTeam, (player) => _handleDeathCup(player)),
-                    backgroundColor: Colors.amber,
-                    heroTag: "Deathcup",
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(20),
-                        bottomLeft: Radius.circular(100),
-                        bottomRight: Radius.circular(100),
-                        topLeft: Radius.circular(100),
+            child: Container(
+              width: constraints.maxWidth -
+                  32.0, // Explicit width based on parent container
+              height: 77.0, // Adjust height to avoid overlap with table area
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16.0), // Rounded corners
+                border:
+                    Border.all(color: Colors.white, width: 2.0), // White border
+                gradient: LinearGradient(
+                  colors: [
+                    currentTeam == team1 ? team2.color : team1.color,
+                    Colors.grey
+                  ], // Gradient colors
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+              padding: const EdgeInsets.all(8.0), // Padding around the buttons
+              child: Stack(
+                children: [
+                  // Water splash animation (placed behind the Airball button)
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: WaterSplashAnimation(
+                        splashColor:
+                            Colors.white, // Set the splash color to white
+                      ), // Splash effect only in this area
+                    ),
+                  ),
+
+                  // Airball button in the middle
+                  Positioned.fill(
+                    child: Center(
+                      child: FloatingActionButton.extended(
+                        heroTag: "airball",
+                        onPressed: () =>
+                            DialogHelpers.showAirballPlayerSelectionDialog(
+                          this,
+                          currentTeam,
+                          (player) => _handleAirballRule(player),
+                        ),
+                        tooltip: 'Airball',
+                        backgroundColor:
+                            Colors.transparent, // Clear the background color
+                        elevation: 0, // Remove the shadow
+                        label: const Text(
+                          'Airball Area',
+                          style: TextStyle(
+                              color:
+                                  Colors.black), // Text color can be customized
+                        ),
                       ),
                     ),
-                    child: const Icon(BeerpongIcons.skull, size: 35),
-                  )
-                else
-                  const SizedBox(width: 56.0), // placeholder
-
-                // Airball button in the middle
-                FloatingActionButton.extended(
-                  backgroundColor: Colors.amber,
-                  heroTag: "airball",
-                  onPressed: () =>
-                      DialogHelpers.showAirballPlayerSelectionDialog(this,
-                          currentTeam, (player) => _handleAirballRule(player)),
-                  tooltip: 'Airball',
-                  label: const Text('Airball'),
-                  icon: const Icon(BeerpongIcons.airball, size: 45),
-                ),
-
-                // Island (if applicable) or placeholder
-                if (selectedRules["Island"] == true)
-                  FloatingActionButton(
-                    backgroundColor: islandBackgroundColor,
-                    heroTag: "Island",
-                    onPressed: currentTeam.canIslandShot &&
-                            currentTeam.cups
-                                .any((c) => c.isVisible && _isIslandCup(c))
-                        ? _highlightIslandCups
-                        : null, // disable if not available
-                    child: const Icon(BeerpongIcons.palm_tree, size: 45),
-                  )
-                else
-                  const SizedBox(width: 56.0), // placeholder
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -913,69 +969,93 @@ class GameScreenState extends State<GameScreen> {
     });
   }
 
-  /// Builds a player name widget with consistent styling.
   Widget _buildPlayerName(Player player) {
-    return Container(
-      padding: const EdgeInsets.all(8.0), // Inner padding
-      decoration: BoxDecoration(
-        color: Colors.brown.shade600, // Background color for card
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.5), // Semi-transparent border
-          width: 0.5,
-        ),
-        borderRadius: BorderRadius.circular(8.0), // Rounded corners
+    return TweenAnimationBuilder<Alignment>(
+      tween: AlignmentTween(
+        begin: beginAlignment, // Add your starting alignment
+        end: endAlignment, // Add your ending alignment
       ),
-      child: Row(
-        children: [
-          player.user == null
-              ? const CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.white24,
-                  child: Icon(Icons.person, color: Colors.white),
-                )
-              : CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.white24,
-                  child: ClipOval(
-                    child: SvgPicture.asset(
-                      _mapAvatarKeyToAsset(player.user!.avatarKey),
-                      fit: BoxFit.cover,
-                      width: 20 * 2,
-                      height: 20 * 2,
-                    ),
-                  ),
-                ),
-          const SizedBox(width: 8.0), // Space between avatar and text
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  player.name.length > 13
-                      ? '${player.name.substring(0, 12)}...' // Truncate long names
-                      : player.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.0,
-                  ),
-                  overflow: TextOverflow.ellipsis, // Handles very long names
-                ),
-                const SizedBox(height: 4.0),
-                const Text(
-                  'Level: 1', // Dummy level
-                  style: TextStyle(color: Colors.grey, fontSize: 12.0),
-                ),
+      duration: const Duration(seconds: 5),
+      onEnd: () {
+        setState(() {
+          // Swap gradient direction after animation ends
+          final temp = beginAlignment;
+          beginAlignment = endAlignment;
+          endAlignment = temp;
+        });
+      },
+      builder: (context, alignment, child) {
+        return Container(
+          padding: const EdgeInsets.all(8.0), // Inner padding
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                currentTeam.color,
+                Colors.grey.shade600,
               ],
+              begin: alignment,
+              end: Alignment.center,
             ),
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.5), // Semi-transparent border
+              width: 0.5,
+            ),
+            borderRadius: BorderRadius.circular(8.0), // Rounded corners
           ),
-        ],
-      ),
+          child: Row(
+            children: [
+              player.user == null
+                  ? const CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white24,
+                      child: Icon(Icons.person, color: Colors.white),
+                    )
+                  : CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.white24,
+                      child: ClipOval(
+                        child: SvgPicture.asset(
+                          _mapAvatarKeyToAsset(player.user!.avatarKey),
+                          fit: BoxFit.cover,
+                          width: 20 * 2,
+                          height: 20 * 2,
+                        ),
+                      ),
+                    ),
+              const SizedBox(width: 8.0), // Space between avatar and text
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      player.name.length > 13
+                          ? '${player.name.substring(0, 12)}...' // Truncate long names
+                          : player.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.0,
+                      ),
+                      overflow:
+                          TextOverflow.ellipsis, // Handles very long names
+                    ),
+                    const SizedBox(height: 4.0),
+                    const Text(
+                      'Level: 1', // Dummy level
+                      style: TextStyle(color: Colors.grey, fontSize: 12.0),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  /// The “Game Stats” page showing a DataTable and hit rate chart.
+  /// The "Game Stats" page showing possible game actions and team brackets.
   Widget _buildGameStatsPage(Color teamColor) {
     return Container(
       color: Colors.black,
@@ -986,63 +1066,24 @@ class GameScreenState extends State<GameScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Team Statistic',
+                'Upcoming Actions',
                 style: TextStyle(
                     color: Colors.amber,
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold),
               ),
-              const Divider(color: Colors.amber, thickness: 1),
               const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(
-                        label: Text('Player',
-                            style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('S', style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('M', style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('T', style: TextStyle(color: Colors.white))),
-                    DataColumn(
-                        label:
-                            Text('A', style: TextStyle(color: Colors.white))),
-                  ],
-                  rows: currentTeam.players.map((player) {
-                    return DataRow(
-                      cells: [
-                        DataCell(Row(
-                          children: [
-                            Icon(Icons.person, color: teamColor),
-                            const SizedBox(width: 8),
-                            Text(
-                              player.name,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        )),
-                        DataCell(Text('${player.score}',
-                            style: const TextStyle(color: Colors.white))),
-                        DataCell(Text('${player.misses}',
-                            style: const TextStyle(color: Colors.white))),
-                        DataCell(Text('${player.throws}',
-                            style: const TextStyle(color: Colors.white))),
-                        DataCell(Text('${player.airballs}',
-                            style: const TextStyle(color: Colors.white))),
-                      ],
-                    );
-                  }).toList(),
-                ),
+              _buildGameActions(currentTeam.players),
+              const SizedBox(height: 10),
+              const Text(
+                'Team Statistics',
+                style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 50),
-              _buildHitRateChart(teamColor),
+              const SizedBox(height: 10),
+              _buildTeamBrackets(),
             ],
           ),
         ),
@@ -1050,98 +1091,528 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// Builds a grid of CircularPercentIndicators for each player’s hit rate.
-  Widget _buildHitRateChart(Color teamColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Hit Rate (%)',
-          style: TextStyle(
-              color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const Divider(color: Colors.amber, thickness: 1),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 200,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: currentTeam.players.length,
-            itemBuilder: (context, index) {
-              final player = currentTeam.players[index];
-              final hitRate = _calculateHitRate(player.score, player.throws);
-              final displayHitRate = hitRate.clamp(0, 100);
+  /// Displays possible game actions for this turn.
+  Widget _buildGameActions(List<Player> players) {
+    // Define actions with their properties
+    List<Map<String, dynamic>> actions = [
+      {
+        'actionTitle': 'Bitchcup',
+        'progressText': 'loosen your belt',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': 'Team Blue',
+        'playerIcon': Icons.dry_cleaning_outlined,
+        'progressValue': 0.7, // create when 2 of 3 airballs are hit
+        'isActive': false,
+      },
+      {
+        'actionTitle': 'On fire',
+        'progressText': 'get your balls back',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': '2 in a row',
+        'playerIcon': Icons.local_fire_department,
+        'progressValue': 0.7, // create when 2 of 3 airballs are hit
+        'isActive': true,
+      },
+      {
+        'actionTitle': '3rd Airball',
+        'progressText': '1 airball until shot',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': 'Team Red',
+        'playerIcon': BeerpongIcons.airball,
+        'progressValue': 0.5,
+        'isActive': false,
+      },
+      {
+        'actionTitle': 'Island',
+        'progressText': 'One hit for two cups',
+        'teamColor': currentTeam.color,
+        'playerName': players[0].name,
+        'teamName': '2 ready',
+        'playerIcon': BeerpongIcons.palm_tree,
+        'progressValue': 0.8,
+        'isActive': currentTeam.canIslandShot,
+      },
+    ];
 
-              return Column(
-                children: [
-                  Text(player.name,
-                      style: const TextStyle(color: Colors.white)),
-                  Expanded(
-                    child: CircularPercentIndicator(
-                      radius: 50.0,
-                      lineWidth: 10.0,
-                      animation: true,
-                      percent: displayHitRate / 100.0, // clamp to [0..1]
-                      center: Text(
-                        "${hitRate.toStringAsFixed(1)}%",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14.0,
-                            color: teamColor),
-                      ),
-                      circularStrokeCap: CircularStrokeCap.round,
-                      progressColor: teamColor,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
+    return Column(
+      children: actions
+          .where((action) => action['isActive'] == true)
+          .map((action) => _buildActionBracket(action))
+          .toList(),
     );
   }
 
-  /// Bottom navigation with Undo, Rearrange, End Turn.
-  Widget _buildBottomAppBar() {
-    return BottomAppBar(
-      color: Colors.black,
+  /// Builds an individual action bracket.
+  Widget _buildActionBracket(Map<String, dynamic> actionData) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.amberAccent, Colors.grey],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Undo
-          FloatingActionButton(
-            backgroundColor: Colors.amber,
-            heroTag: "undo",
-            onPressed: _undoLastAction,
-            tooltip: 'Go Back one turn.',
-            child: const Icon(Icons.undo),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  actionData['actionTitle'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: actionData['progressText'],
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: actionData['teamColor'],
+                        ),
+                      ),
+                      const TextSpan(
+                        text: ' - ',
+                        style: TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                      TextSpan(
+                        text: '${actionData['playerName']} is making a move',
+                        style:
+                            const TextStyle(fontSize: 14, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
-          // Rearrange
-          FloatingActionButton.extended(
-            backgroundColor: Colors.amber,
-            heroTag: "rearrange",
-            onPressed: toggleRearranged,
-            tooltip: 'Rearrange the current cups.',
-            label: const Text('Rearrange'),
-            icon: const Icon(BeerpongIcons.umstellen, size: 35),
-          ),
-          // End Turn
-          FloatingActionButton.extended(
-            backgroundColor: Colors.amber,
-            heroTag: "end",
-            onPressed: () => DialogHelpers.confirmEndTurn(this),
-            tooltip: 'All cups selected. Next turn.',
-            label: const Text('End Turn'),
-            icon: const Icon(Icons.check_rounded),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: actionData['teamColor'].withOpacity(0.2),
+                child: Icon(actionData['playerIcon'],
+                    color: actionData['teamColor']),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                actionData['teamName'],
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-  //endregion
+
+  /// Displays team brackets at the bottom.
+  Widget _buildTeamBrackets() {
+    return Column(
+      children: [
+        _buildTeamBracket('Team Blue', Colors.blue, team1.players),
+        const SizedBox(height: 20),
+        _buildTeamBracket('Team Red', Colors.red, team2.players),
+      ],
+    );
+  }
+
+  /// Builds a single team bracket section with a gradient background.
+  Widget _buildTeamBracket(String teamName, Color color, List<Player> players) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color, Colors.grey],
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              teamName,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Table(
+              border: const TableBorder.symmetric(
+                  outside: BorderSide.none, inside: BorderSide.none),
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(1),
+                2: FlexColumnWidth(1),
+                3: FlexColumnWidth(1),
+                4: FlexColumnWidth(1),
+              },
+              children: [
+                TableRow(
+                  decoration:
+                      BoxDecoration(color: Colors.white.withOpacity(0.2)),
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('Player',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('S',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('A',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('T',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('M',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center),
+                    ),
+                  ],
+                ),
+                ...players.map((player) => TableRow(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(player.name,
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.score}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.airballs}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.throws}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text('${player.misses}',
+                              style: const TextStyle(color: Colors.white),
+                              textAlign: TextAlign.center),
+                        ),
+                      ],
+                    )),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomAppBar() {
+    return BottomAppBar(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          // Main row of buttons (Undo, Rearrange, End Turn)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildBottomButton(
+                  onPressed: _undoLastAction,
+                  tooltip: 'Undo last move',
+                  icon: Icons.undo,
+                  label: 'undo',
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                _buildBottomButton(
+                  onPressed: () {
+                    setState(() {
+                      _showExpandedButtons = !_showExpandedButtons;
+                    });
+                  },
+                  tooltip: 'More Options',
+                  icon: Icons.scatter_plot_outlined,
+                  label: 'action',
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade700, Colors.green.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                _buildBottomButton(
+                  onPressed: () => DialogHelpers.confirmEndTurn(this),
+                  tooltip: 'End turn',
+                  icon: Icons.check_rounded,
+                  label: 'end',
+                  gradient: LinearGradient(
+                    colors: [Colors.red.shade700, Colors.red.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Expanded Buttons (Appears on top of the BottomAppBar, like a dialog)
+          if (_showExpandedButtons)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _showExpandedButtons =
+                      false; // Dismiss the buttons when tapping outside
+                });
+              },
+              child: Container(
+                color: Colors.black.withOpacity(
+                    0.5), // Semi-transparent overlay to close on tap
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (selectedRules["Deathcup"] == true)
+                        _buildExpandedButton(
+                          onPressed: () =>
+                              DialogHelpers.showDeathcupSelectionDialog(
+                                  this,
+                                  currentTeam,
+                                  (player) => _handleDeathCup(player)),
+                          tooltip: 'Deathcup',
+                          icon: BeerpongIcons.skull,
+                          color:
+                              currentTeam == team1 ? team2.color : team1.color,
+                        ),
+                      const SizedBox(width: 20),
+                      _buildExpandedButton(
+                        onPressed: toggleRearranged,
+                        tooltip: 'Rearrange the cups.',
+                        icon: Icons.scatter_plot_outlined,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: 20),
+                      if (selectedRules["Island"] == true)
+                        _buildExpandedButton(
+                          onPressed: currentTeam.canIslandShot &&
+                                  currentTeam.cups.any(
+                                      (c) => c.isVisible && _isIslandCup(c))
+                              ? _highlightIslandCups
+                              : null,
+                          tooltip: 'Island Cup',
+                          icon: BeerpongIcons.palm_tree,
+                          color: islandBackgroundColor,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpandedButton({
+    required VoidCallback? onPressed,
+    required String tooltip,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: FloatingActionButton(
+        onPressed: onPressed,
+        backgroundColor: color,
+        heroTag: tooltip,
+        elevation: 4,
+        shape: const CircleBorder(
+          side: BorderSide(
+            color: Colors.white, // White border with width 2
+            width: 2.0, // Border width
+          ),
+        ),
+        child: Icon(icon, color: Colors.black, size: 30),
+      ),
+    );
+  }
+
+  Widget _buildBottomButton({
+    required VoidCallback onPressed,
+    required String tooltip,
+    required IconData icon,
+    required String label,
+    required Gradient gradient,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: FloatingActionButton(
+        backgroundColor:
+            Colors.transparent, // Remove solid color to show the gradient
+        onPressed: onPressed,
+        heroTag: label.isEmpty
+            ? 'undo'
+            : label.toLowerCase(), // Unique heroTag for each button
+        elevation: 6, // Slight elevation for depth
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30)), // Rounded edges
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: gradient, // Apply the gradient here
+            borderRadius: BorderRadius.circular(30), // Rounded corners
+          ),
+          child: Container(
+            width: 56,
+            height: 56,
+            alignment: Alignment.center,
+            child: label.isEmpty
+                ? Icon(icon, size: 30, color: Colors.white)
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 30, color: Colors.white),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+//endregion
+
+class WaterSplashAnimation extends StatefulWidget {
+  final Color splashColor; // Add splashColor parameter
+
+  const WaterSplashAnimation({super.key, this.splashColor = Colors.blue});
+
+  @override
+  _WaterSplashAnimationState createState() => _WaterSplashAnimationState();
+}
+
+class _WaterSplashAnimationState extends State<WaterSplashAnimation> {
+  final List<WaterSplash> _splashes = [];
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 100), _addSplash);
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _addSplash(Timer timer) {
+    if (mounted) {
+      setState(() {
+        _splashes.add(WaterSplash(
+          x: Random().nextDouble(),
+          y: Random().nextDouble(),
+        ));
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: _splashes
+          .map((splash) => Positioned(
+                left: splash.x * MediaQuery.of(context).size.width,
+                top: splash.y * MediaQuery.of(context).size.height,
+                child: _buildSplashEffect(),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildSplashEffect() {
+    return TweenAnimationBuilder(
+      duration: const Duration(seconds: 2), // Duration for shrinking and fading
+      tween: Tween<double>(begin: 1.0, end: 0.0),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.scale(
+            scale: value,
+            child: Container(
+              width: 50 * value, // Shrinking effect
+              height: 50 * value,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: widget.splashColor
+                    .withOpacity(0.5), // Use the splashColor passed
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class WaterSplash {
+  final double x, y;
+
+  WaterSplash({required this.x, required this.y});
 }
