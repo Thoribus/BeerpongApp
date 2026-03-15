@@ -29,14 +29,16 @@ class ActivityScreenState extends State<ActivityScreen> {
   }
 
   Future<void> _retrieveGames() async {
+    if (user == null) {
+      if (mounted) setState(() { isLoading = false; });
+      return;
+    }
     try {
       games = await FirestoreService.instance.retrieveUserStatsWithDate(user!);
     } catch (e) {
       hasError = true;
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) setState(() { isLoading = false; });
     }
   }
 

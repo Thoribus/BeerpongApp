@@ -24,17 +24,29 @@ class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
   bool _hasInvitations = false;
   final List<Invitation> _invitations = [];
+  late final PageController _gameModePageController;
+  late final ValueNotifier<int> _gameModePageNotifier;
 
   @override
   void initState() {
     super.initState();
+    _gameModePageController = PageController(viewportFraction: 0.9);
+    _gameModePageNotifier = ValueNotifier<int>(0);
     _checkSavedGame();
     _checkPendingInvitations();
+  }
+
+  @override
+  void dispose() {
+    _gameModePageController.dispose();
+    _gameModePageNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> _checkSavedGame() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool hasSavedGame = prefs.containsKey('currentGameState');
+    if (!mounted) return;
     setState(() {
       _hasSavedGame = hasSavedGame;
     });
@@ -52,6 +64,8 @@ class HomeScreenState extends State<HomeScreen> {
 
     List<Invitation> invites =
         await FirestoreService.instance.getAllInvitations(currentUser.id);
+
+    if (!mounted) return;
 
     if (invites.isNotEmpty) {
       for (Invitation invite in invites) {
@@ -205,25 +219,22 @@ class HomeScreenState extends State<HomeScreen> {
       },
     ];
 
-    PageController pageController = PageController(viewportFraction: 0.9);
-    ValueNotifier<int> pageIndexNotifier = ValueNotifier<int>(0);
-
     return Column(
       children: [
         SizedBox(
           height: 250,
           child: PageView.builder(
-            controller: pageController,
+            controller: _gameModePageController,
             itemCount: gameModes.length,
-            onPageChanged: (index) => pageIndexNotifier.value = index,
+            onPageChanged: (index) => _gameModePageNotifier.value = index,
             itemBuilder: (context, index) {
               final mode = gameModes[index];
               return AnimatedBuilder(
-                animation: pageController,
+                animation: _gameModePageController,
                 builder: (context, child) {
                   double scale = 1.0;
-                  if (pageController.position.haveDimensions) {
-                    scale = pageController.page! - index;
+                  if (_gameModePageController.position.haveDimensions) {
+                    scale = _gameModePageController.page! - index;
                     scale = (1 - (scale.abs() * 0.1)).clamp(0.9, 1.0);
                   }
 
@@ -456,7 +467,7 @@ class HomeScreenState extends State<HomeScreen> {
 
         // Page indicators
         ValueListenableBuilder<int>(
-          valueListenable: pageIndexNotifier,
+          valueListenable: _gameModePageNotifier,
           builder: (context, currentIndex, _) {
             return Row(
               mainAxisAlignment: MainAxisAlignment.center,

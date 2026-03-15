@@ -767,7 +767,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
   Widget _buildRankingList(List<User> friends) {
     return ListView.builder(
-      itemCount: friends.length - 3,
+      itemCount: (friends.length - 3).clamp(0, friends.length),
       itemBuilder: (ctx, index) {
         final user = friends[index + 3];
         return ListTile(

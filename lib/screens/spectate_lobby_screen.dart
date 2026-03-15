@@ -3,10 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:go_router/go_router.dart';
 
-class ReadOnlyLobbyScreen extends StatelessWidget {
+class ReadOnlyLobbyScreen extends StatefulWidget {
   final String gameId;
 
   const ReadOnlyLobbyScreen({super.key, required this.gameId});
+
+  @override
+  State<ReadOnlyLobbyScreen> createState() => _ReadOnlyLobbyScreenState();
+}
+
+class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
+  bool _navigated = false;
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +21,7 @@ class ReadOnlyLobbyScreen extends StatelessWidget {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('games')
-          .doc(gameId)
+          .doc(widget.gameId)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -41,11 +48,12 @@ class ReadOnlyLobbyScreen extends StatelessWidget {
         final data = snapshot.data!.data() as Map<String, dynamic>;
         // If the game has started => go to LiveGameStatsScreen
         final started = data['started'] == true;
-        if (started) {
+        if (started && !_navigated) {
+          _navigated = true;
           // Navigate to LiveGameStatsScreen
           // Because this is in a build method, do a post-frame callback
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            context.pushReplacement('/spectate-live/$gameId');
+            if (mounted) context.pushReplacement('/spectate-live/${widget.gameId}');
           });
         }
 

@@ -54,9 +54,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     } catch (e) {
       hasError = true;
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) setState(() { isLoading = false; });
     }
   }
 

@@ -988,11 +988,20 @@ class _WaterSplashAnimationState extends State<WaterSplashAnimation> {
   }
 
   void _addSplash(Timer timer) {
-    if (mounted) {
-      setState(() {
-        _splashes.add(WaterSplash(x: Random().nextDouble(), y: Random().nextDouble()));
-      });
-    }
+    if (!mounted) return;
+    if (_splashes.length >= 20) return; // safety cap
+    final splash = WaterSplash(x: Random().nextDouble(), y: Random().nextDouble());
+    setState(() {
+      _splashes.add(splash);
+    });
+    // Remove this splash after its 2-second TweenAnimationBuilder duration
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _splashes.remove(splash);
+        });
+      }
+    });
   }
 
   @override

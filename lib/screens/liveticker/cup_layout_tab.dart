@@ -47,8 +47,7 @@ class CupLayoutTab extends StatelessWidget {
     final bool isLeft = isLeftSide;
     final badgeTitles = ['Cups Hit', 'Airballs', 'Throws', 'Misses'];
 
-    return Expanded(
-      child: Container(
+    return Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
@@ -119,7 +118,6 @@ class CupLayoutTab extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 

@@ -541,7 +541,7 @@ class AchievementsScreen extends StatelessWidget {
                   ),
               const SizedBox(height: 2),
               Text(
-                '$currentProgress / ${stages[stageIndex + 1]}',
+                '$currentProgress / ${stageIndex + 1 < stages.length ? stages[stageIndex + 1] : stages.last}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
