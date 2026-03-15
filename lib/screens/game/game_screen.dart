@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:beerpongapp/models/tournament.dart';
-import 'package:beerpongapp/screens/profile/achievements_screen.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
-import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
@@ -10,10 +8,10 @@ import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
+import 'package:beerpongapp/screens/game/game_controller.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../models/cup.dart';
 import '../../models/player.dart';
 import '../../models/team.dart';
 
@@ -42,702 +40,208 @@ class GameScreen extends StatefulWidget {
 }
 
 class GameScreenState extends State<GameScreen> {
-  //region ----- Game/Team/Player State -----
-  late String id;
-  late Map<String, bool> selectedRules;
-  late List<String> invitations;
-  late String tournamentId;
+  late GameController _ctrl;
 
-  late Team team1;
-  late Team team2;
-  late Team currentTeam;
-
-  bool gameEnded = false;
-  late bool isTeamOneTurn;
-  String winner = '';
-
-  // Island shot logic
-  bool islandShotActive = false;
-  Player? currentIslandShooter;
-  Color islandBackgroundColor = Colors.grey;
-  //endregion
-
-  //region ----- Page/Undo/Loading State -----
-  final List<Map<String, dynamic>> _actionStack = [];
-  final List<String> _events = [];
   final PageController _pageController = PageController();
   int _currentPage = 0;
   late Future<void> _loadGameFuture;
-  //endregion
-
-  //region ----- Lifecycle -----
-
-  //animation testing
-  late Alignment beginAlignment;
-  late Alignment endAlignment;
-
-  //new button arrangement
   bool _showExpandedButtons = false;
 
   @override
   void initState() {
     super.initState();
-    _loadGameFuture = _loadGameState();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    _ctrl = GameController(userProvider);
+    _ctrl.addListener(_onControllerChanged);
+    _loadGameFuture = _ctrl.loadGameState(
+      widgetId: widget.id,
+      widgetTeam1: widget.team1,
+      widgetTeam2: widget.team2,
+      widgetStartingTeam: widget.startingTeam,
+      widgetInvitations: widget.invitations,
+      widgetSelectedRules: widget.selectedRules,
+      widgetTournamentId: widget.tournamentId,
+    );
     _pageController.addListener(_handlePageChange);
-
-    // Initialize the gradient direction
-    beginAlignment = Alignment.topLeft;
-    endAlignment = Alignment.bottomRight;
   }
 
-  // Function to toggle gradient direction
-  void toggleGradientDirection() {
-    setState(() {
-      final temp = beginAlignment;
-      beginAlignment = endAlignment;
-      endAlignment = temp;
-    });
+  void _onControllerChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    if (!gameEnded) {
-      unawaited(GamePersistence.saveGameState(
-          id: id,
-          team1: team1,
-          team2: team2,
-          isTeamOneTurn: isTeamOneTurn,
-          islandShotActive: islandShotActive,
-          invitations: invitations,
-          selectedRules: selectedRules,
-          tournamentId: tournamentId));
-    }
+    unawaited(_ctrl.persistIfNotEnded());
+    _ctrl.removeListener(_onControllerChanged);
+    _ctrl.dispose();
     _pageController.dispose();
     super.dispose();
   }
-  //endregion
 
-  //region ----- Page Controller Logic -----
   void _handlePageChange() {
     final pageIndex = _pageController.page?.round() ?? 0;
     if (_currentPage != pageIndex) {
       setState(() => _currentPage = pageIndex);
     }
   }
-  //endregion
 
-  //region ----- Persistent Storage (Save/Load) -----
-  Future<void> _loadGameState() async {
-    Map<String, dynamic>? map = await GamePersistence.loadGameState();
-    if (map == null) {
-      // No saved data -> init teams from scratch
-      setState(() {
-        id = widget.id;
-        team1 = widget.team1;
-        team2 = widget.team2;
-        isTeamOneTurn = widget.startingTeam;
-        currentTeam = isTeamOneTurn ? team1 : team2;
-        currentTeam.currentPlayers = currentTeam.rotatePlayers();
-        invitations = widget.invitations;
-        selectedRules = widget.selectedRules;
-        tournamentId = widget.tournamentId;
-      });
-      return;
-    }
+  // ----- Cup tap orchestration -----
 
-    setState(() {
-      id = map['id'];
-      team1 = Team.fromJson(map['team1']);
-      team2 = Team.fromJson(map['team2']);
-      isTeamOneTurn = map['isTeamOneTurn'] ?? false;
-      islandShotActive = map['islandShotActive'] ?? false;
-      invitations = List<String>.from(map['invitations']);
-      selectedRules = Map<String, bool>.from(map['selectedRules']);
-
-      // Current team
-      currentTeam = isTeamOneTurn ? team1 : team2;
-      currentTeam.currentPlayers = currentTeam.rotatePlayers();
-
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _updateIslandBackgroundColor());
-    });
-  }
-  //endregion
-
-  //region ----- Core Game Logic Methods -----
-  /// Called when a cup is hit. Checks if the cup is already green or not.
-  void _handleCupHit(int index) {
-    setState(() {
-      final cup = currentTeam.cups.firstWhere((c) => c.index == index);
-      if (cup.color == Colors.green) {
-        // If cup is already green, check for proximity-based hits
-        _checkProximity(index);
-      } else {
-        // Mark new hit -> cup turns green
-        _checkBallsBack();
-        _checkBitchCup(index);
-        cup.color = Colors.green;
-      }
-    });
-  }
-
-  /// Checks other cups near the given cup. If within the threshold, mark them.
-  void _checkProximity(int index) {
-    const double proximityThreshold = 100.0;
-    double adjacentHits = 0.0;
-
-    // Find the target cup
-    final targetCup = currentTeam.cups.firstWhere(
-        (cup) => cup.index == index && cup.isVisible,
-        orElse: () => Cup(index: -1, color: Colors.transparent));
-
-    // If not found or not visible, do nothing
-    if (targetCup.index == -1) return;
-
-    // Check every other visible cup to see if it's close enough
-    for (final cup in currentTeam.cups) {
-      if (cup.index == index || !cup.isVisible) continue;
-
-      final renderBox1 =
-          cup.key.currentContext?.findRenderObject() as RenderBox?;
-      final renderBox2 =
-          targetCup.key.currentContext?.findRenderObject() as RenderBox?;
-
-      if (renderBox1 != null && renderBox2 != null) {
-        final position1 = renderBox1.localToGlobal(Offset.zero);
-        final position2 = renderBox2.localToGlobal(Offset.zero);
-        final distance = _calculateDistance(position1, position2);
-
-        if (distance < proximityThreshold) {
-          cup.color = Colors.green; // mark as hit
-          adjacentHits++;
-        }
-      }
-    }
-
-    // Revert the originally hit cup's color
-    targetCup.color = currentTeam.color;
-
-    // Reward the player(s) who hit that cup
-    for (final player in currentTeam.currentPlayers) {
-      if (player.cupsHit.contains(index)) {
-        // e.g. player.incrementScoreBy(...) based on adjacency
-        player.incrementScoreBy(adjacentHits / 2 - 1);
-      }
+  void onCupTap(int cupIndex) {
+    if (_ctrl.islandShotActive) {
+      handleIslandShot(cupIndex);
+    } else {
+      showPlayerSelectionDialog(context, cupIndex);
     }
   }
 
-  /// Checks if a player is “On Fire” (3 consecutive hits) and shows a dialog.
-  void _checkOnFire(Player player) {
-    if (player.isOnFire()) {
-      addEvent('On Fire', currentTeam, player);
-      DialogHelpers.showOnFireDialog(this);
-    }
+  Future<void> showPlayerSelectionDialog(BuildContext ctx, int cupIndex) async {
+    await DialogHelpers.showSelectionDialog(
+      ctx,
+      'Select Player',
+      _ctrl.currentTeam.currentPlayers,
+      (player) => _handleNormalHit(player, cupIndex),
+    );
   }
 
-  /// If all teammates hit in one round, triggers “Balls Back.”
-  void _checkBallsBack() {
-    if (currentTeam.ballsBack()) {
-      setState(() {
-        for (final player in currentTeam.currentPlayers) {
-          player.resetHitThisRound();
-        }
-      });
-      addEvent('Balls Back', currentTeam, null);
-      DialogHelpers.showBallsBackDialog(this);
-    }
-  }
+  // ----- Island orchestration -----
 
-  /// If it's the “bitch cup,” show the appropriate dialog.
-  void _checkBitchCup(int index) {
-    if (currentTeam.cups
-            .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
-        index == 4 &&
-        currentTeam.cups.length == 10) {
-      addEvent('Bitchcup', currentTeam, null);
-      DialogHelpers.showBitchCupDialog(this);
-    }
-  }
-
-  /// Confirm all cups are assigned. Switches turn to the other team.
-  void endTurn() {
-    setState(() {
-      // If island shot is still active, deactivate and revert highlight
-      if (islandShotActive) {
-        currentIslandShooter = null;
-        _toggleIslandCups();
-      }
-
-      // For each player who didn't hit any cup -> mark a miss
-      for (final player in currentTeam.currentPlayers) {
-        if (player.hitThisRound == 0) {
-          _incrementPlayerMisses(player);
-          _incrementPlayerThrows(player);
-        }
-        player.resetHitThisRound();
-      }
-
-      // Hide the green cups for the next turn
-      for (final cup in currentTeam.cups) {
-        if (cup.color == Colors.green) cup.isVisible = false;
-      }
-
-      // Switch teams
-      isTeamOneTurn = !isTeamOneTurn;
-      currentTeam = isTeamOneTurn ? team1 : team2;
-      currentTeam.currentPlayers = currentTeam.rotatePlayers();
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _updateIslandBackgroundColor();
-      });
-    });
-  }
-
-  /// Possibly rearrange cups if allowed (6 or fewer visible cups).
-  void toggleRearranged() {
-    final visibleCount = currentTeam.cups.where((cup) => cup.isVisible).length;
-    if (visibleCount > 6) {
-      DialogHelpers.showRearrangeErrorDialog(this);
-      return;
-    }
-    addEvent('Rearranged', currentTeam, null);
-    saveCurrentState();
-
-    setState(() {
-      if (!currentTeam.isRearranged) {
-        // Filter only cups that match the current color & are visible
-        List<Cup> remainingCups = currentTeam.cups
-            .where((cup) => cup.isVisible && cup.color == currentTeam.color)
-            .toList();
-
-        remainingCups = CupLayout.assignSpecificIndices(remainingCups);
-        currentTeam.cups = remainingCups;
-        currentTeam.isRearranged = true;
-      }
-    });
-  }
-  //endregion
-
-  //region ----- Island Logic -----
-  /// Highlights (yellow) or reverts (team color) the island cups if found.
-  void _toggleIslandCups() {
-    setState(() {
-      if (islandShotActive) {
-        // Revert highlight
-        islandShotActive = false;
-        for (final cup in currentTeam.cups) {
-          if (_isIslandCup(cup)) {
-            cup.color = currentTeam.color;
-          }
-        }
-      } else {
-        // Highlight
-        islandShotActive = true;
-        for (final cup in currentTeam.cups) {
-          if (_isIslandCup(cup)) {
-            cup.color = Colors.yellow;
-          }
-        }
-      }
-    });
-  }
-
-  /// Shows a dialog to pick the player who will perform the island shot.
   Future<void> _highlightIslandCups() async {
     await DialogHelpers.showSelectionDialog(
       context,
       'Select Player',
-      currentTeam.currentPlayers.where((p) => !p.islandShotUsed).toList(),
+      _ctrl.currentTeam.currentPlayers.where((p) => !p.islandShotUsed).toList(),
       (player) {
-        saveCurrentState();
-        setState(() {
-          currentIslandShooter = player;
-          player.islandShotUsed = true;
-          islandShotActive = false;
-          _toggleIslandCups();
-
-          // If all have used the island shot, disable it
-          if (currentTeam.players.every((p) => p.islandShotUsed)) {
-            currentTeam.canIslandShot = false;
-            islandBackgroundColor = Colors.grey;
-          }
-        });
+        _ctrl.saveCurrentState();
+        _ctrl.selectIslandShooter(player);
       },
     );
   }
 
-  /// Check if the given cup is isolated (no adjacent cups).
-  bool _isIslandCup(Cup cup) {
-    const double proximityThreshold = 100.0;
-    int closeCupsCount = 0;
-
-    for (final otherCup in currentTeam.cups) {
-      if (cup.index == otherCup.index ||
-          !otherCup.isVisible ||
-          !cup.isVisible) {
-        continue;
-      }
-      final renderBox1 =
-          cup.key.currentContext?.findRenderObject() as RenderBox?;
-      final renderBox2 =
-          otherCup.key.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox1 != null && renderBox2 != null) {
-        final position1 = renderBox1.localToGlobal(Offset.zero);
-        final position2 = renderBox2.localToGlobal(Offset.zero);
-        final distance = _calculateDistance(position1, position2);
-
-        if (distance < proximityThreshold) {
-          closeCupsCount++;
-        }
-      }
-    }
-    return closeCupsCount == 0;
-  }
-
-  /// Handles an island shot scenario.
   Future<void> handleIslandShot(int cupIndex) async {
     await DialogHelpers.showSelectionDialog(
       context,
       'Select Player and Shot Result',
-      currentTeam.currentPlayers,
+      _ctrl.currentTeam.currentPlayers,
       (player) {
-        addEvent('Island Shot', currentTeam, player);
-        saveCurrentState();
-        // If chosen player == currentIslandShooter => island “power shot”
-        if (player == currentIslandShooter) {
-          setState(() {
-            _toggleIslandCups();
-            currentIslandShooter = null;
-          });
-          _incrementPlayerScore(player);
-          _addCupToPlayer(player, cupIndex);
-          _incrementPlayerHitThisRound(player);
-          _incrementPlayerThrows(player);
-          _handleCupHit(cupIndex);
-
-          // Attempt random extra cup
+        _ctrl.addEvent('Island Shot', _ctrl.currentTeam, player);
+        _ctrl.saveCurrentState();
+        if (player == _ctrl.currentIslandShooter) {
+          // Island power shot: hit the cup + a random bonus cup
+          _ctrl.toggleIslandCups();
+          _ctrl.currentIslandShooter = null;
+          _ctrl.incrementPlayerScore(player);
+          _ctrl.addCupToPlayer(player, cupIndex);
+          _ctrl.incrementPlayerHitThisRound(player);
+          _ctrl.incrementPlayerThrows(player);
+          _ctrl.handleCupHit(cupIndex, context);
           try {
-            final extraIndex = getRandomCupIndex(
-                currentTeam.cups, cupIndex, currentTeam.color);
-            _handleCupHit(extraIndex);
-            _addCupToPlayer(player, extraIndex);
-            _incrementPlayerScore(player);
+            final extraIndex = _ctrl.getRandomCupIndex(
+                _ctrl.currentTeam.cups, cupIndex, _ctrl.currentTeam.color);
+            _ctrl.handleCupHit(extraIndex, context);
+            _ctrl.addCupToPlayer(player, extraIndex);
+            _ctrl.incrementPlayerScore(player);
           } catch (_) {
             debugPrint('No matching cups found for island shot bonus.');
           }
         } else {
-          // Normal hit
-          _incrementPlayerScore(player);
-          _addCupToPlayer(player, cupIndex);
-          _incrementPlayerHitThisRound(player);
-          _incrementPlayerThrows(player);
-          _handleCupHit(cupIndex);
-          _checkOnFire(player);
+          _ctrl.incrementPlayerScore(player);
+          _ctrl.addCupToPlayer(player, cupIndex);
+          _ctrl.incrementPlayerHitThisRound(player);
+          _ctrl.incrementPlayerThrows(player);
+          _ctrl.handleCupHit(cupIndex, context);
+          _ctrl.checkOnFire(player, context);
         }
         _checkGameEnd(player, cupIndex);
       },
     );
   }
-  //endregion
 
-  //region ----- Misc Utility & Stats Methods -----
-  double _calculateDistance(Offset pos1, Offset pos2) {
-    return sqrt(pow(pos1.dx - pos2.dx, 2) + pow(pos1.dy - pos2.dy, 2));
+  // ----- Hit handlers -----
+
+  void _handleNormalHit(Player player, int cupIndex) {
+    _ctrl.addEvent('Normal Hit', _ctrl.currentTeam, player);
+    _ctrl.saveCurrentState();
+    _ctrl.addCupToPlayer(player, cupIndex);
+    _ctrl.incrementPlayerThrows(player);
+    _ctrl.incrementPlayerHitThisRound(player);
+    _ctrl.incrementPlayerScore(player);
+    _ctrl.handleCupHit(cupIndex, context);
+    _ctrl.checkOnFire(player, context);
+    _checkGameEnd(player, cupIndex);
   }
 
-  int getRandomCupIndex(List<Cup> cups, int cupIndex, Color teamColor) {
-    final possibleCups = cups.where((c) {
-      return c.index != cupIndex &&
-          c.isVisible &&
-          (c.color == teamColor || c.color == Colors.yellow);
-    }).toList();
-
-    if (possibleCups.isEmpty) {
-      throw Exception('No matching cups found');
+  void _handleDeathCup(Player player) {
+    _ctrl.addEvent('Death Cup', _ctrl.currentTeam, player);
+    _ctrl.saveCurrentState();
+    for (final cup in _ctrl.currentTeam.cups) {
+      if (cup.color == _ctrl.currentTeam.color) {
+        _ctrl.addCupToPlayer(player, cup.index);
+        _ctrl.handleCupHit(cup.index, context);
+        _ctrl.incrementPlayerScore(player);
+        _ctrl.incrementPlayerThrows(player);
+      }
     }
-
-    return possibleCups[Random().nextInt(possibleCups.length)].index;
+    _checkGameEnd(player, 11);
   }
 
-  /// Updates the background color of the island shot button
-  /// based on whether an island shot can still happen.
-  void _updateIslandBackgroundColor() {
-    final hasIslandCup =
-        currentTeam.cups.any((c) => c.isVisible && _isIslandCup(c));
-    islandBackgroundColor = (hasIslandCup && currentTeam.canIslandShot)
-        ? Colors.amber
-        : Colors.grey;
-  }
-  //endregion
+  // ----- Game end orchestration -----
 
-//region ----- Checking for Game End / Nachwurf -----
   void _checkGameEnd(Player player, int cupIndex) async {
-    final allCupsGone = currentTeam.cups.every(
-      (cup) => !cup.isVisible || cup.color == Colors.green,
-    );
-    if (!allCupsGone) return; // Not all cups are gone => do nothing
+    if (!_ctrl.areAllCupsGone()) return;
 
-    // If “Nachwurf” is active and we're not on the special extra cup => let enemy defend
-    if (selectedRules['Putback'] == true && cupIndex != 11) {
+    if (_ctrl.selectedRules['Putback'] == true && cupIndex != 11) {
       final enemyHit = await _handleNachwurf(cupIndex);
       if (enemyHit) {
-        // The enemy canceled the last cup => revert and do NOT end the game
-        _decrementPlayerScore(player);
+        _ctrl.decrementPlayerScore(player);
         return;
       }
-      // If we reach here => enemy failed to defend => game ends
     }
 
-    // Now the game truly ends
-    setState(() {
-      gameEnded = true;
-      final blueTeamWin = team1.cups
-          .every((cup) => !cup.isVisible || cup.color == Colors.green);
-      winner = blueTeamWin ? 'Team 1' : 'Team 2';
-    });
-    _setPlayerHitLastCup(player);
-    if (winner == 'Team 1') {
-      team1.wins++;
-      team2.losses++;
-    }
-    else{
-      team2.wins++;
-      team1.losses++;
-    }
+    _ctrl.setGameEnded();
+    _ctrl.setPlayerHitLastCup(player);
 
     await GamePersistence.clearGameState(false);
-    await _saveGameStatistics();
+    await _ctrl.saveGameStatistics();
 
     if (!mounted) return;
-    // If Tournament, return to tournament overview
-    if (tournamentId != '') {
-      TournamentMatch match = TournamentMatch(
-          id: id,
-          team1: team1,
-          team2: team2,
-          winner: winner == 'Team 1' ? team1 : team2,
-          played: true,
-          selectedRules: selectedRules,
-          invitations: invitations);
+
+    if (_ctrl.tournamentId != '') {
+      final match = TournamentMatch(
+        id: _ctrl.id,
+        team1: _ctrl.team1,
+        team2: _ctrl.team2,
+        winner: _ctrl.winner == 'Team 1' ? _ctrl.team1 : _ctrl.team2,
+        played: true,
+        selectedRules: _ctrl.selectedRules,
+        invitations: _ctrl.invitations,
+      );
       context.pop({'match': match});
       return;
     }
 
-    // Instead of showGameEndDialog, let's push GameHighlightsScreen
-    await DialogHelpers.showGameEndDialog(context, currentTeam.players);
-
-    //await DialogHelpers.showGameEndDialog(this, currentTeam.players);
+    await DialogHelpers.showGameEndDialog(context, _ctrl.currentTeam.players);
   }
 
   Future<bool> _handleNachwurf(int cupIndex) async {
-    final enemyTeam = (currentTeam == team1) ? team2 : team1;
-
-    // Wait for a Player? result
+    final enemyTeam = (_ctrl.currentTeam == _ctrl.team1) ? _ctrl.team2 : _ctrl.team1;
     final chosenPlayer = await DialogHelpers.showNachwurfSelectionDialog(
       context,
       'Enemy Team\'s Last Turn',
       enemyTeam.players,
     );
-
-    // If chosenPlayer == null => user canceled => enemyHit = false
-    // If chosenPlayer != null => enemyHit = true => revert the last cup
     if (chosenPlayer != null) {
-      setState(() => chosenPlayer.defended++);
-      addEvent('Defended', currentTeam, chosenPlayer);
-      saveCurrentState();
-      _removeLastCupHit(cupIndex);
-      return true; // enemyHit
-    } else {
-      return false; // user canceled => no hit
+      chosenPlayer.defended++;
+      _ctrl.addEvent('Defended', _ctrl.currentTeam, chosenPlayer);
+      _ctrl.saveCurrentState();
+      _ctrl.removeLastCupHit(cupIndex);
+      return true;
     }
+    return false;
   }
 
-  void _removeLastCupHit(int cupIndex) {
-    final undoneCup =
-        currentTeam.cups.firstWhere((cup) => cup.index == cupIndex);
-    undoneCup.color = currentTeam.color;
-    undoneCup.isVisible = true;
-    for (final p in currentTeam.players) {
-      p.lastCupHit = false;
-    }
-  }
-  //endregion
+  // ----- UI Build Methods -----
 
-  //region ----- Player Stats Updates -----
-  void _incrementPlayerScore(Player player) =>
-      setState(() => player.incrementScore());
-  void _decrementPlayerScore(Player player) =>
-      setState(() => player.decrementScore());
-  void _addCupToPlayer(Player player, int cupIndex) =>
-      setState(() => player.hitCup(cupIndex));
-  void _incrementPlayerThrows(Player player) =>
-      setState(() => player.incrementThrows());
-  void _incrementPlayerMisses(Player player) =>
-      setState(() => player.incrementMisses());
-  void _incrementPlayerHitThisRound(Player player) =>
-      setState(() => player.incrementHitThisRound());
-
-  void _incrementPlayerAirballs(Player player) {
-    setState(() {
-      player.incrementAirballs();
-      final totalAirballs =
-          currentTeam.players.fold<int>(0, (sum, p) => sum + p.airballs);
-      if (totalAirballs % 3 == 0) {
-        DialogHelpers.showAirballDialog(this, totalAirballs);
-      }
-    });
-  }
-
-  void _setPlayerHitLastCup(Player player) =>
-      setState(() => player.hitLastCup());
-
-  /// Handle what happens when a player throws an airball.
-  void _handleAirballRule(Player player) {
-    addEvent('Airball', currentTeam, player);
-    saveCurrentState();
-    _incrementPlayerAirballs(player);
-  }
-
-  /// Handle what happens when a player hits a cup.
-  void _handleNormalHit(Player player, int cupIndex) {
-    addEvent('Normal Hit', currentTeam, player);
-    saveCurrentState();
-    _addCupToPlayer(player, cupIndex);
-    _incrementPlayerThrows(player);
-    _incrementPlayerHitThisRound(player);
-    _incrementPlayerScore(player);
-    _handleCupHit(cupIndex);
-    _checkOnFire(player);
-    _checkGameEnd(player, cupIndex);
-  }
-
-  /// Handle what happens when a player hits the Death Cup.
-  void _handleDeathCup(Player player) {
-    addEvent('Death Cup', currentTeam, player);
-    saveCurrentState();
-    for (final cup in currentTeam.cups) {
-      if (cup.color == currentTeam.color) {
-        _addCupToPlayer(player, cup.index);
-        _handleCupHit(cup.index);
-        _incrementPlayerScore(player);
-        _incrementPlayerThrows(player);
-      }
-    }
-    _checkGameEnd(player, 11);
-  }
-  //endregion
-
-  //region ----- Undo/Redo Stack -----
-  void saveCurrentState() async {
-    _actionStack.add({
-      'team1': team1.clone(),
-      'team2': team2.clone(),
-      'isTeamOneTurn': isTeamOneTurn,
-      'islandShotActive': islandShotActive,
-      'currentIslandShooter': currentIslandShooter,
-      'events': _events,
-    });
-
-    setState(() {
-      _events.clear();
-    });
-    await FirestoreService.instance.updateGameDoc(id, team1: team1, team2: team2);
-  }
-
-  void addEvent(String eventType, Team team, Player? player) async {
-    final event =
-        await FirestoreService.instance.addEvent(id, eventType, team, player);
-    _events.add(event);
-  }
-
-  void removeEvent(String event) {
-    unawaited(FirestoreService.instance.deleteEvent(id, event));
-  }
-
-  void _undoLastAction() async {
-    if (_actionStack.isEmpty) return;
-
-    final lastState = _actionStack.removeLast();
-    setState(() {
-      team1 = lastState['team1'];
-      team2 = lastState['team2'];
-      isTeamOneTurn = lastState['isTeamOneTurn'];
-      islandShotActive = lastState['islandShotActive'];
-      currentIslandShooter = lastState['currentIslandShooter'];
-      for (final event in lastState['events']) {
-        removeEvent(event);
-      }
-
-      currentTeam = isTeamOneTurn ? team1 : team2;
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _updateIslandBackgroundColor());
-    });
-  }
-  //endregion
-
-  //region ----- Show Various Dialogs (AwesomeDialog) -----
-
-  /// Dialog for picking a player for a normal cup selection.
-  Future<void> showPlayerSelectionDialog(
-      BuildContext context, int cupIndex) async {
-    await DialogHelpers.showSelectionDialog(
-      context,
-      'Select Player',
-      currentTeam.currentPlayers,
-      (player) {
-        _handleNormalHit(player, cupIndex);
-      },
-    );
-  }
-  //endregion
-
-  //region ----- Saving Stats to Firestore -----
-  Future<void> _saveGameStatistics() async {
-    if (!mounted) return;
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-
-    if (winner == 'Team 1') {
-      for (final player in team1.players) {
-        setState(() {
-          player.isWinner = true;
-        });
-      }
-    } else {
-      for (final player in team2.players) {
-        setState(() {
-          player.isWinner = true;
-        });
-      }
-    }
-    final updatedUsers = await FirestoreService.instance.saveGame(
-      team1: team1.players,
-      team2: team2.players,
-    );
-
-    // Give new titles to players if they unlocked any
-    for (final user in updatedUsers) {
-      AchievementsScreen.checkAchievements(user);
-    }
-
-    await FirestoreService.instance
-        .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
-
-    // Delete all game invitations
-    for (String invitationId in invitations) {
-      await FirestoreService.instance.deleteGameInvitation(invitationId);
-    }
-
-    // Update current user in UserProvider if found in updatedUsers
-    final userExists = updatedUsers.any((u) => u.id == userProvider.user?.id);
-    if (userExists) {
-      final currentUser =
-          updatedUsers.firstWhere((u) => u.id == userProvider.user?.id);
-      await userProvider.updateUser(currentUser);
-    }
-  }
-  //endregion
-
-  //region ----- UI Build Methods -----
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -760,7 +264,7 @@ class GameScreenState extends State<GameScreen> {
                     scrollDirection: Axis.horizontal,
                     children: [
                       _buildCurrentGamePage(),
-                      _buildGameStatsPage(currentTeam.color),
+                      _buildGameStatsPage(_ctrl.currentTeam.color),
                     ],
                   ),
                 ),
@@ -769,11 +273,10 @@ class GameScreenState extends State<GameScreen> {
           }
         },
       ),
-      bottomNavigationBar: _buildBottomAppBar(), // Existing bottom ba
+      bottomNavigationBar: _buildBottomAppBar(),
     );
   }
 
-  /// The top AppBar with title.
   AppBar _buildAppBar() {
     return AppBar(
       title: const Text(
@@ -792,47 +295,33 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// The “View Table” / “View Game Stats” buttons at the top of the screen.
   Widget _buildTopNavButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         TextButton(
-          onPressed:
-              _currentPage == 0 ? null : () => _pageController.jumpToPage(0),
+          onPressed: _currentPage == 0 ? null : () => _pageController.jumpToPage(0),
           child: Text(
             'View Table',
-            style: TextStyle(
-                color: _currentPage == 0 ? Colors.amber : Colors.white),
+            style: TextStyle(color: _currentPage == 0 ? Colors.amber : Colors.white),
           ),
         ),
         const VerticalDivider(color: Colors.white, width: 20, thickness: 2),
         TextButton(
-          onPressed:
-              _currentPage == 1 ? null : () => _pageController.jumpToPage(1),
+          onPressed: _currentPage == 1 ? null : () => _pageController.jumpToPage(1),
           child: Text(
             'View Game Stats',
-            style: TextStyle(
-                color: _currentPage == 1 ? Colors.amber : Colors.white),
+            style: TextStyle(color: _currentPage == 1 ? Colors.amber : Colors.white),
           ),
         ),
       ],
     );
   }
 
-  void onCupTap(int cupIndex) {
-    if (islandShotActive) {
-      handleIslandShot(cupIndex);
-    } else {
-      showPlayerSelectionDialog(context, cupIndex);
-    }
-  }
-
   Widget _buildCurrentGamePage() {
     return LayoutBuilder(builder: (context, constraints) {
       return Stack(
         children: [
-          // The background table area
           Positioned(
             top: 100.0,
             left: 16.0,
@@ -853,33 +342,28 @@ class GameScreenState extends State<GameScreen> {
               ),
               child: Column(
                 children: [
-                  // The cups
                   Expanded(
                     flex: 3,
-                    child: CupLayout.buildCupsArea(state: this),
+                    child: CupLayout.buildCupsArea(
+                      team: _ctrl.currentTeam,
+                      onCupTap: onCupTap,
+                    ),
                   ),
                   const SizedBox(height: 20),
-                  // Player names
                   Expanded(
                     flex: 1,
                     child: GridView.builder(
-                      physics:
-                          const NeverScrollableScrollPhysics(), // Disable scrolling within the grid
-                      padding: const EdgeInsets.all(
-                          8.0), // Add padding around the grid
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // 2 columns
-                        mainAxisSpacing: 8.0, // Vertical spacing
-                        crossAxisSpacing: 8.0, // Horizontal spacing
-                        childAspectRatio:
-                            2.5, // Ensures cards have identical dimensions
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.all(8.0),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 8.0,
+                        crossAxisSpacing: 8.0,
+                        childAspectRatio: 2.5,
                       ),
-                      itemCount: currentTeam.currentPlayers.length
-                          .clamp(0, 4), // Max 4 players
+                      itemCount: _ctrl.currentTeam.currentPlayers.length.clamp(0, 4),
                       itemBuilder: (context, index) {
-                        return _buildPlayerName(
-                            currentTeam.currentPlayers[index]);
+                        return _buildPlayerName(_ctrl.currentTeam.currentPlayers[index]);
                       },
                     ),
                   ),
@@ -888,61 +372,50 @@ class GameScreenState extends State<GameScreen> {
               ),
             ),
           ),
-          // Floating Action Buttons for special rules at the top
           Positioned(
             top: 20.0,
             left: 16.0,
             right: 16.0,
             child: Container(
-              width: constraints.maxWidth -
-                  32.0, // Explicit width based on parent container
-              height: 77.0, // Adjust height to avoid overlap with table area
+              width: constraints.maxWidth - 32.0,
+              height: 77.0,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16.0), // Rounded corners
-                border:
-                    Border.all(color: Colors.white, width: 2.0), // White border
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(color: Colors.white, width: 2.0),
                 gradient: LinearGradient(
                   colors: [
-                    currentTeam == team1 ? team2.color : team1.color,
-                    Colors.grey
-                  ], // Gradient colors
+                    _ctrl.currentTeam == _ctrl.team1
+                        ? _ctrl.team2.color
+                        : _ctrl.team1.color,
+                    Colors.grey,
+                  ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                 ),
               ),
-              padding: const EdgeInsets.all(8.0), // Padding around the buttons
+              padding: const EdgeInsets.all(8.0),
               child: Stack(
                 children: [
-                  // Water splash animation (placed behind the Airball button)
                   const Positioned.fill(
                     child: IgnorePointer(
-                      child: WaterSplashAnimation(
-                        splashColor:
-                            Colors.white, // Set the splash color to white
-                      ), // Splash effect only in this area
+                      child: WaterSplashAnimation(splashColor: Colors.white),
                     ),
                   ),
-
-                  // Airball button in the middle
                   Positioned.fill(
                     child: Center(
                       child: FloatingActionButton.extended(
                         heroTag: 'airball',
-                        onPressed: () =>
-                            DialogHelpers.showAirballPlayerSelectionDialog(
-                          this,
-                          currentTeam,
-                          (player) => _handleAirballRule(player),
+                        onPressed: () => DialogHelpers.showAirballPlayerSelectionDialog(
+                          context,
+                          _ctrl.currentTeam,
+                          (player) => _ctrl.handleAirballRule(player, context),
                         ),
                         tooltip: 'Airball',
-                        backgroundColor:
-                            Colors.transparent, // Clear the background color
-                        elevation: 0, // Remove the shadow
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
                         label: const Text(
                           'Airball Area',
-                          style: TextStyle(
-                              color:
-                                  Colors.black), // Text color can be customized
+                          style: TextStyle(color: Colors.black),
                         ),
                       ),
                     ),
@@ -959,35 +432,25 @@ class GameScreenState extends State<GameScreen> {
   Widget _buildPlayerName(Player player) {
     return TweenAnimationBuilder<Alignment>(
       tween: AlignmentTween(
-        begin: beginAlignment, // Add your starting alignment
-        end: endAlignment, // Add your ending alignment
+        begin: _ctrl.beginAlignment,
+        end: _ctrl.endAlignment,
       ),
       duration: const Duration(seconds: 5),
-      onEnd: () {
-        setState(() {
-          // Swap gradient direction after animation ends
-          final temp = beginAlignment;
-          beginAlignment = endAlignment;
-          endAlignment = temp;
-        });
-      },
+      onEnd: _ctrl.toggleGradientDirection,
       builder: (context, alignment, child) {
         return Container(
-          padding: const EdgeInsets.all(8.0), // Inner padding
+          padding: const EdgeInsets.all(8.0),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                currentTeam.color,
-                Colors.grey.shade600,
-              ],
+              colors: [_ctrl.currentTeam.color, Colors.grey.shade600],
               begin: alignment,
               end: Alignment.center,
             ),
             border: Border.all(
-              color: Colors.grey.withValues(alpha: 0.5), // Semi-transparent border
+              color: Colors.grey.withValues(alpha: 0.5),
               width: 0.5,
             ),
-            borderRadius: BorderRadius.circular(8.0), // Rounded corners
+            borderRadius: BorderRadius.circular(8.0),
           ),
           child: Row(
             children: [
@@ -1004,12 +467,12 @@ class GameScreenState extends State<GameScreen> {
                         child: SvgPicture.asset(
                           player.user!.mapAvatarKeyToAsset(),
                           fit: BoxFit.cover,
-                          width: 20 * 2,
-                          height: 20 * 2,
+                          width: 40,
+                          height: 40,
                         ),
                       ),
                     ),
-              const SizedBox(width: 8.0), // Space between avatar and text
+              const SizedBox(width: 8.0),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1017,19 +480,18 @@ class GameScreenState extends State<GameScreen> {
                   children: [
                     Text(
                       player.name.length > 13
-                          ? '${player.name.substring(0, 12)}...' // Truncate long names
+                          ? '${player.name.substring(0, 12)}...'
                           : player.name,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 14.0,
                       ),
-                      overflow:
-                          TextOverflow.ellipsis, // Handles very long names
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4.0),
                     const Text(
-                      'Level: 1', // Dummy level
+                      'Level: 1',
                       style: TextStyle(color: Colors.grey, fontSize: 12.0),
                     ),
                   ],
@@ -1042,7 +504,6 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// The "Game Stats" page showing possible game actions and team brackets.
   Widget _buildGameStatsPage(Color teamColor) {
     return Container(
       color: Colors.black,
@@ -1055,19 +516,15 @@ class GameScreenState extends State<GameScreen> {
               const Text(
                 'Upcoming Actions',
                 style: TextStyle(
-                    color: Colors.amber,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
+                    color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              _buildGameActions(currentTeam.players),
+              _buildGameActions(_ctrl.currentTeam.players),
               const SizedBox(height: 10),
               const Text(
                 'Team Statistics',
                 style: TextStyle(
-                    color: Colors.amber,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold),
+                    color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               _buildTeamBrackets(),
@@ -1078,34 +535,32 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// Displays possible game actions for this turn.
   Widget _buildGameActions(List<Player> players) {
-    // Define actions with their properties
-    List<Map<String, dynamic>> actions = [
+    final actions = [
       {
         'actionTitle': 'Bitchcup',
         'progressText': 'loosen your belt',
-        'teamColor': currentTeam.color,
+        'teamColor': _ctrl.currentTeam.color,
         'playerName': players[0].name,
         'teamName': 'Team Blue',
         'playerIcon': Icons.dry_cleaning_outlined,
-        'progressValue': 0.7, // create when 2 of 3 airballs are hit
+        'progressValue': 0.7,
         'isActive': false,
       },
       {
         'actionTitle': 'On fire',
         'progressText': 'get your balls back',
-        'teamColor': currentTeam.color,
+        'teamColor': _ctrl.currentTeam.color,
         'playerName': players[0].name,
         'teamName': '2 in a row',
         'playerIcon': Icons.local_fire_department,
-        'progressValue': 0.7, // create when 2 of 3 airballs are hit
+        'progressValue': 0.7,
         'isActive': true,
       },
       {
         'actionTitle': '3rd Airball',
         'progressText': '1 airball until shot',
-        'teamColor': currentTeam.color,
+        'teamColor': _ctrl.currentTeam.color,
         'playerName': players[0].name,
         'teamName': 'Team Red',
         'playerIcon': BeerpongIcons.airball,
@@ -1115,12 +570,12 @@ class GameScreenState extends State<GameScreen> {
       {
         'actionTitle': 'Island',
         'progressText': 'One hit for two cups',
-        'teamColor': currentTeam.color,
+        'teamColor': _ctrl.currentTeam.color,
         'playerName': players[0].name,
         'teamName': '2 ready',
         'playerIcon': BeerpongIcons.palmTree,
         'progressValue': 0.8,
-        'isActive': currentTeam.canIslandShot,
+        'isActive': _ctrl.currentTeam.canIslandShot,
       },
     ];
 
@@ -1132,7 +587,6 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// Builds an individual action bracket.
   Widget _buildActionBracket(Map<String, dynamic> actionData) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -1160,10 +614,7 @@ class GameScreenState extends State<GameScreen> {
               children: [
                 Text(
                   actionData['actionTitle'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 RichText(
@@ -1183,8 +634,7 @@ class GameScreenState extends State<GameScreen> {
                       ),
                       TextSpan(
                         text: '${actionData['playerName']} is making a move',
-                        style:
-                            const TextStyle(fontSize: 14, color: Colors.black),
+                        style: const TextStyle(fontSize: 14, color: Colors.black),
                       ),
                     ],
                   ),
@@ -1199,14 +649,12 @@ class GameScreenState extends State<GameScreen> {
               CircleAvatar(
                 radius: 20,
                 backgroundColor: (actionData['teamColor'] as Color).withValues(alpha: 0.2),
-                child: Icon(actionData['playerIcon'],
-                    color: actionData['teamColor']),
+                child: Icon(actionData['playerIcon'], color: actionData['teamColor']),
               ),
               const SizedBox(height: 4),
               Text(
                 actionData['teamName'],
-                style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -1215,18 +663,16 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// Displays team brackets at the bottom.
   Widget _buildTeamBrackets() {
     return Column(
       children: [
-        _buildTeamBracket('Team Blue', Colors.blue, team1.players),
+        _buildTeamBracket('Team Blue', Colors.blue, _ctrl.team1.players),
         const SizedBox(height: 20),
-        _buildTeamBracket('Team Red', Colors.red, team2.players),
+        _buildTeamBracket('Team Red', Colors.red, _ctrl.team2.players),
       ],
     );
   }
 
-  /// Builds a single team bracket section with a gradient background.
   Widget _buildTeamBracket(String teamName, Color color, List<Player> players) {
     return Container(
       width: double.infinity,
@@ -1247,9 +693,7 @@ class GameScreenState extends State<GameScreen> {
             Text(
               teamName,
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold),
+                  color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Table(
@@ -1264,8 +708,7 @@ class GameScreenState extends State<GameScreen> {
               },
               children: [
                 TableRow(
-                  decoration:
-                      BoxDecoration(color: Colors.white.withValues(alpha: 0.2)),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2)),
                   children: const [
                     Padding(
                       padding: EdgeInsets.all(8.0),
@@ -1346,17 +789,27 @@ class GameScreenState extends State<GameScreen> {
       color: Colors.transparent,
       child: Stack(
         children: [
-          // Main row of buttons (Undo, Rearrange, End Turn)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildBottomButton(
-                  onPressed: _undoLastAction,
+                  onPressed: _ctrl.undoLastAction,
                   tooltip: 'Undo last move',
                   icon: Icons.undo,
                   label: 'undo',
+                  gradient: LinearGradient(
+                    colors: [Colors.orange.shade700, Colors.orange.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                _buildBottomButton(
+                  onPressed: () => _ctrl.toggleRearranged(context),
+                  tooltip: 'Rearrange cups',
+                  icon: Icons.workspaces_outlined,
+                  label: 'cups',
                   gradient: LinearGradient(
                     colors: [Colors.blue.shade700, Colors.blue.shade300],
                     begin: Alignment.topLeft,
@@ -1365,9 +818,7 @@ class GameScreenState extends State<GameScreen> {
                 ),
                 _buildBottomButton(
                   onPressed: () {
-                    setState(() {
-                      _showExpandedButtons = !_showExpandedButtons;
-                    });
+                    setState(() => _showExpandedButtons = !_showExpandedButtons);
                   },
                   tooltip: 'More Options',
                   icon: Icons.scatter_plot_outlined,
@@ -1379,7 +830,7 @@ class GameScreenState extends State<GameScreen> {
                   ),
                 ),
                 _buildBottomButton(
-                  onPressed: () => DialogHelpers.confirmEndTurn(this),
+                  onPressed: () => DialogHelpers.confirmEndTurn(context, _ctrl),
                   tooltip: 'End turn',
                   icon: Icons.check_rounded,
                   label: 'end',
@@ -1392,53 +843,48 @@ class GameScreenState extends State<GameScreen> {
               ],
             ),
           ),
-
-          // Expanded Buttons (Appears on top of the BottomAppBar, like a dialog)
           if (_showExpandedButtons)
             GestureDetector(
               onTap: () {
-                setState(() {
-                  _showExpandedButtons =
-                      false; // Dismiss the buttons when tapping outside
-                });
+                setState(() => _showExpandedButtons = false);
               },
               child: Container(
-                color: Colors.black.withValues(
-                    alpha: 0.5), // Semi-transparent overlay to close on tap
+                color: Colors.black.withValues(alpha: 0.5),
                 child: Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (selectedRules['Deathcup'] == true)
+                      if (_ctrl.selectedRules['Deathcup'] == true)
                         _buildExpandedButton(
-                          onPressed: () =>
-                              DialogHelpers.showDeathcupSelectionDialog(
-                                  this,
-                                  currentTeam,
-                                  (player) => _handleDeathCup(player)),
+                          onPressed: () => DialogHelpers.showDeathcupSelectionDialog(
+                            context,
+                            _ctrl.currentTeam,
+                            (player) => _handleDeathCup(player),
+                          ),
                           tooltip: 'Deathcup',
                           icon: BeerpongIcons.skull,
-                          color:
-                              currentTeam == team1 ? team2.color : team1.color,
+                          color: _ctrl.currentTeam == _ctrl.team1
+                              ? _ctrl.team2.color
+                              : _ctrl.team1.color,
                         ),
                       const SizedBox(width: 20),
                       _buildExpandedButton(
-                        onPressed: toggleRearranged,
+                        onPressed: () => _ctrl.toggleRearranged(context),
                         tooltip: 'Rearrange the cups.',
                         icon: Icons.scatter_plot_outlined,
                         color: Colors.green,
                       ),
                       const SizedBox(width: 20),
-                      if (selectedRules['Island'] == true)
+                      if (_ctrl.selectedRules['Island'] == true)
                         _buildExpandedButton(
-                          onPressed: currentTeam.canIslandShot &&
-                                  currentTeam.cups.any(
-                                      (c) => c.isVisible && _isIslandCup(c))
+                          onPressed: _ctrl.currentTeam.canIslandShot &&
+                                  _ctrl.currentTeam.cups
+                                      .any((c) => c.isVisible && _ctrl.isIslandCup(c))
                               ? _highlightIslandCups
                               : null,
                           tooltip: 'Island Cup',
                           icon: BeerpongIcons.palmTree,
-                          color: islandBackgroundColor,
+                          color: _ctrl.islandBackgroundColor,
                         ),
                     ],
                   ),
@@ -1464,10 +910,7 @@ class GameScreenState extends State<GameScreen> {
         heroTag: tooltip,
         elevation: 4,
         shape: const CircleBorder(
-          side: BorderSide(
-            color: Colors.white, // White border with width 2
-            width: 2.0, // Border width
-          ),
+          side: BorderSide(color: Colors.white, width: 2.0),
         ),
         child: Icon(icon, color: Colors.black, size: 30),
       ),
@@ -1484,19 +927,15 @@ class GameScreenState extends State<GameScreen> {
     return Tooltip(
       message: tooltip,
       child: FloatingActionButton(
-        backgroundColor:
-            Colors.transparent, // Remove solid color to show the gradient
+        backgroundColor: Colors.transparent,
         onPressed: onPressed,
-        heroTag: label.isEmpty
-            ? 'undo'
-            : label.toLowerCase(), // Unique heroTag for each button
-        elevation: 6, // Slight elevation for depth
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30)), // Rounded edges
+        heroTag: label.isEmpty ? 'undo' : label.toLowerCase(),
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         child: Ink(
           decoration: BoxDecoration(
-            gradient: gradient, // Apply the gradient here
-            borderRadius: BorderRadius.circular(30), // Rounded corners
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(30),
           ),
           child: Container(
             width: 56,
@@ -1511,8 +950,7 @@ class GameScreenState extends State<GameScreen> {
                       const SizedBox(height: 4),
                       Text(
                         label,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ],
                   ),
@@ -1522,11 +960,11 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 }
-//endregion
+
+// ----- Water Splash Animation -----
 
 class WaterSplashAnimation extends StatefulWidget {
-  final Color splashColor; // Add splashColor parameter
-
+  final Color splashColor;
   const WaterSplashAnimation({super.key, this.splashColor = Colors.blue});
 
   @override
@@ -1552,10 +990,7 @@ class _WaterSplashAnimationState extends State<WaterSplashAnimation> {
   void _addSplash(Timer timer) {
     if (mounted) {
       setState(() {
-        _splashes.add(WaterSplash(
-          x: Random().nextDouble(),
-          y: Random().nextDouble(),
-        ));
+        _splashes.add(WaterSplash(x: Random().nextDouble(), y: Random().nextDouble()));
       });
     }
   }
@@ -1575,7 +1010,7 @@ class _WaterSplashAnimationState extends State<WaterSplashAnimation> {
 
   Widget _buildSplashEffect() {
     return TweenAnimationBuilder(
-      duration: const Duration(seconds: 2), // Duration for shrinking and fading
+      duration: const Duration(seconds: 2),
       tween: Tween<double>(begin: 1.0, end: 0.0),
       builder: (context, value, child) {
         return Opacity(
@@ -1583,12 +1018,11 @@ class _WaterSplashAnimationState extends State<WaterSplashAnimation> {
           child: Transform.scale(
             scale: value,
             child: Container(
-              width: 50 * value, // Shrinking effect
+              width: 50 * value,
               height: 50 * value,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: widget.splashColor
-                    .withValues(alpha: 0.5), // Use the splashColor passed
+                color: widget.splashColor.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -1600,6 +1034,5 @@ class _WaterSplashAnimationState extends State<WaterSplashAnimation> {
 
 class WaterSplash {
   final double x, y;
-
   WaterSplash({required this.x, required this.y});
 }
