@@ -208,17 +208,17 @@ List<TeamStanding> computeStandings(
     List<Team> teams, List<TournamentMatch> matches) {
   final standings = {
     for (final team in teams)
-      team.color.value.toString() +
+      team.color.toARGB32().toString() +
               team.players.map((p) => p.name).join('-'): // Unique-ish key
           TeamStanding(team: team, wins: 0, losses: 0)
   };
 
   for (final match in matches) {
     if (!match.played || match.winner == null) continue;
-    final keyWinner = match.winner!.color.value.toString() +
+    final keyWinner = match.winner!.color.toARGB32().toString() +
         match.winner!.players.map((p) => p.name).join('-');
     final loserTeam = (match.team1 == match.winner) ? match.team2 : match.team1;
-    final keyLoser = loserTeam.color.value.toString() +
+    final keyLoser = loserTeam.color.toARGB32().toString() +
         loserTeam.players.map((p) => p.name).join('-');
 
     standings[keyWinner]!.wins++;

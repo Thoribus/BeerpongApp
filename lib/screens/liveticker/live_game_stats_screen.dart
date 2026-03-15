@@ -1,13 +1,9 @@
-import 'package:beerpongapp/models/event.dart';
-import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
-import 'package:beerpongapp/models/player.dart';
 
 // new screens/tabs
 import 'package:beerpongapp/screens/liveticker/cup_layout_tab.dart';
@@ -131,7 +127,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                       !_dialogShown) {
                     _dialogShown = true;
                     final winningPlayers =
-                        (winner == "Team Blue") ? team1.players : team2.players;
+                        (winner == 'Team Blue') ? team1.players : team2.players;
                     DialogHelpers.showGameEndDialog(context, winningPlayers);
                   }
                 });
@@ -182,7 +178,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               offset: const Offset(0, 2),
               blurRadius: 4,
               spreadRadius: 1,
@@ -290,12 +286,12 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
   }
 
   Widget _buildTabPageSelector() {
-    final List<String> tabs = ["Table", "Statistics", "Timeline"];
+    final List<String> tabs = ['Table', 'Statistics', 'Timeline'];
 
     return Container(
       height: 48,
       width: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.orange,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),

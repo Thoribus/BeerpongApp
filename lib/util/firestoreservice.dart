@@ -1,5 +1,6 @@
 import 'package:beerpongapp/models/event.dart';
 import 'package:beerpongapp/models/team.dart';
+import 'package:beerpongapp/util/app_logger.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/user.dart';
@@ -16,7 +17,7 @@ class FirestoreService {
     try {
       await _db.collection('users').doc(user.id).set(user.toJson());
     } catch (e) {
-      print('Error adding user: $e');
+      AppLogger.error('Error adding user', e);
       rethrow;
     }
   }
@@ -26,7 +27,7 @@ class FirestoreService {
     try {
       await _db.collection('users').doc(user.id).update(user.toJson());
     } catch (e) {
-      print('Error updating user: $e');
+      AppLogger.error('Error updating user', e);
       rethrow;
     }
   }
@@ -38,7 +39,7 @@ class FirestoreService {
       if (!doc.exists) return null;
       return _userFromFirestore(doc);
     } catch (e) {
-      print('Error getting user: $e');
+      AppLogger.error('Error getting user', e);
       rethrow;
     }
   }
@@ -48,7 +49,7 @@ class FirestoreService {
     try {
       await _db.collection('users').doc(userId).delete();
     } catch (e) {
-      print('Error deleting user: $e');
+      AppLogger.error('Error deleting user', e);
       rethrow;
     }
   }
@@ -101,7 +102,7 @@ class FirestoreService {
       'started': false,
       'startingTeam': 'Team Blue',
       'events': [],
-      'tournamendId': "",
+      'tournamendId': '',
     });
     return docRef.id; // Return the new document ID
   }
@@ -227,7 +228,7 @@ class FirestoreService {
       if (!doc.exists) return {};
       return doc.data();
     } catch (e) {
-      print('Error getting game: $e');
+      AppLogger.error('Error getting game', e);
       rethrow;
     }
   }
@@ -245,7 +246,7 @@ class FirestoreService {
         return GameStatistics.fromFirestore(doc.id, doc.data());
       }).toList();
     } catch (e) {
-      print('Error retrieving games: $e');
+      AppLogger.error('Error retrieving games', e);
       return [];
     }
   }
@@ -284,7 +285,7 @@ class FirestoreService {
 
       return userStatsList;
     } catch (e) {
-      print('Error retrieving user stats: $e');
+      AppLogger.error('Error retrieving user stats', e);
       return [];
     }
   }
@@ -303,14 +304,14 @@ class FirestoreService {
 
       await docRef.set({
         'eventType': eventType,
-        'team': team.color.value.toString(),
+        'team': team.color.toARGB32().toString(),
         'player': player?.name,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
       return docRef.id;
     } catch (e) {
-      print('Error adding event: $e');
+      AppLogger.error('Error adding event', e);
       rethrow;
     }
   }
@@ -331,7 +332,7 @@ class FirestoreService {
         }, doc.id, gameId);
       }).toList();
     } catch (e) {
-      print('Error fetching events: $e');
+      AppLogger.error('Error fetching events', e);
       rethrow;
     }
   }
@@ -345,7 +346,7 @@ class FirestoreService {
           .doc(eventId)
           .delete();
     } catch (e) {
-      print('Error deleting event: $e');
+      AppLogger.error('Error deleting event', e);
       rethrow;
     }
   }
@@ -369,7 +370,7 @@ class FirestoreService {
       }
       return friends;
     } catch (e) {
-      print('Error fetching friends: $e');
+      AppLogger.error('Error fetching friends', e);
       rethrow;
     }
   }
@@ -389,7 +390,7 @@ class FirestoreService {
         });
       });
     } catch (e) {
-      print('Error adding friend: $e');
+      AppLogger.error('Error adding friend', e);
       rethrow;
     }
   }
@@ -502,137 +503,146 @@ class FirestoreService {
 
   //region ----- Tournament Functions -----
 
-/// Create a new tournament. Returns the tournament ID.
-Future<String> createTournament(Tournament tournament) async {
-  try {
-    final docRef = await _db.collection('tournaments').add(tournament.toJson());
-    return docRef.id;
-  } catch (e) {
-    print('Error creating tournament: $e');
-    rethrow;
-  }
-}
-
-/// Update an existing tournament.
-Future<void> updateTournament(Tournament tournament) async {
-  try {
-    await _db.collection('tournaments').doc(tournament.id).update(tournament.toJson());
-  } catch (e) {
-    print('Error updating tournament: $e');
-    rethrow;
-  }
-}
-
-/// Fetch a tournament by ID.
-Future<Tournament?> getTournament(String tournamentId) async {
-  try {
-    final doc = await _db.collection('tournaments').doc(tournamentId).get();
-    if (!doc.exists) return null;
-    return Tournament.fromJson({...doc.data()!, 'id': doc.id});
-  } catch (e) {
-    print('Error fetching tournament: $e');
-    rethrow;
-  }
-}
-
-/// Delete a tournament (and optionally its matches).
-Future<void> deleteTournament(String tournamentId) async {
-  try {
-    // Optionally: delete all matches subcollection first if you want
-    final matches = await _db
-        .collection('tournaments')
-        .doc(tournamentId)
-        .collection('matches')
-        .get();
-    for (final doc in matches.docs) {
-      await doc.reference.delete();
+  /// Create a new tournament. Returns the tournament ID.
+  Future<String> createTournament(Tournament tournament) async {
+    try {
+      final docRef =
+          await _db.collection('tournaments').add(tournament.toJson());
+      return docRef.id;
+    } catch (e) {
+      AppLogger.error('Error creating tournament', e);
+      rethrow;
     }
-    await _db.collection('tournaments').doc(tournamentId).delete();
-  } catch (e) {
-    print('Error deleting tournament: $e');
-    rethrow;
   }
-}
 
-/// List all tournaments for a user (by participant ID)
-Future<List<Tournament>> getTournamentsForUser(String userId) async {
-  try {
-    final snapshot = await _db
-        .collection('tournaments')
-        .where('participantIds', arrayContains: userId)
-        .orderBy('createdAt', descending: true)
-        .get();
-    return snapshot.docs.map((doc) =>
-        Tournament.fromJson({...doc.data(), 'id': doc.id})).toList();
-  } catch (e) {
-    print('Error getting tournaments for user: $e');
-    return [];
+  /// Update an existing tournament.
+  Future<void> updateTournament(Tournament tournament) async {
+    try {
+      await _db
+          .collection('tournaments')
+          .doc(tournament.id)
+          .update(tournament.toJson());
+    } catch (e) {
+      AppLogger.error('Error updating tournament', e);
+      rethrow;
+    }
   }
-}
 
-/// Add a match to a tournament (returns match ID)
-Future<String> addMatchToTournament(String tournamentId, TournamentMatch match) async {
-  try {
-    final docRef = await _db
-        .collection('tournaments')
-        .doc(tournamentId)
-        .collection('matches')
-        .add(match.toJson());
-    return docRef.id;
-  } catch (e) {
-    print('Error adding match: $e');
-    rethrow;
+  /// Fetch a tournament by ID.
+  Future<Tournament?> getTournament(String tournamentId) async {
+    try {
+      final doc = await _db.collection('tournaments').doc(tournamentId).get();
+      if (!doc.exists) return null;
+      return Tournament.fromJson({...doc.data()!, 'id': doc.id});
+    } catch (e) {
+      AppLogger.error('Error fetching tournament', e);
+      rethrow;
+    }
   }
-}
 
-/// Update a match in a tournament
-Future<void> updateTournamentMatch(String tournamentId, TournamentMatch match) async {
-  try {
-    await _db
-        .collection('tournaments')
-        .doc(tournamentId)
-        .collection('matches')
-        .doc(match.id)
-        .update(match.toJson());
-  } catch (e) {
-    print('Error updating match: $e');
-    rethrow;
+  /// Delete a tournament (and optionally its matches).
+  Future<void> deleteTournament(String tournamentId) async {
+    try {
+      // Optionally: delete all matches subcollection first if you want
+      final matches = await _db
+          .collection('tournaments')
+          .doc(tournamentId)
+          .collection('matches')
+          .get();
+      for (final doc in matches.docs) {
+        await doc.reference.delete();
+      }
+      await _db.collection('tournaments').doc(tournamentId).delete();
+    } catch (e) {
+      AppLogger.error('Error deleting tournament', e);
+      rethrow;
+    }
   }
-}
 
-/// Get all matches in a tournament (as a list)
-Future<List<TournamentMatch>> getTournamentMatches(String tournamentId) async {
-  try {
-    final snapshot = await _db
-        .collection('tournaments')
-        .doc(tournamentId)
-        .collection('matches')
-        .orderBy('round')
-        .get();
-    return snapshot.docs.map((doc) =>
-        TournamentMatch.fromJson({...doc.data(), 'id': doc.id})).toList();
-  } catch (e) {
-    print('Error fetching matches: $e');
-    return [];
+  /// List all tournaments for a user (by participant ID)
+  Future<List<Tournament>> getTournamentsForUser(String userId) async {
+    try {
+      final snapshot = await _db
+          .collection('tournaments')
+          .where('participantIds', arrayContains: userId)
+          .orderBy('createdAt', descending: true)
+          .get();
+      return snapshot.docs
+          .map((doc) => Tournament.fromJson({...doc.data(), 'id': doc.id}))
+          .toList();
+    } catch (e) {
+      AppLogger.error('Error getting tournaments for user', e);
+      return [];
+    }
   }
-}
 
-/// Get a single match by ID
-Future<TournamentMatch?> getTournamentMatch(String tournamentId, String matchId) async {
-  try {
-    final doc = await _db
-        .collection('tournaments')
-        .doc(tournamentId)
-        .collection('matches')
-        .doc(matchId)
-        .get();
-    if (!doc.exists) return null;
-    return TournamentMatch.fromJson({...doc.data()!, 'id': doc.id});
-  } catch (e) {
-    print('Error fetching match: $e');
-    rethrow;
+  /// Add a match to a tournament (returns match ID)
+  Future<String> addMatchToTournament(
+      String tournamentId, TournamentMatch match) async {
+    try {
+      final docRef = await _db
+          .collection('tournaments')
+          .doc(tournamentId)
+          .collection('matches')
+          .add(match.toJson());
+      return docRef.id;
+    } catch (e) {
+      AppLogger.error('Error adding match', e);
+      rethrow;
+    }
   }
-}
+
+  /// Update a match in a tournament
+  Future<void> updateTournamentMatch(
+      String tournamentId, TournamentMatch match) async {
+    try {
+      await _db
+          .collection('tournaments')
+          .doc(tournamentId)
+          .collection('matches')
+          .doc(match.id)
+          .update(match.toJson());
+    } catch (e) {
+      AppLogger.error('Error updating match', e);
+      rethrow;
+    }
+  }
+
+  /// Get all matches in a tournament (as a list)
+  Future<List<TournamentMatch>> getTournamentMatches(
+      String tournamentId) async {
+    try {
+      final snapshot = await _db
+          .collection('tournaments')
+          .doc(tournamentId)
+          .collection('matches')
+          .orderBy('round')
+          .get();
+      return snapshot.docs
+          .map((doc) => TournamentMatch.fromJson({...doc.data(), 'id': doc.id}))
+          .toList();
+    } catch (e) {
+      AppLogger.error('Error fetching matches', e);
+      return [];
+    }
+  }
+
+  /// Get a single match by ID
+  Future<TournamentMatch?> getTournamentMatch(
+      String tournamentId, String matchId) async {
+    try {
+      final doc = await _db
+          .collection('tournaments')
+          .doc(tournamentId)
+          .collection('matches')
+          .doc(matchId)
+          .get();
+      if (!doc.exists) return null;
+      return TournamentMatch.fromJson({...doc.data()!, 'id': doc.id});
+    } catch (e) {
+      AppLogger.error('Error fetching match', e);
+      rethrow;
+    }
+  }
 //endregion
-
 }

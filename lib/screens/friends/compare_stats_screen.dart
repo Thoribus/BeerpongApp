@@ -56,7 +56,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           )
@@ -265,7 +265,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
         },
         dataSets: [
           RadarDataSet(
-            fillColor: Colors.orange.withOpacity(0.3),
+            fillColor: Colors.orange.withValues(alpha: 0.3),
             borderColor: Colors.orange,
             entryRadius: 3,
             dataEntries: stats
@@ -273,7 +273,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
                 .toList(),
           ),
           RadarDataSet(
-            fillColor: Colors.grey.withOpacity(0.3),
+            fillColor: Colors.grey.withValues(alpha: 0.3),
             borderColor: Colors.grey,
             entryRadius: 3,
             dataEntries: stats

@@ -30,7 +30,7 @@ class CustomDialog extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
           image: const DecorationImage(
-            image: AssetImage("assets/background_achievement.png"),
+            image: AssetImage('assets/background_achievement.png'),
             fit: BoxFit.fill,
           ),
         ),
@@ -104,7 +104,7 @@ class CustomDialog extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(10),
             image: DecorationImage(
-              image: AssetImage("assets/$imagePath"),
+              image: AssetImage('assets/$imagePath'),
               fit: BoxFit.scaleDown,
             ),
           ),
@@ -127,7 +127,7 @@ class CustomDialog extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                "$stageProgress", // Display progress
+                '$stageProgress', // Display progress
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -202,84 +202,84 @@ class AchievementsScreen extends StatelessWidget {
   static List<Map<String, Object>> getAchievements(User user) {
     List<Map<String, Object>> achievements = [
       {
-        'imagePath': "ach_wins.png",
+        'imagePath': 'ach_wins.png',
         'title': 'Wins',
         'titleToGrant': 'Beginner Winner',
         'currentProgress': user.wins,
         'stages': [0, 25, 50, 100, 100], // Bronze, Silver, Amber, Violet
       },
       {
-        'imagePath': "ach_lost.png",
+        'imagePath': 'ach_lost.png',
         'title': 'Losses',
         'titleToGrant': 'Unlucky Warrior',
         'currentProgress': user.losses,
         'stages': [0, 25, 50, 100, 100],
       },
       {
-        'imagePath': "ach_friends.png",
+        'imagePath': 'ach_friends.png',
         'title': 'Friendships',
         'titleToGrant': 'Social Butterfly',
         'currentProgress': user.friends.length,
         'stages': [0, 5, 15, 20, 100],
       },
       {
-        'imagePath': "ach_champion.png",
+        'imagePath': 'ach_champion.png',
         'title': 'Champion',
         'titleToGrant': 'Heavy hitter',
         'currentProgress': user.totalScore.round(),
         'stages': [0, 20, 100, 1000, 5000],
       },
       {
-        'imagePath': "ach_loses.png",
+        'imagePath': 'ach_loses.png',
         'title': 'Misses',
         'titleToGrant': 'Clumsy',
         'currentProgress': user.totalMisses,
         'stages': [0, 25, 50, 1000, 5000],
       },
       {
-        'imagePath': "ach_airball.png",
+        'imagePath': 'ach_airball.png',
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': user.totalAirballs,
         'stages': [0, 10, 20, 1000, 5000],
       },
       {
-        'imagePath': "ach_airball.png",
+        'imagePath': 'ach_airball.png',
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': user.totalAirballs,
         'stages': [0, 10, 20, 1000, 5000],
       },
       {
-        'imagePath': "ach_airball.png",
+        'imagePath': 'ach_airball.png',
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': user.totalAirballs,
         'stages': [0, 10, 20, 1000, 5000],
       },
       {
-        'imagePath': "ach_airball.png",
+        'imagePath': 'ach_airball.png',
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': user.totalAirballs,
         'stages': [0, 10, 20, 1000, 5000],
       },
       {
-        'imagePath': "ach_airball.png",
+        'imagePath': 'ach_airball.png',
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': 0, //user.totalAirballs,
         'stages': [0, 10, 20, 1000, 5000],
       },
       {
-        'imagePath': "ach_airball.png",
+        'imagePath': 'ach_airball.png',
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': 1001, //user.totalAirballs,
         'stages': [0, 10, 20, 1000, 5000],
       },
       {
-        'imagePath': "ach_airball.png",
+        'imagePath': 'ach_airball.png',
         'title': 'Airballs',
         'titleToGrant': 'Airballer',
         'currentProgress': user.totalAirballs,
@@ -336,10 +336,10 @@ class AchievementsScreen extends StatelessWidget {
 
   Widget _buildUserCard() {
     // Dummy data
-    final String username = "PlayerOne";
-    final int level = 12;
-    final int achievementsCompleted = 32;
-    final int totalAchievements = 50;
+    const String username = 'PlayerOne';
+    const int level = 12;
+    const int achievementsCompleted = 32;
+    const int totalAchievements = 50;
     final double progress =
         (achievementsCompleted / totalAchievements).clamp(0.0, 1.0);
 
@@ -371,16 +371,16 @@ class AchievementsScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.amber.withOpacity(0.6),
+                        color: Colors.amber.withValues(alpha: 0.6),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       'Lv $level',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -394,9 +394,9 @@ class AchievementsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         username,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -409,15 +409,15 @@ class AchievementsScreen extends StatelessWidget {
                           value: progress,
                           minHeight: 10,
                           backgroundColor: Colors.grey[300],
-                          valueColor: AlwaysStoppedAnimation<Color>(
+                          valueColor: const AlwaysStoppedAnimation<Color>(
                             Colors.amber,
                           ),
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      const Text(
                         '$achievementsCompleted / $totalAchievements Achievements',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12, color: Colors.black54),
                       ),
                     ],
@@ -438,7 +438,7 @@ class AchievementsScreen extends StatelessWidget {
                 const SizedBox(width: 6),
                 Icon(Icons.military_tech, color: Colors.grey[700]),
                 const SizedBox(width: 6),
-                Icon(Icons.emoji_events, color: Colors.deepOrange),
+                const Icon(Icons.emoji_events, color: Colors.deepOrange),
               ],
             ),
           ],
@@ -514,7 +514,7 @@ class AchievementsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Image.asset(
-                "assets/$imagePath",
+                'assets/$imagePath',
                 width: 50,
                 height: 50,
                 fit: BoxFit.contain,
@@ -535,7 +535,7 @@ class AchievementsScreen extends StatelessWidget {
               LinearProgressIndicator(
                   value: progressPercentage,
                   backgroundColor: Colors.grey,
-                  valueColor: AlwaysStoppedAnimation<Color>(
+                  valueColor: const AlwaysStoppedAnimation<Color>(
                       Colors.white) // stage color einfügen wenn progress stimmt
                   //valueColor: AlwaysStoppedAnimation<Color>(stageColor),
                   ),
@@ -615,8 +615,8 @@ class AchievementsScreen extends StatelessWidget {
           Icons.star, // Achievement icon
           size: 40.0,
           color: i == stageIndex
-              ? stageColors[i].withOpacity(1.0) // Highlight current stage
-              : stageColors[i].withOpacity(0.4), // Dim other stages
+              ? stageColors[i].withValues(alpha: 1.0) // Highlight current stage
+              : stageColors[i].withValues(alpha: 0.4), // Dim other stages
         ),
       );
       if (i < stages.length - 1) {

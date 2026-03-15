@@ -33,13 +33,13 @@ class BeerpongIcons {
   static const IconData umstellen = IconData(0xe800, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData airball = IconData(0xe801, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData newgame = IconData(0xe802, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData racoon_avatar = IconData(0xe803, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData dog_avatar = IconData(0xe804, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData cat_avatar = IconData(0xe805, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData eagle_avatar = IconData(0xe806, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData frog_avatar = IconData(0xe807, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData bunny_avatar = IconData(0xe808, fontFamily: _kFontFam, fontPackage: _kFontPkg);
-  static const IconData palm_tree = IconData(0xea56, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData racoonAvatar = IconData(0xe803, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData dogAvatar = IconData(0xe804, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData catAvatar = IconData(0xe805, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData eagleAvatar = IconData(0xe806, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData frogAvatar = IconData(0xe807, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData bunnyAvatar = IconData(0xe808, fontFamily: _kFontFam, fontPackage: _kFontPkg);
+  static const IconData palmTree = IconData(0xea56, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData skull = IconData(0xeaa1, fontFamily: _kFontFam, fontPackage: _kFontPkg);
   static const IconData medal = IconData(0xf5a2, fontFamily: _kFontFam, fontPackage: _kFontPkg);
 }

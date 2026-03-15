@@ -26,8 +26,6 @@ class PersonalStatisticsScreen extends StatelessWidget {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
-                final userStatsList = snapshot.data ?? [];
-
                 // 2) Now we have userStatsList for line charts etc.
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +78,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 offset: const Offset(0, 2),
                 blurRadius: 2,
                 spreadRadius: 0,
@@ -94,7 +92,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.grey,
                   shape: BoxShape.circle,
                 ),

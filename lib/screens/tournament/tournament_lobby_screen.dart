@@ -50,7 +50,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
     _InfoTileData(BeerpongIcons.airball, 'Airballs'),
     _InfoTileData(Icons.roundabout_left, 'Bounce'),
     _InfoTileData(Icons.sports_basketball_outlined, 'Putback'),
-    _InfoTileData(BeerpongIcons.palm_tree, 'Island'),
+    _InfoTileData(BeerpongIcons.palmTree, 'Island'),
     _InfoTileData(BeerpongIcons.skull, 'Deathcup'),
     _InfoTileData(BeerpongIcons.umstellen, 'Rearrange'),
   ];
@@ -60,9 +60,18 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
   final Map<int, String> _invitationStatuses = {};
   final Map<int, User> _friendMap = {};
   final List<String> _acceptedInvites = [];
+  final List<StreamSubscription<dynamic>> _invitationSubscriptions = [];
   late final Map<String, bool> _selectedRules = {
     for (var tile in tiles) tile.text: false,
   };
+
+  @override
+  void dispose() {
+    for (final sub in _invitationSubscriptions) {
+      sub.cancel();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -258,14 +267,14 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(8),
       child: Column(
         children: [
           const Text(
-            "Players",
+            'Players',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -285,11 +294,11 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
             TextButton.icon(
               onPressed: () {
                 setState(() {
-                  players.add(Player(name: "", user: null));
+                  players.add(Player(name: '', user: null));
                 });
               },
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text("Add Player",
+              label: const Text('Add Player',
                   style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -328,11 +337,11 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
             ),
           if (status == 'pending') ...[
             const SizedBox(width: 8),
-            const Text("pending...", style: TextStyle(color: Colors.amber)),
+            const Text('pending...', style: TextStyle(color: Colors.amber)),
             IconButton(
               icon: const Icon(Icons.cancel, color: Colors.red),
-              onPressed: () {
-                _cancelInvitation(rowIndex);
+              onPressed: () async {
+                await _cancelInvitation(rowIndex);
               },
             ),
           ],
@@ -368,7 +377,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
       decoration: InputDecoration(
         fillColor: Colors.white10,
         filled: true,
-        labelText: "Player ${rowIndex + 1}",
+        labelText: 'Player ${rowIndex + 1}',
         labelStyle: const TextStyle(color: Colors.amber),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -399,14 +408,17 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
       );
       return;
     }
+    final messenger = ScaffoldMessenger.of(context);
     final friends = await FirestoreService().getFriends(currentUser.id);
+    if (!mounted) return;
     if (friends.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('No friends found!')),
       );
       return;
     }
     final selected = await _showPickPlayerDialog(currentUser, friends);
+    if (!mounted) return;
     if (selected == null) return;
     final players = _players;
     if (selected.id == currentUser.id) {
@@ -428,11 +440,12 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
       gameId:
           '', // Not needed for tournament, but kept for FirestoreService compatibility
     );
+    if (!mounted) return;
     _invitationDocIds[rowIndex] = docId;
     _invitationStatuses[rowIndex] = 'pending';
     _friendMap[rowIndex] = selected;
     _listenToInvitationStatus(rowIndex, docId);
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(content: Text('Invited ${selected.username}')),
     );
   }
@@ -484,7 +497,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
               Navigator.pop(context);
             },
             child: _buildPlayerOptionCard(
-                currentUser, "You", Icons.account_circle, Colors.amber),
+                currentUser, 'You', Icons.account_circle, Colors.amber),
           ),
           ListView.builder(
             shrinkWrap: true,
@@ -498,7 +511,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
                   Navigator.pop(context);
                 },
                 child: _buildPlayerOptionCard(
-                    friend, "Friend", Icons.person, Colors.blue),
+                    friend, 'Friend', Icons.person, Colors.blue),
               );
             },
           ),
@@ -513,7 +526,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
       margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: Row(
@@ -560,7 +573,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
   }
 
   void _listenToInvitationStatus(int rowIndex, String docId) {
-    FirebaseFirestore.instance
+    final sub = FirebaseFirestore.instance
         .collection('invitations')
         .doc(docId)
         .snapshots()
@@ -583,31 +596,35 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
         });
       } else if (status == 'declined') {
         FirestoreService().deleteGameInvitation(docId);
-        setState(() {
-          _invitationDocIds.remove(rowIndex);
-          _invitationStatuses.remove(rowIndex);
-          _players[rowIndex] = _players[rowIndex].copyWithName("");
-          _players[rowIndex] = _players[rowIndex].copyWithUser(null);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invitation declined')),
-        );
+        if (mounted) {
+          setState(() {
+            _invitationDocIds.remove(rowIndex);
+            _invitationStatuses.remove(rowIndex);
+            _players[rowIndex] = _players[rowIndex].copyWithName('');
+            _players[rowIndex] = _players[rowIndex].copyWithUser(null);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invitation declined')),
+          );
+        }
       } else if (status == 'pending') {
         setState(() {
           _invitationStatuses[rowIndex] = 'pending';
         });
       }
     });
+    _invitationSubscriptions.add(sub);
   }
 
-  void _cancelInvitation(int rowIndex) async {
+  Future<void> _cancelInvitation(int rowIndex) async {
     final docId = _invitationDocIds[rowIndex];
     if (docId == null || docId.isEmpty) return;
     await FirestoreService().deleteGameInvitation(docId);
+    if (!mounted) return;
     setState(() {
       _invitationDocIds.remove(rowIndex);
       _invitationStatuses.remove(rowIndex);
-      _players[rowIndex] = _players[rowIndex].copyWithName("");
+      _players[rowIndex] = _players[rowIndex].copyWithName('');
       _players[rowIndex] = _players[rowIndex].copyWithUser(null);
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -671,7 +688,8 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
         .set(tournament.toJson());
 
     // 5. Go to Tournament Overview
-    Navigator.pushReplacement(
+    if (!mounted) return;
+    unawaited(Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => TournamentPageView(
@@ -679,7 +697,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
           initialTournament: tournament,
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildSelectableTile(int index) {

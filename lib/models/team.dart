@@ -43,7 +43,7 @@ class Team {
   /// Convert this Team instance into a JSON-friendly map.
   Map<String, dynamic> toJson() {
     return {
-      'colorValue': color.value, // store color as int
+      'colorValue': color.toARGB32(), // store color as int
       'players':
           players.map((p) => p.toJson()).toList(), // store players in JSON
       'cups': cups.map((c) => c.toJson()).toList(), // store cups in JSON
@@ -56,7 +56,7 @@ class Team {
 
   /// Recreate a Team from a JSON map.
   factory Team.fromJson(Map<String, dynamic> data) {
-    final colorValue = data['colorValue'] as int? ?? Colors.blue.value;
+    final colorValue = data['colorValue'] as int? ?? Colors.blue.toARGB32();
     return Team(
       color: Color(colorValue),
       players: data['players'] != null

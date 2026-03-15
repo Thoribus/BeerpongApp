@@ -1,5 +1,6 @@
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/profile/achievements_screen.dart';
+import 'package:beerpongapp/util/app_logger.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -49,12 +50,12 @@ class ActivityScreenState extends State<ActivityScreen> {
     double hitRateDelta = newUser.hitRate - user.hitRate;
     num scoreIncrease = player.score;
 
-    print(scoreIncrease);
-    print(hitRateDelta);
-    print(winRateDelta);
-    List<Map<String, String>> upgrades =
+    AppLogger.debug('scoreIncrease: $scoreIncrease');
+    AppLogger.debug('hitRateDelta: $hitRateDelta');
+    AppLogger.debug('winRateDelta: $winRateDelta');
+    final List<Map<String, String>> upgrades =
         AchievementsScreen.getUpgradedAchivements(player);
-    print(upgrades);
+    AppLogger.debug('upgrades: $upgrades');
   }
 
   @override
@@ -95,7 +96,7 @@ class ActivityScreenState extends State<ActivityScreen> {
 
   Widget _buildGameCard(UserStatsInGame game, int index) {
     return Card(
-      color: Colors.amber.withOpacity(0.2),
+      color: Colors.amber.withValues(alpha: 0.2),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Padding(
         padding: const EdgeInsets.all(16.0),

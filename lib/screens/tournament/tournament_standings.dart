@@ -45,7 +45,7 @@ class TournamentStandingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 14),
                 Text(
-                  team.players.map((p) => p.name).join(", "),
+                  team.players.map((p) => p.name).join(', '),
                   style: const TextStyle(fontSize: 16),
                 ),
                 const Spacer(),

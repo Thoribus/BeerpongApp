@@ -2,13 +2,10 @@ import 'dart:async';
 
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/invitation.dart';
-import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
-import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
 import 'package:beerpongapp/screens/tournament/tournament_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +25,6 @@ class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
   bool _hasInvitations = false;
   final List<Invitation> _invitations = [];
-  final double _progress = 0.0;
 
   @override
   void initState() {
@@ -131,247 +127,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBracketExample() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "BEERPONG BATTLE",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => ReadOnlyLobbyScreen(
-                              gameId: _invitations[0].gameId,
-                            )),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  "Spectate",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.grey[850],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: _invitations.isEmpty
-                ? const Center(
-                    child: Text(
-                      "No invitations available",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  )
-                : ListView.builder(
-                    scrollDirection: Axis.vertical,
-                    itemCount: _invitations.length,
-                    itemBuilder: (context, index) {
-                      return _buildInvitationCard(_invitations[index]);
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInvitationCard(Invitation invite) {
-    final firestoreService = FirestoreService();
-
-    return StreamBuilder<DocumentSnapshot>(
-        stream: firestoreService.getGameDocStream(invite.gameId),
-        builder:
-            (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.red)),
-            );
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(
-              child: Text('Game not found.',
-                  style: TextStyle(color: Colors.white, fontSize: 18)),
-            );
-          }
-
-          // Extract game data
-          final gameData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-
-          Team team1 = Team.fromJson(gameData['team1']);
-          Team team2 = Team.fromJson(gameData['team2']);
-
-          return Card(
-            color: Colors.grey[900],
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Invitation",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
-                          Text(
-                              "${team1.players.length} VS ${team2.players.length}",
-                              style: const TextStyle(color: Colors.white70)),
-                        ],
-                      ),
-                      const Row(
-                        children: [
-                          Icon(Icons.star_border_outlined, color: Colors.amber),
-                          Icon(Icons.star_border_outlined, color: Colors.green),
-                          Icon(Icons.star_border_outlined, color: Colors.blue),
-                        ],
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      // Loop over the players in the game and build their avatars
-                      for (Player player in team1.players)
-                        _buildPlayerAvatar(player, Colors.amber),
-                      const Text(" VS ", style: TextStyle(color: Colors.white)),
-                      for (Player player in team2.players)
-                        _buildPlayerAvatar(player, Colors.green),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Stack(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 50, // Same height as the button
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8.0),
-                          gradient: LinearGradient(
-                            begin: Alignment.centerRight,
-                            end: Alignment.centerLeft,
-                            stops: [_progress, _progress + 0.01],
-                            colors: const [
-                              Colors
-                                  .grey, // Gradually appears as progress increases
-                              Colors.amber,
-                            ],
-                          ),
-                        ),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors
-                              .transparent, // Transparent to show the gradient
-                          shadowColor:
-                              Colors.transparent, // Removes button shadow
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        onPressed: () async {
-                          await FirestoreService()
-                              .updateInvitationStatus(invite.id, "accepted");
-                        },
-                        child: const Text(
-                          "You got 30s to join. Hurry up!",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
-  }
-
-  Widget _buildPlayerAvatar(Player player, Color color) {
-    if (player.user == null) return _buildEmptyAvatar();
-    final avatarAsset = player.user!.mapAvatarKeyToAsset();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: CircleAvatar(
-        radius: 20,
-        backgroundColor: color,
-        child: CircleAvatar(
-          radius: 30,
-          backgroundColor: Colors.white24,
-          child: avatarAsset.isNotEmpty
-              ? ClipOval(
-                  child: SvgPicture.asset(
-                    avatarAsset,
-                    fit: BoxFit.cover,
-                    width: 56,
-                    height: 56,
-                    placeholderBuilder: (BuildContext context) => Container(
-                      color: Colors.grey,
-                      child: const Icon(
-                        Icons.error,
-                        color: Colors.red,
-                      ),
-                    ),
-                  ),
-                )
-              : const Icon(
-                  Icons.person,
-                  size: 40,
-                  color: Colors.white,
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyAvatar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: CircleAvatar(
-        radius: 20,
-        backgroundColor: Colors.grey[800],
-        child: const Icon(Icons.person, color: Colors.white70),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -382,7 +137,7 @@ class HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 40), // Give space for SVG overflow
-              _buildSectionTitle("Game Modes"),
+              _buildSectionTitle('Game Modes'),
               const SizedBox(height: 20),
 
               // Wrap in Stack to allow overflow
@@ -394,7 +149,7 @@ class HomeScreenState extends State<HomeScreen> {
               ),
 
               const SizedBox(height: 30),
-              _buildSectionTitle("Rulebook"),
+              _buildSectionTitle('Rulebook'),
               const SizedBox(height: 10),
               _buildRulebookSection(),
               const SizedBox(height: 40),
@@ -406,7 +161,6 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _onReturnFromNextScreen() {
-    print("Hola!");
     _checkSavedGame();
   }
 
@@ -488,7 +242,7 @@ class HomeScreenState extends State<HomeScreen> {
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      (mode['color'] as Color).withOpacity(0.3),
+                                      (mode['color'] as Color).withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 6),
                                 ),
@@ -503,7 +257,7 @@ class HomeScreenState extends State<HomeScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 12, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(20),
                                     border: Border.all(
                                         color: Colors.white, width: 1),
@@ -535,7 +289,7 @@ class HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 const Spacer(),
-                                Divider(color: Colors.white24),
+                                const Divider(color: Colors.white24),
                                 Text(
                                   mode['details'] as String,
                                   style: const TextStyle(
@@ -610,10 +364,10 @@ class HomeScreenState extends State<HomeScreen> {
                                                   index: index,
                                                   color: Colors.red)),
                                         ),
-                                        selectedRules: {},
+                                        selectedRules: const {},
                                         startingTeam: true,
-                                        invitations: [],
-                                        tournamentId: "",
+                                        invitations: const [],
+                                        tournamentId: '',
                                       ),
                                     ),
                                   );
@@ -692,7 +446,7 @@ class HomeScreenState extends State<HomeScreen> {
                                 padding: const EdgeInsets.all(16),
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
+                                  gradient: LinearGradient(
                                     colors: [Colors.white, Colors.white70],
                                   ),
                                   boxShadow: [
@@ -738,7 +492,7 @@ class HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     color: isActive
                         ? Colors.orange
-                        : Colors.orange.withOpacity(0.4),
+                        : Colors.orange.withValues(alpha: 0.4),
                     shape: BoxShape.circle,
                   ),
                 );
@@ -857,7 +611,7 @@ Widget _buildRulebookSection() {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.15),
+                  color: Colors.grey.withValues(alpha: 0.15),
                   blurRadius: 6,
                   offset: const Offset(0, 3),
                 ),

@@ -50,7 +50,7 @@ class ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildTabPageSelector() {
-    final List<String> tabs = ["Avatar", "User Card", "In Game"];
+    final List<String> tabs = ['Avatar', 'User Card', 'In Game'];
 
     return Container(
       height: 48,

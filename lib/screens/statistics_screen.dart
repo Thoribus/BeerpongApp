@@ -57,7 +57,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildTabPageSelector() {
-    final List<String> tabs = ["Stats", "Performance", "History"];
+    final List<String> tabs = ['Stats', 'Performance', 'History'];
 
     return Container(
       height: 48,
@@ -143,8 +143,8 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 setState(() => _currentTabPage = index);
               },
               children: [
-                PersonalStatisticsScreen(user: user!),
-                PerformanceScreen(user: user!),
+                PersonalStatisticsScreen(user: user),
+                PerformanceScreen(user: user),
                 _buildHistoryTab(), // Your original content
               ],
             ),
@@ -183,7 +183,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(4, 6), // bottom-right style
               )
@@ -242,7 +242,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                       children: [
                         ..._buildAvatarList(context, game.team1Players),
                         const SizedBox(width: 12),
-                        const Text("VS",
+                        const Text('VS',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 12),
                         ..._buildAvatarList(context, game.team2Players),

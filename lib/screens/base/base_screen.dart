@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/screens/profile/account_screen.dart';
 import 'package:beerpongapp/screens/friends/friendlist.dart';
 import 'package:beerpongapp/screens/home/home_screen.dart';
 import 'package:beerpongapp/screens/shop/shop_screen.dart';
 import 'package:beerpongapp/screens/games/statistics_screen.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
-
+import 'package:beerpongapp/util/theme_provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -22,15 +21,18 @@ class BaseScreenState extends State<BaseScreen> {
   late int _selectedIndex = widget.selectedIndex;
   late PageController _pageController;
 
-  bool isDarkMode = true;
-  String language = 'en'; // 'en' or 'de'
-
   final double _itemWidth = 78;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _onItemTapped(int index) {
@@ -41,7 +43,10 @@ class BaseScreenState extends State<BaseScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final user = userProvider.user;
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0E0F11),
       drawer: Drawer(
@@ -119,28 +124,14 @@ class BaseScreenState extends State<BaseScreen> {
                 const Divider(color: Colors.grey),
                 SwitchListTile(
                   title: Text(
-                    language == 'en' ? 'Dark Mode' : 'Dunkelmodus',
+                    'Dark Mode',
                     style: TextStyle(
                         color: isDarkMode ? Colors.white : Colors.black),
                   ),
                   value: isDarkMode,
-                  onChanged: (value) => setState(() => isDarkMode = value),
+                  onChanged: (_) => themeProvider.toggle(),
                   secondary: Icon(
                     Icons.dark_mode,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-                SwitchListTile(
-                  title: Text(
-                    language == 'en' ? 'Language: English' : 'Sprache: Deutsch',
-                    style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black),
-                  ),
-                  value: language == 'en',
-                  onChanged: (value) =>
-                      setState(() => language = value ? 'en' : 'de'),
-                  secondary: Icon(
-                    Icons.language,
                     color: isDarkMode ? Colors.white : Colors.black,
                   ),
                 ),
@@ -148,9 +139,7 @@ class BaseScreenState extends State<BaseScreen> {
                   leading: Icon(Icons.privacy_tip_outlined,
                       color: isDarkMode ? Colors.white : Colors.black),
                   title: Text(
-                    language == 'en'
-                        ? 'Privacy Settings'
-                        : 'Datenschutzeinstellungen',
+                    'Privacy Settings',
                     style: TextStyle(
                         color: isDarkMode ? Colors.white : Colors.black),
                   ),
@@ -168,11 +157,7 @@ class BaseScreenState extends State<BaseScreen> {
         preferredSize: const Size.fromHeight(52),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade800, //Color(0xFF151924),
-            //borderRadius: BorderRadius.only(
-            //bottomLeft: Radius.circular(16),
-            //bottomRight: Radius.circular(16),
-            //),
+            color: Colors.grey.shade800,
           ),
           child: SafeArea(
             child: Padding(
@@ -204,7 +189,7 @@ class BaseScreenState extends State<BaseScreen> {
                     icon: const Icon(Icons.notifications_none),
                     color: Colors.white,
                     onPressed: () {
-                      // TODO: Notification action
+                      // Push notifications: not yet implemented
                     },
                   ),
                 ],
@@ -253,7 +238,7 @@ class BaseScreenState extends State<BaseScreen> {
                     width: indicatorWidth,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.orange, // AppConstants.primaryColor,
+                      color: Colors.orange,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -279,7 +264,6 @@ class BaseScreenState extends State<BaseScreen> {
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
     final color = isSelected ? Colors.orange : Colors.grey.shade500;
-//AppConstants.primaryColor : Colors.grey.shade500;
 
     return GestureDetector(
       onTap: () => _onItemTapped(index),
@@ -288,7 +272,7 @@ class BaseScreenState extends State<BaseScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 22), // Smaller icon
+            Icon(icon, color: color, size: 22),
             const SizedBox(height: 2),
             Text(
               label,

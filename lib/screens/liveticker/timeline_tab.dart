@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/event.dart';
-import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 
@@ -14,9 +13,9 @@ class TimelineTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance
-          .collection("games")
+          .collection('games')
           .doc(gameData.gameId)
-          .collection("events")
+          .collection('events')
           .orderBy('timestamp', descending: false)
           .snapshots(),
       builder: (context, snapshot) {
@@ -58,7 +57,7 @@ class TimelineTab extends StatelessWidget {
                     color: Colors.grey),
               ),
             ),
-            ...entry.value.map((e) => _buildAnimatedEventRow(e)).toList(),
+            ...entry.value.map((e) => _buildAnimatedEventRow(e)),
           ],
         );
       }).toList(),
@@ -66,7 +65,7 @@ class TimelineTab extends StatelessWidget {
   }
 
   Widget _buildAnimatedEventRow(GameEvent event) {
-    final isTeam1 = event.team == "4294198070";
+    final isTeam1 = event.team == '4294198070';
     Color eventColor = _getEventColor(event.eventType);
     IconData eventIcon = _getEventIcon(event.eventType);
 
@@ -115,22 +114,7 @@ class TimelineTab extends StatelessWidget {
       {required bool isTeam1}) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      child: StatefulBuilder(
-        builder: (context, setState) {
-          bool hovered = false;
-
-          return GestureDetector(
-            onTapDown: (_) => setState(() => hovered = true),
-            onTapUp: (_) => setState(() => hovered = false),
-            onTapCancel: () => setState(() => hovered = false),
-            child: AnimatedScale(
-              scale: hovered ? 1.02 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              child: _buildEventTile(event, color, isTeam1: isTeam1),
-            ),
-          );
-        },
-      ),
+      child: _buildEventTile(event, color, isTeam1: isTeam1),
     );
   }
 
@@ -138,7 +122,7 @@ class TimelineTab extends StatelessWidget {
       {required bool isTeam1}) {
     Duration eventDuration = event.timestamp.difference(gameData.gameStart);
     String eventTime =
-        "${(eventDuration.inMinutes % 60).toString().padLeft(2, '0')}:${(eventDuration.inSeconds % 60).toString().padLeft(2, '0')}";
+        '${(eventDuration.inMinutes % 60).toString().padLeft(2, '0')}:${(eventDuration.inSeconds % 60).toString().padLeft(2, '0')}';
 
     return Container(
       margin: EdgeInsets.only(
@@ -149,10 +133,10 @@ class TimelineTab extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.2),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -172,7 +156,7 @@ class TimelineTab extends StatelessWidget {
                       event.eventType,
                       style: TextStyle(
                         fontSize: 12,
-                        color: color.withOpacity(0.8),
+                        color: color.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -192,7 +176,7 @@ class TimelineTab extends StatelessWidget {
                       event.eventType,
                       style: TextStyle(
                         fontSize: 12,
-                        color: color.withOpacity(0.8),
+                        color: color.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -214,11 +198,11 @@ class TimelineTab extends StatelessWidget {
 
   Color _getEventColor(String eventType) {
     switch (eventType) {
-      case "Airball":
+      case 'Airball':
         return Colors.blue;
-      case "Bitchcup":
+      case 'Bitchcup':
         return Colors.red;
-      case "Normal Hit":
+      case 'Normal Hit':
         return Colors.green;
       default:
         return Colors.grey;
@@ -227,11 +211,11 @@ class TimelineTab extends StatelessWidget {
 
   IconData _getEventIcon(String eventType) {
     switch (eventType) {
-      case "Airball":
+      case 'Airball':
         return BeerpongIcons.airball;
-      case "Bitchcup":
+      case 'Bitchcup':
         return Icons.warning;
-      case "Normal Hit":
+      case 'Normal Hit':
         return Icons.sports_bar;
       default:
         return Icons.sports;

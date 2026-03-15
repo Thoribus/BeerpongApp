@@ -64,7 +64,7 @@ class Cup {
     return {
       'index': index,
       'isVisible': isVisible,
-      'color': color.value, // store color as integer
+      'color': color.toARGB32(), // store color as integer
     };
   }
 

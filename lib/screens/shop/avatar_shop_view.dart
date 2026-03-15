@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AvatarShopScreen extends StatelessWidget {
+  AvatarShopScreen({super.key});
+
   final List<ShopItem> profilePictures = [
     ShopItem('assets/avatars/avatar_catpants.svg', 100),
     ShopItem('assets/avatars/avatar_catpants.svg', 200),
@@ -28,9 +30,9 @@ class AvatarShopScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: ListView(
           children: [
-            _buildCategory(context, "Profile Pictures", profilePictures),
-            _buildCategory(context, "Avatar Borders", avatarBorders),
-            _buildCategory(context, "Emblems & Medals", emblems),
+            _buildCategory(context, 'Profile Pictures', profilePictures),
+            _buildCategory(context, 'Avatar Borders', avatarBorders),
+            _buildCategory(context, 'Emblems & Medals', emblems),
           ],
         ),
       ),
@@ -116,7 +118,7 @@ class AvatarShopScreen extends StatelessWidget {
                     const Icon(Icons.star, size: 16, color: Colors.white),
                     const SizedBox(width: 4),
                     Text(
-                      "${item.price}",
+                      '${item.price}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,

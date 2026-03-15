@@ -24,7 +24,7 @@ class _TournamentPageViewState extends State<TournamentPageView> {
   int _currentTabPage = 0;
 
   // Added "Analysis" tab
-  final List<String> _tabs = ["Overview", "Standings", "Analysis"];
+  final List<String> _tabs = ['Overview', 'Standings', 'Analysis'];
 
   @override
   void initState() {

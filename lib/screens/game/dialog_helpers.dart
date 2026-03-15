@@ -33,7 +33,7 @@ class DialogHelpers {
           ),
           const SizedBox(height: 10.0),
           const Text(
-            "Select the player for the cup action:",
+            'Select the player for the cup action:',
             style: TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -55,8 +55,8 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "Cancel",
-    ).show();
+      btnCancelText: 'Cancel',
+    ).show().ignore();
   }
 
   /// Dialog to pick a player for the Airball rule.
@@ -94,7 +94,7 @@ class DialogHelpers {
           ),
           const SizedBox(height: 10.0),
           const Text(
-            "Select the player for the cup action:",
+            'Select the player for the cup action:',
             style: TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -154,14 +154,14 @@ class DialogHelpers {
           ),
         ],
       ),
-      btnCancelText: "Cancel",
+      btnCancelText: 'Cancel',
       btnCancelOnPress: () {
         // If user cancels, we complete with null
         if (!completer.isCompleted) {
           completer.complete(null);
         }
       },
-    ).show();
+    ).show().ignore();
 
     // Return the Future that completes when user picks a player or cancels
     return completer.future;
@@ -215,8 +215,8 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "OK",
-    ).show();
+      btnCancelText: 'OK',
+    ).show().ignore();
   }
 
   /// Confirmation dialog to end the turn.
@@ -254,13 +254,13 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "Cancel",
+      btnCancelText: 'Cancel',
       btnOkOnPress: () {
         state.saveCurrentState();
         state.endTurn();
       },
-      btnOkText: "End Turn",
-    ).show();
+      btnOkText: 'End Turn',
+    ).show().ignore();
   }
 
   /// Shows an airball milestone dialog when airballs % 3 == 0.
@@ -298,8 +298,8 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: "OK",
-    ).show();
+      btnOkText: 'OK',
+    ).show().ignore();
   }
 
   /// Shows an AwesomeDialog indicating the team got Balls Back.
@@ -337,8 +337,8 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: "OK",
-    ).show();
+      btnOkText: 'OK',
+    ).show().ignore();
   }
 
   /// Shows an AwesomeDialog indicating the player is “On Fire.”
@@ -369,8 +369,8 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: "OK",
-    ).show();
+      btnOkText: 'OK',
+    ).show().ignore();
   }
 
   /// Shows an AwesomeDialog for the “Bitch Cup.”
@@ -412,8 +412,8 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "OK",
-    ).show();
+      btnCancelText: 'OK',
+    ).show().ignore();
   }
 
   /// Shows the game-over dialog and navigates to Stats or Home screen.
@@ -435,7 +435,7 @@ class DialogHelpers {
           ),
           const SizedBox(height: 10.0),
           Text(
-            "${players.map((p) => p.name).join(', ')} have won the game!",
+            '${players.map((p) => p.name).join(', ')} have won the game!',
             style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -458,7 +458,7 @@ class DialogHelpers {
           MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 3)),
         );
       },
-      btnOkText: "Go to Stats",
+      btnOkText: 'Go to Stats',
       btnCancelOnPress: () {
         // Go to Home
         Navigator.push(
@@ -466,8 +466,8 @@ class DialogHelpers {
           MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 2)),
         );
       },
-      btnCancelText: "Go to Home",
-    ).show();
+      btnCancelText: 'Go to Home',
+    ).show().ignore();
   }
 }
 
@@ -477,7 +477,7 @@ Widget _buildPlayerName(Player player) {
     decoration: BoxDecoration(
       color: Colors.brown.shade600, // Background color for card
       border: Border.all(
-        color: Colors.grey.withOpacity(0.5), // Semi-transparent border
+        color: Colors.grey.withValues(alpha: 0.5), // Semi-transparent border
         width: 0.5,
       ),
       borderRadius: BorderRadius.circular(8.0), // Rounded corners

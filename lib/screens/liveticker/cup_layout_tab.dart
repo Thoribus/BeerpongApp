@@ -45,7 +45,7 @@ class CupLayoutTab extends StatelessWidget {
   Widget _buildTeamBracket(BuildContext context, Team team,
       {required bool isLeftSide}) {
     final bool isLeft = isLeftSide;
-    final badgeTitles = ["Cups Hit", "Airballs", "Throws", "Misses"];
+    final badgeTitles = ['Cups Hit', 'Airballs', 'Throws', 'Misses'];
 
     return Expanded(
       child: Container(
@@ -215,9 +215,9 @@ class CupLayoutTab extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.amber.withOpacity(0.2),
+                Colors.amber.withValues(alpha: 0.2),
                 Colors.grey.shade600,
-                Colors.amber.withOpacity(0.2)
+                Colors.amber.withValues(alpha: 0.2)
               ],
               stops: const [0.0, 0.5, 1.0],
               begin: Alignment.centerLeft,
@@ -226,7 +226,7 @@ class CupLayoutTab extends StatelessWidget {
             borderRadius: BorderRadius.circular(20.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -264,7 +264,7 @@ class CupLayoutTab extends StatelessWidget {
               Center(
                 child: Container(
                   width: 1,
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
               ),
             ],

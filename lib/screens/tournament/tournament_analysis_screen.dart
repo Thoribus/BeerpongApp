@@ -17,21 +17,21 @@ class TournamentAnalysisScreen extends StatelessWidget {
         child: ListView(
           children: [
             const Text(
-              "Win Distribution",
+              'Win Distribution',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildWinBarChart(),
             const SizedBox(height: 24),
             const Text(
-              "Score Distribution",
+              'Score Distribution',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildScoreLineChart(),
             const SizedBox(height: 24),
             const Text(
-              "Confrontation Matrix",
+              'Confrontation Matrix',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -66,7 +66,7 @@ class TournamentAnalysisScreen extends StatelessWidget {
           barGroups: barGroups,
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
+            leftTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: true),
             ),
             bottomTitles: AxisTitles(
@@ -75,7 +75,7 @@ class TournamentAnalysisScreen extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
                   if (index >= 0 && index < tournament.teams.length) {
-                    return Text("T${index + 1}",
+                    return Text('T${index + 1}',
                         style: const TextStyle(fontSize: 10));
                   }
                   return const SizedBox.shrink();
@@ -117,13 +117,13 @@ class TournamentAnalysisScreen extends StatelessWidget {
             LineChartBarData(
               isCurved: true,
               spots: spots,
-              dotData: FlDotData(show: true),
+              dotData: const FlDotData(show: true),
               color: Colors.blue,
               belowBarData: BarAreaData(show: false),
             )
           ],
           borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(
+          titlesData: const FlTitlesData(
             leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
             bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
@@ -143,18 +143,18 @@ class TournamentAnalysisScreen extends StatelessWidget {
           children: [
             const SizedBox(),
             ...teams
-                .map((t) => Center(child: Text("T${teams.indexOf(t) + 1}"))),
+                .map((t) => Center(child: Text('T${teams.indexOf(t) + 1}'))),
           ],
         ),
         ...teams.asMap().entries.map((rowEntry) {
           final rowIndex = rowEntry.key;
           return TableRow(
             children: [
-              Center(child: Text("T${rowIndex + 1}")),
+              Center(child: Text('T${rowIndex + 1}')),
               ...teams.asMap().entries.map((colEntry) {
                 final colIndex = colEntry.key;
                 if (rowIndex == colIndex) {
-                  return const Center(child: Text("✕"));
+                  return const Center(child: Text('✕'));
                 }
                 // Fake result generation (replace with real match data if available)
                 final won = (rowIndex + colIndex) % 2 == 0;
@@ -165,7 +165,7 @@ class TournamentAnalysisScreen extends StatelessWidget {
                     size: 16,
                   ),
                 );
-              }).toList(),
+              }),
             ],
           );
         }),

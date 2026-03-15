@@ -36,7 +36,7 @@ class PerformanceScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // "Performance Summary": use a custom card
-                    _buildSectionTitle("Performance Summary"),
+                    _buildSectionTitle('Performance Summary'),
                     _buildCard(
                       child: StatisticsTable(
                         user: user,
@@ -46,7 +46,7 @@ class PerformanceScreen extends StatelessWidget {
                     const SizedBox(height: 16),
 
                     // Heat Map
-                    _buildSectionTitle("Cups Hit Heat Map"),
+                    _buildSectionTitle('Cups Hit Heat Map'),
                     _buildCard(
                       child: _buildPyramidHeatMap(),
                     ),
@@ -303,7 +303,7 @@ class StatisticsTable extends StatelessWidget {
   bool _lessIsBetter(String attribute) {
     // If the attribute name is "Total Misses" or "Total Airballs", returning true
     // means we’ll invert the color logic (negative slope => green).
-    return attribute == "Total Misses" || attribute == "Total Airballs";
+    return attribute == 'Total Misses' || attribute == 'Total Airballs';
   }
 
   /// On tap, show a bigger chart with BOTH raw data and the regression line

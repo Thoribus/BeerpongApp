@@ -140,8 +140,8 @@ class Player {
   /// Decode a Player from a JSON map.
   factory Player.fromJson(Map<String, dynamic> json) {
     // Handle cases where 'hitThisRound' might be stored as a bool
-    if (json["hitThisRound"] is bool) {
-      json["hitThisRound"] = json["hitThisRound"] ? 1 : 0;
+    if (json['hitThisRound'] is bool) {
+      json['hitThisRound'] = json['hitThisRound'] ? 1 : 0;
     }
 
     return Player(

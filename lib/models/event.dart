@@ -25,16 +25,16 @@ class GameEvent {
   factory GameEvent.fromJson(Map<String, dynamic> json, String id, String gameId) {
     return GameEvent(
       eventId: id,
-      eventType: json["eventType"] as String,
+      eventType: json['eventType'] as String,
       gameId: gameId,
-      player: json["player"] as String?,
-      team: json["team"] as String,
-      timestamp: (json["timestamp"] as Timestamp).toDate(),
+      player: json['player'] as String?,
+      team: json['team'] as String,
+      timestamp: (json['timestamp'] as Timestamp).toDate(),
     );
   }
 
   @override
   String toString() {
-    return "GameEvent($eventType, player: $player, team: $team, timestamp: $timestamp)";
+    return 'GameEvent($eventType, player: $player, team: $team, timestamp: $timestamp)';
   }
 }

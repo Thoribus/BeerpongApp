@@ -63,11 +63,11 @@ class GamePersistence {
     if (deleteGame) {
       final map = await loadGameState() as Map<String, dynamic>;
       final id = map['id'];
-      FirestoreService().deleteGameDoc(id);
+      await FirestoreService().deleteGameDoc(id);
       final List<Invitation> invitations = await FirestoreService()
           .getGameInvitationsByGameId(id); // Get all invitations for this game
       for (final invitation in invitations) {
-        FirestoreService().deleteGameInvitation(invitation.id);
+        await FirestoreService().deleteGameInvitation(invitation.id);
       }
     }
     await prefs.remove(_gameStateKey);

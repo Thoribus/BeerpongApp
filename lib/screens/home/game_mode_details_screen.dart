@@ -50,7 +50,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
     _InfoTileData(BeerpongIcons.airball, 'Airballs'),
     _InfoTileData(Icons.roundabout_left, 'Bounce'),
     _InfoTileData(Icons.sports_basketball_outlined, 'Putback'),
-    _InfoTileData(BeerpongIcons.palm_tree, 'Island'),
+    _InfoTileData(BeerpongIcons.palmTree, 'Island'),
     _InfoTileData(BeerpongIcons.skull, 'Deathcup'),
     _InfoTileData(BeerpongIcons.umstellen, 'Rearrange'),
   ];
@@ -66,6 +66,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   final Map<int, String> _redInvitationStatuses = {};
   final Map<int, User> _redFriendMap = {};
   final List<String> _acceptedInvites = [];
+  final List<StreamSubscription<dynamic>> _invitationSubscriptions = [];
   late final Map<String, bool> _selectedRules = {
     for (var tile in tiles) tile.text: false,
   };
@@ -80,6 +81,9 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
 
   @override
   void dispose() {
+    for (final sub in _invitationSubscriptions) {
+      sub.cancel();
+    }
     for (final docId in _blueInvitationDocIds.values) {
       if (docId.isNotEmpty) FirestoreService().deleteGameInvitation(docId);
     }
@@ -305,13 +309,13 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   }
 
   Widget _buildTeamPanel({required bool isBlue}) {
-    final teamName = isBlue ? "TEAM BLUE" : "TEAM RED";
+    final teamName = isBlue ? 'TEAM BLUE' : 'TEAM RED';
     final color = isBlue ? Colors.blue : Colors.red;
     final players = isBlue ? _playersBlue : _playersRed;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(8),
@@ -337,12 +341,12 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
             TextButton.icon(
               onPressed: () {
                 setState(() {
-                  players.add(Player(name: "", user: null));
+                  players.add(Player(name: '', user: null));
                 });
                 _updateGameDoc();
               },
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text("Add Player",
+              label: const Text('Add Player',
                   style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -383,7 +387,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
             ),
           if (status == 'pending') ...[
             const SizedBox(width: 8),
-            const Text("pending...", style: TextStyle(color: Colors.amber)),
+            const Text('pending...', style: TextStyle(color: Colors.amber)),
             IconButton(
               icon: const Icon(Icons.cancel, color: Colors.red),
               onPressed: () {
@@ -425,7 +429,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       decoration: InputDecoration(
         fillColor: Colors.white10,
         filled: true,
-        labelText: "Player ${rowIndex + 1}",
+        labelText: 'Player ${rowIndex + 1}',
         labelStyle: const TextStyle(color: Colors.amber),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -457,9 +461,11 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       );
       return;
     }
+    final messenger = ScaffoldMessenger.of(context);
     final friends = await FirestoreService().getFriends(currentUser.id);
+    if (!mounted) return;
     if (friends.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(content: Text('No friends found!')),
       );
       return;
@@ -472,7 +478,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
         players[rowIndex] = players[rowIndex].copyWithName(selected.username);
         players[rowIndex] = players[rowIndex].copyWithUser(selected);
       });
-      _updateGameDoc();
+      await _updateGameDoc();
       return;
     }
     setState(() {
@@ -486,6 +492,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       playerIndex: rowIndex,
       gameId: _gameId!,
     );
+    if (!mounted) return;
     if (isBlue) {
       _blueInvitationDocIds[rowIndex] = docId;
       _blueInvitationStatuses[rowIndex] = 'pending';
@@ -496,8 +503,8 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       _redFriendMap[rowIndex] = selected;
     }
     _listenToInvitationStatus(isBlue, rowIndex, docId);
-    _updateGameDoc();
-    ScaffoldMessenger.of(context).showSnackBar(
+    await _updateGameDoc();
+    messenger.showSnackBar(
       SnackBar(content: Text('Invited ${selected.username}')),
     );
   }
@@ -549,7 +556,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
               Navigator.pop(context);
             },
             child: _buildPlayerOptionCard(
-                currentUser, "You", Icons.account_circle, Colors.amber),
+                currentUser, 'You', Icons.account_circle, Colors.amber),
           ),
           ListView.builder(
             shrinkWrap: true,
@@ -563,7 +570,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                   Navigator.pop(context);
                 },
                 child: _buildPlayerOptionCard(
-                    friend, "Friend", Icons.person, Colors.blue),
+                    friend, 'Friend', Icons.person, Colors.blue),
               );
             },
           ),
@@ -578,7 +585,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: Row(
@@ -625,7 +632,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   }
 
   void _listenToInvitationStatus(bool isBlue, int rowIndex, String docId) {
-    FirebaseFirestore.instance
+    final sub = FirebaseFirestore.instance
         .collection('invitations')
         .doc(docId)
         .snapshots()
@@ -665,19 +672,21 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           if (isBlue) {
             _blueInvitationDocIds.remove(rowIndex);
             _blueInvitationStatuses.remove(rowIndex);
-            _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithName("");
+            _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithName('');
             _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithUser(null);
           } else {
             _redInvitationDocIds.remove(rowIndex);
             _redInvitationStatuses.remove(rowIndex);
-            _playersRed[rowIndex] = _playersRed[rowIndex].copyWithName("");
+            _playersRed[rowIndex] = _playersRed[rowIndex].copyWithName('');
             _playersRed[rowIndex] = _playersRed[rowIndex].copyWithUser(null);
           }
         });
         _updateGameDoc();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invitation declined')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invitation declined')),
+          );
+        }
       } else if (status == 'pending') {
         setState(() {
           if (isBlue) {
@@ -689,28 +698,31 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
         _updateGameDoc();
       }
     });
+    _invitationSubscriptions.add(sub);
   }
 
-  void _cancelInvitation(bool isBlue, int rowIndex) async {
+  Future<void> _cancelInvitation(bool isBlue, int rowIndex) async {
     final docId = isBlue
         ? _blueInvitationDocIds[rowIndex]
         : _redInvitationDocIds[rowIndex];
     if (docId == null || docId.isEmpty) return;
     await FirestoreService().deleteGameInvitation(docId);
+    if (!mounted) return;
     setState(() {
       if (isBlue) {
         _blueInvitationDocIds.remove(rowIndex);
         _blueInvitationStatuses.remove(rowIndex);
-        _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithName("");
+        _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithName('');
         _playersBlue[rowIndex] = _playersBlue[rowIndex].copyWithUser(null);
       } else {
         _redInvitationDocIds.remove(rowIndex);
         _redInvitationStatuses.remove(rowIndex);
-        _playersRed[rowIndex] = _playersRed[rowIndex].copyWithName("");
+        _playersRed[rowIndex] = _playersRed[rowIndex].copyWithName('');
         _playersRed[rowIndex] = _playersRed[rowIndex].copyWithUser(null);
       }
     });
-    _updateGameDoc();
+    await _updateGameDoc();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Invitation canceled')),
     );
@@ -741,7 +753,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       invitations: _acceptedInvites,
       started: _started,
       timestamp: true,
-      tournamendId: "",
+      tournamendId: '',
     );
   }
 
@@ -770,7 +782,8 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       _started = true;
       _startingTeam = chosenTeam;
     });
-    _updateGameDoc();
+    await _updateGameDoc();
+    if (!mounted) return;
     Team team1 = Team(
           color: Colors.blue,
           players: _playersBlue,
@@ -784,7 +797,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           cups: List.generate(
               10, (index) => Cup(index: index, color: Colors.red)),
         );
-    Navigator.pushReplacement(
+    unawaited(Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (context) => GameScreen(
@@ -793,17 +806,17 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           team2: team2,
           selectedRules: _selectedRules,
           invitations: _acceptedInvites,
-          startingTeam: _startingTeam == "Team Blue",
-          tournamentId: "",
+          startingTeam: _startingTeam == 'Team Blue',
+          tournamentId: '',
         ),
       ),
-    );
+    ));
   }
 
   Future<String?> _showStartingTeamDialog() async {
     // Adjust team names if you want dynamic team names
-    const team1Name = "Team Blue";
-    const team2Name = "Team Red";
+    const team1Name = 'Team Blue';
+    const team2Name = 'Team Red';
     final team1Players =
         _playersBlue.map((p) => p.name).where((n) => n.isNotEmpty).toList();
     final team2Players =
@@ -885,7 +898,6 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
         }
         // Optionally: update your rules logic here
         _selectedRules[tile.text] = !isSelected;
-        print(_selectedRules);
       }),
       child: Container(
         width: 120,

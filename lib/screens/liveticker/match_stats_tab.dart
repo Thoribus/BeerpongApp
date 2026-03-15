@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 
 class MatchStatsTab extends StatelessWidget {
@@ -52,7 +51,7 @@ class MatchStatsTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                     blurRadius: 6,
                     offset: const Offset(0, 4),
                   ),
@@ -119,7 +118,7 @@ class MatchStatsTab extends StatelessWidget {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
