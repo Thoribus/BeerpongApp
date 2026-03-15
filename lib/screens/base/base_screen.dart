@@ -71,7 +71,7 @@ class BaseScreenState extends State<BaseScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '@wutzi',
+                                '@${user?.username ?? 'guest'}',
                                 style: TextStyle(
                                   color: isDarkMode
                                       ? Colors.grey[400]

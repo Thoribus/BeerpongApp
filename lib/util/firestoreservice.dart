@@ -32,6 +32,22 @@ class FirestoreService {
   Future<void> deleteUser(String userId) =>
       UserRepository.instance.deleteUser(userId);
 
+  Future<bool> checkUsernameAvailable(
+          String usernameLower, String currentUserId) =>
+      UserRepository.instance
+          .checkUsernameAvailable(usernameLower, currentUserId);
+
+  Future<void> claimUsername({
+    required String newUsername,
+    required String oldUsernameLower,
+    required String uid,
+  }) =>
+      UserRepository.instance.claimUsername(
+        newUsername: newUsername,
+        oldUsernameLower: oldUsernameLower,
+        uid: uid,
+      );
+
   Future<List<User>> saveGame({
     required List<Player> team1,
     required List<Player> team2,

@@ -52,6 +52,38 @@ class UserRepository {
     return User.fromJson({...data, 'id': doc.id});
   }
 
+  /// Returns true if [usernameLower] is unclaimed or already owned by [currentUserId].
+  Future<bool> checkUsernameAvailable(
+      String usernameLower, String currentUserId) async {
+    final doc =
+        await _db.collection('usernames').doc(usernameLower).get();
+    if (!doc.exists) return true;
+    return doc.data()?['uid'] == currentUserId;
+  }
+
+  /// Atomically releases the old username claim, claims the new one,
+  /// and writes the updated username field on the user document.
+  Future<void> claimUsername({
+    required String newUsername,
+    required String oldUsernameLower,
+    required String uid,
+  }) async {
+    final newLower = newUsername.toLowerCase();
+    await _db.runTransaction((tx) async {
+      final newRef = _db.collection('usernames').doc(newLower);
+      final snap = await tx.get(newRef);
+      if (snap.exists &&
+          snap.data()?['uid'] != uid) {
+        throw Exception('Username "$newUsername" is already taken.');
+      }
+      if (oldUsernameLower.isNotEmpty && oldUsernameLower != newLower) {
+        tx.delete(_db.collection('usernames').doc(oldUsernameLower));
+      }
+      tx.set(newRef, {'uid': uid});
+      tx.update(_db.collection('users').doc(uid), {'username': newUsername});
+    });
+  }
+
   /// Merge a player's in-game stats into their persistent user profile.
   /// Uses Firestore transactions with FieldValue.increment() to avoid race conditions.
   Future<List<User>> saveGame({

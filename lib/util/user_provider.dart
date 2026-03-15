@@ -34,6 +34,18 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Claims [newUsername] atomically in Firestore and updates the local user.
+  Future<void> claimUsername(String newUsername) async {
+    if (_user == null) return;
+    await FirestoreService.instance.claimUsername(
+      newUsername: newUsername,
+      oldUsernameLower: _user!.usernameLower,
+      uid: _user!.id,
+    );
+    _user = _user!.copyWith(username: newUsername);
+    notifyListeners();
+  }
+
   /// Clears local user data and signs out from Firebase & Google.
   Future<void> signOut() async {
     _user = null;

@@ -45,6 +45,9 @@ class User {
     this.unlockedTitles = const [],
   });
 
+  /// Lowercase version of username, used for case-insensitive uniqueness checks.
+  String get usernameLower => username.toLowerCase();
+
   /// Convenience getter to compute the user's overall win rate.
   double get winRate {
     final totalGames = wins + losses;
