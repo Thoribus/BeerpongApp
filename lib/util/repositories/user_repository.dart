@@ -53,23 +53,48 @@ class UserRepository {
   }
 
   /// Merge a player's in-game stats into their persistent user profile.
+  /// Uses Firestore transactions with FieldValue.increment() to avoid race conditions.
   Future<List<User>> saveGame({
     required List<Player> team1,
     required List<Player> team2,
   }) async {
-    final updatedUsers = <User>[];
-    for (final player in [...team1, ...team2]) {
-      if (player.user == null) continue;
-      final updatedUser = mapPlayerToUser(player);
-      await updateUser(updatedUser);
-      updatedUsers.add(updatedUser);
-    }
-    return updatedUsers;
+    final allPlayers =
+        [...team1, ...team2].where((p) => p.user != null).toList();
+
+    await Future.wait(allPlayers.map((player) async {
+      final userRef = _db.collection('users').doc(player.user!.id);
+      await _db.runTransaction((tx) async {
+        tx.update(userRef, {
+          'totalScore': FieldValue.increment(player.score),
+          'totalMisses': FieldValue.increment(player.misses),
+          'totalAirballs': FieldValue.increment(player.airballs),
+          'totalThrows': FieldValue.increment(player.throws),
+          'onFire': FieldValue.increment(player.onFire),
+          'defended': FieldValue.increment(player.defended),
+          'hitLastCup': FieldValue.increment(player.lastCupHit ? 1 : 0),
+          'wins': FieldValue.increment(player.isWinner ? 1 : 0),
+          'losses': FieldValue.increment(player.isWinner ? 0 : 1),
+          for (final cupIndex in player.cupsHit)
+            'cupsHitCount.$cupIndex': FieldValue.increment(1),
+        });
+      });
+    }));
+
+    final updatedUsers = await Future.wait(
+      allPlayers.map((p) => getUser(p.user!.id)),
+    );
+    return updatedUsers.whereType<User>().toList();
   }
 
   /// Maps a player's in-game results onto their user profile by incrementing stats.
+  /// Kept for backwards compatibility (used by AchievementsScreen).
   static User mapPlayerToUser(Player player) {
     final oldUser = player.user!;
+    final updatedCupsHitCount = Map<String, int>.from(oldUser.cupsHitCount);
+    for (final cupIndex in player.cupsHit) {
+      final key = cupIndex.toString();
+      updatedCupsHitCount[key] = (updatedCupsHitCount[key] ?? 0) + 1;
+    }
     return oldUser.copyWith(
       totalScore: oldUser.totalScore + player.score,
       totalMisses: oldUser.totalMisses + player.misses,
@@ -78,7 +103,7 @@ class UserRepository {
       onFire: oldUser.onFire + player.onFire,
       defended: oldUser.defended + player.defended,
       hitLastCup: oldUser.hitLastCup + (player.lastCupHit ? 1 : 0),
-      cupsHit: [...oldUser.cupsHit, ...player.cupsHit],
+      cupsHitCount: updatedCupsHitCount,
       wins: oldUser.wins + (player.isWinner ? 1 : 0),
       losses: oldUser.losses + (player.isWinner ? 0 : 1),
     );

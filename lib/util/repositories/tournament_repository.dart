@@ -36,7 +36,10 @@ class TournamentRepository {
       final doc =
           await _db.collection('tournaments').doc(tournamentId).get();
       if (!doc.exists) return null;
-      return Tournament.fromJson({...doc.data()!, 'id': doc.id});
+      final tournament = Tournament.fromJson({...doc.data()!, 'id': doc.id});
+      // Load matches from sub-collection (authoritative source)
+      final matches = await getTournamentMatches(tournamentId);
+      return tournament.copyWith(matches: matches);
     } catch (e) {
       AppLogger.error('Error fetching tournament', e);
       rethrow;
@@ -50,10 +53,12 @@ class TournamentRepository {
           .doc(tournamentId)
           .collection('matches')
           .get();
+      final batch = _db.batch();
       for (final doc in matches.docs) {
-        await doc.reference.delete();
+        batch.delete(doc.reference);
       }
-      await _db.collection('tournaments').doc(tournamentId).delete();
+      batch.delete(_db.collection('tournaments').doc(tournamentId));
+      await batch.commit();
     } catch (e) {
       AppLogger.error('Error deleting tournament', e);
       rethrow;

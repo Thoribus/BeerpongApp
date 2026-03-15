@@ -3,7 +3,7 @@ import 'user.dart';
 /// A class representing a player in the game.
 class Player {
   final String name;        // The player's name
-  num score;                // The player's score
+  double score;             // The player's score
   int throws;               // Number of throws the player made
   int misses;               // Number of misses by the player
   int airballs;             // Number of airballs by the player
@@ -146,7 +146,7 @@ class Player {
 
     return Player(
       name: json['name'],
-      score: json['score'],
+      score: (json['score'] as num).toDouble(),
       throws: json['throws'],
       misses: json['misses'],
       airballs: json['airballs'],
@@ -219,7 +219,7 @@ class Player {
   }
 
   @override
-  int get hashCode => name.hashCode ^ score.hashCode;
+  int get hashCode => name.hashCode;
 }
 
 extension PlayerCopyWith on Player {

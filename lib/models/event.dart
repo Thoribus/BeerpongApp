@@ -29,8 +29,17 @@ class GameEvent {
       gameId: gameId,
       player: json['player'] as String?,
       team: json['team'] as String,
-      timestamp: (json['timestamp'] as Timestamp).toDate(),
+      timestamp: (json['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'eventType': eventType,
+      'team': team,
+      'player': player,
+      'timestamp': FieldValue.serverTimestamp(),
+    };
   }
 
   @override

@@ -57,9 +57,9 @@ class Tournament {
       teams: (json['teams'] as List<dynamic>)
           .map((e) => Team.fromJson(e as Map<String, dynamic>))
           .toList(),
-      matches: (json['matches'] as List<dynamic>)
-          .map((e) => TournamentMatch.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      matches: (json['matches'] as List<dynamic>?)
+          ?.map((e) => TournamentMatch.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
       started: json['started'] ?? false,
       finished: json['finished'] ?? false,
       createdAt: json['createdAt'] != null
@@ -69,15 +69,23 @@ class Tournament {
   }
 
   Map<String, dynamic> toJson() {
+    // Collect all participant user IDs from all teams' players
+    final participantIds = teams
+        .expand((t) => t.players)
+        .where((p) => p.user != null)
+        .map((p) => p.user!.id)
+        .toSet()
+        .toList();
+
     return {
       'id': id,
       'name': name,
       'type': type.toString(),
       'teams': teams.map((t) => t.toJson()).toList(),
-      'matches': matches.map((m) => m.toJson()).toList(),
       'started': started,
       'finished': finished,
       'createdAt': createdAt.toIso8601String(),
+      'participantIds': participantIds,
     };
   }
 }

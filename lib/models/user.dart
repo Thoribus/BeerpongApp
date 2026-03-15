@@ -19,7 +19,7 @@ class User {
   int onFire;
   int defended;
   int hitLastCup;
-  List<int> cupsHit;
+  Map<String, int> cupsHitCount;
   int wins;
   int losses;
   List<String> friends;
@@ -38,7 +38,7 @@ class User {
     this.onFire = 0,
     this.defended = 0,
     this.hitLastCup = 0,
-    this.cupsHit = const [],
+    this.cupsHitCount = const {},
     this.wins = 0,
     this.losses = 0,
     this.friends = const [],
@@ -56,6 +56,20 @@ class User {
     return totalThrows > 0 ? totalScore / totalThrows : 0.0;
   }
 
+  /// Flat list of cup positions hit, reconstructed from counts. Used by legacy stats screens.
+  List<int> get cupsHit {
+    final result = <int>[];
+    cupsHitCount.forEach((k, count) {
+      final idx = int.tryParse(k);
+      if (idx != null) {
+        for (var i = 0; i < count; i++) {
+          result.add(idx);
+        }
+      }
+    });
+    return result;
+  }
+
   /// Encode this user into a JSON-compatible map for Firestore.
   Map<String, dynamic> toJson() {
     return {
@@ -71,7 +85,7 @@ class User {
       'onFire': onFire,
       'defended': defended,
       'hitLastCup': hitLastCup,
-      'cupsHit': cupsHit,
+      'cupsHitCount': cupsHitCount,
       'wins': wins,
       'losses': losses,
       'friends': friends,
@@ -94,7 +108,12 @@ class User {
       onFire: json['onFire'] ?? 0,
       defended: json['defended'] ?? 0,
       hitLastCup: json['hitLastCup'] ?? 0,
-      cupsHit: List<int>.from(json['cupsHit'] ?? []),
+      cupsHitCount: Map<String, int>.from(
+        (json['cupsHitCount'] as Map?)?.map(
+              (k, v) => MapEntry(k.toString(), (v as num).toInt()),
+            ) ??
+            {},
+      ),
       wins: json['wins'] ?? 0,
       losses: json['losses'] ?? 0,
       friends: List<String>.from(json['friends'] ?? []),
@@ -120,7 +139,7 @@ class User {
     int? onFire,
     int? defended,
     int? hitLastCup,
-    List<int>? cupsHit,
+    Map<String, int>? cupsHitCount,
     int? wins,
     int? losses,
     List<String>? friends,
@@ -139,7 +158,7 @@ class User {
       onFire: onFire ?? this.onFire,
       defended: defended ?? this.defended,
       hitLastCup: hitLastCup ?? this.hitLastCup,
-      cupsHit: cupsHit ?? this.cupsHit,
+      cupsHitCount: cupsHitCount ?? this.cupsHitCount,
       wins: wins ?? this.wins,
       losses: losses ?? this.losses,
       friends: friends ?? this.friends,

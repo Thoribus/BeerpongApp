@@ -63,18 +63,23 @@ class GameRepository {
     if (tournamentId != null) updates['tournamentId'] = tournamentId;
 
     if (team1 != null || team2 != null) {
-      final participants = <String>[];
-      if (team1 != null) {
-        participants.addAll(
-          team1.players.where((p) => p.user != null).map((p) => p.user!.id),
-        );
+      if (team1 != null && team2 != null) {
+        // Full replacement when both teams are provided
+        updates['participants'] = [
+          ...team1.players.where((p) => p.user != null).map((p) => p.user!.id),
+          ...team2.players.where((p) => p.user != null).map((p) => p.user!.id),
+        ];
+      } else {
+        // Partial update — add new participants without overwriting existing ones
+        final newParticipants = (team1 ?? team2)!
+            .players
+            .where((p) => p.user != null)
+            .map((p) => p.user!.id)
+            .toList();
+        if (newParticipants.isNotEmpty) {
+          updates['participants'] = FieldValue.arrayUnion(newParticipants);
+        }
       }
-      if (team2 != null) {
-        participants.addAll(
-          team2.players.where((p) => p.user != null).map((p) => p.user!.id),
-        );
-      }
-      updates['participants'] = participants;
     }
 
     if (updates.isEmpty) return;
@@ -86,13 +91,29 @@ class GameRepository {
   }
 
   Future<void> deleteGameDoc(String gameId) async {
-    await _db.collection('games').doc(gameId).delete();
+    try {
+      // Delete all events in the sub-collection first
+      final eventsSnap = await _db
+          .collection('games')
+          .doc(gameId)
+          .collection('events')
+          .get();
+      final batch = _db.batch();
+      for (final doc in eventsSnap.docs) {
+        batch.delete(doc.reference);
+      }
+      batch.delete(_db.collection('games').doc(gameId));
+      await batch.commit();
+    } catch (e) {
+      AppLogger.error('Error deleting game doc', e);
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>?> retrieveGameById(String gameId) async {
     try {
       final doc = await _db.collection('games').doc(gameId).get();
-      if (!doc.exists) return {};
+      if (!doc.exists) return null;
       return doc.data();
     } catch (e) {
       AppLogger.error('Error getting game', e);

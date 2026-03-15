@@ -170,10 +170,23 @@ class TournamentLobbyController extends ChangeNotifier {
       finished: false,
     );
 
-    await FirebaseFirestore.instance
-        .collection('tournaments')
-        .doc(tournamentId)
-        .set(tournament.toJson());
+    final batch = FirebaseFirestore.instance.batch();
+
+    batch.set(
+      FirebaseFirestore.instance.collection('tournaments').doc(tournamentId),
+      tournament.toJson(),
+    );
+
+    for (final match in matches) {
+      final matchRef = FirebaseFirestore.instance
+          .collection('tournaments')
+          .doc(tournamentId)
+          .collection('matches')
+          .doc(match.id);
+      batch.set(matchRef, match.toJson());
+    }
+
+    await batch.commit();
 
     return tournament;
   }
