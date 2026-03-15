@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'dart:math';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../models/cup.dart';
 import '../../models/player.dart';
@@ -518,7 +519,7 @@ class GameScreenState extends State<GameScreen> {
           played: true,
           selectedRules: selectedRules,
           invitations: invitations);
-      Navigator.pop(context, {'match': match});
+      context.pop({'match': match});
       return;
     }
 

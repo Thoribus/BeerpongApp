@@ -10,7 +10,8 @@ import 'package:clipboard/clipboard.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'compare_stats_screen.dart';
+import 'package:beerpongapp/util/route_args.dart';
+import 'package:go_router/go_router.dart';
 
 class DummyUser {
   final String username;
@@ -275,14 +276,10 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       return;
     }
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ComparisonScreen(
-          currentUser: userProvider.user!,
-          friend: friend,
-        ),
-      ),
-    );
+    context.push('/compare', extra: ComparisonArgs(
+      currentUser: userProvider.user!,
+      friend: friend,
+    ));
   }
 
   @override

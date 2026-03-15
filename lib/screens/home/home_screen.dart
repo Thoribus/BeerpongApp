@@ -4,15 +4,14 @@ import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
-import 'package:beerpongapp/screens/tournament/tournament_lobby_screen.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:beerpongapp/screens/game/game_screen.dart';
-import 'package:beerpongapp/screens/home/game_mode_details_screen.dart';
+import 'package:beerpongapp/util/route_args.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -341,36 +340,31 @@ class HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => GameScreen(
-                                        id: 'Resume Game',
-                                        team1: Team(
-                                          color: Colors.blue,
-                                          players: [],
-                                          cups: List.generate(
-                                              10,
-                                              (index) => Cup(
-                                                  index: index,
-                                                  color: Colors.blue)),
-                                        ),
-                                        team2: Team(
-                                          color: Colors.red,
-                                          players: [],
-                                          cups: List.generate(
-                                              10,
-                                              (index) => Cup(
-                                                  index: index,
-                                                  color: Colors.red)),
-                                        ),
-                                        selectedRules: const {},
-                                        startingTeam: true,
-                                        invitations: const [],
-                                        tournamentId: '',
-                                      ),
+                                  context.push('/game', extra: GameArgs(
+                                    id: 'Resume Game',
+                                    team1: Team(
+                                      color: Colors.blue,
+                                      players: [],
+                                      cups: List.generate(
+                                          10,
+                                          (index) => Cup(
+                                              index: index,
+                                              color: Colors.blue)),
                                     ),
-                                  );
+                                    team2: Team(
+                                      color: Colors.red,
+                                      players: [],
+                                      cups: List.generate(
+                                          10,
+                                          (index) => Cup(
+                                              index: index,
+                                              color: Colors.red)),
+                                    ),
+                                    selectedRules: const {},
+                                    startingTeam: true,
+                                    invitations: const [],
+                                    tournamentId: '',
+                                  ));
                                 },
                                 child: const Text(
                                   'Resume',
@@ -396,48 +390,32 @@ class HomeScreenState extends State<HomeScreen> {
                                 }
                                 if (_hasSavedGame) {
                                   _showNewGameConfirmationDialog(context, () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => GameModeDetailsScreen(
-                                          title: mode['title']! as String,
-                                          subtitle: mode['subtitle']! as String,
-                                          details: mode['details']! as String,
-                                          iconPath:
-                                              'assets/${mode['icon'] as String}',
-                                          color: mode['color'] as Color,
-                                        ),
-                                      ),
-                                    );
+                                    context.push('/game-mode', extra: GameModeArgs(
+                                      title: mode['title']! as String,
+                                      subtitle: mode['subtitle']! as String,
+                                      details: mode['details']! as String,
+                                      iconPath: 'assets/${mode['icon'] as String}',
+                                      color: mode['color'] as Color,
+                                    ));
                                   });
                                 } else {
                                   if (mode['title'] == 'Tournament') {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => TournamentLobbyScreen(
-                                          title: mode['title'] as String,
-                                          subtitle: mode['subtitle'] as String,
-                                          details: mode['details'] as String,
-                                          iconPath: 'assets/${mode['icon']}',
-                                          color: mode['color'] as Color,
-                                        ),
-                                      ),
-                                    );
+                                    context.push('/tournament-lobby', extra: GameModeArgs(
+                                      title: mode['title'] as String,
+                                      subtitle: mode['subtitle'] as String,
+                                      details: mode['details'] as String,
+                                      iconPath: 'assets/${mode['icon']}',
+                                      color: mode['color'] as Color,
+                                    ));
                                     return;
                                   }
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => GameModeDetailsScreen(
-                                        title: mode['title'] as String,
-                                        subtitle: mode['subtitle'] as String,
-                                        details: mode['details'] as String,
-                                        iconPath: 'assets/${mode['icon']}',
-                                        color: mode['color'] as Color,
-                                      ),
-                                    ),
-                                  ).then((_) {
+                                  context.push('/game-mode', extra: GameModeArgs(
+                                    title: mode['title'] as String,
+                                    subtitle: mode['subtitle'] as String,
+                                    details: mode['details'] as String,
+                                    iconPath: 'assets/${mode['icon']}',
+                                    color: mode['color'] as Color,
+                                  )).then((_) {
                                     _onReturnFromNextScreen();
                                   });
                                 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
-import 'package:beerpongapp/screens/tournament/tournament_page_view.dart';
+import 'package:beerpongapp/util/route_args.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -689,15 +690,13 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
 
     // 5. Go to Tournament Overview
     if (!mounted) return;
-    unawaited(Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TournamentPageView(
-          tournamentId: tournamentId,
-          initialTournament: tournament,
-        ),
+    context.pushReplacement(
+      '/tournament/$tournamentId',
+      extra: TournamentPageViewArgs(
+        tournamentId: tournamentId,
+        initialTournament: tournament,
       ),
-    ));
+    );
   }
 
   Widget _buildSelectableTile(int index) {

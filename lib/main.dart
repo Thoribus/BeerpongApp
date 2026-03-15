@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/util/theme_provider.dart';
-import 'package:beerpongapp/screens/base/base_screen.dart';
+import 'package:beerpongapp/util/router.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -31,18 +31,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Beerpong Companion',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeProvider.themeMode,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const BaseScreen(selectedIndex: 2),
-        '/friendlist': (context) => const BaseScreen(selectedIndex: 1),
-        '/statistics': (context) => const BaseScreen(selectedIndex: 3),
-        '/account': (context) => const BaseScreen(selectedIndex: 4),
-      },
+      routerConfig: AppRouter.router,
     );
   }
 }

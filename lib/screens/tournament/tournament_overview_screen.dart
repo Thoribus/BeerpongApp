@@ -2,8 +2,9 @@ import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/route_args.dart';
 import 'package:flutter/material.dart';
-import '../game/game_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class TournamentOverviewScreen extends StatefulWidget {
   final String tournamentId;
@@ -493,18 +494,16 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
         players: cleanTeam2Players,
         cups: match.team2.cups);
 
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GameScreen(
-          id: gameId,
-          team1: team1,
-          team2: team2,
-          selectedRules: match.selectedRules,
-          invitations: match.invitations,
-          startingTeam: chosenTeam == 'Team Blue',
-          tournamentId: widget.tournamentId,
-        ),
+    final result = await context.push<Map<String, dynamic>>(
+      '/game',
+      extra: GameArgs(
+        id: gameId,
+        team1: team1,
+        team2: team2,
+        selectedRules: match.selectedRules,
+        invitations: match.invitations,
+        startingTeam: chosenTeam == 'Team Blue',
+        tournamentId: widget.tournamentId,
       ),
     );
     if (!mounted) return;

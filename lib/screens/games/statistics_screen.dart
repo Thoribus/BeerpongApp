@@ -1,6 +1,6 @@
 //-------------Packages-------------------------
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
+import 'package:go_router/go_router.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -306,9 +306,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               padding: const EdgeInsets.all(8),
             ),
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => LiveGameStatsScreen(gameId: game.id),
-              ));
+              context.push('/spectate-live/${game.id}');
             },
           ),
         ),
@@ -487,9 +485,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
   Widget _buildViewTableButton(GameStatistics game) {
     return ElevatedButton(
       onPressed: () {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => LiveGameStatsScreen(gameId: game.id),
-        ));
+        context.push('/spectate-live/${game.id}');
       },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
       child: const Text(

@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../util/firestoreservice.dart';
+import '../../util/route_args.dart';
 import '../../util/user_provider.dart';
 import '../../models/user.dart';
 import '../../models/player.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/team.dart';
 import '../../models/cup.dart';
-import '../game/game_screen.dart';
 
 class GameModeDetailsScreen extends StatefulWidget {
   final String title;
@@ -797,20 +798,18 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           cups: List.generate(
               10, (index) => Cup(index: index, color: Colors.red)),
         );
-    unawaited(Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GameScreen(
-          id: _gameId!,
-          team1: team1,
-          team2: team2,
-          selectedRules: _selectedRules,
-          invitations: _acceptedInvites,
-          startingTeam: _startingTeam == 'Team Blue',
-          tournamentId: '',
-        ),
+    context.pushReplacement(
+      '/game',
+      extra: GameArgs(
+        id: _gameId!,
+        team1: team1,
+        team2: team2,
+        selectedRules: _selectedRules,
+        invitations: _acceptedInvites,
+        startingTeam: _startingTeam == 'Team Blue',
+        tournamentId: '',
       ),
-    ));
+    );
   }
 
   Future<String?> _showStartingTeamDialog() async {

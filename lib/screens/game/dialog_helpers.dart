@@ -3,8 +3,8 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/screens/base/base_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'game_screen.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -453,18 +453,12 @@ class DialogHelpers {
       ),
       btnOkOnPress: () {
         // Go to Stats
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 3)),
-        );
+        context.go('/games');
       },
       btnOkText: 'Go to Stats',
       btnCancelOnPress: () {
         // Go to Home
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 2)),
-        );
+        context.go('/home');
       },
       btnCancelText: 'Go to Home',
     ).show().ignore();

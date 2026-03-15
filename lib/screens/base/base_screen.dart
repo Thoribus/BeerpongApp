@@ -1,43 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/screens/profile/account_screen.dart';
-import 'package:beerpongapp/screens/friends/friendlist.dart';
-import 'package:beerpongapp/screens/home/home_screen.dart';
-import 'package:beerpongapp/screens/shop/shop_screen.dart';
-import 'package:beerpongapp/screens/games/statistics_screen.dart';
-import 'package:beerpongapp/widgets/user_card.dart';
 import 'package:beerpongapp/util/theme_provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/widgets/user_card.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class BaseScreen extends StatefulWidget {
-  final int selectedIndex;
-  const BaseScreen({required this.selectedIndex, super.key});
+  final StatefulNavigationShell shell;
+  const BaseScreen({required this.shell, super.key});
 
   @override
   BaseScreenState createState() => BaseScreenState();
 }
 
 class BaseScreenState extends State<BaseScreen> {
-  late int _selectedIndex = widget.selectedIndex;
-  late PageController _pageController;
-
-  final double _itemWidth = 78;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: _selectedIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
   void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-    _pageController.jumpToPage(index);
+    widget.shell.goBranch(index);
   }
 
   @override
@@ -46,6 +24,7 @@ class BaseScreenState extends State<BaseScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final user = userProvider.user;
     final isDarkMode = themeProvider.isDarkMode;
+    final selectedIndex = widget.shell.currentIndex;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0E0F11),
@@ -175,7 +154,7 @@ class BaseScreenState extends State<BaseScreen> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        _getAppBarTitle(_selectedIndex),
+                        _getAppBarTitle(selectedIndex),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -198,18 +177,7 @@ class BaseScreenState extends State<BaseScreen> {
           ),
         ),
       ),
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        onPageChanged: (index) => setState(() => _selectedIndex = index),
-        children: const [
-          ShopScreen(),
-          FriendsListScreen(),
-          HomeScreen(),
-          StatisticsScreen(),
-          AccountScreen(),
-        ],
-      ),
+      body: widget.shell,
       bottomNavigationBar: Container(
         height: 60,
         decoration: const BoxDecoration(
@@ -224,7 +192,7 @@ class BaseScreenState extends State<BaseScreen> {
             final itemWidth = constraints.maxWidth / 5;
             const indicatorWidth = 42.0;
             final indicatorLeft =
-                _selectedIndex * itemWidth + (itemWidth - indicatorWidth) / 2;
+                selectedIndex * itemWidth + (itemWidth - indicatorWidth) / 2;
 
             return Stack(
               alignment: Alignment.topCenter,
@@ -246,11 +214,11 @@ class BaseScreenState extends State<BaseScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildNavItem(Icons.shopping_bag_outlined, 'Shop', 0),
-                    _buildNavItem(Icons.favorite_outline, 'Friends', 1),
-                    _buildNavItem(Icons.sports_bar_outlined, 'Home', 2),
-                    _buildNavItem(Icons.workspaces_outlined, 'Games', 3),
-                    _buildNavItem(Icons.account_circle_outlined, 'Profile', 4),
+                    _buildNavItem(Icons.shopping_bag_outlined, 'Shop', 0, selectedIndex),
+                    _buildNavItem(Icons.favorite_outline, 'Friends', 1, selectedIndex),
+                    _buildNavItem(Icons.sports_bar_outlined, 'Home', 2, selectedIndex),
+                    _buildNavItem(Icons.workspaces_outlined, 'Games', 3, selectedIndex),
+                    _buildNavItem(Icons.account_circle_outlined, 'Profile', 4, selectedIndex),
                   ],
                 ),
               ],
@@ -261,14 +229,14 @@ class BaseScreenState extends State<BaseScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    final isSelected = _selectedIndex == index;
+  Widget _buildNavItem(IconData icon, String label, int index, int selectedIndex) {
+    final isSelected = selectedIndex == index;
     final color = isSelected ? Colors.orange : Colors.grey.shade500;
 
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       child: SizedBox(
-        width: _itemWidth,
+        width: 78,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

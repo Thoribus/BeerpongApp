@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class ReadOnlyLobbyScreen extends StatelessWidget {
   final String gameId;
@@ -45,12 +45,7 @@ class ReadOnlyLobbyScreen extends StatelessWidget {
           // Navigate to LiveGameStatsScreen
           // Because this is in a build method, do a post-frame callback
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => LiveGameStatsScreen(gameId: gameId),
-              ),
-            );
+            context.pushReplacement('/spectate-live/$gameId');
           });
         }
 
