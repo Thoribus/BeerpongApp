@@ -71,7 +71,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     super.didChangeDependencies();
     final user = Provider.of<UserProvider>(context, listen: false).user;
     if (user != null && _friends == null) {
-      _friends = FirestoreService().getFriends(user.id);
+      _friends = FirestoreService.instance.getFriends(user.id);
     }
   }
 
@@ -251,9 +251,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     UserProvider userProvider,
   ) async {
     try {
-      await FirestoreService().addFriend(userProvider.user!.id, friendId);
+      await FirestoreService.instance.addFriend(userProvider.user!.id, friendId);
       setState(() {
-        _friends = FirestoreService().getFriends(userProvider.user!.id);
+        _friends = FirestoreService.instance.getFriends(userProvider.user!.id);
       });
     } catch (e) {
       _showErrorSnackBar('Error adding friend: $e');
@@ -455,7 +455,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               itemBuilder: (ctx, index) {
                 final friend = friends[index];
                 return FutureBuilder<List<UserStatsInGame>>(
-                  future: FirestoreService().retrieveUserStatsWithDate(friend),
+                  future: FirestoreService.instance.retrieveUserStatsWithDate(friend),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -827,7 +827,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   Future<List<User>> _fetchFriendsAndUser() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.user == null) return [];
-    final friends = await FirestoreService().getFriends(userProvider.user!.id);
+    final friends = await FirestoreService.instance.getFriends(userProvider.user!.id);
     return [userProvider.user!, ...friends];
   }
 }

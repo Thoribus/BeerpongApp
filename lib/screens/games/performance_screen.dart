@@ -21,7 +21,7 @@ class PerformanceScreen extends StatelessWidget {
           children: [
             // 1) Load userStatsInGame from Firestore
             FutureBuilder<List<UserStatsInGame>>(
-              future: FirestoreService().retrieveUserStatsWithDate(user),
+              future: FirestoreService.instance.retrieveUserStatsWithDate(user),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());

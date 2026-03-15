@@ -15,7 +15,7 @@ class UserProvider with ChangeNotifier {
   Future<void> loadUser() async {
     final auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-      _user = await FirestoreService().getUser(currentUser.uid);
+      _user = await FirestoreService.instance.getUser(currentUser.uid);
       notifyListeners();
     }
   }
@@ -23,7 +23,7 @@ class UserProvider with ChangeNotifier {
   /// Updates the user's data in Firestore and locally.
   Future<void> updateUser(User user) async {
     _user = user;
-    await FirestoreService().updateUser(user);
+    await FirestoreService.instance.updateUser(user);
     notifyListeners();
   }
 
@@ -44,14 +44,14 @@ class UserProvider with ChangeNotifier {
     }
 
     // Check if user doc already exists
-    final existingUser = await FirestoreService().getUser(authUser.uid);
+    final existingUser = await FirestoreService.instance.getUser(authUser.uid);
     if (existingUser == null) {
       // Create a new default user in Firestore
       final newUser = User(
         id: authUser.uid,
         username: authUser.displayName ?? 'Unknown',
       );
-      await FirestoreService().addUser(newUser);
+      await FirestoreService.instance.addUser(newUser);
       _user = newUser;
     } else {
       _user = existingUser;

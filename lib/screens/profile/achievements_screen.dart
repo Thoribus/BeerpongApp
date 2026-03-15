@@ -166,7 +166,7 @@ class AchievementsScreen extends StatelessWidget {
     }
 
     if (changed) {
-      await FirestoreService().updateUser(user);
+      await FirestoreService.instance.updateUser(user);
     }
   }
 

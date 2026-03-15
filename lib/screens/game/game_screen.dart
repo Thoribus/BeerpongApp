@@ -646,17 +646,17 @@ class GameScreenState extends State<GameScreen> {
     setState(() {
       _events.clear();
     });
-    await FirestoreService().updateGameDoc(id, team1: team1, team2: team2);
+    await FirestoreService.instance.updateGameDoc(id, team1: team1, team2: team2);
   }
 
   void addEvent(String eventType, Team team, Player? player) async {
     final event =
-        await FirestoreService().addEvent(id, eventType, team, player);
+        await FirestoreService.instance.addEvent(id, eventType, team, player);
     _events.add(event);
   }
 
   void removeEvent(String event) {
-    unawaited(FirestoreService().deleteEvent(id, event));
+    unawaited(FirestoreService.instance.deleteEvent(id, event));
   }
 
   void _undoLastAction() async {
@@ -714,7 +714,7 @@ class GameScreenState extends State<GameScreen> {
         });
       }
     }
-    final updatedUsers = await FirestoreService().saveGame(
+    final updatedUsers = await FirestoreService.instance.saveGame(
       team1: team1.players,
       team2: team2.players,
     );
@@ -724,12 +724,12 @@ class GameScreenState extends State<GameScreen> {
       AchievementsScreen.checkAchievements(user);
     }
 
-    await FirestoreService()
+    await FirestoreService.instance
         .updateGameDoc(id, team1: team1, team2: team2, winner: winner);
 
     // Delete all game invitations
     for (String invitationId in invitations) {
-      await FirestoreService().deleteGameInvitation(invitationId);
+      await FirestoreService.instance.deleteGameInvitation(invitationId);
     }
 
     // Update current user in UserProvider if found in updatedUsers

@@ -30,7 +30,7 @@ class ActivityScreenState extends State<ActivityScreen> {
 
   Future<void> _retrieveGames() async {
     try {
-      games = await FirestoreService().retrieveUserStatsWithDate(user!);
+      games = await FirestoreService.instance.retrieveUserStatsWithDate(user!);
     } catch (e) {
       hasError = true;
     } finally {

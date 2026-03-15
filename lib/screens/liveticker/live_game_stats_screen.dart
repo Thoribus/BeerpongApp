@@ -37,7 +37,7 @@ class LiveGameData {
 
 class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     with SingleTickerProviderStateMixin {
-  final FirestoreService _firestoreService = FirestoreService();
+  final FirestoreService _firestoreService = FirestoreService.instance;
   int _currentTabPage = 0;
   late PageController _tabPageController;
   late DateTime gameStart;

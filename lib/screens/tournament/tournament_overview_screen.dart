@@ -40,7 +40,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
   }
 
   Future<void> _reloadTournamentData() async {
-    final latest = await FirestoreService().getTournament(widget.tournamentId);
+    final latest = await FirestoreService.instance.getTournament(widget.tournamentId);
     if (latest != null) {
       setState(() {
         tournament = latest;
@@ -459,11 +459,11 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
     if (!mounted) return;
 
     // 1. Create the Firestore document for the game.
-    final gameId = await FirestoreService().createEmptyGameDoc(
+    final gameId = await FirestoreService.instance.createEmptyGameDoc(
       team1: match.team1,
       team2: match.team2,
     );
-    await FirestoreService().updateGameDoc(
+    await FirestoreService.instance.updateGameDoc(
       gameId,
       rules: match.selectedRules.entries
           .where((entry) => entry.value)
@@ -473,7 +473,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       invitations: match.invitations,
       started: true,
       timestamp: true,
-      tournamendId: tournament.id,
+      tournamentId: tournament.id,
     );
     if (!mounted) return;
 
@@ -515,7 +515,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
         tournamentTeams: tournament.teams,
         matchTeams: [result['match'].team1, result['match'].team2],
       );
-      await FirestoreService().updateTournament(tournament);
+      await FirestoreService.instance.updateTournament(tournament);
       await _reloadTournamentData();
     }
   }

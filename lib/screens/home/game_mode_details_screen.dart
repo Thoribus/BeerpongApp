@@ -85,13 +85,13 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       sub.cancel();
     }
     for (final docId in _blueInvitationDocIds.values) {
-      if (docId.isNotEmpty) FirestoreService().deleteGameInvitation(docId);
+      if (docId.isNotEmpty) FirestoreService.instance.deleteGameInvitation(docId);
     }
     for (final docId in _redInvitationDocIds.values) {
-      if (docId.isNotEmpty) FirestoreService().deleteGameInvitation(docId);
+      if (docId.isNotEmpty) FirestoreService.instance.deleteGameInvitation(docId);
     }
     if (!_started && _gameId != null) {
-      FirestoreService().deleteGameDoc(_gameId!);
+      FirestoreService.instance.deleteGameDoc(_gameId!);
     }
     super.dispose();
   }
@@ -107,7 +107,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       players: [],
       cups: List.generate(10, (index) => Cup(index: index, color: Colors.red)),
     );
-    final docId = await FirestoreService().createEmptyGameDoc(
+    final docId = await FirestoreService.instance.createEmptyGameDoc(
       team1: emptyTeamBlue,
       team2: emptyTeamRed,
     );
@@ -444,7 +444,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
     final statuses = isBlue ? _blueInvitationStatuses : _redInvitationStatuses;
     final docId = docIds[rowIndex];
     if (docId != null && docId.isNotEmpty) {
-      FirestoreService().deleteGameInvitation(docId);
+      FirestoreService.instance.deleteGameInvitation(docId);
       docIds.remove(rowIndex);
       statuses.remove(rowIndex);
     }
@@ -462,7 +462,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       return;
     }
     final messenger = ScaffoldMessenger.of(context);
-    final friends = await FirestoreService().getFriends(currentUser.id);
+    final friends = await FirestoreService.instance.getFriends(currentUser.id);
     if (!mounted) return;
     if (friends.isEmpty) {
       messenger.showSnackBar(
@@ -485,7 +485,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       players[rowIndex] = players[rowIndex].copyWithName(selected.username);
       players[rowIndex] = players[rowIndex].copyWithUser(selected);
     });
-    final docId = await FirestoreService().sendGameInvitation(
+    final docId = await FirestoreService.instance.sendGameInvitation(
       fromUserId: currentUser.id,
       toUserId: selected.id,
       teamNumber: isBlue ? 1 : 2,
@@ -667,7 +667,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
         });
         _updateGameDoc();
       } else if (status == 'declined') {
-        FirestoreService().deleteGameInvitation(docId);
+        FirestoreService.instance.deleteGameInvitation(docId);
         setState(() {
           if (isBlue) {
             _blueInvitationDocIds.remove(rowIndex);
@@ -706,7 +706,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
         ? _blueInvitationDocIds[rowIndex]
         : _redInvitationDocIds[rowIndex];
     if (docId == null || docId.isEmpty) return;
-    await FirestoreService().deleteGameInvitation(docId);
+    await FirestoreService.instance.deleteGameInvitation(docId);
     if (!mounted) return;
     setState(() {
       if (isBlue) {
@@ -741,7 +741,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       players: _playersRed,
       cups: List.generate(10, (index) => Cup(index: index, color: Colors.red)),
     );
-    await FirestoreService().updateGameDoc(
+    await FirestoreService.instance.updateGameDoc(
       _gameId!,
       team1: teamBlue,
       team2: teamRed,
@@ -776,7 +776,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       return;
     }
     for (final inviteId in _acceptedInvites) {
-      await FirestoreService().updateInvitationGameId(inviteId, _gameId!);
+      await FirestoreService.instance.updateInvitationGameId(inviteId, _gameId!);
     }
     setState(() {
       _started = true;

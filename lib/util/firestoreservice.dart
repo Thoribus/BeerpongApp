@@ -9,7 +9,12 @@ import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/tournament.dart';
 
 /// Provides methods to interact with Firestore for users, games, stats, etc.
+///
+/// Use [FirestoreService.instance] — do not instantiate directly.
 class FirestoreService {
+  FirestoreService._();
+  static final FirestoreService instance = FirestoreService._();
+
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   /// Create or update a user in Firestore.

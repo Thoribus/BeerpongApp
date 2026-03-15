@@ -46,7 +46,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 
   Future<void> _retrieveGames() async {
     try {
-      games = await FirestoreService().retrieveGames(user);
+      games = await FirestoreService.instance.retrieveGames(user);
     } catch (e) {
       hasError = true;
     } finally {

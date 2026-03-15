@@ -52,7 +52,7 @@ class HomeScreenState extends State<HomeScreen> {
     if (currentUser == null) return;
 
     List<Invitation> invites =
-        await FirestoreService().getAllInvitations(currentUser.id);
+        await FirestoreService.instance.getAllInvitations(currentUser.id);
 
     if (invites.isNotEmpty) {
       for (Invitation invite in invites) {

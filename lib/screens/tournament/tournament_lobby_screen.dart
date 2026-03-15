@@ -392,7 +392,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
     final statuses = _invitationStatuses;
     final docId = docIds[rowIndex];
     if (docId != null && docId.isNotEmpty) {
-      FirestoreService().deleteGameInvitation(docId);
+      FirestoreService.instance.deleteGameInvitation(docId);
       docIds.remove(rowIndex);
       statuses.remove(rowIndex);
     }
@@ -409,7 +409,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
       return;
     }
     final messenger = ScaffoldMessenger.of(context);
-    final friends = await FirestoreService().getFriends(currentUser.id);
+    final friends = await FirestoreService.instance.getFriends(currentUser.id);
     if (!mounted) return;
     if (friends.isEmpty) {
       messenger.showSnackBar(
@@ -432,7 +432,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
       players[rowIndex] = players[rowIndex].copyWithName(selected.username);
       players[rowIndex] = players[rowIndex].copyWithUser(selected);
     });
-    final docId = await FirestoreService().sendGameInvitation(
+    final docId = await FirestoreService.instance.sendGameInvitation(
       fromUserId: currentUser.id,
       toUserId: selected.id,
       teamNumber: 1,
@@ -595,7 +595,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
           _invitationStatuses.remove(rowIndex);
         });
       } else if (status == 'declined') {
-        FirestoreService().deleteGameInvitation(docId);
+        FirestoreService.instance.deleteGameInvitation(docId);
         if (mounted) {
           setState(() {
             _invitationDocIds.remove(rowIndex);
@@ -619,7 +619,7 @@ class _TournamentLobbyScreenState extends State<TournamentLobbyScreen> {
   Future<void> _cancelInvitation(int rowIndex) async {
     final docId = _invitationDocIds[rowIndex];
     if (docId == null || docId.isEmpty) return;
-    await FirestoreService().deleteGameInvitation(docId);
+    await FirestoreService.instance.deleteGameInvitation(docId);
     if (!mounted) return;
     setState(() {
       _invitationDocIds.remove(rowIndex);
