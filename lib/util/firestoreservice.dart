@@ -439,26 +439,27 @@ class FirestoreService {
     await _db.collection('invitations').doc(invitationId).delete();
   }
 
+  Invitation _invitationFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data()!;
+    return Invitation(
+      id: doc.id,
+      fromUserId: data['fromUserId'],
+      toUserId: data['toUserId'],
+      teamNumber: data['teamNumber'],
+      playerIndex: data['playerIndex'],
+      status: data['status'],
+      createdAt: data['createdAt'],
+      gameId: data['gameId'],
+    );
+  }
+
   Future<List<Invitation>> getGameInvitations(String userId) async {
     final snapshot = await _db
         .collection('invitations')
         .where('toUserId', isEqualTo: userId)
         .where('status', isEqualTo: 'pending')
         .get();
-
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      return Invitation(
-        id: doc.id,
-        fromUserId: data['fromUserId'],
-        toUserId: data['toUserId'],
-        teamNumber: data['teamNumber'],
-        playerIndex: data['playerIndex'],
-        status: data['status'],
-        createdAt: data['createdAt'],
-        gameId: data['gameId'],
-      );
-    }).toList();
+    return snapshot.docs.map(_invitationFromDoc).toList();
   }
 
   Future<List<Invitation>> getGameInvitationsByGameId(String gameId) async {
@@ -466,20 +467,7 @@ class FirestoreService {
         .collection('invitations')
         .where('gameId', isEqualTo: gameId)
         .get();
-
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      return Invitation(
-        id: doc.id,
-        fromUserId: data['fromUserId'],
-        toUserId: data['toUserId'],
-        teamNumber: data['teamNumber'],
-        playerIndex: data['playerIndex'],
-        status: data['status'],
-        createdAt: data['createdAt'],
-        gameId: data['gameId'],
-      );
-    }).toList();
+    return snapshot.docs.map(_invitationFromDoc).toList();
   }
 
   Future<List<Invitation>> getAllInvitations(String userId) async {
@@ -487,20 +475,7 @@ class FirestoreService {
         .collection('invitations')
         .where('toUserId', isEqualTo: userId)
         .get();
-
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      return Invitation(
-        id: doc.id,
-        fromUserId: data['fromUserId'],
-        toUserId: data['toUserId'],
-        teamNumber: data['teamNumber'],
-        playerIndex: data['playerIndex'],
-        status: data['status'],
-        createdAt: data['createdAt'],
-        gameId: data['gameId'],
-      );
-    }).toList();
+    return snapshot.docs.map(_invitationFromDoc).toList();
   }
 
   //endregion
