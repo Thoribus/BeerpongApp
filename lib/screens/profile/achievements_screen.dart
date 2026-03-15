@@ -446,8 +446,12 @@ class AchievementsScreen extends StatelessWidget {
         ? Colors.grey // Grey color for no achievement
         : _getStageColor(stageIndex);
 
-    double progressPercentage =
-        (currentProgress / stages[stageIndex]).clamp(0.0, 1.0);
+    final int nextTarget = stageIndex + 1 < stages.length ? stages[stageIndex + 1] : stages.last;
+    final int currentBase = stages[stageIndex];
+    final int range = nextTarget - currentBase;
+    double progressPercentage = range > 0
+        ? ((currentProgress - currentBase) / range).clamp(0.0, 1.0)
+        : 1.0;
 
     return GestureDetector(
       onTap: () {

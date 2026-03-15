@@ -14,20 +14,10 @@ import 'package:beerpongapp/util/route_args.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_tab_bar.dart';
 
-class DummyUser {
-  final String username;
-  final String avatarUrl;
-
-  DummyUser({
-    required this.username,
-    required this.avatarUrl,
-  });
-}
-
 enum ActionType { wonGame, achievement }
 
 class FriendAction {
-  final DummyUser user;
+  final User user;
   final ActionType type;
   final String description;
   final DateTime date;
@@ -484,77 +474,100 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     );
   }
 
+  Future<List<FriendAction>> _buildFriendActions(List<User> friends) async {
+    final List<FriendAction> actions = [];
+    await Future.wait(friends.map((friend) async {
+      final stats =
+          await FirestoreService.instance.retrieveUserStatsWithDate(friend);
+      if (stats.isNotEmpty) {
+        actions.add(FriendAction(
+          user: friend,
+          type: ActionType.wonGame,
+          description: 'recently played a game',
+          date: stats.first.date,
+        ));
+      }
+    }));
+    actions.sort((a, b) => b.date.compareTo(a.date));
+    return actions;
+  }
+
   Widget _buildSocialPage() {
-    final List<FriendAction> dummyActions = [
-      FriendAction(
-        user: DummyUser(username: 'Alice', avatarUrl: ''),
-        type: ActionType.wonGame,
-        description: 'won a game of Classic Mode',
-        date: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      FriendAction(
-        user: DummyUser(username: 'Bob', avatarUrl: ''),
-        type: ActionType.achievement,
-        description: 'unlocked the “Sharpshooter” achievement',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      FriendAction(
-        user: DummyUser(username: 'Carol', avatarUrl: ''),
-        type: ActionType.wonGame,
-        description: 'won a game of Speed Mode',
-        date: DateTime.now().subtract(const Duration(days: 2, hours: 3)),
-      ),
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      itemCount: dummyActions.length,
-      itemBuilder: (context, index) {
-        final action = dummyActions[index];
-        final bgColor = getActionColor(action.type);
-
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          color: bgColor,
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            leading: CircleAvatar(
-              backgroundColor: Colors.black12,
-              child: Text(
-                action.user.username[0],
-                style: const TextStyle(color: Colors.black),
-              ),
-            ),
-            title: Text(
-              action.user.username,
-              style: const TextStyle(fontSize: 13, color: Colors.black),
-            ),
-            subtitle: Text(
-              action.description,
-              style: const TextStyle(fontSize: 11, color: Colors.black87),
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text('Date',
-                    style: TextStyle(fontSize: 10, color: Colors.black54)),
-                const SizedBox(height: 2),
-                Text(
-                  DateFormat('dd.MM.yyyy').format(action.date),
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                ),
-              ],
-            ),
-          ),
+    return FutureBuilder<List<User>>(
+      future: _friends,
+      builder: (context, friendsSnapshot) {
+        if (friendsSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!friendsSnapshot.hasData || friendsSnapshot.data!.isEmpty) {
+          return const Center(
+            child: Text('No friend activity yet.',
+                style: TextStyle(color: Colors.black)),
+          );
+        }
+        return FutureBuilder<List<FriendAction>>(
+          future: _buildFriendActions(friendsSnapshot.data!),
+          builder: (context, actionsSnapshot) {
+            if (actionsSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final actions = actionsSnapshot.data ?? [];
+            if (actions.isEmpty) {
+              return const Center(
+                child: Text('No recent friend activity.',
+                    style: TextStyle(color: Colors.black)),
+              );
+            }
+            return ListView.builder(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              itemCount: actions.length,
+              itemBuilder: (context, index) {
+                final action = actions[index];
+                final bgColor = getActionColor(action.type);
+                return Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  color: bgColor,
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    leading: _buildCompactFriendAvatar(action.user),
+                    title: Text(
+                      action.user.username,
+                      style:
+                          const TextStyle(fontSize: 13, color: Colors.black),
+                    ),
+                    subtitle: Text(
+                      action.description,
+                      style: const TextStyle(
+                          fontSize: 11, color: Colors.black87),
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text('Last active',
+                            style: TextStyle(
+                                fontSize: 10, color: Colors.black54)),
+                        const SizedBox(height: 2),
+                        Text(
+                          DateFormat('dd.MM.yyyy').format(action.date),
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
         );
       },
     );
