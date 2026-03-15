@@ -1,118 +1,54 @@
 import 'package:beerpongapp/models/event.dart';
-import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/util/app_logger.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
-import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/invitation.dart';
+import 'package:beerpongapp/models/player.dart';
+import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/util/repositories/friend_repository.dart';
+import 'package:beerpongapp/util/repositories/game_repository.dart';
+import 'package:beerpongapp/util/repositories/invitation_repository.dart';
+import 'package:beerpongapp/util/repositories/tournament_repository.dart';
+import 'package:beerpongapp/util/repositories/user_repository.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Provides methods to interact with Firestore for users, games, stats, etc.
+/// Firestore access facade. Delegates to domain repositories.
 ///
 /// Use [FirestoreService.instance] — do not instantiate directly.
 class FirestoreService {
   FirestoreService._();
   static final FirestoreService instance = FirestoreService._();
 
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  // ----- User -----
 
-  /// Create or update a user in Firestore.
-  Future<void> addUser(User user) async {
-    try {
-      await _db.collection('users').doc(user.id).set(user.toJson());
-    } catch (e) {
-      AppLogger.error('Error adding user', e);
-      rethrow;
-    }
-  }
+  Future<void> addUser(User user) => UserRepository.instance.addUser(user);
 
-  /// Update an existing user in Firestore.
-  Future<void> updateUser(User user) async {
-    try {
-      await _db.collection('users').doc(user.id).update(user.toJson());
-    } catch (e) {
-      AppLogger.error('Error updating user', e);
-      rethrow;
-    }
-  }
+  Future<void> updateUser(User user) =>
+      UserRepository.instance.updateUser(user);
 
-  /// Fetch a user by ID from Firestore.
-  Future<User?> getUser(String userId) async {
-    try {
-      final doc = await _db.collection('users').doc(userId).get();
-      if (!doc.exists) return null;
-      return _userFromFirestore(doc);
-    } catch (e) {
-      AppLogger.error('Error getting user', e);
-      rethrow;
-    }
-  }
+  Future<User?> getUser(String userId) =>
+      UserRepository.instance.getUser(userId);
 
-  /// Remove a user from Firestore.
-  Future<void> deleteUser(String userId) async {
-    try {
-      await _db.collection('users').doc(userId).delete();
-    } catch (e) {
-      AppLogger.error('Error deleting user', e);
-      rethrow;
-    }
-  }
+  Future<void> deleteUser(String userId) =>
+      UserRepository.instance.deleteUser(userId);
 
-  /// Maps a DocumentSnapshot into a User.
-  User _userFromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return User.fromJson({
-      ...data,
-      'id': doc.id,
-    });
-  }
-
-  //region ----- Games Logic -----
-
-  /// Saves a new completed game to Firestore, updates user stats for each player.
   Future<List<User>> saveGame({
     required List<Player> team1,
     required List<Player> team2,
-  }) async {
-    final updatedUsers = <User>[];
-    for (final player in [...team1, ...team2]) {
-      if (player.user == null) continue;
+  }) =>
+      UserRepository.instance.saveGame(team1: team1, team2: team2);
 
-      final updatedUser = mapPlayerToUser(player);
-      await updateUser(updatedUser);
-      updatedUsers.add(updatedUser);
-    }
-    return updatedUsers;
-  }
+  static User mapPlayerToUser(Player player) =>
+      UserRepository.mapPlayerToUser(player);
 
-  // Create an empty "games" doc with default or placeholder fields
+  // ----- Game -----
+
   Future<String> createEmptyGameDoc({
     required Team team1,
     required Team team2,
-  }) async {
-    final docRef = await _db.collection('games').add({
-      'timestamp': FieldValue.serverTimestamp(),
-      'winner': '',
-      'team1': team1.toJson(),
-      'team2': team2.toJson(),
-      'participants': [
-        // Maybe gather user IDs from team1+team2 if they're actual accounts
-        ...team1.players.where((p) => p.user != null).map((p) => p.user!.id),
-        ...team2.players.where((p) => p.user != null).map((p) => p.user!.id),
-      ],
-      'invitations': [],
-      'specialRules': [],
-      'gameMode': 'Single Game',
-      'started': false,
-      'startingTeam': 'Team Blue',
-      'events': [],
-      'tournamentId': '',
-    });
-    return docRef.id; // Return the new document ID
-  }
+  }) =>
+      GameRepository.instance.createEmptyGameDoc(team1: team1, team2: team2);
 
-  // Update the game doc with new team arrays or other fields
   Future<void> updateGameDoc(
     String gameId, {
     Team? team1,
@@ -125,503 +61,125 @@ class FirestoreService {
     String? startingTeam,
     bool? timestamp,
     String? tournamentId,
-  }) async {
-    // 1) Build a map for the fields you actually want to update
-    final Map<String, dynamic> updates = {};
+  }) =>
+      GameRepository.instance.updateGameDoc(
+        gameId,
+        team1: team1,
+        team2: team2,
+        winner: winner,
+        invitations: invitations,
+        rules: rules,
+        gameMode: gameMode,
+        started: started,
+        startingTeam: startingTeam,
+        timestamp: timestamp,
+        tournamentId: tournamentId,
+      );
 
-    // If these fields are non-null, add them to the map:
-    if (team1 != null) {
-      updates['team1'] = team1.toJson();
-      // If your logic always wants to recalc participants from team1/team2, do it conditionally, etc.
-    }
-    if (team2 != null) {
-      updates['team2'] = team2.toJson();
-    }
-    if (winner != null) {
-      updates['winner'] = winner;
-    }
-    if (invitations != null) {
-      updates['invitations'] = invitations;
-    }
-    if (rules != null) {
-      updates['specialRules'] = rules;
-    }
-    if (gameMode != null) {
-      updates['gameMode'] = gameMode;
-    }
-    if (started != null) {
-      updates['started'] = started;
-    }
-    if (startingTeam != null) {
-      updates['startingTeam'] = startingTeam;
-    }
-    if (timestamp == true) {
-      updates['timestamp'] = FieldValue.serverTimestamp();
-    }
-    if (tournamentId != null) {
-      updates['tournamentId'] = tournamentId;
-    }
+  Stream<DocumentSnapshot> getGameDocStream(String gameId) =>
+      GameRepository.instance.getGameDocStream(gameId);
 
-    // Optionally, recalc participants if you do want them always updated
-    // e.g. if team1 or team2 was given, re-derive participants from them
-    if (team1 != null || team2 != null) {
-      final participants = <String>[];
-      if (team1 != null) {
-        participants.addAll(
-          team1.players.where((p) => p.user != null).map((p) => p.user!.id),
-        );
-      }
-      if (team2 != null) {
-        participants.addAll(
-          team2.players.where((p) => p.user != null).map((p) => p.user!.id),
-        );
-      }
-      updates['participants'] = participants;
-    }
+  Future<void> deleteGameDoc(String gameId) =>
+      GameRepository.instance.deleteGameDoc(gameId);
 
-    // 2) If there's nothing to update, just return
-    if (updates.isEmpty) {
-      return;
-    }
+  Future<Map<String, dynamic>?> retrieveGameById(String gameId) =>
+      GameRepository.instance.retrieveGameById(gameId);
 
-    // 3) Perform the partial update
-    await _db.collection('games').doc(gameId).update(updates);
-  }
+  Future<List<GameStatistics>> retrieveGames(User user) =>
+      GameRepository.instance.retrieveGames(user);
 
-  /// Returns a stream of game document snapshots
-  Stream<DocumentSnapshot> getGameDocStream(String gameId) {
-    return _db.collection('games').doc(gameId).snapshots();
-  }
+  Future<List<UserStatsInGame>> retrieveUserStatsWithDate(User user) =>
+      GameRepository.instance.retrieveUserStatsWithDate(user);
 
-  // Delete the game doc if user leaves
-  Future<void> deleteGameDoc(String gameId) async {
-    await _db.collection('games').doc(gameId).delete();
-  }
-
-  /// Helper to copy relevant stats from Player => existing User, incrementing them.
-  static User mapPlayerToUser(Player player) {
-    final oldUser = player.user!;
-    // increment stats
-    final newTotalScore = oldUser.totalScore + player.score;
-    final newTotalMisses = oldUser.totalMisses + player.misses;
-    final newTotalAirballs = oldUser.totalAirballs + player.airballs;
-    final newTotalThrows = oldUser.totalThrows + player.throws;
-    final newOnFire = oldUser.onFire + player.onFire;
-    final newDefended = oldUser.defended + player.defended;
-    final newHitLastCup = oldUser.hitLastCup + (player.lastCupHit ? 1 : 0);
-    final newCupsHit = [...oldUser.cupsHit, ...player.cupsHit];
-    final newWins = oldUser.wins + (player.isWinner ? 1 : 0);
-    final newLosses = oldUser.losses + (player.isWinner ? 0 : 1);
-
-    return oldUser.copyWith(
-      totalScore: newTotalScore,
-      totalMisses: newTotalMisses,
-      totalAirballs: newTotalAirballs,
-      totalThrows: newTotalThrows,
-      onFire: newOnFire,
-      defended: newDefended,
-      hitLastCup: newHitLastCup,
-      cupsHit: newCupsHit,
-      wins: newWins,
-      losses: newLosses,
-    );
-  }
-
-  Future<Map<String, dynamic>?> retrieveGameById(String gameId) async {
-    try {
-      final doc = await _db.collection('games').doc(gameId).get();
-      if (!doc.exists) return {};
-      return doc.data();
-    } catch (e) {
-      AppLogger.error('Error getting game', e);
-      rethrow;
-    }
-  }
-
-  /// Retrieve games from Firestore for the current user (descending timestamp).
-  Future<List<GameStatistics>> retrieveGames(User user) async {
-    try {
-      final snapshot = await _db
-          .collection('games')
-          .where('participants', arrayContains: user.id)
-          .orderBy('timestamp', descending: true)
-          .get();
-
-      return snapshot.docs.map((doc) {
-        return GameStatistics.fromFirestore(doc.id, doc.data());
-      }).toList();
-    } catch (e) {
-      AppLogger.error('Error retrieving games', e);
-      return [];
-    }
-  }
-
-  /// Retrieve (date, player's stats) for the current user across all games.
-  Future<List<UserStatsInGame>> retrieveUserStatsWithDate(User user) async {
-    try {
-      final snapshot = await _db
-          .collection('games')
-          .where('participants', arrayContains: user.id)
-          .orderBy('timestamp', descending: true)
-          .get();
-
-      final allGames = snapshot.docs.map((doc) {
-        return GameStatistics.fromFirestore(doc.id, doc.data());
-      }).toList();
-
-      final userStatsList = <UserStatsInGame>[];
-
-      for (final game in allGames) {
-        final allPlayersInGame = [...game.team1Players, ...game.team2Players];
-        final matchingPlayer = allPlayersInGame.firstWhere(
-          (p) => p.user?.id == user.id,
-          orElse: () => Player(name: 'notFound'),
-        );
-
-        if (matchingPlayer.name != 'notFound') {
-          userStatsList.add(
-            UserStatsInGame(
-              date: game.date, // from your GameStatistics
-              player: matchingPlayer,
-            ),
-          );
-        }
-      }
-
-      return userStatsList;
-    } catch (e) {
-      AppLogger.error('Error retrieving user stats', e);
-      return [];
-    }
-  }
-  //endregion
-
-  //region ----- Event Functions -----
   Future<String> addEvent(
-      String gameId, String eventType, Team team, Player? player) async {
-    try {
-      final eventsRef = FirebaseFirestore.instance
-          .collection('games')
-          .doc(gameId)
-          .collection('events');
+          String gameId, String eventType, Team team, Player? player) =>
+      GameRepository.instance.addEvent(gameId, eventType, team, player);
 
-      final docRef = eventsRef.doc();
+  Future<List<GameEvent>> getEvents(String gameId) =>
+      GameRepository.instance.getEvents(gameId);
 
-      await docRef.set({
-        'eventType': eventType,
-        'team': team.color.toARGB32().toString(),
-        'player': player?.name,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+  Future<void> deleteEvent(String gameId, String eventId) =>
+      GameRepository.instance.deleteEvent(gameId, eventId);
 
-      return docRef.id;
-    } catch (e) {
-      AppLogger.error('Error adding event', e);
-      rethrow;
-    }
-  }
+  // ----- Friends -----
 
-  Future<List<GameEvent>> getEvents(String gameId) async {
-    try {
-      final snapshot = await _db
-          .collection('games')
-          .doc(gameId)
-          .collection('events')
-          .orderBy('timestamp', descending: true)
-          .get();
+  Future<List<User>> getFriends(String userId) =>
+      FriendRepository.instance.getFriends(userId);
 
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return GameEvent.fromJson({
-          ...data,
-        }, doc.id, gameId);
-      }).toList();
-    } catch (e) {
-      AppLogger.error('Error fetching events', e);
-      rethrow;
-    }
-  }
+  Future<void> addFriend(String userId, String friendId) =>
+      FriendRepository.instance.addFriend(userId, friendId);
 
-  Future<void> deleteEvent(String gameId, String eventId) async {
-    try {
-      await _db
-          .collection('games')
-          .doc(gameId)
-          .collection('events')
-          .doc(eventId)
-          .delete();
-    } catch (e) {
-      AppLogger.error('Error deleting event', e);
-      rethrow;
-    }
-  }
-  //endregion
+  // ----- Invitations -----
 
-  //region ----- Friend Functions -----
-
-  /// Returns a list of this user's friends
-  Future<List<User>> getFriends(String userId) async {
-    try {
-      final userDoc = await _db.collection('users').doc(userId).get();
-      final data = userDoc.data() as Map<String, dynamic>;
-      final friendIds = List<String>.from(data['friends'] ?? []);
-
-      final friends = <User>[];
-      for (final friendId in friendIds) {
-        final friendDoc = await _db.collection('users').doc(friendId).get();
-        if (friendDoc.exists) {
-          friends.add(_userFromFirestore(friendDoc));
-        }
-      }
-      return friends;
-    } catch (e) {
-      AppLogger.error('Error fetching friends', e);
-      rethrow;
-    }
-  }
-
-  /// Add friend to each other's friend list
-  Future<void> addFriend(String userId, String friendId) async {
-    try {
-      final userDoc = _db.collection('users').doc(userId);
-      final friendDoc = _db.collection('users').doc(friendId);
-
-      await _db.runTransaction((transaction) async {
-        transaction.update(userDoc, {
-          'friends': FieldValue.arrayUnion([friendId])
-        });
-        transaction.update(friendDoc, {
-          'friends': FieldValue.arrayUnion([userId])
-        });
-      });
-    } catch (e) {
-      AppLogger.error('Error adding friend', e);
-      rethrow;
-    }
-  }
-  //endregion
-
-  //region ----- Invitation Functions -----
   Future<String> sendGameInvitation({
     required String fromUserId,
     required String toUserId,
     required int teamNumber,
     required int playerIndex,
     required String gameId,
-  }) async {
-    final docRef = await _db.collection('invitations').add({
-      'fromUserId': fromUserId,
-      'toUserId': toUserId,
-      'teamNumber': teamNumber,
-      'playerIndex': playerIndex,
-      'status': 'pending',
-      'createdAt': FieldValue.serverTimestamp(),
-      'gameId': gameId,
-    });
-    return docRef.id;
-  }
+  }) =>
+      InvitationRepository.instance.sendGameInvitation(
+        fromUserId: fromUserId,
+        toUserId: toUserId,
+        teamNumber: teamNumber,
+        playerIndex: playerIndex,
+        gameId: gameId,
+      );
 
   Future<void> updateInvitationStatus(
-      String invitationId, String newStatus) async {
-    await _db.collection('invitations').doc(invitationId).update({
-      'status': newStatus,
-    });
-  }
+          String invitationId, String newStatus) =>
+      InvitationRepository.instance
+          .updateInvitationStatus(invitationId, newStatus);
 
   Future<void> updateInvitationGameId(
-      String invitationId, String gameId) async {
-    await _db.collection('invitations').doc(invitationId).update({
-      'gameId': gameId,
-    });
-  }
+          String invitationId, String gameId) =>
+      InvitationRepository.instance
+          .updateInvitationGameId(invitationId, gameId);
 
-  Future<void> deleteGameInvitation(String invitationId) async {
-    await _db.collection('invitations').doc(invitationId).delete();
-  }
+  Future<void> deleteGameInvitation(String invitationId) =>
+      InvitationRepository.instance.deleteGameInvitation(invitationId);
 
-  Invitation _invitationFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-    return Invitation(
-      id: doc.id,
-      fromUserId: data['fromUserId'],
-      toUserId: data['toUserId'],
-      teamNumber: data['teamNumber'],
-      playerIndex: data['playerIndex'],
-      status: data['status'],
-      createdAt: data['createdAt'],
-      gameId: data['gameId'],
-    );
-  }
+  Future<List<Invitation>> getGameInvitations(String userId) =>
+      InvitationRepository.instance.getGameInvitations(userId);
 
-  Future<List<Invitation>> getGameInvitations(String userId) async {
-    final snapshot = await _db
-        .collection('invitations')
-        .where('toUserId', isEqualTo: userId)
-        .where('status', isEqualTo: 'pending')
-        .get();
-    return snapshot.docs.map(_invitationFromDoc).toList();
-  }
+  Future<List<Invitation>> getGameInvitationsByGameId(String gameId) =>
+      InvitationRepository.instance.getGameInvitationsByGameId(gameId);
 
-  Future<List<Invitation>> getGameInvitationsByGameId(String gameId) async {
-    final snapshot = await _db
-        .collection('invitations')
-        .where('gameId', isEqualTo: gameId)
-        .get();
-    return snapshot.docs.map(_invitationFromDoc).toList();
-  }
+  Future<List<Invitation>> getAllInvitations(String userId) =>
+      InvitationRepository.instance.getAllInvitations(userId);
 
-  Future<List<Invitation>> getAllInvitations(String userId) async {
-    final snapshot = await _db
-        .collection('invitations')
-        .where('toUserId', isEqualTo: userId)
-        .get();
-    return snapshot.docs.map(_invitationFromDoc).toList();
-  }
+  // ----- Tournaments -----
 
-  //endregion
+  Future<String> createTournament(Tournament tournament) =>
+      TournamentRepository.instance.createTournament(tournament);
 
-  //region ----- Tournament Functions -----
+  Future<void> updateTournament(Tournament tournament) =>
+      TournamentRepository.instance.updateTournament(tournament);
 
-  /// Create a new tournament. Returns the tournament ID.
-  Future<String> createTournament(Tournament tournament) async {
-    try {
-      final docRef =
-          await _db.collection('tournaments').add(tournament.toJson());
-      return docRef.id;
-    } catch (e) {
-      AppLogger.error('Error creating tournament', e);
-      rethrow;
-    }
-  }
+  Future<Tournament?> getTournament(String tournamentId) =>
+      TournamentRepository.instance.getTournament(tournamentId);
 
-  /// Update an existing tournament.
-  Future<void> updateTournament(Tournament tournament) async {
-    try {
-      await _db
-          .collection('tournaments')
-          .doc(tournament.id)
-          .update(tournament.toJson());
-    } catch (e) {
-      AppLogger.error('Error updating tournament', e);
-      rethrow;
-    }
-  }
+  Future<void> deleteTournament(String tournamentId) =>
+      TournamentRepository.instance.deleteTournament(tournamentId);
 
-  /// Fetch a tournament by ID.
-  Future<Tournament?> getTournament(String tournamentId) async {
-    try {
-      final doc = await _db.collection('tournaments').doc(tournamentId).get();
-      if (!doc.exists) return null;
-      return Tournament.fromJson({...doc.data()!, 'id': doc.id});
-    } catch (e) {
-      AppLogger.error('Error fetching tournament', e);
-      rethrow;
-    }
-  }
+  Future<List<Tournament>> getTournamentsForUser(String userId) =>
+      TournamentRepository.instance.getTournamentsForUser(userId);
 
-  /// Delete a tournament (and optionally its matches).
-  Future<void> deleteTournament(String tournamentId) async {
-    try {
-      // Optionally: delete all matches subcollection first if you want
-      final matches = await _db
-          .collection('tournaments')
-          .doc(tournamentId)
-          .collection('matches')
-          .get();
-      for (final doc in matches.docs) {
-        await doc.reference.delete();
-      }
-      await _db.collection('tournaments').doc(tournamentId).delete();
-    } catch (e) {
-      AppLogger.error('Error deleting tournament', e);
-      rethrow;
-    }
-  }
-
-  /// List all tournaments for a user (by participant ID)
-  Future<List<Tournament>> getTournamentsForUser(String userId) async {
-    try {
-      final snapshot = await _db
-          .collection('tournaments')
-          .where('participantIds', arrayContains: userId)
-          .orderBy('createdAt', descending: true)
-          .get();
-      return snapshot.docs
-          .map((doc) => Tournament.fromJson({...doc.data(), 'id': doc.id}))
-          .toList();
-    } catch (e) {
-      AppLogger.error('Error getting tournaments for user', e);
-      return [];
-    }
-  }
-
-  /// Add a match to a tournament (returns match ID)
   Future<String> addMatchToTournament(
-      String tournamentId, TournamentMatch match) async {
-    try {
-      final docRef = await _db
-          .collection('tournaments')
-          .doc(tournamentId)
-          .collection('matches')
-          .add(match.toJson());
-      return docRef.id;
-    } catch (e) {
-      AppLogger.error('Error adding match', e);
-      rethrow;
-    }
-  }
+          String tournamentId, TournamentMatch match) =>
+      TournamentRepository.instance
+          .addMatchToTournament(tournamentId, match);
 
-  /// Update a match in a tournament
   Future<void> updateTournamentMatch(
-      String tournamentId, TournamentMatch match) async {
-    try {
-      await _db
-          .collection('tournaments')
-          .doc(tournamentId)
-          .collection('matches')
-          .doc(match.id)
-          .update(match.toJson());
-    } catch (e) {
-      AppLogger.error('Error updating match', e);
-      rethrow;
-    }
-  }
+          String tournamentId, TournamentMatch match) =>
+      TournamentRepository.instance
+          .updateTournamentMatch(tournamentId, match);
 
-  /// Get all matches in a tournament (as a list)
-  Future<List<TournamentMatch>> getTournamentMatches(
-      String tournamentId) async {
-    try {
-      final snapshot = await _db
-          .collection('tournaments')
-          .doc(tournamentId)
-          .collection('matches')
-          .orderBy('round')
-          .get();
-      return snapshot.docs
-          .map((doc) => TournamentMatch.fromJson({...doc.data(), 'id': doc.id}))
-          .toList();
-    } catch (e) {
-      AppLogger.error('Error fetching matches', e);
-      return [];
-    }
-  }
+  Future<List<TournamentMatch>> getTournamentMatches(String tournamentId) =>
+      TournamentRepository.instance.getTournamentMatches(tournamentId);
 
-  /// Get a single match by ID
   Future<TournamentMatch?> getTournamentMatch(
-      String tournamentId, String matchId) async {
-    try {
-      final doc = await _db
-          .collection('tournaments')
-          .doc(tournamentId)
-          .collection('matches')
-          .doc(matchId)
-          .get();
-      if (!doc.exists) return null;
-      return TournamentMatch.fromJson({...doc.data()!, 'id': doc.id});
-    } catch (e) {
-      AppLogger.error('Error fetching match', e);
-      rethrow;
-    }
-  }
-//endregion
+          String tournamentId, String matchId) =>
+      TournamentRepository.instance
+          .getTournamentMatch(tournamentId, matchId);
 }
