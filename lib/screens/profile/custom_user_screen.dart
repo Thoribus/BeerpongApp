@@ -1,15 +1,12 @@
-import 'package:beerpongapp/models/cup.dart';
-import 'package:beerpongapp/models/player.dart';
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/models/game_statistics.dart';
-import 'package:beerpongapp/util/firestoreservice.dart';
-import 'package:beerpongapp/widgets/user_card.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/widgets/user_card.dart';
 
 class CustomUserScreen extends StatefulWidget {
   final User user;
-
   const CustomUserScreen({super.key, required this.user});
 
   @override
@@ -17,220 +14,226 @@ class CustomUserScreen extends StatefulWidget {
 }
 
 class _CustomUserScreenState extends State<CustomUserScreen> {
-  String? selectedIcon;
-  String? selectedAchievement;
-  String? selectedTitle;
-
-  final List<String> availableIcons = [
-    'assets/avatars/avatar_aggroracoon.png',
-    'assets/avatars/avatar_catbeer.png',
-    'assets/avatars/avatar_catpants.png',
-    'assets/avatars/avatar_cheering.png',
-    'assets/avatars/avatar_cupbeer.png',
-    'assets/avatars/avatar_frogisland.png',
+  // Keys must match the SVG filenames under assets/avatars/
+  static const _avatarKeys = [
+    'avatar_aggroracoon',
+    'avatar_catbeer',
+    'avatar_catpants',
+    'avatar_cheering',
+    'avatar_cupbeer',
+    'avatar_frogisland',
   ];
 
-  final List<String> availableAchievements = [
-    'assets/achievements/ach_holyknight.png',
-    'assets/achievements/ach_animalparty.png',
-    'assets/achievements/ach_catblock.png',
-    'assets/achievements/ach_catsniper.png',
-    'assets/achievements/ach_moletable.png',
-    'assets/achievements/ach_racoontrophy.png',
-    'assets/achievements/ach_cheersshot.png',
-    'assets/achievements/ach_sadlooser.png',
-    'assets/achievements/ach_twerkfrog.png',
-    'assets/achievements/ach_header.png',
-  ];
+  static const _bgColor = Color(0xFF0E0F11);
+  static const _cardColor = Color(0xFF1C1E22);
+  static const _borderColor = Color(0xFF2A2D33);
 
-  final List<String> availableTitles = [
-    'Beginner',
-    'Pro Player',
-    'Champion',
-  ];
+  late String _selectedAvatarKey;
+  late String _selectedTitle;
+  bool _isSaving = false;
 
-  void _resetSelections() {
-    setState(() {
-      selectedIcon = null;
-      selectedAchievement = null;
-      selectedTitle = null;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _selectedAvatarKey = _avatarKeys.contains(widget.user.avatarKey)
+        ? widget.user.avatarKey
+        : _avatarKeys.first;
+    _selectedTitle = widget.user.title;
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Selections saved and reset.")),
-    );
+  List<String> get _availableTitles {
+    final unlocked = widget.user.unlockedTitles;
+    return unlocked.isNotEmpty ? unlocked : ['Beginner', 'Pro Player', 'Champion'];
+  }
+
+  // Local preview — updates live as the user picks
+  User get _previewUser => widget.user.copyWith(
+        avatarKey: _selectedAvatarKey,
+        title: _selectedTitle,
+      );
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    try {
+      final provider = Provider.of<UserProvider>(context, listen: false);
+      await provider.updateUser(_previewUser);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _bgColor,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _resetSelections,
-        label: const Text("Save"),
-        icon: const Icon(Icons.save),
+        onPressed: _isSaving ? null : _save,
         backgroundColor: Colors.orange,
+        foregroundColor: Colors.white,
+        icon: _isSaving
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.check),
+        label: Text(_isSaving ? 'Saving…' : 'Save'),
       ),
-      body: FutureBuilder<List<UserStatsInGame>>(
-        future: FirestoreService().retrieveUserStatsWithDate(widget.user),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Live preview card — reflects picks in real time
+            UserCard(
+              user: _previewUser,
+              onTitleTap: () {},
+              onAvatarTap: () {},
+            ),
+            const SizedBox(height: 28),
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            const _SectionHeader(title: 'Avatar'),
+            const SizedBox(height: 12),
+            _buildAvatarGrid(),
+
+            const SizedBox(height: 28),
+
+            const _SectionHeader(title: 'Title'),
+            const SizedBox(height: 12),
+            _buildTitlePicker(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1,
+      ),
+      itemCount: _avatarKeys.length,
+      itemBuilder: (context, index) {
+        final key = _avatarKeys[index];
+        final isSelected = _selectedAvatarKey == key;
+
+        return GestureDetector(
+          onTap: () => setState(() => _selectedAvatarKey = key),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: isSelected
+                  ? Colors.orange.withValues(alpha: 0.12)
+                  : _cardColor,
+              border: Border.all(
+                color: isSelected ? Colors.orange : _borderColor,
+                width: isSelected ? 2.5 : 1,
+              ),
+            ),
+            child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: UserCard(
-                    user: widget.user,
-                    onTitleTap: () {},
-                    onAvatarTap: () {},
+                  padding: const EdgeInsets.all(14),
+                  child: SvgPicture.asset(
+                    'assets/avatars/$key.svg',
+                    fit: BoxFit.contain,
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                _buildSectionTitle('Choose User Icon'),
-                _buildIconGrid(availableIcons, selectedIcon, (icon) {
-                  setState(() => selectedIcon = icon);
-                }),
-
-                _buildSectionTitle('Choose Achievement Icon'),
-                _buildIconGridOptimized(
-                  icons: availableAchievements,
-                  selected: selectedAchievement,
-                  onSelect: (icon) {
-                    setState(() => selectedAchievement = icon);
-                  },
-                ),
-
-                const SizedBox(height: 24),
-                _buildSectionTitle('Choose Title'),
-                _buildTitleSelection(),
-                const SizedBox(height: 80), // Leave room for FAB
+                if (isSelected)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check,
+                          size: 11, color: Colors.white),
+                    ),
+                  ),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _buildIconGrid(
-    List<String> icons,
-    String? selected,
-    Function(String) onSelect,
-  ) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: icons.map((iconPath) {
-        final isSelected = selected == iconPath;
-        return GestureDetector(
-          onTap: () => onSelect(iconPath),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? Colors.orange : Colors.transparent,
-                width: 3,
-              ),
-            ),
-            child: CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.grey[200],
-                child: Image.asset(iconPath,
-                    width: 36, height: 36, fit: BoxFit.cover)),
           ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildTitleSelection() {
-    return Wrap(
-      spacing: 8,
-      children: availableTitles.map((title) {
-        final isSelected = selectedTitle == title;
-        return ChoiceChip(
-          label: Text(title),
-          selected: isSelected,
-          onSelected: (_) => setState(() => selectedTitle = title),
-          selectedColor: Colors.orange.shade100,
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.orange : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildIconGridOptimized({
-    required List<String> icons,
-    required String? selected,
-    required Function(String) onSelect,
-  }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const int crossAxisCount = 4;
-        const double spacing = 12;
-        final itemWidth =
-            (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
-                crossAxisCount;
-
-        return GridView.builder(
-          itemCount: icons.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: spacing,
-            crossAxisSpacing: spacing,
-            childAspectRatio: 1,
-          ),
-          itemBuilder: (context, index) {
-            final iconPath = icons[index];
-            final isSelected = selected == iconPath;
-
-            return GestureDetector(
-              onTap: () => onSelect(iconPath),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? Colors.orange : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-                child: CircleAvatar(
-                  backgroundColor: Colors.grey[200],
-                  child: Image.asset(iconPath,
-                      width: 36, height: 36, fit: BoxFit.cover),
-                ),
-              ),
-            );
-          },
         );
       },
+    );
+  }
+
+  Widget _buildTitlePicker() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _availableTitles.map((title) {
+        final isSelected = _selectedTitle == title;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedTitle = title),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: isSelected ? Colors.orange : _cardColor,
+              border: Border.all(
+                color: isSelected ? Colors.orange : _borderColor,
+              ),
+            ),
+            child: Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey.shade400,
+                fontWeight:
+                    isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
     );
   }
 }
