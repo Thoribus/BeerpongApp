@@ -11,6 +11,9 @@ class AppTheme {
   // Light mode surfaces
   static const Color surfaceLight = Color(0xFFEDEDED);
   static const Color navBarLight = Color(0xFFDCDCDC);
+  // Tab bar defaults
+  static const Color tabBarBackground = Color(0xFF424242); // grey.shade800
+  static const Color tabBarInactive = Color(0xFF757575);   // grey.shade600
 
   static ThemeData get dark => ThemeData(
         brightness: Brightness.dark,

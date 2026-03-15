@@ -1,3 +1,4 @@
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 
 class AppConstants {
@@ -9,9 +10,9 @@ class AppConstants {
   static const Color teamTwoColor = Colors.red;
 
   // ── App background / surface colours ────────────────────────────────────────
-  static const Color bgDark = Color(0xFF0E0F11);
-  static const Color surfaceDark = Color(0xFF1C1E22);
-  static const Color borderDark = Color(0xFF2A2D33);
+  static const Color bgDark = AppTheme.backgroundDark;
+  static const Color surfaceDark = AppTheme.surfaceDark;
+  static const Color borderDark = AppTheme.surfaceDark2;
 
   // ── Game rules ───────────────────────────────────────────────────────────────
   /// Number of cups per team at the start of a standard game.

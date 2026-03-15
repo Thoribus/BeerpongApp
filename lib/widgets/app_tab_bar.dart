@@ -1,3 +1,4 @@
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 
 /// Shared horizontal tab bar used across multiple screens.
@@ -16,9 +17,9 @@ class AppTabBar extends StatelessWidget {
     required this.tabs,
     required this.selectedIndex,
     required this.onTabSelected,
-    this.backgroundColor = const Color(0xFF424242), // Colors.grey.shade800
+    this.backgroundColor = AppTheme.tabBarBackground,
     this.activeTabColor = Colors.orange,
-    this.inactiveTabColor = const Color(0xFF757575), // Colors.grey.shade600
+    this.inactiveTabColor = AppTheme.tabBarInactive,
     this.pageController,
   });
 
