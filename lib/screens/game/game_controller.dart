@@ -233,8 +233,10 @@ class GameController extends ChangeNotifier {
   void toggleIslandCups() {
     if (islandShotActive) {
       islandShotActive = false;
+      // Reset by color, not by recalculating proximity — cup layout may have
+      // changed since the highlight was applied (cups removed, rearranged).
       for (final cup in currentTeam.cups) {
-        if (_isIslandCup(cup)) cup.color = currentTeam.color;
+        if (cup.color == Colors.yellow) cup.color = currentTeam.color;
       }
     } else {
       islandShotActive = true;

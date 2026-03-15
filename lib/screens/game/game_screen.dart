@@ -90,7 +90,16 @@ class GameScreenState extends State<GameScreen> {
 
   void onCupTap(int cupIndex) {
     if (_ctrl.islandShotActive) {
-      handleIslandShot(cupIndex);
+      // Only yellow (highlighted island) cups trigger the island shot power.
+      // Tapping a non-island cup during island mode is treated as a normal hit.
+      final cup = _ctrl.currentTeam.cups
+          .where((c) => c.index == cupIndex)
+          .firstOrNull;
+      if (cup != null && cup.color == Colors.yellow) {
+        handleIslandShot(cupIndex);
+      } else {
+        showPlayerSelectionDialog(context, cupIndex);
+      }
     } else {
       showPlayerSelectionDialog(context, cupIndex);
     }
