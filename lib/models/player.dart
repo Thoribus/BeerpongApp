@@ -154,7 +154,7 @@ class Player {
       hitThisRound: json['hitThisRound'],
       islandShotUsed: json['islandShotUsed'] ?? false,
       defended: json['defended'] ?? 0,
-      consecutiveHits: json['consecutiveHits'] ?? json['consecuteiveHits'] ?? 0,
+      consecutiveHits: json['consecutiveHits'] ?? 0,
       onFire: json['onFire'] ?? 0,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       lastCupHit: json['lastCupHit'] ?? false,

@@ -109,7 +109,7 @@ class GameScreenState extends State<GameScreen> {
           islandShotActive: islandShotActive,
           invitations: invitations,
           selectedRules: selectedRules,
-          tournamendId: tournamentId));
+          tournamentId: tournamentId));
     }
     _pageController.dispose();
     super.dispose();

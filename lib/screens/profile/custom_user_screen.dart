@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -14,19 +15,11 @@ class CustomUserScreen extends StatefulWidget {
 }
 
 class _CustomUserScreenState extends State<CustomUserScreen> {
-  // Keys must match the SVG filenames under assets/avatars/
-  static const _avatarKeys = [
-    'avatar_aggroracoon',
-    'avatar_catbeer',
-    'avatar_catpants',
-    'avatar_cheering',
-    'avatar_cupbeer',
-    'avatar_frogisland',
-  ];
+  static const _avatarKeys = AppConstants.avatarKeys;
 
-  static const _bgColor = Color(0xFF0E0F11);
-  static const _cardColor = Color(0xFF1C1E22);
-  static const _borderColor = Color(0xFF2A2D33);
+  static const _bgColor = AppConstants.bgDark;
+  static const _cardColor = AppConstants.surfaceDark;
+  static const _borderColor = AppConstants.borderDark;
 
   late String _selectedAvatarKey;
   late String _selectedTitle;

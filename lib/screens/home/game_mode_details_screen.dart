@@ -753,7 +753,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       invitations: _acceptedInvites,
       started: _started,
       timestamp: true,
-      tournamendId: '',
+      tournamentId: '',
     );
   }
 

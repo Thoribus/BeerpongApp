@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,7 +7,7 @@ import '../../models/team.dart';
 
 /// A helper class to save/load/clear the game state from SharedPreferences.
 class GamePersistence {
-  static const String _gameStateKey = 'currentGameState';
+  static const String _gameStateKey = AppConstants.prefGameState;
 
   /// Saves the entire game state (team1, team2, flags) as a single JSON string.
   static Future<void> saveGameState({
@@ -17,7 +18,7 @@ class GamePersistence {
     required bool islandShotActive,
     required List<String> invitations,
     required Map<String, bool> selectedRules,
-    required String tournamendId,
+    required String tournamentId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -30,7 +31,7 @@ class GamePersistence {
       'islandShotActive': islandShotActive,
       'invitations': invitations,
       'selectedRules': selectedRules,
-      'tournamentId': tournamendId,
+      'tournamentId': tournamentId,
     };
 
     final jsonString = json.encode(gameMap);
