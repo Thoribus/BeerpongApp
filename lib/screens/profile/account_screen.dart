@@ -54,7 +54,7 @@ class AccountScreenState extends State<AccountScreen>
             )
           : Column(
               children: [
-                _buildTabPageSelector(),
+                _buildTabBarWithLogout(userProvider),
                 const SizedBox(height: 10),
                 Expanded(
                   child: PageView(
@@ -62,6 +62,11 @@ class AccountScreenState extends State<AccountScreen>
                     onPageChanged: (index) {
                       setState(() {
                         _currentTabPage = index;
+                        // Lazy-load friends only when the Social tab is first opened.
+                        if (index == 2 && _friendsFuture == null && user != null) {
+                          _friendsFuture =
+                              FirestoreService.instance.getFriends(user!.id);
+                        }
                       });
                     },
                     children: [
@@ -77,7 +82,6 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Widget _buildSocialPage() {
-    _friendsFuture ??= FirestoreService.instance.getFriends(user!.id);
     return FutureBuilder<List<User>>(
       future: _friendsFuture,
       builder: (context, snapshot) {
@@ -129,18 +133,56 @@ class AccountScreenState extends State<AccountScreen>
     );
   }
 
-  Widget _buildTabPageSelector() {
-    return AppTabBar(
-      tabs: const ['Customize', 'Achievements', 'Activity'],
-      selectedIndex: _currentTabPage,
-      onTabSelected: (index) {
-        if (_currentTabPage != index) {
-          setState(() => _currentTabPage = index);
-        }
-      },
-      pageController: _tabPageController,
-      backgroundColor: Colors.grey.shade800,
+  Widget _buildTabBarWithLogout(UserProvider userProvider) {
+    return ColoredBox(
+      color: Colors.grey.shade800,
+      child: Row(
+        children: [
+          Expanded(
+            child: AppTabBar(
+              tabs: const ['Customize', 'Achievements', 'Activity'],
+              selectedIndex: _currentTabPage,
+              onTabSelected: (index) {
+                if (_currentTabPage != index) {
+                  setState(() => _currentTabPage = index);
+                }
+              },
+              pageController: _tabPageController,
+              backgroundColor: Colors.grey.shade800,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
+            tooltip: 'Sign out',
+            onPressed: () => _confirmSignOut(userProvider),
+          ),
+        ],
+      ),
     );
+  }
+
+  Future<void> _confirmSignOut(UserProvider userProvider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You will be returned to the sign-in screen.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child:
+                const Text('Sign out', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await userProvider.signOut();
+    }
   }
 
 }

@@ -11,6 +11,13 @@ class UserProvider with ChangeNotifier {
 
   User? get user => _user;
 
+  /// Sets the user directly — for use in tests only.
+  // ignore: use_setters_to_change_properties
+  void setUserForTesting(User user) {
+    _user = user;
+    notifyListeners();
+  }
+
   /// Load the current user's data from Firestore.
   Future<void> loadUser() async {
     final auth.User? currentUser = auth.FirebaseAuth.instance.currentUser;
