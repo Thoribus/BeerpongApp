@@ -1,5 +1,6 @@
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/player.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:beerpongapp/models/user.dart';
@@ -27,8 +28,9 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -75,22 +77,24 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
+    final c = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.black,
+          color: c.onBackground,
         ),
       ),
     );
   }
 
   Widget _buildCard({required Widget child}) {
+    final c = AppColors.of(context);
     return Card(
-      color: Colors.grey[200],
+      color: c.surface2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 5,
       child: Padding(
@@ -255,14 +259,15 @@ class StatisticsTable extends StatelessWidget {
         _lessIsBetter(attribute) ? changePercent < 0 : changePercent >= 0;
     final trendColor = isPositive ? Colors.green : Colors.red;
 
+    final c = AppColors.of(context);
     return ListTile(
       leading: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             attribute,
-            style: const TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: c.onBackground, fontWeight: FontWeight.bold),
           ),
           Icon(icon, color: Colors.orange, size: 20),
         ],
@@ -294,8 +299,8 @@ class StatisticsTable extends StatelessWidget {
         children: [
           Text(
             '$value',
-            style: const TextStyle(
-              color: Colors.black,
+            style: TextStyle(
+              color: c.onBackground,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),

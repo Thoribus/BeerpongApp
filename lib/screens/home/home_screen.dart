@@ -4,6 +4,7 @@ import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -142,8 +143,9 @@ class HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -178,14 +180,15 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
+    final c = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 30.0),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.black,
+          color: c.onBackground,
         ),
       ),
     );
@@ -532,6 +535,7 @@ Widget _buildRulebookSection() {
         final rule = rules[index];
         final int rating = (rule['rating'] as int?) ?? 0;
 
+        final c = AppColors.of(context);
         return GestureDetector(
           onTap: () {
             showDialog(
@@ -555,10 +559,10 @@ Widget _buildRulebookSection() {
                         Text(
                           rule['title'] as String,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: c.onBackground,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -578,9 +582,9 @@ Widget _buildRulebookSection() {
                         Text(
                           rule['longDescription'] as String,
                           textAlign: TextAlign.justify,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
-                            color: Colors.black87,
+                            color: c.onBackground,
                             height: 1.5,
                           ),
                         ),
@@ -596,7 +600,7 @@ Widget _buildRulebookSection() {
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.grey,
+              color: c.surface2,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -631,18 +635,18 @@ Widget _buildRulebookSection() {
                 const SizedBox(height: 12),
                 Text(
                   rule['title'] as String,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: Colors.black,
+                    color: c.onBackground,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   rule['description'] as String,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black54,
+                    color: c.subtle,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

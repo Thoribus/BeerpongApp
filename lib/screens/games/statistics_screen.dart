@@ -1,5 +1,6 @@
 //-------------Packages-------------------------
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -76,19 +77,20 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     final userProvider = Provider.of<UserProvider>(context);
     if (userProvider.user == null) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: c.background,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.lock_outline, color: Colors.grey, size: 48),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Sign in to view your statistics',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                style: TextStyle(color: c.onBackground, fontSize: 16),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -103,18 +105,18 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     user = userProvider.user!;
 
     if (isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
+      return Scaffold(
+        backgroundColor: c.background,
+        body: const Center(
           child: CircularProgressIndicator(color: Colors.amber),
         ),
       );
     }
 
     if (hasError) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
+      return Scaffold(
+        backgroundColor: c.background,
+        body: const Center(
           child: Text(
             'Failed to load games',
             style: TextStyle(color: Colors.red),
@@ -146,6 +148,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildGameCard(GameStatistics game, int index) {
+    final c = AppColors.of(context);
     final bool userWon = (game.winningTeam == 'Team 1'
         ? game.team1Players.any((p) => p.name == user.username)
         : game.team2Players.any((p) => p.name == user.username));
@@ -166,8 +169,8 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: userWon
-                  ? [winColor, Colors.white]
-                  : [loseColor, Colors.white],
+                  ? [winColor, c.card]
+                  : [loseColor, c.card],
               begin: Alignment.bottomRight,
               end: Alignment.topLeft,
             ),
@@ -199,17 +202,19 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                       const SizedBox(width: 6),
                       Text(
                         'Game ${index + 1}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: c.onBackground),
                       ),
                     ],
                   ),
                   Text(
                     DateFormat('dd.MM.yyyy – kk:mm').format(game.date),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: Colors.grey,
+                      color: c.subtle,
                     ),
                   ),
                 ],
@@ -442,7 +447,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
           ),
         ],
       ),
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.of(context).background,
     );
   }
 
@@ -590,7 +595,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
     }
 
     return Container(
-      color: Colors.black,
+      color: AppColors.of(context).background,
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

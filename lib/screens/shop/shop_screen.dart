@@ -1,3 +1,4 @@
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'avatar_shop_view.dart';
@@ -65,6 +66,7 @@ class ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildProductList() {
+    final c = AppColors.of(context);
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: products.length,
@@ -74,7 +76,7 @@ class ShopScreenState extends State<ShopScreen> {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: c.card,
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
@@ -98,15 +100,16 @@ class ShopScreenState extends State<ShopScreen> {
                   children: [
                     Text(
                       product.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: c.onBackground,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       product.description,
-                      style: TextStyle(color: Colors.grey[700]),
+                      style: TextStyle(color: c.subtle),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -114,9 +117,9 @@ class ShopScreenState extends State<ShopScreen> {
                       children: [
                         Text(
                           '${product.price.toStringAsFixed(2)} €',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: c.onBackground,
                           ),
                         ),
                         ElevatedButton(

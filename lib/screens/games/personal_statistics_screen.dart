@@ -1,3 +1,4 @@
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/user.dart';
 
@@ -8,8 +9,9 @@ class PersonalStatisticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -51,9 +53,10 @@ class PersonalStatisticsScreen extends StatelessWidget {
       itemCount: stats.length,
       itemBuilder: (context, index) {
         final stat = stats[index];
+        final c = AppColors.of(context);
         return Container(
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: c.surface2,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -71,8 +74,8 @@ class PersonalStatisticsScreen extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
-                  color: Colors.grey,
+                decoration: BoxDecoration(
+                  color: c.chip,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -89,17 +92,17 @@ class PersonalStatisticsScreen extends StatelessWidget {
                   children: [
                     Text(
                       '${stat['value']}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: c.onBackground,
                       ),
                     ),
                     Text(
                       stat['title'] as String,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey,
+                        color: c.subtle,
                       ),
                     ),
                   ],

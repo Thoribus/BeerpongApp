@@ -26,9 +26,10 @@ class BaseScreenState extends State<BaseScreen> {
     final user = userProvider.user;
     final isDarkMode = themeProvider.isDarkMode;
     final selectedIndex = widget.shell.currentIndex;
+    final c = AppColors.of(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: c.background,
       drawer: Drawer(
         backgroundColor:
             isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight,
@@ -42,18 +43,16 @@ class BaseScreenState extends State<BaseScreen> {
                   children: [
                     DrawerHeader(
                       decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? AppTheme.surfaceDark2
-                            : AppTheme.navBarLight,
+                        color: c.drawerHeader,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const CircleAvatar(
+                          CircleAvatar(
                             radius: 28,
-                            backgroundColor: Colors.grey,
+                            backgroundColor: c.border,
                             child: Icon(Icons.person,
-                                size: 28, color: Colors.white),
+                                size: 28, color: c.onBackground),
                           ),
                           const SizedBox(width: 12),
                           Column(
@@ -65,17 +64,14 @@ class BaseScreenState extends State<BaseScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color:
-                                      isDarkMode ? Colors.white : Colors.black,
+                                  color: c.onBackground,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '@${user?.username ?? 'guest'}',
                                 style: TextStyle(
-                                  color: isDarkMode
-                                      ? Colors.grey[400]
-                                      : Colors.grey[700],
+                                  color: c.subtle,
                                 ),
                               ),
                             ],
@@ -101,27 +97,25 @@ class BaseScreenState extends State<BaseScreen> {
             // === Bottom Section: Settings Toggles ===
             Column(
               children: [
-                const Divider(color: Colors.grey),
+                Divider(color: c.divider),
                 SwitchListTile(
                   title: Text(
                     'Dark Mode',
-                    style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black),
+                    style: TextStyle(color: c.onBackground),
                   ),
                   value: isDarkMode,
                   onChanged: (_) => themeProvider.toggle(),
                   secondary: Icon(
                     Icons.dark_mode,
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: c.onBackground,
                   ),
                 ),
                 ListTile(
                   leading: Icon(Icons.privacy_tip_outlined,
-                      color: isDarkMode ? Colors.white : Colors.black),
+                      color: c.onBackground),
                   title: Text(
                     'Privacy Settings',
-                    style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black),
+                    style: TextStyle(color: c.onBackground),
                   ),
                   onTap: () {
                     // Optional: navigate to privacy settings
@@ -137,7 +131,7 @@ class BaseScreenState extends State<BaseScreen> {
         preferredSize: const Size.fromHeight(52),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade800,
+            color: c.appBar,
           ),
           child: SafeArea(
             child: Padding(
@@ -146,7 +140,7 @@ class BaseScreenState extends State<BaseScreen> {
                 children: [
                   Builder(
                     builder: (context) => IconButton(
-                      icon: const Icon(Icons.settings, color: Colors.white),
+                      icon: Icon(Icons.settings, color: c.onBackground),
                       onPressed: () {
                         Scaffold.of(context).openDrawer();
                       },
@@ -156,8 +150,8 @@ class BaseScreenState extends State<BaseScreen> {
                     child: Center(
                       child: Text(
                         _getAppBarTitle(selectedIndex),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: c.onBackground,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -167,7 +161,7 @@ class BaseScreenState extends State<BaseScreen> {
                   const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.notifications_none),
-                    color: Colors.white,
+                    color: c.onBackground,
                     onPressed: () {
                       // Push notifications: not yet implemented
                     },
@@ -181,9 +175,9 @@ class BaseScreenState extends State<BaseScreen> {
       body: widget.shell,
       bottomNavigationBar: Container(
         height: 60,
-        decoration: const BoxDecoration(
-          color: AppTheme.navBarDark,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: c.navBar,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(28),
             topRight: Radius.circular(28),
           ),

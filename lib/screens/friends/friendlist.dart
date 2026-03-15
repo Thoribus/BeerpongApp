@@ -2,6 +2,7 @@ import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -83,6 +84,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       return;
     }
 
+    final c = AppColors.of(context);
     await showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -90,7 +92,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         return Dialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          backgroundColor: Colors.grey[200], // Card background style
+          backgroundColor: c.card,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: SingleChildScrollView(
@@ -102,12 +104,12 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'Add a Friend',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: c.onBackground,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -117,7 +119,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                         hintText: "Enter friend's ID",
                         hintStyle: const TextStyle(fontSize: 14),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: c.surface,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         enabledBorder: OutlineInputBorder(
@@ -131,7 +133,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                               color: Colors.deepOrange, width: 1.5),
                         ),
                       ),
-                      style: const TextStyle(fontSize: 14, color: Colors.black),
+                      style: TextStyle(fontSize: 14, color: c.onBackground),
                     ),
                     const SizedBox(height: 10),
                     GestureDetector(
@@ -184,8 +186,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          child: const Text('Cancel',
-                              style: TextStyle(color: Colors.black)),
+                          child: Text('Cancel',
+                              style: TextStyle(color: c.onBackground)),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                         const SizedBox(width: 8),
@@ -276,18 +278,20 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final c = AppColors.of(context);
+
     if (userProvider.user == null) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: c.background,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.people_outline, color: Colors.grey, size: 48),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Sign in to view your friends',
-                style: TextStyle(color: Colors.black, fontSize: 16),
+                style: TextStyle(color: c.onBackground, fontSize: 16),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -301,7 +305,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       body: Column(
         children: [
           _buildPageSelector(),
@@ -341,19 +345,20 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     return FutureBuilder<List<User>>(
       future: _friends,
       builder: (context, snapshot) {
+        final c = AppColors.of(context);
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
           return Center(
             child: Text('Error: ${snapshot.error}',
-                style: const TextStyle(color: Colors.black)),
+                style: TextStyle(color: c.onBackground)),
           );
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(
+          return Center(
             child: Text('No friends found.',
-                style: TextStyle(color: Colors.black)),
+                style: TextStyle(color: c.onBackground)),
           );
         }
 
@@ -368,7 +373,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                color: Colors.grey[200],
+                color: c.card,
                 elevation: 1,
                 child: ListTile(
                   contentPadding:
@@ -376,11 +381,11 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                   leading: _buildCompactFriendAvatar(userProvider.user!),
                   title: Text(
                     userProvider.user!.username,
-                    style: const TextStyle(fontSize: 14, color: Colors.black),
+                    style: TextStyle(fontSize: 14, color: c.onBackground),
                   ),
                   subtitle: Text(
                     'Title: ${userProvider.user!.title}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: c.subtle),
                   ),
                   trailing: GestureDetector(
                     onTap: () => _showAddFriendDialog(context),
@@ -403,13 +408,14 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 return FutureBuilder<List<UserStatsInGame>>(
                   future: FirestoreService.instance.retrieveUserStatsWithDate(friend),
                   builder: (context, snapshot) {
+                    final c = AppColors.of(context);
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
                       return Center(
                           child: Text('Error: ${snapshot.error}',
-                              style: const TextStyle(color: Colors.black)));
+                              style: TextStyle(color: c.onBackground)));
                     }
 
                     final lastGame = snapshot.data ?? [];
@@ -418,7 +424,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      color: Colors.grey[200],
+                      color: c.card,
                       elevation: 1,
                       margin: const EdgeInsets.symmetric(vertical: 5),
                       child: ListTile(
@@ -430,22 +436,21 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                         leading: _buildCompactFriendAvatar(friend),
                         title: Text(
                           friend.username,
-                          style: const TextStyle(
-                              fontSize: 13, color: Colors.black),
+                          style: TextStyle(
+                              fontSize: 13, color: c.onBackground),
                         ),
                         subtitle: Text(
                           'Title: ${friend.title}',
-                          style:
-                              const TextStyle(fontSize: 11, color: Colors.grey),
+                          style: TextStyle(fontSize: 11, color: c.subtle),
                         ),
                         trailing: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Text(
+                            Text(
                               'last seen',
                               style:
-                                  TextStyle(fontSize: 10, color: Colors.grey),
+                                  TextStyle(fontSize: 10, color: c.subtle),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -453,10 +458,10 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                                   ? DateFormat('dd.MM.yyyy')
                                       .format(lastGame.first.date)
                                   : 'No games',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                color: c.onBackground,
                               ),
                             ),
                           ],
@@ -499,10 +504,11 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         if (friendsSnapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+        final c = AppColors.of(context);
         if (!friendsSnapshot.hasData || friendsSnapshot.data!.isEmpty) {
-          return const Center(
+          return Center(
             child: Text('No friend activity yet.',
-                style: TextStyle(color: Colors.black)),
+                style: TextStyle(color: c.onBackground)),
           );
         }
         return FutureBuilder<List<FriendAction>>(
@@ -513,9 +519,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
             }
             final actions = actionsSnapshot.data ?? [];
             if (actions.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text('No recent friend activity.',
-                    style: TextStyle(color: Colors.black)),
+                    style: TextStyle(color: c.onBackground)),
               );
             }
             return ListView.builder(
@@ -661,6 +667,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
   Widget _buildPodiumUser(User user, int rank, Color borderColor,
       {bool crown = false, double height = 100}) {
+    final c = AppColors.of(context);
     return Column(
       children: [
         Stack(
@@ -694,7 +701,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           width: 80,
           child: Text(
             user.username,
-            style: const TextStyle(color: Colors.black),
+            style: TextStyle(color: c.onBackground),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             textAlign: TextAlign.center,
@@ -705,7 +712,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               ? user.totalScore.toString()
               : '${(user.winRate * 100).toStringAsFixed(2)}%',
           style:
-              const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              TextStyle(color: c.onBackground, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -738,26 +745,31 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Widget _buildRankingList(List<User> friends) {
-    return ListView.builder(
-      itemCount: (friends.length - 3).clamp(0, friends.length),
-      itemBuilder: (ctx, index) {
-        final user = friends[index + 3];
-        return ListTile(
-          leading: Text('${index + 4}',
-              style: const TextStyle(color: Colors.amber, fontSize: 18)),
-          title: Row(
-            children: [
-              _buildFriendAvatar(user, radius: 20),
-              const SizedBox(width: 10),
-              Text(user.username, style: const TextStyle(color: Colors.black)),
-            ],
-          ),
-          trailing: Text(
-            _selectedAttribute == 'Total Score'
-                ? user.totalScore.toString()
-                : '${(user.winRate * 100).toStringAsFixed(2)}%',
-            style: const TextStyle(color: Colors.grey),
-          ),
+    return Builder(
+      builder: (context) {
+        final c = AppColors.of(context);
+        return ListView.builder(
+          itemCount: (friends.length - 3).clamp(0, friends.length),
+          itemBuilder: (ctx, index) {
+            final user = friends[index + 3];
+            return ListTile(
+              leading: Text('${index + 4}',
+                  style: const TextStyle(color: Colors.amber, fontSize: 18)),
+              title: Row(
+                children: [
+                  _buildFriendAvatar(user, radius: 20),
+                  const SizedBox(width: 10),
+                  Text(user.username, style: TextStyle(color: c.onBackground)),
+                ],
+              ),
+              trailing: Text(
+                _selectedAttribute == 'Total Score'
+                    ? user.totalScore.toString()
+                    : '${(user.winRate * 100).toStringAsFixed(2)}%',
+                style: TextStyle(color: c.subtle),
+              ),
+            );
+          },
         );
       },
     );

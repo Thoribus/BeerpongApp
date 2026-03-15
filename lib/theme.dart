@@ -1,5 +1,34 @@
 import 'package:flutter/material.dart';
 
+/// Semantic colour resolver — call `AppColors.of(context)` once per build
+/// and use the returned object throughout that widget's build method.
+class AppColors {
+  final bool isDark;
+  const AppColors._(this.isDark);
+
+  static AppColors of(BuildContext context) =>
+      AppColors._(Theme.of(context).brightness == Brightness.dark);
+
+  // ── Backgrounds ──────────────────────────────────────────────────────────
+  Color get background  => isDark ? AppTheme.backgroundDark    : const Color(0xFFF5F5F5);
+  Color get surface     => isDark ? AppTheme.surfaceDark        : Colors.white;
+  Color get surface2    => isDark ? AppTheme.surfaceDark2       : const Color(0xFFF0F0F0);
+  Color get appBar      => isDark ? AppTheme.tabBarBackground   : AppTheme.navBarLight;
+  Color get navBar      => isDark ? AppTheme.navBarDark         : AppTheme.navBarLight;
+  Color get drawerHeader => isDark ? AppTheme.surfaceDark2      : AppTheme.navBarLight;
+
+  // ── Text ─────────────────────────────────────────────────────────────────
+  Color get onBackground => isDark ? Colors.white              : const Color(0xFF1A1A1A);
+  Color get subtle       => isDark ? const Color(0xFFBDBDBD)   : Colors.grey.shade600;
+  Color get muted        => isDark ? Colors.white38            : Colors.black38;
+
+  // ── Structure ─────────────────────────────────────────────────────────────
+  Color get border  => isDark ? AppTheme.surfaceDark2   : const Color(0xFFE0E0E0);
+  Color get divider => isDark ? Colors.white12          : Colors.black12;
+  Color get card    => isDark ? AppTheme.surfaceDark    : Colors.white;
+  Color get chip    => isDark ? AppTheme.surfaceDark2   : const Color(0xFFEDEDED);
+}
+
 class AppTheme {
   static const Color primary = Colors.amber;
   static const Color gold = Color(0xFFF0AE1D);

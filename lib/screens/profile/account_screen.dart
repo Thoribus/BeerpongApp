@@ -1,3 +1,4 @@
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -40,9 +41,10 @@ class AccountScreenState extends State<AccountScreen>
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     user = userProvider.user;
+    final c = AppColors.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       body: user == null
           ? Center(
               child: ElevatedButton(
@@ -72,7 +74,7 @@ class AccountScreenState extends State<AccountScreen>
                     children: [
                       CustomUserScreen(user: user!),
                       AchievementsScreen(user: user!),
-                      _buildSocialPage(),
+                      _buildSocialPage(c),
                     ],
                   ),
                 ),
@@ -81,7 +83,7 @@ class AccountScreenState extends State<AccountScreen>
     );
   }
 
-  Widget _buildSocialPage() {
+  Widget _buildSocialPage(AppColors c) {
     return FutureBuilder<List<User>>(
       future: _friendsFuture,
       builder: (context, snapshot) {
@@ -111,7 +113,7 @@ class AccountScreenState extends State<AccountScreen>
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 leading: CircleAvatar(
-                  backgroundColor: Colors.black12,
+                  backgroundColor: c.border,
                   child: Text(
                     friend.username.isNotEmpty ? friend.username[0] : '?',
                     style: const TextStyle(color: Colors.black),
@@ -119,11 +121,11 @@ class AccountScreenState extends State<AccountScreen>
                 ),
                 title: Text(
                   friend.username,
-                  style: const TextStyle(fontSize: 13, color: Colors.black),
+                  style: TextStyle(fontSize: 13, color: c.onBackground),
                 ),
                 subtitle: Text(
                   '${friend.wins} wins · ${friend.losses} losses · $totalGames games played',
-                  style: const TextStyle(fontSize: 11, color: Colors.black87),
+                  style: TextStyle(fontSize: 11, color: c.onBackground),
                 ),
               ),
             );

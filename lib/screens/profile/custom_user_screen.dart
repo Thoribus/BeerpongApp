@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -31,10 +32,6 @@ class CustomUserScreen extends StatefulWidget {
 
 class _CustomUserScreenState extends State<CustomUserScreen> {
   static const _avatarKeys = AppConstants.avatarKeys;
-
-  static const _bgColor = AppConstants.bgDark;
-  static const _cardColor = AppConstants.surfaceDark;
-  static const _borderColor = AppConstants.borderDark;
 
   late String _selectedAvatarKey;
   late String _selectedTitle;
@@ -149,8 +146,9 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: c.background,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _canSave ? _save : null,
         backgroundColor: _canSave ? Colors.orange : Colors.grey,
@@ -200,6 +198,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
   }
 
   Widget _buildUsernameField() {
+    final c = AppColors.of(context);
     final (color, icon, hint) = switch (_usernameStatus) {
       UsernameStatus.idle => (Colors.grey.shade600, null, ''),
       UsernameStatus.checking =>
@@ -221,16 +220,16 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
         TextField(
           controller: _usernameController,
           maxLength: 20,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: c.onBackground),
           decoration: InputDecoration(
             hintText: 'Choose a username',
-            hintStyle: TextStyle(color: Colors.grey.shade500),
-            counterStyle: TextStyle(color: Colors.grey.shade500),
+            hintStyle: TextStyle(color: c.subtle),
+            counterStyle: TextStyle(color: c.subtle),
             filled: true,
-            fillColor: _cardColor,
+            fillColor: c.card,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: _borderColor),
+              borderSide: BorderSide(color: c.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -269,6 +268,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
   }
 
   Widget _buildAvatarGrid() {
+    final c = AppColors.of(context);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -291,9 +291,9 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
               borderRadius: BorderRadius.circular(16),
               color: isSelected
                   ? Colors.orange.withValues(alpha: 0.12)
-                  : _cardColor,
+                  : c.card,
               border: Border.all(
-                color: isSelected ? Colors.orange : _borderColor,
+                color: isSelected ? Colors.orange : c.border,
                 width: isSelected ? 2.5 : 1,
               ),
             ),
@@ -329,6 +329,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
   }
 
   Widget _buildTitlePicker() {
+    final c = AppColors.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -342,15 +343,15 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              color: isSelected ? Colors.orange : _cardColor,
+              color: isSelected ? Colors.orange : c.card,
               border: Border.all(
-                color: isSelected ? Colors.orange : _borderColor,
+                color: isSelected ? Colors.orange : c.border,
               ),
             ),
             child: Text(
               title,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey.shade400,
+                color: isSelected ? Colors.white : c.subtle,
                 fontWeight:
                     isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 14,
@@ -369,10 +370,11 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: c.onBackground,
         fontSize: 16,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
