@@ -17,7 +17,7 @@ void main() {
         onFire: 3,
         defended: 1,
         hitLastCup: 2,
-        cupsHit: [0, 1, 2],
+        cupsHitCount: {'0': 1, '1': 1, '2': 1},
         wins: 7,
         losses: 3,
         friends: ['f1', 'f2'],
