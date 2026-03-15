@@ -153,12 +153,11 @@ class AchievementsScreen extends StatelessWidget {
 
     for (var ach in achievements) {
       List<int> stages = ach['stages'] as List<int>;
-      int stage1Threshold = stages[1];
       int currentProgress = ach['currentProgress'] as int;
       String titleToGrant = ach['titleToGrant'] as String;
 
-      // If user has not unlocked this title yet, check if they meet stage1 threshold
-      if (currentProgress >= stage1Threshold &&
+      // Grant title once any stage threshold is reached
+      if (_getCurrentStageIndex(currentProgress, stages) >= 1 &&
           !user.unlockedTitles.contains(titleToGrant)) {
         user.unlockedTitles.add(titleToGrant);
         changed = true;
@@ -236,55 +235,6 @@ class AchievementsScreen extends StatelessWidget {
         'currentProgress': user.totalMisses,
         'stages': [0, 25, 50, 1000, 5000],
       },
-      {
-        'imagePath': 'ach_airball.png',
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': 'ach_airball.png',
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': 'ach_airball.png',
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': 'ach_airball.png',
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': 'ach_airball.png',
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': 0, //user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': 'ach_airball.png',
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': 1001, //user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': 'ach_airball.png',
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
     ];
     return achievements;
   }
@@ -335,13 +285,16 @@ class AchievementsScreen extends StatelessWidget {
   }
 
   Widget _buildUserCard() {
-    // Dummy data
-    const String username = 'PlayerOne';
-    const int level = 12;
-    const int achievementsCompleted = 32;
-    const int totalAchievements = 50;
+    final allAchievements = getAchievements(user);
+    final int totalAchievements = allAchievements.length;
+    final int achievementsCompleted = allAchievements.where((ach) {
+      final stages = ach['stages'] as List<int>;
+      final progress = ach['currentProgress'] as int;
+      return _getCurrentStageIndex(progress, stages) >= 1;
+    }).length;
+    final int level = user.unlockedTitles.length;
     final double progress =
-        (achievementsCompleted / totalAchievements).clamp(0.0, 1.0);
+        totalAchievements > 0 ? (achievementsCompleted / totalAchievements).clamp(0.0, 1.0) : 0.0;
 
     return Card(
       color: Colors.white,
@@ -377,10 +330,10 @@ class AchievementsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'Lv $level',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -394,9 +347,9 @@ class AchievementsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        username,
-                        style: TextStyle(
+                      Text(
+                        user.username,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -415,9 +368,9 @@ class AchievementsScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         '$achievementsCompleted / $totalAchievements Achievements',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 12, color: Colors.black54),
                       ),
                     ],

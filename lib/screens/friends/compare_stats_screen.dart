@@ -105,6 +105,15 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
 
             // Time filter stays inside, centered
             Center(child: _buildTimeFilterBar()),
+            if (selectedIndex != 0)
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Showing cumulative stats — time filters coming soon',
+                  style: TextStyle(fontSize: 10, color: Colors.white54),
+                  textAlign: TextAlign.center,
+                ),
+              ),
           ],
         ),
       ),

@@ -1,12 +1,11 @@
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import 'package:beerpongapp/models/user.dart';
 import 'achievements_screen.dart';
 import '../profile/custom_user_screen.dart';
-import '../friends/friendlist.dart' show DummyUser, ActionType, FriendAction, getActionColor;
 import '../../widgets/app_tab_bar.dart';
 
 /// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
@@ -20,6 +19,7 @@ class AccountScreen extends StatefulWidget {
 class AccountScreenState extends State<AccountScreen>
     with SingleTickerProviderStateMixin {
   User? user;
+  Future<List<User>>? _friendsFuture;
 
   int _currentTabPage = 0;
   late PageController _tabPageController;
@@ -77,76 +77,53 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Widget _buildSocialPage() {
-    final List<FriendAction> dummyActions = [
-      FriendAction(
-        user: DummyUser(username: 'Alice', avatarUrl: ''),
-        type: ActionType.wonGame,
-        description: 'won a game of Classic Mode',
-        date: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      FriendAction(
-        user: DummyUser(username: 'Bob', avatarUrl: ''),
-        type: ActionType.achievement,
-        description: 'unlocked the “Sharpshooter” achievement',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      FriendAction(
-        user: DummyUser(username: 'Carol', avatarUrl: ''),
-        type: ActionType.wonGame,
-        description: 'won a game of Speed Mode',
-        date: DateTime.now().subtract(const Duration(days: 2, hours: 3)),
-      ),
-    ];
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      itemCount: dummyActions.length,
-      itemBuilder: (context, index) {
-        final action = dummyActions[index];
-        final bgColor = getActionColor(action.type);
-
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          color: bgColor,
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            leading: CircleAvatar(
-              backgroundColor: Colors.black12,
-              child: Text(
-                action.user.username[0],
-                style: const TextStyle(color: Colors.black),
+    _friendsFuture ??= FirestoreService.instance.getFriends(user!.id);
+    return FutureBuilder<List<User>>(
+      future: _friendsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final friends = snapshot.data ?? [];
+        if (friends.isEmpty) {
+          return const Center(
+            child: Text('No friends yet. Add some friends to see their activity!'),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          itemCount: friends.length,
+          itemBuilder: (context, index) {
+            final friend = friends[index];
+            final totalGames = friend.wins + friend.losses;
+            return Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-            ),
-            title: Text(
-              action.user.username,
-              style: const TextStyle(fontSize: 13, color: Colors.black),
-            ),
-            subtitle: Text(
-              action.description,
-              style: const TextStyle(fontSize: 11, color: Colors.black87),
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text('Date',
-                    style: TextStyle(fontSize: 10, color: Colors.black54)),
-                const SizedBox(height: 2),
-                Text(
-                  DateFormat('dd.MM.yyyy').format(action.date),
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
+              color: Colors.greenAccent.shade100,
+              elevation: 2,
+              margin: const EdgeInsets.symmetric(vertical: 6),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                leading: CircleAvatar(
+                  backgroundColor: Colors.black12,
+                  child: Text(
+                    friend.username.isNotEmpty ? friend.username[0] : '?',
+                    style: const TextStyle(color: Colors.black),
+                  ),
                 ),
-              ],
-            ),
-          ),
+                title: Text(
+                  friend.username,
+                  style: const TextStyle(fontSize: 13, color: Colors.black),
+                ),
+                subtitle: Text(
+                  '${friend.wins} wins · ${friend.losses} losses · $totalGames games played',
+                  style: const TextStyle(fontSize: 11, color: Colors.black87),
+                ),
+              ),
+            );
+          },
         );
       },
     );

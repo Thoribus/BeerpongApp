@@ -135,6 +135,17 @@ class TournamentAnalysisScreen extends StatelessWidget {
   Widget _buildConfrontationMatrix() {
     final teams = tournament.teams;
 
+    // Build lookup: "rowColorKey-colColorKey" → true if row team won
+    final Map<String, bool> results = {};
+    for (final match in tournament.matches) {
+      if (!match.played || match.winner == null) continue;
+      final r = match.team1.color.toARGB32().toString();
+      final c = match.team2.color.toARGB32().toString();
+      final team1Won = match.winner!.color.toARGB32() == match.team1.color.toARGB32();
+      results['$r-$c'] = team1Won;
+      results['$c-$r'] = !team1Won;
+    }
+
     return Table(
       border: TableBorder.all(color: Colors.grey.shade400),
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -148,20 +159,26 @@ class TournamentAnalysisScreen extends StatelessWidget {
         ),
         ...teams.asMap().entries.map((rowEntry) {
           final rowIndex = rowEntry.key;
+          final rowTeam = rowEntry.value;
+          final rowKey = rowTeam.color.toARGB32().toString();
           return TableRow(
             children: [
               Center(child: Text('T${rowIndex + 1}')),
-              ...teams.asMap().entries.map((colEntry) {
-                final colIndex = colEntry.key;
-                if (rowIndex == colIndex) {
+              ...teams.map((colTeam) {
+                if (colTeam.color.toARGB32() == rowTeam.color.toARGB32()) {
                   return const Center(child: Text('✕'));
                 }
-                // Fake result generation (replace with real match data if available)
-                final won = (rowIndex + colIndex) % 2 == 0;
+                final colKey = colTeam.color.toARGB32().toString();
+                final result = results['$rowKey-$colKey'];
+                if (result == null) {
+                  return const Center(
+                    child: Text('?', style: TextStyle(color: Colors.grey)),
+                  );
+                }
                 return Center(
                   child: Icon(
-                    won ? Icons.check : Icons.close,
-                    color: won ? Colors.green : Colors.red,
+                    result ? Icons.check : Icons.close,
+                    color: result ? Colors.green : Colors.red,
                     size: 16,
                   ),
                 );

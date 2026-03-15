@@ -8,28 +8,27 @@ class MatchStatsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double sumStat(List players, double Function(dynamic) f) =>
+        players.fold<double>(0, (s, p) => s + f(p));
+
+    final t1Score = sumStat(gameData.team1.players, (p) => p.score.toDouble());
+    final t1Throws = sumStat(gameData.team1.players, (p) => p.throws.toDouble());
+    final t1Airballs = sumStat(gameData.team1.players, (p) => p.airballs.toDouble());
+    final t1Misses = sumStat(gameData.team1.players, (p) => p.misses.toDouble());
+    final t1Accuracy = t1Throws > 0 ? (t1Score / t1Throws * 100).clamp(0.0, 100.0) : 0.0;
+
+    final t2Score = sumStat(gameData.team2.players, (p) => p.score.toDouble());
+    final t2Throws = sumStat(gameData.team2.players, (p) => p.throws.toDouble());
+    final t2Airballs = sumStat(gameData.team2.players, (p) => p.airballs.toDouble());
+    final t2Misses = sumStat(gameData.team2.players, (p) => p.misses.toDouble());
+    final t2Accuracy = t2Throws > 0 ? (t2Score / t2Throws * 100).clamp(0.0, 100.0) : 0.0;
+
     final stats = [
-      {
-        'title': 'Score',
-        'team1': gameData.team1.players[0].score.toDouble(),
-        'team2': gameData.team2.players[0].score.toDouble()
-      },
-      {
-        'title': 'Throws',
-        'team1': gameData.team1.players[0].throws.toDouble(),
-        'team2': gameData.team2.players[0].throws.toDouble()
-      },
-      {
-        'title': 'Airballs',
-        'team1': gameData.team1.players[0].airballs.toDouble(),
-        'team2': gameData.team2.players[0].airballs.toDouble()
-      },
-      {
-        'title': 'Misses',
-        'team1': gameData.team1.players[0].misses.toDouble(),
-        'team2': gameData.team2.players[0].misses.toDouble()
-      },
-      {'title': 'Accuracy', 'team1': 65.0, 'team2': 58.0},
+      {'title': 'Score', 'team1': t1Score, 'team2': t2Score},
+      {'title': 'Throws', 'team1': t1Throws, 'team2': t2Throws},
+      {'title': 'Airballs', 'team1': t1Airballs, 'team2': t2Airballs},
+      {'title': 'Misses', 'team1': t1Misses, 'team2': t2Misses},
+      {'title': 'Accuracy %', 'team1': t1Accuracy, 'team2': t2Accuracy},
     ];
 
     return SingleChildScrollView(

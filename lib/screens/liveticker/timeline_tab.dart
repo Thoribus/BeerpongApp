@@ -65,7 +65,7 @@ class TimelineTab extends StatelessWidget {
   }
 
   Widget _buildAnimatedEventRow(GameEvent event) {
-    final isTeam1 = event.team == '4294198070';
+    final isTeam1 = event.team == gameData.team1.color.toARGB32().toString();
     Color eventColor = _getEventColor(event.eventType);
     IconData eventIcon = _getEventIcon(event.eventType);
 
