@@ -7,6 +7,7 @@ import 'package:beerpongapp/models/user.dart';
 import 'achievements_screen.dart';
 import '../profile/custom_user_screen.dart';
 import '../friends/friendlist.dart' show DummyUser, ActionType, FriendAction, getActionColor;
+import '../../widgets/app_tab_bar.dart';
 
 /// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
 class AccountScreen extends StatefulWidget {
@@ -152,64 +153,16 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Widget _buildTabPageSelector() {
-    final List<String> tabs = ['Customize', 'Achievements', 'Activity'];
-
-    return Container(
-      height: 48,
-      width: double.infinity,
-      //margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800,
-        //borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Row(
-        children: tabs.asMap().entries.map((entry) {
-          final index = entry.key;
-          final title = entry.value;
-          final isSelected = _currentTabPage == index;
-
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () {
-                  if (_currentTabPage != index) {
-                    setState(() {
-                      _currentTabPage = index;
-                    });
-                    _tabPageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange : Colors.grey.shade600,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.white70,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+    return AppTabBar(
+      tabs: const ['Customize', 'Achievements', 'Activity'],
+      selectedIndex: _currentTabPage,
+      onTabSelected: (index) {
+        if (_currentTabPage != index) {
+          setState(() => _currentTabPage = index);
+        }
+      },
+      pageController: _tabPageController,
+      backgroundColor: Colors.grey.shade800,
     );
   }
 

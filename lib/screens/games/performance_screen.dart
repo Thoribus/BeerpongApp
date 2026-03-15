@@ -6,10 +6,24 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 
-class PerformanceScreen extends StatelessWidget {
+class PerformanceScreen extends StatefulWidget {
   final User user;
 
   const PerformanceScreen({super.key, required this.user});
+
+  @override
+  State<PerformanceScreen> createState() => _PerformanceScreenState();
+}
+
+class _PerformanceScreenState extends State<PerformanceScreen> {
+  late final Future<List<UserStatsInGame>> _statsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsFuture =
+        FirestoreService.instance.retrieveUserStatsWithDate(widget.user);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +35,7 @@ class PerformanceScreen extends StatelessWidget {
           children: [
             // 1) Load userStatsInGame from Firestore
             FutureBuilder<List<UserStatsInGame>>(
-              future: FirestoreService.instance.retrieveUserStatsWithDate(user),
+              future: _statsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -39,7 +53,7 @@ class PerformanceScreen extends StatelessWidget {
                     _buildSectionTitle('Performance Summary'),
                     _buildCard(
                       child: StatisticsTable(
-                        user: user,
+                        user: widget.user,
                         userStatsList: userStatsList, // pass it here
                       ),
                     ),
@@ -115,7 +129,7 @@ class PerformanceScreen extends StatelessWidget {
 
   List<int> _countCupsHit() {
     List<int> counts = List.filled(10, 0);
-    for (var hit in user.cupsHit) {
+    for (var hit in widget.user.cupsHit) {
       if (hit >= 0 && hit < counts.length) {
         counts[hit]++;
       }
@@ -143,7 +157,7 @@ class PerformanceScreen extends StatelessWidget {
 /// The table widget
 class StatisticsTable extends StatelessWidget {
   final User user;
-  final List<UserStatsInGame> userStatsList; // All the user’s games
+  final List<UserStatsInGame> userStatsList; // All the user's games
 
   const StatisticsTable({
     super.key,
@@ -302,7 +316,7 @@ class StatisticsTable extends StatelessWidget {
 
   bool _lessIsBetter(String attribute) {
     // If the attribute name is "Total Misses" or "Total Airballs", returning true
-    // means we’ll invert the color logic (negative slope => green).
+    // means we'll invert the color logic (negative slope => green).
     return attribute == 'Total Misses' || attribute == 'Total Airballs';
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'avatar_shop_view.dart';
+import '../../widgets/app_tab_bar.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -50,62 +51,16 @@ class ShopScreenState extends State<ShopScreen> {
   }
 
   Widget _buildTabPageSelector() {
-    final List<String> tabs = ['Avatar', 'User Card', 'In Game'];
-
-    return Container(
-      height: 48,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Row(
-        children: tabs.asMap().entries.map((entry) {
-          final index = entry.key;
-          final title = entry.value;
-          final isSelected = _currentTabPage == index;
-
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () {
-                  if (_currentTabPage != index) {
-                    setState(() {
-                      _currentTabPage = index;
-                    });
-                    _tabPageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange : Colors.grey.shade600,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.white70,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+    return AppTabBar(
+      tabs: const ['Avatar', 'User Card', 'In Game'],
+      selectedIndex: _currentTabPage,
+      onTabSelected: (index) {
+        if (_currentTabPage != index) {
+          setState(() => _currentTabPage = index);
+        }
+      },
+      pageController: _tabPageController,
+      backgroundColor: Colors.grey.shade800,
     );
   }
 

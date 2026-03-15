@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/models/game_statistics.dart';
-import 'package:beerpongapp/util/firestoreservice.dart';
 
 class PersonalStatisticsScreen extends StatelessWidget {
   final User user;
@@ -16,28 +14,9 @@ class PersonalStatisticsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 1) Load userStatsInGame from Firestore
-            FutureBuilder<List<UserStatsInGame>>(
-              future: FirestoreService.instance.retrieveUserStatsWithDate(user),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                // 2) Now we have userStatsList for line charts etc.
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 16),
-                    // Example "Statistics Tiles" if you want them:
-                    _buildStatisticsTiles(user),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              },
-            ),
+            const SizedBox(height: 16),
+            _buildStatisticsTiles(user),
+            const SizedBox(height: 24),
           ],
         ),
       ),

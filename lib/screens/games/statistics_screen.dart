@@ -19,6 +19,10 @@ import '../games/performance_screen.dart';
 import '../games/personal_statistics_screen.dart';
 //----------------------------------------------
 
+//-------------Widgets--------------------------
+import '../../widgets/app_tab_bar.dart';
+//----------------------------------------------
+
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
@@ -59,52 +63,14 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildTabPageSelector() {
-    final List<String> tabs = ['Stats', 'Performance', 'History'];
-
-    return Container(
-      height: 48,
-      width: double.infinity,
-      color: Colors.grey.shade800,
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Row(
-        children: tabs.asMap().entries.map((entry) {
-          final index = entry.key;
-          final title = entry.value;
-          final isSelected = _currentTabPage == index;
-
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() => _currentTabPage = index);
-                  _tabPageController.animateToPage(
-                    index,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange : Colors.grey.shade600,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.white70,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+    return AppTabBar(
+      tabs: const ['Stats', 'Performance', 'History'],
+      selectedIndex: _currentTabPage,
+      onTabSelected: (index) {
+        setState(() => _currentTabPage = index);
+      },
+      pageController: _tabPageController,
+      backgroundColor: Colors.grey.shade800,
     );
   }
 

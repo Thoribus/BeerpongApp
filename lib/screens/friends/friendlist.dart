@@ -12,6 +12,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:beerpongapp/util/route_args.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/app_tab_bar.dart';
 
 class DummyUser {
   final String username;
@@ -334,57 +335,15 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Widget _buildPageSelector() {
-    final List<String> pages = ['Friendlist', 'Leaderboard', 'Socials'];
-
-    return Container(
-      height: 48,
-      width: double.infinity,
-      //margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800,
-        //borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Row(
-        children: pages.asMap().entries.map((entry) {
-          final index = entry.key;
-          final title = entry.value;
-          final isSelected = _currentPage == index;
-
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () {
-                  if (_currentPage != index) {
-                    _pageController.jumpToPage(index);
-                  }
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.orange : Colors.grey.shade600,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.white70,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+    return AppTabBar(
+      tabs: const ['Friendlist', 'Leaderboard', 'Socials'],
+      selectedIndex: _currentPage,
+      onTabSelected: (index) {
+        if (_currentPage != index) {
+          _pageController.jumpToPage(index);
+        }
+      },
+      backgroundColor: Colors.grey.shade800,
     );
   }
 
