@@ -221,3 +221,41 @@ class Player {
   @override
   int get hashCode => name.hashCode ^ score.hashCode;
 }
+
+extension PlayerCopyWith on Player {
+  Player copyWithName(String newName) {
+    return Player(
+      name: newName,
+      user: user,
+      score: score,
+      throws: throws,
+      misses: misses,
+      airballs: airballs,
+      defended: defended,
+      consecutiveHits: consecutiveHits,
+      cupsHit: cupsHit,
+      hitThisRound: hitThisRound,
+      onFire: onFire,
+      islandShotUsed: islandShotUsed,
+      lastCupHit: lastCupHit,
+    );
+  }
+
+  Player copyWithUser(User? newUser) {
+    return Player(
+      name: name,
+      user: newUser,
+      score: score,
+      throws: throws,
+      misses: misses,
+      airballs: airballs,
+      defended: defended,
+      consecutiveHits: consecutiveHits,
+      cupsHit: cupsHit,
+      hitThisRound: hitThisRound,
+      onFire: onFire,
+      islandShotUsed: islandShotUsed,
+      lastCupHit: lastCupHit,
+    );
+  }
+}
