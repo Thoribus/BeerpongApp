@@ -40,6 +40,10 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     super.initState();
     _tabPageController = PageController(initialPage: _currentTabPage);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.user == null) {
+      isLoading = false;
+      return;
+    }
     user = userProvider.user!;
     _retrieveGames();
   }
@@ -57,7 +61,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildTabPageSelector() {
-    final List<String> tabs = ["Stats", "Performance", "History"];
+    final List<String> tabs = ['Stats', 'Performance', 'History'];
 
     return Container(
       height: 48,
@@ -108,7 +112,30 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userProvider = Provider.of<UserProvider>(context);
+    if (userProvider.user == null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock_outline, color: Colors.grey, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Sign in to view your statistics',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async => userProvider.signIn(),
+                child: const Text('Sign in with Google'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     user = userProvider.user!;
 
     if (isLoading) {
@@ -143,8 +170,8 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 setState(() => _currentTabPage = index);
               },
               children: [
-                PersonalStatisticsScreen(user: user!),
-                PerformanceScreen(user: user!),
+                PersonalStatisticsScreen(user: user),
+                PerformanceScreen(user: user),
                 _buildHistoryTab(), // Your original content
               ],
             ),
@@ -183,7 +210,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(4, 6), // bottom-right style
               )
@@ -242,7 +269,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                       children: [
                         ..._buildAvatarList(context, game.team1Players),
                         const SizedBox(width: 12),
-                        const Text("VS",
+                        const Text('VS',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 12),
                         ..._buildAvatarList(context, game.team2Players),

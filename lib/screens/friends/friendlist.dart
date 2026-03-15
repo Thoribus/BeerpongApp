@@ -1,4 +1,3 @@
-import 'package:beerpongapp/constants.dart'; // For AppConstants.primaryColor (optional)
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -45,8 +44,6 @@ Color _getActionColor(ActionType type) {
       return Colors.greenAccent.shade100;
     case ActionType.achievement:
       return Colors.lightBlueAccent.shade100;
-    default:
-      return Colors.grey.shade200;
   }
 }
 
@@ -58,28 +55,23 @@ class FriendsListScreen extends StatefulWidget {
 }
 
 class FriendsListScreenState extends State<FriendsListScreen> {
-  late Future<List<User>> _friends;
+  Future<List<User>>? _friends;
   String _selectedAttribute = 'Total Score';
 
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  Color _getLastSeenColor(DateTime? lastSeen) {
-    if (lastSeen == null) return Colors.grey;
-    final now = DateTime.now();
-    final diff = now.difference(lastSeen);
-
-    if (diff.inDays < 1) return Colors.green;
-    if (diff.inDays < 7) return Colors.orange;
-    return Colors.grey;
-  }
-
   @override
   void initState() {
     super.initState();
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.user != null) {
-      _friends = FirestoreService().getFriends(userProvider.user!.id);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user != null && _friends == null) {
+      _friends = FirestoreService().getFriends(user.id);
     }
   }
 
@@ -152,8 +144,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                     const SizedBox(height: 10),
                     GestureDetector(
                       onTap: () {
+                        final messenger = ScaffoldMessenger.of(context);
                         FlutterClipboard.copy(userProvider.user!.id).then(
-                          (value) => ScaffoldMessenger.of(context).showSnackBar(
+                          (value) => messenger.showSnackBar(
                             const SnackBar(
                                 content: Text('Copied to Clipboard')),
                           ),
@@ -235,79 +228,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     );
   }
 
-  Widget _buildAddFriendDialogContent(
-    TextEditingController controller,
-    UserProvider userProvider,
-  ) {
-    return SingleChildScrollView(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-          maxWidth: MediaQuery.of(context).size.width * 0.9,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: "Enter friend's ID"),
-            ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                FlutterClipboard.copy(userProvider.user!.id).then(
-                  (value) => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied to Clipboard')),
-                  ),
-                );
-              },
-              child: Text(
-                'Your ID: ${userProvider.user!.id}',
-                style: const TextStyle(color: Colors.blue),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: MediaQuery.of(context).size.width * 0.6,
-              height: MediaQuery.of(context).size.width * 0.6,
-              child: QrImageView(
-                version: QrVersions.auto,
-                data: userProvider.user!.id,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _scanQRCode,
-              child: const Text('Scan QR Code'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildAddFriendDialogActions(
-    TextEditingController controller,
-    UserProvider userProvider,
-  ) {
-    return [
-      TextButton(
-        child: const Text('Cancel'),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      TextButton(
-        child: const Text('Add'),
-        onPressed: () {
-          final String friendId = controller.text.trim();
-          if (friendId.isNotEmpty) {
-            _addFriend(context, friendId, userProvider);
-            Navigator.of(context).pop();
-          }
-        },
-      ),
-    ];
-  }
-
   /// Scans a QR code and attempts to add a friend with the scanned ID.
   Future<void> _scanQRCode() async {
     try {
@@ -315,7 +235,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       if (!mounted) return;
       if (result.type == ResultType.Barcode) {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
-        _addFriend(context, result.rawContent, userProvider);
+        await _addFriend(context, result.rawContent, userProvider);
+        if (!mounted) return;
         Navigator.of(context).pop(); // close the dialog
       }
     } catch (e) {
@@ -368,12 +289,24 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     if (userProvider.user == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.white,
         body: Center(
-          child: Text(
-            'You must be signed in to view your friends.',
-            style: TextStyle(color: Colors.black),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.people_outline, color: Colors.grey, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Sign in to view your friends',
+                style: TextStyle(color: Colors.black, fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async => userProvider.signIn(),
+                child: const Text('Sign in with Google'),
+              ),
+            ],
           ),
         ),
       );
@@ -404,7 +337,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Widget _buildPageSelector() {
-    final List<String> pages = ["Friendlist", "Leaderboard", "Socials"];
+    final List<String> pages = ['Friendlist', 'Leaderboard', 'Socials'];
 
     return Container(
       height: 48,
@@ -534,8 +467,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                     }
 
                     final lastGame = snapshot.data ?? [];
-                    final lastSeenColor = _getLastSeenColor(
-                        lastGame.isNotEmpty ? lastGame.first.date : null);
 
                     return Card(
                       shape: RoundedRectangleBorder(
