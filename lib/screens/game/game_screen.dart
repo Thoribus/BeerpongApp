@@ -163,12 +163,6 @@ class GameScreenState extends State<GameScreen> {
   }
   //endregion
 
-  /// Maps avatarKey -> local asset path (e.g. 'cat' -> 'assets/avatars/cat.png').
-  String _mapAvatarKeyToAsset(String avatarKey) {
-    if (avatarKey.isEmpty) return '';
-    return 'assets/avatars/$avatarKey.svg';
-  }
-
   //region ----- Core Game Logic Methods -----
   /// Called when a cup is hit. Checks if the cup is already green or not.
   void _handleCupHit(int index) {
@@ -1007,7 +1001,7 @@ class GameScreenState extends State<GameScreen> {
                       backgroundColor: Colors.white24,
                       child: ClipOval(
                         child: SvgPicture.asset(
-                          _mapAvatarKeyToAsset(player.user!.avatarKey),
+                          player.user!.mapAvatarKeyToAsset(),
                           fit: BoxFit.cover,
                           width: 20 * 2,
                           height: 20 * 2,

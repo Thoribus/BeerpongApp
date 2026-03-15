@@ -6,41 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'achievements_screen.dart';
 import '../profile/custom_user_screen.dart';
-
-class DummyUser {
-  final String username;
-  final String avatarUrl;
-
-  DummyUser({
-    required this.username,
-    required this.avatarUrl,
-  });
-}
-
-enum ActionType { wonGame, achievement }
-
-class _FriendAction {
-  final DummyUser user;
-  final ActionType type;
-  final String description;
-  final DateTime date;
-
-  _FriendAction({
-    required this.user,
-    required this.type,
-    required this.description,
-    required this.date,
-  });
-}
-
-Color _getActionColor(ActionType type) {
-  switch (type) {
-    case ActionType.wonGame:
-      return Colors.greenAccent.shade100;
-    case ActionType.achievement:
-      return Colors.lightBlueAccent.shade100;
-  }
-}
+import '../friends/friendlist.dart' show DummyUser, ActionType, FriendAction, getActionColor;
 
 /// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
 class AccountScreen extends StatefulWidget {
@@ -110,20 +76,20 @@ class AccountScreenState extends State<AccountScreen>
   }
 
   Widget _buildSocialPage() {
-    final List<_FriendAction> dummyActions = [
-      _FriendAction(
+    final List<FriendAction> dummyActions = [
+      FriendAction(
         user: DummyUser(username: 'Alice', avatarUrl: ''),
         type: ActionType.wonGame,
         description: 'won a game of Classic Mode',
         date: DateTime.now().subtract(const Duration(hours: 2)),
       ),
-      _FriendAction(
+      FriendAction(
         user: DummyUser(username: 'Bob', avatarUrl: ''),
         type: ActionType.achievement,
         description: 'unlocked the “Sharpshooter” achievement',
         date: DateTime.now().subtract(const Duration(days: 1)),
       ),
-      _FriendAction(
+      FriendAction(
         user: DummyUser(username: 'Carol', avatarUrl: ''),
         type: ActionType.wonGame,
         description: 'won a game of Speed Mode',
@@ -136,7 +102,7 @@ class AccountScreenState extends State<AccountScreen>
       itemCount: dummyActions.length,
       itemBuilder: (context, index) {
         final action = dummyActions[index];
-        final bgColor = _getActionColor(action.type);
+        final bgColor = getActionColor(action.type);
 
         return Card(
           shape: RoundedRectangleBorder(

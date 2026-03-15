@@ -24,13 +24,13 @@ class DummyUser {
 
 enum ActionType { wonGame, achievement }
 
-class _FriendAction {
+class FriendAction {
   final DummyUser user;
   final ActionType type;
   final String description;
   final DateTime date;
 
-  _FriendAction({
+  FriendAction({
     required this.user,
     required this.type,
     required this.description,
@@ -38,7 +38,7 @@ class _FriendAction {
   });
 }
 
-Color _getActionColor(ActionType type) {
+Color getActionColor(ActionType type) {
   switch (type) {
     case ActionType.wonGame:
       return Colors.greenAccent.shade100;
@@ -529,20 +529,20 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Widget _buildSocialPage() {
-    final List<_FriendAction> dummyActions = [
-      _FriendAction(
+    final List<FriendAction> dummyActions = [
+      FriendAction(
         user: DummyUser(username: 'Alice', avatarUrl: ''),
         type: ActionType.wonGame,
         description: 'won a game of Classic Mode',
         date: DateTime.now().subtract(const Duration(hours: 2)),
       ),
-      _FriendAction(
+      FriendAction(
         user: DummyUser(username: 'Bob', avatarUrl: ''),
         type: ActionType.achievement,
         description: 'unlocked the “Sharpshooter” achievement',
         date: DateTime.now().subtract(const Duration(days: 1)),
       ),
-      _FriendAction(
+      FriendAction(
         user: DummyUser(username: 'Carol', avatarUrl: ''),
         type: ActionType.wonGame,
         description: 'won a game of Speed Mode',
@@ -555,7 +555,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       itemCount: dummyActions.length,
       itemBuilder: (context, index) {
         final action = dummyActions[index];
-        final bgColor = _getActionColor(action.type);
+        final bgColor = getActionColor(action.type);
 
         return Card(
           shape: RoundedRectangleBorder(

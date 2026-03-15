@@ -495,7 +495,7 @@ Widget _buildPlayerName(Player player) {
                 backgroundColor: Colors.white24,
                 child: ClipOval(
                   child: SvgPicture.asset(
-                    _mapAvatarKeyToAsset(player.user!.avatarKey),
+                    player.user!.mapAvatarKeyToAsset(),
                     fit: BoxFit.cover,
                     width: 20 * 2,
                     height: 20 * 2,
@@ -530,9 +530,4 @@ Widget _buildPlayerName(Player player) {
       ],
     ),
   );
-}
-
-String _mapAvatarKeyToAsset(String avatarKey) {
-  if (avatarKey.isEmpty) return '';
-  return 'assets/avatars/$avatarKey.svg';
 }
