@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:clipboard/clipboard.dart';
+import 'package:flutter/services.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -147,8 +147,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                     GestureDetector(
                       onTap: () {
                         final messenger = ScaffoldMessenger.of(context);
-                        FlutterClipboard.copy(userProvider.user!.id).then(
-                          (value) => messenger.showSnackBar(
+                        Clipboard.setData(ClipboardData(text: userProvider.user!.id)).then(
+                          (_) => messenger.showSnackBar(
                             const SnackBar(
                                 content: Text('Copied to Clipboard')),
                           ),

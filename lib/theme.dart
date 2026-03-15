@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static const Color primary = Colors.amber;
+  static const Color gold = Color(0xFFF0AE1D);
+  // Dark mode surfaces
   static const Color backgroundDark = Color(0xFF0E0F11);
   static const Color surfaceDark = Color(0xFF1E1E1E);
   static const Color surfaceDark2 = Color(0xFF2C2F36);
   static const Color navBarDark = Color(0xFF131417);
+  // Light mode surfaces
+  static const Color surfaceLight = Color(0xFFEDEDED);
+  static const Color navBarLight = Color(0xFFDCDCDC);
 
   static ThemeData get dark => ThemeData(
         brightness: Brightness.dark,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -285,7 +286,7 @@ class GameScreenState extends State<GameScreen> {
         style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
-      backgroundColor: const Color(0xFFF0AE1D),
+      backgroundColor: AppTheme.gold,
       actions: [
         IconButton(
           icon: const Icon(Icons.scatter_plot_outlined),

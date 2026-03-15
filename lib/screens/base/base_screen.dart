@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/theme_provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -27,10 +28,10 @@ class BaseScreenState extends State<BaseScreen> {
     final selectedIndex = widget.shell.currentIndex;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0F11),
+      backgroundColor: AppTheme.backgroundDark,
       drawer: Drawer(
         backgroundColor:
-            isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFEDEDED),
+            isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -42,8 +43,8 @@ class BaseScreenState extends State<BaseScreen> {
                     DrawerHeader(
                       decoration: BoxDecoration(
                         color: isDarkMode
-                            ? const Color(0xFF2C2F36)
-                            : const Color(0xFFDCDCDC),
+                            ? AppTheme.surfaceDark2
+                            : AppTheme.navBarLight,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -181,7 +182,7 @@ class BaseScreenState extends State<BaseScreen> {
       bottomNavigationBar: Container(
         height: 60,
         decoration: const BoxDecoration(
-          color: Color(0xFF131417),
+          color: AppTheme.navBarDark,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(28),
             topRight: Radius.circular(28),
