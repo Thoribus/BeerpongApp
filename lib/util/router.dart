@@ -1,4 +1,3 @@
-import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/screens/friends/compare_stats_screen.dart';
 import 'package:beerpongapp/screens/friends/friendlist.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
@@ -113,8 +112,8 @@ class AppRouter {
       GoRoute(
         path: '/waiting',
         builder: (context, state) {
-          final invitation = state.extra as Invitation;
-          return WaitingForGameScreen(invitation: invitation);
+          final args = state.extra as WaitingArgs;
+          return WaitingForGameScreen(args: args);
         },
       ),
     ],

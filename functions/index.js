@@ -148,6 +148,53 @@ exports.onInvitationUpdated = onDocumentUpdated(
 );
 
 // ---------------------------------------------------------------------------
+// Trigger: game started → notify accepted invitees
+// ---------------------------------------------------------------------------
+
+exports.onGameStarted = onDocumentUpdated(
+    "games/{gameId}",
+    async (event) => {
+      const before = event.data.before.data();
+      const after = event.data.after.data();
+
+      // Only fire on the false → true transition.
+      if (before.started || !after.started) return;
+
+      const invitationIds = after.invitations || [];
+      if (invitationIds.length === 0) return;
+
+      const db = admin.firestore();
+
+      // Resolve each invitation doc to get the recipient's userId.
+      const inviteSnaps = await Promise.all(
+          invitationIds.map((id) => db.collection("invitations").doc(id).get()),
+      );
+
+      const toUserIds = inviteSnaps
+          .filter((snap) => snap.exists)
+          .map((snap) => snap.data().toUserId)
+          .filter(Boolean);
+
+      if (toUserIds.length === 0) return;
+
+      // Derive host name from the first invitation's fromUsername.
+      const firstInvite = inviteSnaps.find((s) => s.exists);
+      const hostName =
+        (firstInvite && firstInvite.data() && firstInvite.data().fromUsername) || "";
+
+      await Promise.all(
+          toUserIds.map((userId) =>
+            sendToUser(
+                userId,
+                {title: "Game Starting!", body: "Your game is about to begin. Jump in!"},
+                {type: "game_started", gameId: event.params.gameId, hostName},
+            ),
+          ),
+      );
+    },
+);
+
+// ---------------------------------------------------------------------------
 // Scheduled: expire pending invitations every 30 minutes
 // ---------------------------------------------------------------------------
 

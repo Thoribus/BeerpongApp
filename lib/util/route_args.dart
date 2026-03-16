@@ -61,3 +61,22 @@ class ComparisonArgs {
 
   const ComparisonArgs({required this.currentUser, required this.friend});
 }
+
+/// Route arguments for WaitingForGameScreen.
+///
+/// Can be built from a full [Invitation] (normal accept flow) or from just a
+/// [gameId] + [hostName] when arriving via a [game_started] notification tap
+/// (the app was in the background when the host started).
+class WaitingArgs {
+  final String gameId;
+  final String hostName;
+
+  /// Invitation document ID — null when opened from a game_started notification.
+  final String? invitationId;
+
+  const WaitingArgs({
+    required this.gameId,
+    required this.hostName,
+    this.invitationId,
+  });
+}

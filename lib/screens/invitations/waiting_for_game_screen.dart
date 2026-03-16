@@ -9,12 +9,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Shown after the recipient accepts an invitation.
-/// Watches the game doc in real time; navigates to GameScreen the moment
-/// the host starts the game (started == true).
+/// Shown after the recipient accepts an invitation, or when a [game_started]
+/// push notification is tapped while the app was backgrounded.
+/// Watches the game doc in real time; auto-navigates to GameScreen the moment
+/// [started == true] is detected.
 class WaitingForGameScreen extends StatefulWidget {
-  final Invitation invitation;
-  const WaitingForGameScreen({super.key, required this.invitation});
+  final WaitingArgs args;
+  const WaitingForGameScreen({super.key, required this.args});
 
   @override
   State<WaitingForGameScreen> createState() => _WaitingForGameScreenState();
@@ -27,9 +28,9 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.invitation.gameId.isNotEmpty) {
+    if (widget.args.gameId.isNotEmpty) {
       _gameSub = FirestoreService.instance
-          .getGameDocStream(widget.invitation.gameId)
+          .getGameDocStream(widget.args.gameId)
           .listen(_handleGameDoc);
     }
   }
@@ -64,7 +65,7 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
     context.go(
       '/game',
       extra: GameArgs(
-        id: widget.invitation.gameId,
+        id: widget.args.gameId,
         team1: team1,
         team2: team2,
         selectedRules: selectedRules,
@@ -76,10 +77,14 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
   }
 
   Future<void> _cancel() async {
-    await FirestoreService.instance.updateInvitationStatus(
-      widget.invitation.id,
-      InvitationStatus.cancelled.name,
-    );
+    // Only update the invitation status if we arrived via the accept flow.
+    final invitationId = widget.args.invitationId;
+    if (invitationId != null) {
+      await FirestoreService.instance.updateInvitationStatus(
+        invitationId,
+        InvitationStatus.cancelled.name,
+      );
+    }
     if (!mounted) return;
     context.go('/home');
   }
@@ -87,13 +92,10 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final inv = widget.invitation;
-    final hostName =
-        inv.fromUsername.isNotEmpty ? inv.fromUsername : 'the host';
-
-    // Tournament invites have no gameId at invite time — just show a waiting
-    // screen until the host triggers Phase 4 routing.
-    final bodyText = inv.gameId.isEmpty
+    final hostName = widget.args.hostName.isNotEmpty
+        ? widget.args.hostName
+        : 'the host';
+    final bodyText = widget.args.gameId.isEmpty
         ? 'Waiting for $hostName to start the tournament…'
         : 'Waiting for $hostName to start the game…';
 

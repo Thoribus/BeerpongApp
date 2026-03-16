@@ -1,8 +1,9 @@
 import 'dart:async';
-
+import 'dart:convert';
 
 import 'package:beerpongapp/util/app_logger.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/route_args.dart';
 import 'package:beerpongapp/util/router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -47,7 +48,6 @@ class NotificationService {
     const androidSettings =
         AndroidInitializationSettings('@drawable/ic_notification');
     const iosSettings = DarwinInitializationSettings(
-      // We request permissions via firebase_messaging, not here.
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
@@ -61,8 +61,6 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onLocalNotificationTap,
     );
 
-    // Create the Android notification channel so that FCM background messages
-    // (which bypass Flutter) are also delivered to the correct channel.
     await _localNotifications
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -76,8 +74,6 @@ class NotificationService {
   }
 
   /// Call after a successful login.
-  /// Requests OS notification permission, saves the FCM token to Firestore,
-  /// and wires up all message handlers.
   Future<void> initForUser(String userId) async {
     await _requestPermission();
     await _saveToken(userId);
@@ -86,8 +82,6 @@ class NotificationService {
   }
 
   /// Call on logout.
-  /// Removes this device's FCM token from Firestore so the user stops
-  /// receiving notifications on this device.
   Future<void> removeTokenForUser(String userId) async {
     await _tokenRefreshSub?.cancel();
     _tokenRefreshSub = null;
@@ -146,15 +140,9 @@ class NotificationService {
     if (_messageHandlersSetup) return;
     _messageHandlersSetup = true;
 
-    // Foreground: FCM won't show a banner automatically — we display one via
-    // flutter_local_notifications for a consistent cross-platform experience.
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-    // Background tap: app was in the background when the notification arrived;
-    // user tapped the system banner.
     FirebaseMessaging.onMessageOpenedApp.listen(_routeFromMessage);
 
-    // Terminated tap: app was closed; notification opened it.
     unawaited(_messaging.getInitialMessage().then((msg) {
       if (msg != null) _routeFromMessage(msg);
     }));
@@ -169,14 +157,16 @@ class NotificationService {
     await _showLocalNotification(
       title: notification.title ?? '',
       body: notification.body ?? '',
-      type: message.data['type'] ?? '',
+      data: message.data.cast<String, String>(),
     );
   }
 
+  /// Shows a local banner. The full [data] map is JSON-encoded as the payload
+  /// so that fields like [gameId] survive the round-trip to [_onLocalNotificationTap].
   Future<void> _showLocalNotification({
     required String title,
     required String body,
-    required String type,
+    required Map<String, String> data,
   }) async {
     const androidDetails = AndroidNotificationDetails(
       _channelId,
@@ -188,13 +178,11 @@ class NotificationService {
     const iosDetails = DarwinNotificationDetails();
 
     await _localNotifications.show(
-      // Use a stable ID derived from the current second to avoid stacking
-      // identical notifications while still replacing outdated ones.
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title,
       body,
       const NotificationDetails(android: androidDetails, iOS: iosDetails),
-      payload: type,
+      payload: jsonEncode(data),
     );
   }
 
@@ -203,25 +191,48 @@ class NotificationService {
   // ---------------------------------------------------------------------------
 
   void _onLocalNotificationTap(NotificationResponse response) {
-    _routeByType(response.payload ?? '');
+    try {
+      final raw =
+          jsonDecode(response.payload ?? '{}') as Map<String, dynamic>;
+      final data = raw.map((k, v) => MapEntry(k, v?.toString() ?? ''));
+      _routeByType(data['type'] ?? '', data);
+    } catch (_) {
+      // Legacy plain-string payload fallback.
+      _routeByType(response.payload ?? '', {});
+    }
   }
 
   void _routeFromMessage(RemoteMessage message) {
-    _routeByType(message.data['type'] ?? '');
+    _routeByType(
+        message.data['type'] ?? '', message.data.cast<String, String>());
   }
 
-  /// Routes to the correct in-app screen based on the notification [type].
-  /// Routes for Phase 3 screens (/invitations, /waiting) will be active once
-  /// those screens are added to the router.
-  void _routeByType(String type) {
+  /// Routes to the correct in-app screen based on notification [type].
+  ///
+  /// | type                  | action                                          |
+  /// |-----------------------|-------------------------------------------------|
+  /// | game_invitation       | → /invitations (recipient views pending invites)|
+  /// | invitation_accepted   | → /home (host: lobby listener already updated)  |
+  /// | invitation_declined   | → /home (host: lobby listener already updated)  |
+  /// | game_started          | → /waiting (recipient joins; auto-enters /game) |
+  void _routeByType(String type, Map<String, String> data) {
+    AppLogger.info('[FCM route] type=$type');
     switch (type) {
       case 'game_invitation':
         AppRouter.router.go('/invitations');
       case 'invitation_accepted':
       case 'invitation_declined':
-        // Host is still in the lobby — the Firestore listener there already
-        // updated the slot UI. No additional navigation needed.
-        break;
+        // The lobby's Firestore stream already updated the slot UI while the
+        // host was in GameModeDetailsScreen. If they tapped the notification
+        // from outside the app, bring them home.
+        AppRouter.router.go('/home');
+      case 'game_started':
+        final gameId = data['gameId'] ?? '';
+        final hostName = data['hostName'] ?? '';
+        AppRouter.router.go(
+          '/waiting',
+          extra: WaitingArgs(gameId: gameId, hostName: hostName),
+        );
       default:
         break;
     }
