@@ -7,21 +7,37 @@ class InvitationRepository {
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  /// Creates a new pending invitation document.
+  ///
+  /// [fromUsername] is denormalized so Cloud Functions can build the
+  /// notification payload without an extra user lookup.
+  /// [tournamentId] is populated for tournament invites; [gameId] for regular.
+  /// [expiresAt] is set to 1 hour from now — Cloud Functions expire stale docs.
   Future<String> sendGameInvitation({
     required String fromUserId,
     required String toUserId,
     required int teamNumber,
     required int playerIndex,
     required String gameId,
+    String fromUsername = '',
+    String tournamentId = '',
+    String gameType = 'regular',
   }) async {
+    final expiresAt = Timestamp.fromDate(
+      DateTime.now().toUtc().add(const Duration(hours: 1)),
+    );
     final docRef = await _db.collection('invitations').add({
       'fromUserId': fromUserId,
+      'fromUsername': fromUsername,
       'toUserId': toUserId,
       'teamNumber': teamNumber,
       'playerIndex': playerIndex,
-      'status': 'pending',
+      'status': InvitationStatus.pending.name,
       'createdAt': FieldValue.serverTimestamp(),
+      'expiresAt': expiresAt,
       'gameId': gameId,
+      'tournamentId': tournamentId,
+      'gameType': gameType,
     });
     return docRef.id;
   }
@@ -47,24 +63,15 @@ class InvitationRepository {
   }
 
   Invitation _invitationFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-    return Invitation(
-      id: doc.id,
-      fromUserId: data['fromUserId'],
-      toUserId: data['toUserId'],
-      teamNumber: data['teamNumber'],
-      playerIndex: data['playerIndex'],
-      status: data['status'],
-      createdAt: data['createdAt'],
-      gameId: data['gameId'],
-    );
+    return Invitation.fromDoc(doc);
   }
 
+  /// One-shot fetch: pending invitations addressed to [userId].
   Future<List<Invitation>> getGameInvitations(String userId) async {
     final snapshot = await _db
         .collection('invitations')
         .where('toUserId', isEqualTo: userId)
-        .where('status', isEqualTo: 'pending')
+        .where('status', isEqualTo: InvitationStatus.pending.name)
         .get();
     return snapshot.docs.map(_invitationFromDoc).toList();
   }
@@ -77,11 +84,23 @@ class InvitationRepository {
     return snapshot.docs.map(_invitationFromDoc).toList();
   }
 
+  /// One-shot fetch: all invitations (any status) addressed to [userId].
   Future<List<Invitation>> getAllInvitations(String userId) async {
     final snapshot = await _db
         .collection('invitations')
         .where('toUserId', isEqualTo: userId)
         .get();
     return snapshot.docs.map(_invitationFromDoc).toList();
+  }
+
+  /// Real-time stream of pending invitations addressed to [userId].
+  /// Used by HomeScreen to keep the badge count live without polling.
+  Stream<List<Invitation>> pendingInvitationsStream(String userId) {
+    return _db
+        .collection('invitations')
+        .where('toUserId', isEqualTo: userId)
+        .where('status', isEqualTo: InvitationStatus.pending.name)
+        .snapshots()
+        .map((snap) => snap.docs.map(_invitationFromDoc).toList());
   }
 }

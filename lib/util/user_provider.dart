@@ -1,3 +1,4 @@
+import 'package:beerpongapp/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/util/app_logger.dart';
@@ -24,6 +25,11 @@ class UserProvider with ChangeNotifier {
     if (currentUser != null) {
       _user = await FirestoreService.instance.getUser(currentUser.uid);
       notifyListeners();
+      // Re-register the FCM token for this device in case it refreshed while
+      // the user was signed out or the app was uninstalled/reinstalled.
+      if (_user != null) {
+        await NotificationService.instance.initForUser(_user!.id);
+      }
     }
   }
 
@@ -48,6 +54,11 @@ class UserProvider with ChangeNotifier {
 
   /// Clears local user data and signs out from Firebase & Google.
   Future<void> signOut() async {
+    if (_user != null) {
+      // Remove this device's FCM token before clearing the user reference so
+      // the user stops receiving notifications on this device after logout.
+      await NotificationService.instance.removeTokenForUser(_user!.id);
+    }
     _user = null;
     await GoogleSignIn().signOut();
     await auth.FirebaseAuth.instance.signOut();
@@ -76,6 +87,9 @@ class UserProvider with ChangeNotifier {
       _user = existingUser;
     }
     notifyListeners();
+
+    // Register FCM token for the newly signed-in user.
+    await NotificationService.instance.initForUser(_user!.id);
   }
 
   /// Actual Google sign-in flow returning the Firebase user.
@@ -86,7 +100,7 @@ class UserProvider with ChangeNotifier {
         return null; // The user canceled the sign-in
       }
 
-      final GoogleSignInAuthentication googleAuth = 
+      final GoogleSignInAuthentication googleAuth =
         await googleUser.authentication;
 
       final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
@@ -94,7 +108,7 @@ class UserProvider with ChangeNotifier {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = 
+      final userCredential =
         await auth.FirebaseAuth.instance.signInWithCredential(credential);
 
       return userCredential.user;

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/screens/home/game_lobby_controller.dart';
+import 'package:beerpongapp/screens/tournament/tournament_lobby_controller.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -16,176 +18,310 @@ import '../../models/cup.dart';
 class GameModeDetailsScreen extends StatefulWidget {
   final String title;
   final String subtitle;
-  final String details;
   final String iconPath;
   final Color color;
+  final bool isTournament;
 
   const GameModeDetailsScreen({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.details,
     required this.iconPath,
     required this.color,
+    this.isTournament = false,
   });
 
   @override
   State<GameModeDetailsScreen> createState() => _GameModeDetailsScreenState();
 }
 
-class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
-  // ----- UI-only state -----
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-  final PageController _bottomPageController = PageController();
-  int _bottomCurrentPage = 0;
-
-  final List<String> infoPages = [
-    'Fast-paced fun for everyone!',
-    'Pick the rules you want to use!',
-    'Invite your friends for a challenge!',
+class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
+    with SingleTickerProviderStateMixin {
+  static const _ruleDefs = [
+    (BeerpongIcons.airball, 'Airballs'),
+    (Icons.roundabout_left, 'Bounce'),
+    (Icons.sports_basketball_outlined, 'Putback'),
+    (BeerpongIcons.palmTree, 'Island'),
+    (BeerpongIcons.skull, 'Deathcup'),
+    (BeerpongIcons.umstellen, 'Rearrange'),
   ];
 
-  final List<_InfoTileData> tiles = [
-    _InfoTileData(BeerpongIcons.airball, 'Airballs'),
-    _InfoTileData(Icons.roundabout_left, 'Bounce'),
-    _InfoTileData(Icons.sports_basketball_outlined, 'Putback'),
-    _InfoTileData(BeerpongIcons.palmTree, 'Island'),
-    _InfoTileData(BeerpongIcons.skull, 'Deathcup'),
-    _InfoTileData(BeerpongIcons.umstellen, 'Rearrange'),
-  ];
+  late TabController _tabController;
+  late bool _isTournament;
 
-  late GameLobbyController _ctrl;
+  // Exactly one is non-null at any time
+  GameLobbyController? _gameCtrl;
+  TournamentLobbyController? _tournCtrl;
+
+  Map<String, bool> get _selectedRules =>
+      _isTournament ? _tournCtrl!.selectedRules : _gameCtrl!.selectedRules;
+
+  bool get _canStart => _isTournament
+      ? _tournCtrl!.canStartTournament()
+      : _gameCtrl!.canStartGame();
+
+  /// Accent color: purple for tournament mode, the card color for single game.
+  Color get _activeColor =>
+      _isTournament ? Colors.deepPurple : widget.color;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = GameLobbyController(
-      initialRules: {for (final tile in tiles) tile.text: false},
-    );
-    _ctrl.addListener(_onControllerChanged);
-    _ctrl.onShowMessage = (msg) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      }
-    };
-    _ctrl.onInvitationDeclined = () {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invitation declined')),
-        );
-      }
-    };
-    _ctrl.createGameDoc();
+    _isTournament = widget.isTournament;
+    _tabController = TabController(length: 2, vsync: this);
+    _initController();
+  }
+
+  void _initController() {
+    final rules = {for (final r in _ruleDefs) r.$2: false};
+    if (_isTournament) {
+      _tournCtrl = TournamentLobbyController(initialRules: rules);
+      _tournCtrl!.addListener(_onControllerChanged);
+      _tournCtrl!.onShowMessage = _showMessage;
+      _tournCtrl!.onInvitationDeclined = _onInvitationDeclined;
+    } else {
+      _gameCtrl = GameLobbyController(initialRules: rules);
+      _gameCtrl!.addListener(_onControllerChanged);
+      _gameCtrl!.onShowMessage = _showMessage;
+      _gameCtrl!.onInvitationDeclined = _onInvitationDeclined;
+      _gameCtrl!.createGameDoc();
+    }
+  }
+
+  void _disposeController() {
+    _gameCtrl?.removeListener(_onControllerChanged);
+    _gameCtrl?.dispose();
+    _gameCtrl = null;
+    _tournCtrl?.removeListener(_onControllerChanged);
+    _tournCtrl?.dispose();
+    _tournCtrl = null;
+  }
+
+  void _switchMode(bool toTournament) {
+    if (_isTournament == toTournament) return;
+    setState(() {
+      _disposeController();
+      _isTournament = toTournament;
+      _initController();
+    });
   }
 
   void _onControllerChanged() {
     if (mounted) setState(() {});
   }
 
+  void _showMessage(String msg) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
+
+  void _onInvitationDeclined() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invitation declined')),
+      );
+    }
+  }
+
   @override
   void dispose() {
-    _ctrl.removeListener(_onControllerChanged);
-    _ctrl.dispose();
-    _pageController.dispose();
-    _bottomPageController.dispose();
+    _disposeController();
+    _tabController.dispose();
     super.dispose();
   }
 
-  // ----- Context-dependent orchestration -----
+  // ----- Friend picking -----
 
-  Future<void> _onPickFriend(bool isBlue, int rowIndex) async {
+  Future<void> _onPickFriend({required bool isBlue, required int rowIndex}) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.user;
     if (currentUser == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('No user logged in!')));
+      _showMessage('No user logged in!');
       return;
     }
-    final messenger = ScaffoldMessenger.of(context);
     final friends = await FirestoreService.instance.getFriends(currentUser.id);
     if (!mounted) return;
     if (friends.isEmpty) {
-      messenger.showSnackBar(const SnackBar(content: Text('No friends found!')));
+      _showMessage('No friends found!');
       return;
     }
     final selected = await _showPickPlayerDialog(currentUser, friends);
-    if (selected == null) return;
+    if (!mounted || selected == null) return;
 
-    if (selected.id == currentUser.id) {
-      await _ctrl.selectSelf(isBlue, rowIndex, selected);
+    if (_isTournament) {
+      if (selected.id == currentUser.id) {
+        _tournCtrl!.selectPlayer(rowIndex, selected);
+      } else {
+        await _tournCtrl!.sendInvitation(rowIndex, currentUser.id, selected);
+        if (mounted) _showMessage('Invited ${selected.username}');
+      }
     } else {
-      await _ctrl.sendInvitation(
-        isBlue: isBlue,
-        rowIndex: rowIndex,
-        fromUserId: currentUser.id,
-        selected: selected,
-      );
-      messenger.showSnackBar(SnackBar(content: Text('Invited ${selected.username}')));
+      if (selected.id == currentUser.id) {
+        await _gameCtrl!.selectSelf(isBlue, rowIndex, selected);
+      } else {
+        await _gameCtrl!.sendInvitation(
+          isBlue: isBlue,
+          rowIndex: rowIndex,
+          fromUserId: currentUser.id,
+          selected: selected,
+        );
+        if (mounted) _showMessage('Invited ${selected.username}');
+      }
     }
   }
 
   Future<User?> _showPickPlayerDialog(User currentUser, List<User> friends) async {
+    final c = AppColors.of(context);
     final completer = Completer<User?>();
-    final bodyWidget = _buildPickPlayerBody(currentUser, friends, completer);
-    await showDialog<User?>(
+    await showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (context) => Dialog(
-        backgroundColor: Colors.grey[850],
+        backgroundColor: c.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-        child: Container(
-          height: 400,
-          padding: const EdgeInsets.all(12),
-          child: bodyWidget,
+        child: SizedBox(
+          height: 420,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Row(
+                  children: [
+                    Text(
+                      'Select a Player',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: c.onBackground,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: Icon(Icons.close, color: c.subtle),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(color: c.divider),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  children: [
+                    _playerOptionTile(currentUser, completer, c,
+                        label: 'Yourself', iconColor: Colors.amber),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+                      child: Text('Friends',
+                          style: TextStyle(color: c.subtle, fontSize: 12)),
+                    ),
+                    ...friends.map((f) => _playerOptionTile(f, completer, c)),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
     return completer.future;
   }
 
+  Widget _playerOptionTile(User user, Completer<User?> completer, AppColors c,
+      {String? label, Color iconColor = Colors.transparent}) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      leading: CircleAvatar(
+        radius: 20,
+        backgroundColor: c.chip,
+        child: ClipOval(
+          child: SvgPicture.asset(
+            user.mapAvatarKeyToAsset(),
+            width: 36,
+            height: 36,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+      title: Text(user.username,
+          style: TextStyle(color: c.onBackground, fontWeight: FontWeight.w600)),
+      subtitle: label != null
+          ? Text(label, style: TextStyle(color: c.subtle, fontSize: 12))
+          : null,
+      onTap: () {
+        if (!completer.isCompleted) completer.complete(user);
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
+  // ----- Start actions -----
+
+  Future<void> _onStart() async {
+    if (_isTournament) {
+      await _onStartTournament();
+    } else {
+      await _onStartGame();
+    }
+  }
+
   Future<void> _onStartGame() async {
-    if (_ctrl.gameId == null) return;
+    if (_gameCtrl!.gameId == null) return;
     final chosenTeam = await _showStartingTeamDialog();
     if (chosenTeam == null) return;
 
-    for (final inviteId in _ctrl.acceptedInvites) {
-      await FirestoreService.instance.updateInvitationGameId(inviteId, _ctrl.gameId!);
+    for (final inviteId in _gameCtrl!.acceptedInvites) {
+      await FirestoreService.instance
+          .updateInvitationGameId(inviteId, _gameCtrl!.gameId!);
     }
-    await _ctrl.startGame(chosenTeam);
+    await _gameCtrl!.startGame(chosenTeam);
     if (!mounted) return;
 
-    final team1 = Team(
-      color: Colors.blue,
-      players: _ctrl.playersBlue,
-      cups: List.generate(10, (i) => Cup(index: i, color: Colors.blue)),
-    );
-    final team2 = Team(
-      color: Colors.red,
-      players: _ctrl.playersRed,
-      cups: List.generate(10, (i) => Cup(index: i, color: Colors.red)),
-    );
     context.pushReplacement(
       '/game',
       extra: GameArgs(
-        id: _ctrl.gameId!,
-        team1: team1,
-        team2: team2,
-        selectedRules: _ctrl.selectedRules,
-        invitations: _ctrl.acceptedInvites,
-        startingTeam: _ctrl.startingTeam == 'Team Blue',
+        id: _gameCtrl!.gameId!,
+        team1: Team(
+          color: Colors.blue,
+          players: _gameCtrl!.playersBlue,
+          cups: List.generate(10, (i) => Cup(index: i, color: Colors.blue)),
+        ),
+        team2: Team(
+          color: Colors.red,
+          players: _gameCtrl!.playersRed,
+          cups: List.generate(10, (i) => Cup(index: i, color: Colors.red)),
+        ),
+        selectedRules: _gameCtrl!.selectedRules,
+        invitations: _gameCtrl!.acceptedInvites,
+        startingTeam: _gameCtrl!.startingTeam == 'Team Blue',
         tournamentId: '',
       ),
     );
   }
 
-  Future<String?> _showStartingTeamDialog() async {
-    const team1Name = 'Team Blue';
-    const team2Name = 'Team Red';
-    final team1Players =
-        _ctrl.playersBlue.map((p) => p.name).where((n) => n.isNotEmpty).toList();
-    final team2Players =
-        _ctrl.playersRed.map((p) => p.name).where((n) => n.isNotEmpty).toList();
+  Future<void> _onStartTournament() async {
+    final tournament = await _tournCtrl!.createTournament(widget.title);
+    if (!mounted) return;
+    context.pushReplacement(
+      '/tournament/${tournament.id}',
+      extra: TournamentPageViewArgs(
+        tournamentId: tournament.id,
+        initialTournament: tournament,
+      ),
+    );
+  }
+
+  Future<String?> _showStartingTeamDialog() {
+    final blueNames = _gameCtrl!.playersBlue
+        .map((p) => p.name)
+        .where((n) => n.isNotEmpty)
+        .toList();
+    final redNames = _gameCtrl!.playersRed
+        .map((p) => p.name)
+        .where((n) => n.isNotEmpty)
+        .toList();
 
     return showDialog<String>(
       context: context,
@@ -200,45 +336,44 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
               children: [
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(team1Name,
+                      const Text('Team Blue',
                           style: TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.blue)),
-                      ...team1Players.map((n) => Text(n)),
+                      ...blueNames.map((n) => Text(n)),
                     ],
                   ),
                 ),
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Text('VS', style: TextStyle(fontWeight: FontWeight.bold)),
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child:
+                      Text('VS', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(team2Name,
+                      const Text('Team Red',
                           style: TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.red)),
-                      ...team2Players.map((n) => Text(n)),
+                      ...redNames.map((n) => Text(n)),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             const Text('Which team should start?'),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(team1Name),
-            child: const Text('$team1Name starts',
+            onPressed: () => Navigator.of(context).pop('Team Blue'),
+            child: const Text('Team Blue starts',
                 style: TextStyle(color: Colors.blue)),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(team2Name),
-            child: const Text('$team2Name starts',
+            onPressed: () => Navigator.of(context).pop('Team Red'),
+            child: const Text('Team Red starts',
                 style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -246,141 +381,143 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
     );
   }
 
-  // ----- UI Build Methods -----
+  // ----- Build -----
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final startLabel = _isTournament ? 'Start Tournament' : 'Start Game';
+
     return Scaffold(
-      backgroundColor: widget.color,
+      backgroundColor: _activeColor,
       appBar: AppBar(
-        backgroundColor: widget.color,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [
-          Expanded(
-            child: Column(
+          // Hero
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  widget.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.subtitle,
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 160,
-                  child: PageView.builder(
-                    controller: _pageController,
-                    itemCount: infoPages.length,
-                    onPageChanged: (index) =>
-                        setState(() => _currentPage = index),
-                    itemBuilder: (context, index) => Column(
-                      children: [
-                        SvgPicture.asset(widget.iconPath, height: 100),
-                        const SizedBox(height: 16),
-                        Text(
-                          infoPages[index],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    infoPages.length,
-                    (index) => Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _currentPage == index ? Colors.white : Colors.white30,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 300,
-                  child: PageView(
-                    controller: _bottomPageController,
-                    onPageChanged: (index) =>
-                        setState(() => _bottomCurrentPage = index),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SingleChildScrollView(
-                        child: Center(
-                          child: Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            alignment: WrapAlignment.center,
-                            children: List.generate(
-                              tiles.length,
-                              (index) => _buildSelectableTile(index),
-                            ),
-                          ),
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SingleChildScrollView(child: _buildLobbySection()),
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.subtitle,
+                        style:
+                            const TextStyle(color: Colors.white70, fontSize: 16),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    2,
-                    (index) => Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _bottomCurrentPage == index
-                            ? Colors.white
-                            : Colors.white30,
-                      ),
-                    ),
-                  ),
+                SvgPicture.asset(
+                  widget.iconPath,
+                  height: 100,
+                  width: 100,
+                  fit: BoxFit.contain,
                 ),
               ],
             ),
           ),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius:
-                  BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.color,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+
+          // Content card
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
                 ),
-                onPressed: _ctrl.canStartGame() ? _onStartGame : null,
-                child: const Text(
-                  'Start Game',
-                  style: TextStyle(
-                      color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+              ),
+              child: Column(
+                children: [
+                  // Mode toggle
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                    child: _buildModeToggle(c),
+                  ),
+
+                  // Tab bar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: c.chip,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: TabBar(
+                        controller: _tabController,
+                        indicator: BoxDecoration(
+                          color: _activeColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        labelColor: Colors.white,
+                        unselectedLabelColor: c.subtle,
+                        labelStyle: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                        dividerColor: Colors.transparent,
+                        tabs: const [Tab(text: 'Rules'), Tab(text: 'Lobby')],
+                      ),
+                    ),
+                  ),
+
+                  // Tab content
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildRulesTab(c),
+                        _isTournament
+                            ? _buildTournamentLobbyTab(c)
+                            : _buildSingleGameLobbyTab(c),
+                      ],
+                    ),
+                  ),
+
+                  // Start button
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _canStart ? _activeColor : c.chip,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          elevation: _canStart ? 2 : 0,
+                        ),
+                        onPressed: _canStart ? _onStart : null,
+                        child: Text(
+                          startLabel,
+                          style: TextStyle(
+                            color: _canStart ? Colors.white : c.subtle,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -389,211 +526,97 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
     );
   }
 
-  Widget _buildLobbySection() {
-    return Column(
-      children: [
-        const Text(
-          'Lobby',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(child: _buildTeamPanel(isBlue: true)),
-            const SizedBox(width: 16),
-            Expanded(child: _buildTeamPanel(isBlue: false)),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTeamPanel({required bool isBlue}) {
-    final teamName = isBlue ? 'TEAM BLUE' : 'TEAM RED';
-    final color = isBlue ? Colors.blue : Colors.red;
-    final players = isBlue ? _ctrl.playersBlue : _ctrl.playersRed;
-
+  Widget _buildModeToggle(AppColors c) {
     return Container(
+      height: 40,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(8),
+        color: c.chip,
+        borderRadius: BorderRadius.circular(10),
       ),
-      padding: const EdgeInsets.all(8),
-      child: Column(
+      child: Row(
         children: [
-          Text(
-            teamName,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Column(
-            children: List.generate(
-              players.length,
-              (index) => _buildPlayerRow(isBlue: isBlue, rowIndex: index),
-            ),
-          ),
-          if (players.length < 4) ...[
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: () => _ctrl.addPlayer(isBlue),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('Add Player', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+          _modeToggleButton('Single Game', !_isTournament, () => _switchMode(false), c),
+          _modeToggleButton('Tournament', _isTournament, () => _switchMode(true), c),
         ],
       ),
     );
   }
 
-  Widget _buildPlayerRow({required bool isBlue, required int rowIndex}) {
-    final players = isBlue ? _ctrl.playersBlue : _ctrl.playersRed;
-    final invitationStatuses =
-        isBlue ? _ctrl.blueInvitationStatuses : _ctrl.redInvitationStatuses;
-    final status = invitationStatuses[rowIndex];
-    final player = players[rowIndex];
-    final hasPickedFriendOrSelf = player.user != null;
-
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: IconButton(
-        icon: const Icon(Icons.remove_circle, color: Colors.red),
-        onPressed: () => _ctrl.removePlayer(isBlue, rowIndex),
-      ),
-      title: hasPickedFriendOrSelf
-          ? _buildReadOnlyLabel(player)
-          : _buildEditableField(isBlue, players, rowIndex),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!hasPickedFriendOrSelf)
-            IconButton(
-              icon: const Icon(Icons.person, color: Colors.white),
-              onPressed: () => _onPickFriend(isBlue, rowIndex),
-            ),
-          if (status == 'pending') ...[
-            const SizedBox(width: 8),
-            const Text('pending...', style: TextStyle(color: Colors.amber)),
-            IconButton(
-              icon: const Icon(Icons.cancel, color: Colors.red),
-              onPressed: () => _ctrl.cancelInvitation(isBlue, rowIndex),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReadOnlyLabel(Player player) {
-    return Container(
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        player.name,
-        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _buildEditableField(bool isBlue, List<Player> players, int rowIndex) {
-    return TextFormField(
-      initialValue: players[rowIndex].name,
-      onChanged: (val) => _ctrl.updatePlayerName(isBlue, rowIndex, val),
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        fillColor: Colors.white10,
-        filled: true,
-        labelText: 'Player ${rowIndex + 1}',
-        labelStyle: const TextStyle(color: Colors.amber),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
-  }
-
-  Widget _buildPickPlayerBody(
-      User currentUser, List<User> friends, Completer<User?> completer) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text(
-              'Select a Player',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+  Widget _modeToggleButton(
+      String label, bool active, VoidCallback onTap, AppColors c) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: active ? _activeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: active ? Colors.white : c.subtle,
             ),
           ),
-          const Divider(color: Colors.white24),
-          _buildPlayerOptionCard(
-            currentUser,
-            completer,
-            label: 'Yourself',
-            icon: Icons.star,
-            iconColor: Colors.amber,
-          ),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text('Friends', style: TextStyle(color: Colors.white70)),
-          ),
-          ...friends.map((friend) => _buildPlayerOptionCard(friend, completer)),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildPlayerOptionCard(
-    User user,
-    Completer<User?> completer, {
-    String? label,
-    IconData icon = Icons.person,
-    Color iconColor = Colors.white,
-  }) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: Colors.white12,
-        child: Icon(icon, color: iconColor),
+  // ----- Rules tab -----
+
+  Widget _buildRulesTab(AppColors c) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.0,
       ),
-      title: Text(label ?? user.username, style: const TextStyle(color: Colors.white)),
-      onTap: () {
-        if (!completer.isCompleted) completer.complete(user);
-        Navigator.of(context).pop();
-      },
+      itemCount: _ruleDefs.length,
+      itemBuilder: (context, i) => _buildRuleTile(i, c),
     );
   }
 
-  Widget _buildSelectableTile(int index) {
-    final tile = tiles[index];
-    final isSelected = _ctrl.selectedRules[tile.text] == true;
-
+  Widget _buildRuleTile(int index, AppColors c) {
+    final (icon, label) = _ruleDefs[index];
+    final isSelected = _selectedRules[label] == true;
     return GestureDetector(
-      onTap: () => _ctrl.toggleRule(tile.text, !isSelected),
-      child: Container(
-        width: 120,
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      onTap: () {
+        if (_isTournament) {
+          _tournCtrl!.toggleRule(label, !isSelected);
+        } else {
+          _gameCtrl!.toggleRule(label, !isSelected);
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.amber[100] : Colors.white,
+          color: isSelected ? _activeColor.withValues(alpha: 0.12) : c.chip,
           border: Border.all(
-            color: isSelected ? Colors.amber : Colors.grey.shade300,
+            color: isSelected ? _activeColor : c.border,
+            width: isSelected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(tile.icon, color: isSelected ? Colors.amber[800] : Colors.grey),
+            Icon(icon, color: isSelected ? _activeColor : c.subtle, size: 26),
             const SizedBox(height: 6),
             Text(
-              tile.text,
+              label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isSelected ? Colors.amber[800] : Colors.black87,
-                fontSize: 12,
+                color: isSelected ? _activeColor : c.onBackground,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ],
@@ -601,10 +624,283 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       ),
     );
   }
-}
 
-class _InfoTileData {
-  final IconData icon;
-  final String text;
-  _InfoTileData(this.icon, this.text);
+  // ----- Single game lobby -----
+
+  Widget _buildSingleGameLobbyTab(AppColors c) {
+    final ctrl = _gameCtrl!;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _buildTeamPanel(
+              c: c,
+              color: Colors.blue,
+              label: 'BLUE',
+              players: ctrl.playersBlue,
+              statuses: ctrl.blueInvitationStatuses,
+              isBlue: true,
+              maxPlayers: 4,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildTeamPanel(
+              c: c,
+              color: Colors.red,
+              label: 'RED',
+              players: ctrl.playersRed,
+              statuses: ctrl.redInvitationStatuses,
+              isBlue: false,
+              maxPlayers: 4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamPanel({
+    required AppColors c,
+    required Color color,
+    required String label,
+    required List<Player> players,
+    required Map<int, String> statuses,
+    required bool isBlue,
+    required int maxPlayers,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: color,
+                letterSpacing: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...List.generate(
+            players.length,
+            (i) => _buildPlayerRow(
+              c: c,
+              player: players[i],
+              status: statuses[i],
+              onAdd: () => _onPickFriend(isBlue: isBlue, rowIndex: i),
+              onRemove: () => _gameCtrl!.removePlayer(isBlue, i),
+              onNameChanged: (val) =>
+                  _gameCtrl!.updatePlayerName(isBlue, i, val),
+              onCancelInvite: () => _gameCtrl!.cancelInvitation(isBlue, i),
+              hintText: 'Player ${i + 1}',
+            ),
+          ),
+          if (players.length < maxPlayers) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _gameCtrl!.addPlayer(isBlue),
+              icon: Icon(Icons.add, color: color, size: 16),
+              label: Text('Add', style: TextStyle(color: color, fontSize: 13)),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: color.withValues(alpha: 0.4)),
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ----- Tournament lobby -----
+
+  Widget _buildTournamentLobbyTab(AppColors c) {
+    final ctrl = _tournCtrl!;
+    final players = ctrl.players;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: c.card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: _activeColor.withValues(alpha: 0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: _activeColor.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                color: _activeColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'PLAYERS',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: _activeColor,
+                  letterSpacing: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ...List.generate(
+              players.length,
+              (i) => _buildPlayerRow(
+                c: c,
+                player: players[i],
+                status: ctrl.invitationStatuses[i],
+                onAdd: () => _onPickFriend(isBlue: true, rowIndex: i),
+                onRemove: () => ctrl.removePlayer(i),
+                onNameChanged: (val) => ctrl.updatePlayerName(i, val),
+                onCancelInvite: () => ctrl.cancelInvitation(i),
+                hintText: 'Player ${i + 1}',
+              ),
+            ),
+            if (players.length < 8) ...[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: ctrl.addPlayer,
+                icon: Icon(Icons.add, color: _activeColor, size: 16),
+                label: Text('Add Player',
+                    style: TextStyle(color: _activeColor, fontSize: 13)),
+                style: OutlinedButton.styleFrom(
+                  side:
+                      BorderSide(color: _activeColor.withValues(alpha: 0.4)),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ----- Shared player row -----
+
+  Widget _buildPlayerRow({
+    required AppColors c,
+    required Player player,
+    required String? status,
+    required VoidCallback onAdd,
+    required VoidCallback onRemove,
+    required ValueChanged<String> onNameChanged,
+    required VoidCallback onCancelInvite,
+    required String hintText,
+  }) {
+    final hasUser = player.user != null;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: hasUser
+                ? _readOnlyLabel(player.name, c)
+                : _editableField(player.name, hintText, onNameChanged, c),
+          ),
+          if (!hasUser)
+            _iconBtn(Icons.person_add_outlined, c.subtle, onAdd, size: 20),
+          _iconBtn(Icons.close, Colors.red, onRemove, size: 18),
+          if (status == 'pending') ...[
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.amber),
+            ),
+            _iconBtn(Icons.cancel, Colors.red, onCancelInvite, size: 18),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _readOnlyLabel(String name, AppColors c) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+          color: c.chip, borderRadius: BorderRadius.circular(8)),
+      child: Text(
+        name,
+        style: TextStyle(
+            color: c.onBackground,
+            fontWeight: FontWeight.w600,
+            fontSize: 13),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Widget _editableField(String value, String hint, ValueChanged<String> onChange,
+      AppColors c) {
+    return TextFormField(
+      initialValue: value,
+      onChanged: onChange,
+      style: TextStyle(color: c.onBackground, fontSize: 13),
+      decoration: InputDecoration(
+        fillColor: c.chip,
+        filled: true,
+        hintText: hint,
+        hintStyle: TextStyle(color: c.subtle, fontSize: 13),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        isDense: true,
+      ),
+    );
+  }
+
+  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap,
+      {double size = 20}) {
+    return IconButton(
+      icon: Icon(icon, color: color, size: size),
+      onPressed: onTap,
+      padding: const EdgeInsets.all(4),
+      constraints: const BoxConstraints(),
+    );
+  }
 }

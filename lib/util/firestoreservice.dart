@@ -164,6 +164,18 @@ class FirestoreService {
   Future<List<Invitation>> getAllInvitations(String userId) =>
       InvitationRepository.instance.getAllInvitations(userId);
 
+  /// Real-time stream of pending invitations for [userId].
+  Stream<List<Invitation>> pendingInvitationsStream(String userId) =>
+      InvitationRepository.instance.pendingInvitationsStream(userId);
+
+  // ----- FCM tokens -----
+
+  Future<void> saveFcmToken(String userId, String token) =>
+      UserRepository.instance.saveFcmToken(userId, token);
+
+  Future<void> removeFcmToken(String userId, String token) =>
+      UserRepository.instance.removeFcmToken(userId, token);
+
   // ----- Tournaments -----
 
   Future<String> createTournament(Tournament tournament) =>

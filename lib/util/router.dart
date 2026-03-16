@@ -7,7 +7,6 @@ import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/screens/profile/account_screen.dart';
 import 'package:beerpongapp/screens/shop/shop_screen.dart';
 import 'package:beerpongapp/screens/games/statistics_screen.dart';
-import 'package:beerpongapp/screens/tournament/tournament_lobby_screen.dart';
 import 'package:beerpongapp/screens/tournament/tournament_page_view.dart';
 import 'package:beerpongapp/screens/base/base_screen.dart';
 import 'package:beerpongapp/util/route_args.dart';
@@ -56,22 +55,9 @@ class AppRouter {
           return GameModeDetailsScreen(
             title: args.title,
             subtitle: args.subtitle,
-            details: args.details,
             iconPath: args.iconPath,
             color: args.color,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/tournament-lobby',
-        builder: (context, state) {
-          final args = state.extra as GameModeArgs;
-          return TournamentLobbyScreen(
-            title: args.title,
-            subtitle: args.subtitle,
-            details: args.details,
-            iconPath: args.iconPath,
-            color: args.color,
+            isTournament: args.isTournament,
           );
         },
       ),

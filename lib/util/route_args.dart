@@ -3,14 +3,14 @@ import 'package:beerpongapp/models/tournament.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:flutter/material.dart';
 
-/// Route arguments for GameModeDetailsScreen and TournamentLobbyScreen.
-/// Both screens share identical constructor params.
+/// Route arguments for GameModeDetailsScreen.
 class GameModeArgs {
   final String title;
   final String subtitle;
   final String details;
   final String iconPath;
   final Color color;
+  final bool isTournament;
 
   const GameModeArgs({
     required this.title,
@@ -18,6 +18,7 @@ class GameModeArgs {
     required this.details,
     required this.iconPath,
     required this.color,
+    this.isTournament = false,
   });
 }
 

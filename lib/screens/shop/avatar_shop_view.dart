@@ -1,3 +1,4 @@
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -24,9 +25,10 @@ class AvatarShopScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Scaffold(
       body: Container(
-        color: Colors.white,
+        color: c.background,
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: ListView(
           children: [
@@ -41,6 +43,7 @@ class AvatarShopScreen extends StatelessWidget {
 
   Widget _buildCategory(
       BuildContext context, String title, List<ShopItem> items) {
+    final c = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
       child: Column(
@@ -50,10 +53,10 @@ class AvatarShopScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: c.onBackground,
               ),
             ),
           ),
@@ -74,11 +77,12 @@ class AvatarShopScreen extends StatelessWidget {
   }
 
   Widget _buildShopItem(BuildContext context, ShopItem item) {
+    final c = AppColors.of(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade800,
+        color: c.surface2,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(

@@ -118,6 +118,32 @@ class UserRepository {
     return updatedUsers.whereType<User>().toList();
   }
 
+  // ----- FCM token management -----
+
+  /// Adds [token] to the user's `fcmTokens` array in Firestore (arrayUnion —
+  /// safe to call multiple times; duplicates are ignored).
+  Future<void> saveFcmToken(String userId, String token) async {
+    try {
+      await _db.collection('users').doc(userId).update({
+        'fcmTokens': FieldValue.arrayUnion([token]),
+      });
+    } catch (e) {
+      AppLogger.warning('saveFcmToken failed for $userId: $e');
+    }
+  }
+
+  /// Removes [token] from the user's `fcmTokens` array (arrayRemove).
+  /// Called on logout or when FCM reports the token as invalid.
+  Future<void> removeFcmToken(String userId, String token) async {
+    try {
+      await _db.collection('users').doc(userId).update({
+        'fcmTokens': FieldValue.arrayRemove([token]),
+      });
+    } catch (e) {
+      AppLogger.warning('removeFcmToken failed for $userId: $e');
+    }
+  }
+
   /// Maps a player's in-game results onto their user profile by incrementing stats.
   /// Kept for backwards compatibility (used by AchievementsScreen).
   static User mapPlayerToUser(Player player) {
