@@ -64,16 +64,19 @@ class TournamentLobbyController extends ChangeNotifier {
   }
 
   Future<void> sendInvitation(
-      int rowIndex, String fromUserId, User selected) async {
+      int rowIndex, String fromUserId, User selected,
+      {String fromUsername = ''}) async {
     players[rowIndex] = players[rowIndex].copyWithName(selected.username);
     players[rowIndex] = players[rowIndex].copyWithUser(selected);
 
     final docId = await FirestoreService.instance.sendGameInvitation(
       fromUserId: fromUserId,
+      fromUsername: fromUsername,
       toUserId: selected.id,
       teamNumber: 1,
       playerIndex: rowIndex,
       gameId: '',
+      gameType: 'tournament',
     );
 
     invitationDocIds[rowIndex] = docId;

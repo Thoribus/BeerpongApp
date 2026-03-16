@@ -153,7 +153,12 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
       if (selected.id == currentUser.id) {
         _tournCtrl!.selectPlayer(rowIndex, selected);
       } else {
-        await _tournCtrl!.sendInvitation(rowIndex, currentUser.id, selected);
+        await _tournCtrl!.sendInvitation(
+          rowIndex,
+          currentUser.id,
+          selected,
+          fromUsername: currentUser.username,
+        );
         if (mounted) _showMessage('Invited ${selected.username}');
       }
     } else {
@@ -164,6 +169,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
           isBlue: isBlue,
           rowIndex: rowIndex,
           fromUserId: currentUser.id,
+          fromUsername: currentUser.username,
           selected: selected,
         );
         if (mounted) _showMessage('Invited ${selected.username}');

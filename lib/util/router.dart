@@ -1,8 +1,11 @@
+import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/screens/friends/compare_stats_screen.dart';
 import 'package:beerpongapp/screens/friends/friendlist.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/screens/home/game_mode_details_screen.dart';
 import 'package:beerpongapp/screens/home/home_screen.dart';
+import 'package:beerpongapp/screens/invitations/invitation_inbox_screen.dart';
+import 'package:beerpongapp/screens/invitations/waiting_for_game_screen.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/screens/profile/account_screen.dart';
 import 'package:beerpongapp/screens/shop/shop_screen.dart';
@@ -101,6 +104,17 @@ class AppRouter {
             currentUser: args.currentUser,
             friend: args.friend,
           );
+        },
+      ),
+      GoRoute(
+        path: '/invitations',
+        builder: (_, __) => const InvitationInboxScreen(),
+      ),
+      GoRoute(
+        path: '/waiting',
+        builder: (context, state) {
+          final invitation = state.extra as Invitation;
+          return WaitingForGameScreen(invitation: invitation);
         },
       ),
     ],

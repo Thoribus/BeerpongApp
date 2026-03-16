@@ -131,6 +131,7 @@ class GameLobbyController extends ChangeNotifier {
     required bool isBlue,
     required int rowIndex,
     required String fromUserId,
+    required String fromUsername,
     required User selected,
   }) async {
     final players = isBlue ? playersBlue : playersRed;
@@ -140,6 +141,7 @@ class GameLobbyController extends ChangeNotifier {
 
     final docId = await FirestoreService.instance.sendGameInvitation(
       fromUserId: fromUserId,
+      fromUsername: fromUsername,
       toUserId: selected.id,
       teamNumber: isBlue ? 1 : 2,
       playerIndex: rowIndex,

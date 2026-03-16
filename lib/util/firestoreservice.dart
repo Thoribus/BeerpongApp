@@ -133,13 +133,19 @@ class FirestoreService {
     required int teamNumber,
     required int playerIndex,
     required String gameId,
+    String fromUsername = '',
+    String tournamentId = '',
+    String gameType = 'regular',
   }) =>
       InvitationRepository.instance.sendGameInvitation(
         fromUserId: fromUserId,
+        fromUsername: fromUsername,
         toUserId: toUserId,
         teamNumber: teamNumber,
         playerIndex: playerIndex,
         gameId: gameId,
+        tournamentId: tournamentId,
+        gameType: gameType,
       );
 
   Future<void> updateInvitationStatus(

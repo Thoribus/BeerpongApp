@@ -23,15 +23,12 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   bool _hasSavedGame = false;
-  bool _hasInvitations = false;
-  final List<Invitation> _invitations = [];
   GoRouter? _goRouter;
 
   @override
   void initState() {
     super.initState();
     _checkSavedGame();
-    _checkPendingInvitations();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _goRouter = GoRouter.of(context);
       _goRouter!.routerDelegate.addListener(_onRouteChanged);
@@ -60,37 +57,6 @@ class HomeScreenState extends State<HomeScreen> {
     setState(() {
       _hasSavedGame = hasSavedGame;
     });
-  }
-
-  Future<void> _checkPendingInvitations() async {
-    // If you already have a saved game, don't check for invitations.
-    // Finish the game first.
-    if (_hasSavedGame) return;
-
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final currentUser = userProvider.user;
-
-    if (currentUser == null) return;
-
-    List<Invitation> invites =
-        await FirestoreService.instance.getAllInvitations(currentUser.id);
-
-    if (!mounted) return;
-
-    if (invites.isNotEmpty) {
-      for (Invitation invite in invites) {
-        setState(() {
-          _invitations.add(invite);
-        });
-      }
-      setState(() {
-        _hasInvitations = true;
-      });
-    } else {
-      setState(() {
-        _hasInvitations = false;
-      });
-    }
   }
 
   Future<void> _showNewGameConfirmationDialog(
@@ -187,12 +153,6 @@ class HomeScreenState extends State<HomeScreen> {
   void _onReturnFromNextScreen() => _checkSavedGame();
 
   void _navigate({required bool isTournament}) {
-    if (_hasInvitations) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You are currently in a game.')),
-      );
-      return;
-    }
     void go() {
       context
           .push(
@@ -242,6 +202,49 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         )
         .then((_) => _onReturnFromNextScreen());
+  }
+
+  Widget _buildInvitationBadge(AppColors c) {
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    if (user == null) return const SizedBox.shrink();
+    return StreamBuilder<List<Invitation>>(
+      stream: FirestoreService.instance.pendingInvitationsStream(user.id),
+      builder: (context, snapshot) {
+        final count = snapshot.data?.length ?? 0;
+        if (count == 0) return const SizedBox.shrink();
+        return GestureDetector(
+          onTap: () => context.push('/invitations'),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: c.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.mail_outline, color: Colors.orange.shade700),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    count == 1
+                        ? 'You have 1 pending invitation'
+                        : 'You have $count pending invitations',
+                    style: TextStyle(
+                      color: c.onBackground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: c.subtle),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildPlaySection(BuildContext context, AppColors c) {
@@ -345,6 +348,9 @@ class HomeScreenState extends State<HomeScreen> {
           ),
 
           const SizedBox(height: 12),
+
+          // ── Pending invitations badge ──────────────────────────────────
+          _buildInvitationBadge(c),
 
           // ── Tournament secondary button ────────────────────────────────
           OutlinedButton.icon(

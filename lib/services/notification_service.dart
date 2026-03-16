@@ -216,8 +216,7 @@ class NotificationService {
   void _routeByType(String type) {
     switch (type) {
       case 'game_invitation':
-        // Phase 3: AppRouter.router.go('/invitations');
-        AppRouter.router.go('/home');
+        AppRouter.router.go('/invitations');
       case 'invitation_accepted':
       case 'invitation_declined':
         // Host is still in the lobby — the Firestore listener there already
