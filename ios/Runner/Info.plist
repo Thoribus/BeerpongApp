@@ -51,10 +51,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<!-- Google Sign-In: set to CLIENT_ID from GoogleService-Info.plist -->
 	<key>GIDClientID</key>
-	<string>REPLACE_WITH_CLIENT_ID_FROM_GOOGLESERVICE_INFO_PLIST</string>
-	<!-- Google Sign-In OAuth callback URL scheme: REVERSED_CLIENT_ID from GoogleService-Info.plist -->
+	<string>8746505211-bq6r301gbm1gb8amq41c9hg519e8d5r8.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -62,7 +60,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>REPLACE_WITH_REVERSED_CLIENT_ID_FROM_GOOGLESERVICE_INFO_PLIST</string>
+				<string>com.googleusercontent.apps.8746505211-bq6r301gbm1gb8amq41c9hg519e8d5r8</string>
 			</array>
 		</dict>
 	</array>
