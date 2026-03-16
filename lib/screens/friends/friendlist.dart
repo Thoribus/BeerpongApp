@@ -49,6 +49,7 @@ class FriendsListScreen extends StatefulWidget {
 
 class FriendsListScreenState extends State<FriendsListScreen> {
   Future<List<User>>? _friends;
+  Future<List<User>>? _friendsWithUser;
   String _selectedAttribute = 'Total Score';
 
   final PageController _pageController = PageController();
@@ -65,6 +66,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     final user = Provider.of<UserProvider>(context, listen: false).user;
     if (user != null && _friends == null) {
       _friends = FirestoreService.instance.getFriends(user.id);
+      _friendsWithUser = _friends!.then((friends) => [user, ...friends]);
     }
   }
 
@@ -248,6 +250,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       await FirestoreService.instance.addFriend(userProvider.user!.id, friendId);
       setState(() {
         _friends = FirestoreService.instance.getFriends(userProvider.user!.id);
+        _friendsWithUser = _friends!.then((friends) => [userProvider.user!, ...friends]);
       });
     } catch (e) {
       _showErrorSnackBar('Error adding friend: $e');
@@ -355,14 +358,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 style: TextStyle(color: c.onBackground)),
           );
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(
-            child: Text('No friends found.',
-                style: TextStyle(color: c.onBackground)),
-          );
-        }
-
-        final friends = snapshot.data!;
+        final friends = snapshot.data ?? [];
         final userProvider = Provider.of<UserProvider>(context);
 
         return ListView(
@@ -399,6 +395,17 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 ),
               ),
             const SizedBox(height: 10),
+            if (friends.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'No friends yet. Add one using the + button above.',
+                    style: TextStyle(color: c.subtle, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -582,7 +589,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   /// Builds the “Leaderboard” page, which includes the user + friends sorted by an attribute.
   Widget _buildRankingPage() {
     return FutureBuilder<List<User>>(
-      future: _fetchFriendsAndUser(),
+      future: _friendsWithUser,
       builder: (ctx, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -805,10 +812,4 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     );
   }
 
-  Future<List<User>> _fetchFriendsAndUser() async {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    if (userProvider.user == null) return [];
-    final friends = await FirestoreService.instance.getFriends(userProvider.user!.id);
-    return [userProvider.user!, ...friends];
-  }
 }
