@@ -60,20 +60,20 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCLwMud47v8KKd7PNXUS4O3xp31SqycBNA',
-    appId: '1:8746505211:ios:8595b300351225e8d9315e',
+    appId: '1:8746505211:ios:992005a460dc0e84d9315e',
     messagingSenderId: '8746505211',
     projectId: 'beerpong-companion',
-    storageBucket: 'beerpong-companion.appspot.com',
-    iosBundleId: 'com.example.flutterApplication1',
+    storageBucket: 'beerpong-companion.firebasestorage.app',
+    iosBundleId: 'com.tecbreak.beerpongapp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCLwMud47v8KKd7PNXUS4O3xp31SqycBNA',
-    appId: '1:8746505211:ios:8595b300351225e8d9315e',
+    appId: '1:8746505211:ios:992005a460dc0e84d9315e',
     messagingSenderId: '8746505211',
     projectId: 'beerpong-companion',
-    storageBucket: 'beerpong-companion.appspot.com',
-    iosBundleId: 'com.example.flutterApplication1',
+    storageBucket: 'beerpong-companion.firebasestorage.app',
+    iosBundleId: 'com.tecbreak.beerpongapp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
