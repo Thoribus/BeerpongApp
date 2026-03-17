@@ -89,7 +89,9 @@ class GameScreenState extends State<GameScreen> {
   // ----- Cup tap orchestration -----
 
   void onCupTap(int cupIndex) {
-    if (_ctrl.islandShotActive) {
+    if (_ctrl.bounceShotActive) {
+      _handleBounceCupTap(cupIndex);
+    } else if (_ctrl.islandShotActive) {
       // Only yellow (highlighted island) cups trigger the island shot power.
       // Tapping a non-island cup during island mode is treated as a normal hit.
       final cup = _ctrl.currentTeam.cups
@@ -140,6 +142,7 @@ class GameScreenState extends State<GameScreen> {
           // Island power shot: hit the cup + a random bonus cup
           _ctrl.toggleIslandCups();
           _ctrl.currentIslandShooter = null;
+          player.islandMakes++;
           _ctrl.incrementPlayerScore(player);
           _ctrl.addCupToPlayer(player, cupIndex);
           _ctrl.incrementPlayerHitThisRound(player);
@@ -175,8 +178,49 @@ class GameScreenState extends State<GameScreen> {
     _ctrl.addCupToPlayer(player, cupIndex);
     _ctrl.incrementPlayerThrows(player);
     _ctrl.incrementPlayerHitThisRound(player);
-    _ctrl.incrementPlayerScore(player);
+    // Bomb: cup already green → middle cup stays on table, no score for it here.
+    // Adjacent cup scores are awarded inside _checkProximity.
+    final isBomb = _ctrl.currentTeam.cups
+        .any((c) => c.index == cupIndex && c.color == Colors.green);
+    if (!isBomb) _ctrl.incrementPlayerScore(player);
     _ctrl.handleCupHit(cupIndex, context);
+    _ctrl.checkOnFire(player, context);
+    _checkGameEnd(player, cupIndex);
+  }
+
+  /// Step 1 — choose which player is bouncing, then enter bounce-shot mode.
+  Future<void> _handleBounceShot() async {
+    await DialogHelpers.showSelectionDialog(
+      context,
+      'Bounce Shot — Select Thrower',
+      _ctrl.currentTeam.currentPlayers,
+      (player) {
+        _ctrl.activateBounceShot(player);
+      },
+    );
+  }
+
+  /// Step 2 — called from [onCupTap] while bounce mode is active.
+  void _handleBounceCupTap(int cupIndex) {
+    final player = _ctrl.currentBounceShooter!;
+    _ctrl.addEvent('Bounce Hit', _ctrl.currentTeam, player);
+    _ctrl.saveCurrentState();
+    _ctrl.bounceShotActive = false;
+    _ctrl.currentBounceShooter = null;
+    player.bounceAttempts++;
+    player.bounceMakes++;
+    _ctrl.incrementPlayerThrows(player);
+    _ctrl.incrementPlayerHitThisRound(player);
+    _ctrl.incrementPlayerScore(player);
+    _ctrl.addCupToPlayer(player, cupIndex);
+    _ctrl.handleCupHit(cupIndex, context);
+    try {
+      final extraIndex = _ctrl.getRandomCupIndex(
+          _ctrl.currentTeam.cups, cupIndex, _ctrl.currentTeam.color);
+      _ctrl.handleCupHit(extraIndex, context);
+      _ctrl.addCupToPlayer(player, extraIndex);
+      _ctrl.incrementPlayerScore(player);
+    } catch (_) {}
     _ctrl.checkOnFire(player, context);
     _checkGameEnd(player, cupIndex);
   }
@@ -184,12 +228,14 @@ class GameScreenState extends State<GameScreen> {
   void _handleDeathCup(Player player) {
     _ctrl.addEvent('Death Cup', _ctrl.currentTeam, player);
     _ctrl.saveCurrentState();
+    // One throw triggered the death cup — count it once, not per remaining cup.
+    _ctrl.incrementPlayerThrows(player);
+    _ctrl.incrementPlayerHitThisRound(player);
     for (final cup in _ctrl.currentTeam.cups) {
       if (cup.color == _ctrl.currentTeam.color) {
         _ctrl.addCupToPlayer(player, cup.index);
         _ctrl.handleCupHit(cup.index, context);
         _ctrl.incrementPlayerScore(player);
-        _ctrl.incrementPlayerThrows(player);
       }
     }
     _checkGameEnd(player, 11);
@@ -212,11 +258,12 @@ class GameScreenState extends State<GameScreen> {
     _ctrl.setPlayerHitLastCup(player);
 
     await GamePersistence.clearGameState(false);
-    await _ctrl.saveGameStatistics();
+    final updatedUser = await _ctrl.saveGameStatistics();
 
     if (!mounted) return;
 
     if (_ctrl.tournamentId != '') {
+      if (updatedUser != null) await _ctrl.updateCurrentUser(updatedUser);
       final match = TournamentMatch(
         id: _ctrl.id,
         team1: _ctrl.team1,
@@ -230,7 +277,11 @@ class GameScreenState extends State<GameScreen> {
       return;
     }
 
-    await DialogHelpers.showGameEndDialog(context, _ctrl.currentTeam.players);
+    await DialogHelpers.showGameEndDialog(
+      context,
+      _ctrl.currentTeam.players,
+      onNavigate: updatedUser != null ? () => _ctrl.updateCurrentUser(updatedUser) : null,
+    );
   }
 
   Future<bool> _handleNachwurf(int cupIndex) async {
@@ -301,6 +352,25 @@ class GameScreenState extends State<GameScreen> {
         title: const Text('Game', style: TextStyle(color: Colors.white)),
       );
     }
+
+    if (_ctrl.bounceShotActive) {
+      return AppBar(
+        backgroundColor: Colors.orange.shade900,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Tap the cup you sank',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: _ctrl.cancelBounceShot,
+            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+        ],
+      );
+    }
+
     final teamName = _teamLabel(_ctrl.currentTeam);
     return AppBar(
       centerTitle: true,
@@ -810,6 +880,13 @@ class GameScreenState extends State<GameScreen> {
                           .any((c) => c.isVisible && _ctrl.isIslandCup(c)),
                   onTap: _highlightIslandCups,
                 ),
+              _buildSheetAction(
+                ctx: ctx,
+                icon: Icons.sports_tennis_rounded,
+                label: 'Bounce Shot',
+                color: Colors.orange,
+                onTap: _handleBounceShot,
+              ),
               _buildSheetAction(
                 ctx: ctx,
                 icon: Icons.workspaces_outlined,

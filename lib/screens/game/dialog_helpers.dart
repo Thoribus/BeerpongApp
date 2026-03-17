@@ -5,7 +5,7 @@ import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:beerpongapp/util/router.dart';
 import 'package:flutter_svg/svg.dart';
 
 /// A utility class to hold all the AwesomeDialog-based methods.
@@ -415,8 +415,15 @@ class DialogHelpers {
   }
 
   /// Shows the game-over dialog and navigates to Stats or Home screen.
+  ///
+  /// [onNavigate] is called after navigation; use it to trigger any
+  /// post-game state updates (e.g. updateUser) that would otherwise cause
+  /// a GoRouter rebuild and invalidate the dialog context before dismiss.
   static Future<void> showGameEndDialog(
-      BuildContext context, List<Player> players) async {
+    BuildContext context,
+    List<Player> players, {
+    Future<void> Function()? onNavigate,
+  }) async {
     AwesomeDialog(
       context: context,
       dialogType: DialogType.warning,
@@ -450,15 +457,22 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {
-        context.go('/games');
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          AppRouter.router.go('/games');
+          await onNavigate?.call();
+        });
       },
       btnOkText: 'Go to Stats',
       btnCancelOnPress: () {
-        context.go('/home');
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          AppRouter.router.go('/home');
+          await onNavigate?.call();
+        });
       },
       btnCancelText: 'Go to Home',
     ).show().ignore();
   }
+
 }
 
 Widget _buildPlayerName(Player player) {
@@ -484,12 +498,14 @@ Widget _buildPlayerName(Player player) {
                 radius: 20,
                 backgroundColor: Colors.white24,
                 child: ClipOval(
-                  child: SvgPicture.asset(
-                    player.user!.mapAvatarKeyToAsset(),
-                    fit: BoxFit.cover,
-                    width: 20 * 2,
-                    height: 20 * 2,
-                  ),
+                  child: player.user!.mapAvatarKeyToAsset().isEmpty
+                      ? const Icon(Icons.person, color: Colors.white)
+                      : SvgPicture.asset(
+                          player.user!.mapAvatarKeyToAsset(),
+                          fit: BoxFit.cover,
+                          width: 20 * 2,
+                          height: 20 * 2,
+                        ),
                 ),
               ),
         const SizedBox(width: 8.0),

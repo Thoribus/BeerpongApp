@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 //----------------------------------------------
 
 //-------------Models---------------------------
@@ -136,9 +135,9 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 setState(() => _currentTabPage = index);
               },
               children: [
-                PersonalStatisticsScreen(user: user),
+                PersonalStatisticsScreen(user: user, games: games),
                 PerformanceScreen(user: user),
-                _buildHistoryTab(), // Your original content
+                _buildHistoryTab(),
               ],
             ),
           ),
@@ -149,205 +148,216 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildGameCard(GameStatistics game, int index) {
     final c = AppColors.of(context);
-    final bool userWon = (game.winningTeam == 'Team 1'
+    final bool userWon = game.winningTeam == 'Team 1'
         ? game.team1Players.any((p) => p.name == user.username)
-        : game.team2Players.any((p) => p.name == user.username));
+        : game.team2Players.any((p) => p.name == user.username);
 
-    final Color winColor = Colors.greenAccent.shade400;
-    final Color loseColor = Colors.redAccent.shade200;
+    final accentColor =
+        userWon ? Colors.greenAccent.shade400 : Colors.redAccent.shade200;
 
-    int team1Cups =
-        game.team1Players.fold(0, (sum, p) => sum + p.cupsHit.length);
-    int team2Cups =
-        game.team2Players.fold(0, (sum, p) => sum + p.cupsHit.length);
+    final allPlayers = game.team1Players + game.team2Players;
+    final userPlayer = allPlayers.where((p) => p.name == user.username).firstOrNull;
+    final userHitRate = userPlayer != null && userPlayer.throws > 0
+        ? (userPlayer.score / userPlayer.throws * 100).toStringAsFixed(0)
+        : '--';
 
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: userWon
-                  ? [winColor, c.card]
-                  : [loseColor, c.card],
-              begin: Alignment.bottomRight,
-              end: Alignment.topLeft,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(4, 6), // bottom-right style
-              )
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              /// Top Row: Game title + Win/Lose icon (left), Date centered
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        userWon ? Icons.emoji_events : Icons.cancel,
-                        color: userWon
-                            ? Colors.green.shade700
-                            : Colors.red.shade600,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Game ${index + 1}',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: c.onBackground),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    DateFormat('dd.MM.yyyy – kk:mm').format(game.date),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: c.subtle,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+    final t1Cups = game.team1Players.fold(0, (s, p) => s + p.cupsHit.length);
+    final t2Cups = game.team2Players.fold(0, (s, p) => s + p.cupsHit.length);
 
-              /// Avatars Row with Team CupsHit on edges
-              Row(
-                children: [
-                  /// Team 1 CupsHit - left aligned
-                  Text(
-                    '$team1Cups',
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-
-                  /// Centered avatars + VS
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        ..._buildAvatarList(context, game.team1Players),
-                        const SizedBox(width: 12),
-                        const Text('VS',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 12),
-                        ..._buildAvatarList(context, game.team2Players),
-                      ],
-                    ),
-                  ),
-
-                  /// Team 2 CupsHit - right aligned
-                  Text(
-                    '$team2Cups',
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-            ],
-          ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [accentColor.withValues(alpha: 0.15), c.card],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-
-        /// Floating details button in top-right
-        Positioned(
-          top: 4,
-          right: 8,
-          child: IconButton(
-            tooltip: 'Details',
-            icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.black87,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.all(8),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          )
+        ],
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          childrenPadding:
+              const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          leading: CircleAvatar(
+            radius: 16,
+            backgroundColor: accentColor.withValues(alpha: 0.2),
+            child: Icon(
+              userWon ? Icons.emoji_events : Icons.cancel,
+              color: accentColor,
+              size: 18,
             ),
-            onPressed: () {
-              context.push('/spectate-live/${game.id}');
-            },
           ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  DateFormat('dd.MM.yy').format(game.date),
+                  style: TextStyle(
+                    color: c.onBackground,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              // Cup scores
+              Text(
+                '$t1Cups',
+                style: TextStyle(
+                  color: game.winningTeam == 'Team 1'
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child:
+                    Text('–', style: TextStyle(color: c.subtle, fontSize: 13)),
+              ),
+              Text(
+                '$t2Cups',
+                style: TextStyle(
+                  color: game.winningTeam == 'Team 2'
+                      ? Colors.greenAccent
+                      : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Your hit rate badge
+              if (userPlayer != null)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$userHitRate%',
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          trailing: IconButton(
+            tooltip: 'Live view',
+            icon: const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Colors.white54),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () => context.push('/spectate-live/${game.id}'),
+          ),
+          children: [
+            _buildInlinePlayerTable(context, 'Team 1', game.team1Players),
+            const SizedBox(height: 8),
+            _buildInlinePlayerTable(context, 'Team 2', game.team2Players),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInlinePlayerTable(
+      BuildContext context, String teamLabel, List<Player> players) {
+    final c = AppColors.of(context);
+    final headerStyle =
+        TextStyle(color: c.subtle, fontSize: 10, fontWeight: FontWeight.w600);
+    final cellStyle = TextStyle(color: c.onBackground, fontSize: 11);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(teamLabel,
+            style: TextStyle(
+                color: c.subtle,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.3)),
+        const SizedBox(height: 4),
+        Table(
+          columnWidths: const {
+            0: FlexColumnWidth(2.5),
+            1: FlexColumnWidth(1),
+            2: FlexColumnWidth(1),
+            3: FlexColumnWidth(1),
+            4: FlexColumnWidth(1.2),
+          },
+          children: [
+            TableRow(
+              children: [
+                Text('Player', style: headerStyle),
+                Text('Score', style: headerStyle, textAlign: TextAlign.center),
+                Text('Throws', style: headerStyle, textAlign: TextAlign.center),
+                Text('Miss', style: headerStyle, textAlign: TextAlign.center),
+                Text('Hit%', style: headerStyle, textAlign: TextAlign.center),
+              ],
+            ),
+            ...players.map((p) {
+              final hr = p.throws > 0
+                  ? '${(p.score / p.throws * 100).toStringAsFixed(0)}%'
+                  : '--';
+              return TableRow(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Text(
+                      p.name.length > 12
+                          ? '${p.name.substring(0, 12)}…'
+                          : p.name,
+                      style: cellStyle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text('${p.score.toInt()}',
+                      style: cellStyle, textAlign: TextAlign.center),
+                  Text('${p.throws}',
+                      style: cellStyle, textAlign: TextAlign.center),
+                  Text('${p.misses}',
+                      style: cellStyle, textAlign: TextAlign.center),
+                  Text(hr,
+                      style: cellStyle.copyWith(color: Colors.amber),
+                      textAlign: TextAlign.center),
+                ],
+              );
+            }),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildHistoryTab() {
+    if (games.isEmpty) {
+      return Center(
+        child: Text(
+          'No games recorded yet.',
+          style: TextStyle(color: AppColors.of(context).subtle),
+        ),
+      );
+    }
     return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: games.length,
-      itemBuilder: (context, index) {
-        final game = games[index];
-        return _buildGameCard(game, index);
-      },
+      itemBuilder: (context, index) => _buildGameCard(games[index], index),
     );
   }
-}
-
-List<Widget> _buildAvatarList(BuildContext context, List<dynamic> players) {
-  return players.map((player) {
-    String? avatarPath;
-    int cupsHitCount = 0;
-    String playerName = 'Unknown';
-    User? user = player.user;
-
-    if (user != null) {
-      if (user.avatarKey.isNotEmpty) {
-        avatarPath = user.mapAvatarKeyToAsset();
-      }
-    }
-
-    cupsHitCount = player.cupsHit?.length ?? 0;
-    playerName = player.name;
-
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(playerName),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.white24,
-              child: avatarPath != null && avatarPath.isNotEmpty
-                  ? ClipOval(
-                      child: SvgPicture.asset(
-                        avatarPath,
-                        fit: BoxFit.cover,
-                        width: 32,
-                        height: 32,
-                      ),
-                    )
-                  : const Icon(Icons.person, size: 18, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '$cupsHitCount',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-      ),
-    );
-  }).toList();
 }
 
 class GameDetailsPage extends StatefulWidget {

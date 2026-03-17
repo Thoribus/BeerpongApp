@@ -16,14 +16,26 @@ class PerformanceScreen extends StatefulWidget {
   State<PerformanceScreen> createState() => _PerformanceScreenState();
 }
 
+enum _TimeFilter { all, last10, last5 }
+
 class _PerformanceScreenState extends State<PerformanceScreen> {
   late final Future<List<UserStatsInGame>> _statsFuture;
+  _TimeFilter _filter = _TimeFilter.all;
 
   @override
   void initState() {
     super.initState();
     _statsFuture =
         FirestoreService.instance.retrieveUserStatsWithDate(widget.user);
+  }
+
+  List<UserStatsInGame> _applyFilter(List<UserStatsInGame> all) {
+    final sorted = [...all]..sort((a, b) => b.date.compareTo(a.date));
+    return switch (_filter) {
+      _TimeFilter.last10 => sorted.take(10).toList(),
+      _TimeFilter.last5 => sorted.take(5).toList(),
+      _TimeFilter.all => sorted,
+    };
   }
 
   @override
@@ -35,7 +47,8 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 1) Load userStatsInGame from Firestore
+            _buildFilterChips(),
+            const SizedBox(height: 8),
             FutureBuilder<List<UserStatsInGame>>(
               future: _statsFuture,
               builder: (context, snapshot) {
@@ -45,32 +58,61 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
-                final userStatsList = snapshot.data ?? [];
+                final filtered = _applyFilter(snapshot.data ?? []);
 
-                // 2) Now we have userStatsList for line charts etc.
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // "Performance Summary": use a custom card
                     _buildSectionTitle('Performance Summary'),
                     _buildCard(
                       child: StatisticsTable(
                         user: widget.user,
-                        userStatsList: userStatsList, // pass it here
+                        userStatsList: filtered,
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Heat Map
                     _buildSectionTitle('Cups Hit Heat Map'),
-                    _buildCard(
-                      child: _buildPyramidHeatMap(),
-                    ),
+                    _buildCard(child: _buildPyramidHeatMap()),
                   ],
                 );
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Row(
+      children: [
+        _filterChip('All', _TimeFilter.all),
+        const SizedBox(width: 8),
+        _filterChip('Last 10', _TimeFilter.last10),
+        const SizedBox(width: 8),
+        _filterChip('Last 5', _TimeFilter.last5),
+      ],
+    );
+  }
+
+  Widget _filterChip(String label, _TimeFilter value) {
+    final selected = _filter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _filter = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? Colors.amber : Colors.white12,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.black : Colors.white70,
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ),
     );

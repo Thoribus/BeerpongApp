@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
+import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
@@ -31,10 +32,15 @@ class GameController extends ChangeNotifier {
   bool gameEnded = false;
   late bool isTeamOneTurn;
   String winner = '';
+  int roundCount = 0;
+  int cupsRemainingWinner = 0;
 
   bool islandShotActive = false;
   Player? currentIslandShooter;
   Color islandBackgroundColor = Colors.grey;
+
+  bool bounceShotActive = false;
+  Player? currentBounceShooter;
 
   // Gradient animation state used by the player-name cards.
   Alignment beginAlignment = Alignment.topLeft;
@@ -123,9 +129,24 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Enters bounce-shot mode for [player]. The next cup tap will be treated
+  /// as the bounced cup; a random bonus cup is also removed (counts as 2).
+  void activateBounceShot(Player player) {
+    currentBounceShooter = player;
+    bounceShotActive = true;
+    notifyListeners();
+  }
+
+  /// Cancels bounce-shot mode without recording anything.
+  void cancelBounceShot() {
+    bounceShotActive = false;
+    currentBounceShooter = null;
+    notifyListeners();
+  }
+
   void _checkProximity(int index) {
     const double proximityThreshold = 100.0;
-    double adjacentHits = 0.0;
+    int adjacentHits = 0;
 
     final targetCup = currentTeam.cups.firstWhere(
       (cup) => cup.index == index && cup.isVisible,
@@ -149,10 +170,18 @@ class GameController extends ChangeNotifier {
       }
     }
 
+    // Middle cup stays on the table — restore its color so it is not removed at end-turn.
     targetCup.color = currentTeam.color;
-    for (final player in currentTeam.currentPlayers) {
-      if (player.cupsHit.contains(index)) {
-        player.incrementScoreBy(adjacentHits / 2 - 1);
+
+    // The cup that was first hit already awarded +1 to the shooting player.
+    // The bomb score is (adjacentHits) total cups removed, so we distribute
+    // (adjacentHits - 1) here to cancel that pre-existing +1 and arrive at
+    // a net total equal to the number of cups actually removed by the bomb.
+    final players = currentTeam.currentPlayers;
+    if (players.isNotEmpty && adjacentHits > 0) {
+      final scorePerPlayer = (adjacentHits - 1) / players.length;
+      for (final player in players) {
+        player.incrementScoreBy(scorePerPlayer);
       }
     }
   }
@@ -190,6 +219,11 @@ class GameController extends ChangeNotifier {
       toggleIslandCups();
     }
 
+    if (bounceShotActive) {
+      bounceShotActive = false;
+      currentBounceShooter = null;
+    }
+
     for (final player in currentTeam.currentPlayers) {
       if (player.hitThisRound == 0) {
         player.incrementMisses();
@@ -202,7 +236,10 @@ class GameController extends ChangeNotifier {
       if (cup.color == Colors.green) cup.isVisible = false;
     }
 
+    // Increment round count once both teams have completed a turn
+    // (i.e. when control passes back to team 1).
     isTeamOneTurn = !isTeamOneTurn;
+    if (isTeamOneTurn) roundCount++;
     currentTeam = isTeamOneTurn ? team1 : team2;
     currentTeam.currentPlayers = currentTeam.rotatePlayers();
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateIslandBackgroundColor());
@@ -319,6 +356,11 @@ class GameController extends ChangeNotifier {
     gameEnded = true;
     final blueTeamWin = team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
     winner = blueTeamWin ? 'Team 1' : 'Team 2';
+    // Count cups the winning team still had remaining (measure of dominance).
+    final winningTeam = blueTeamWin ? team1 : team2;
+    cupsRemainingWinner = winningTeam.cups
+        .where((c) => c.isVisible && c.color != Colors.green)
+        .length;
     if (winner == 'Team 1') {
       team1.wins++;
       team2.losses++;
@@ -393,7 +435,8 @@ class GameController extends ChangeNotifier {
   }
 
   void addEvent(String eventType, Team team, Player? player) async {
-    final event = await FirestoreService.instance.addEvent(id, eventType, team, player);
+    final event = await FirestoreService.instance
+        .addEvent(id, eventType, team, player, roundNumber: roundCount);
     _events.add(event);
   }
 
@@ -419,7 +462,7 @@ class GameController extends ChangeNotifier {
 
   // ----- Firestore Stats -----
 
-  Future<void> saveGameStatistics() async {
+  Future<User?> saveGameStatistics() async {
     if (winner == 'Team 1') {
       for (final player in team1.players) {
         player.isWinner = true;
@@ -439,16 +482,30 @@ class GameController extends ChangeNotifier {
       AchievementsScreen.checkAchievements(user);
     }
 
-    await FirestoreService.instance.updateGameDoc(id, team1: team1, team2: team2, winner: winner);
+    await FirestoreService.instance.updateGameDoc(
+      id,
+      team1: team1,
+      team2: team2,
+      winner: winner,
+      endedAt: true,
+      roundCount: roundCount,
+      cupsRemainingWinner: cupsRemainingWinner,
+    );
 
     for (final invitationId in invitations) {
       await FirestoreService.instance.deleteGameInvitation(invitationId);
     }
 
+    // Return the updated User for the current player so the caller can
+    // call updateCurrentUser() *after* navigation (calling updateUser here
+    // triggers notifyListeners → GoRouter rebuild → disposes the dialog).
     final userExists = updatedUsers.any((u) => u.id == _userProvider.user?.id);
-    if (userExists) {
-      final currentUser = updatedUsers.firstWhere((u) => u.id == _userProvider.user?.id);
-      await _userProvider.updateUser(currentUser);
-    }
+    return userExists
+        ? updatedUsers.firstWhere((u) => u.id == _userProvider.user?.id)
+        : null;
+  }
+
+  Future<void> updateCurrentUser(User user) async {
+    await _userProvider.updateUser(user);
   }
 }
