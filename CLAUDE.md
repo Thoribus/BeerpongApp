@@ -152,6 +152,43 @@ Detected in `_handleNormalHit` by checking `cup.color == Colors.green` before ca
 - One throw triggered it — `incrementPlayerThrows` and `incrementPlayerHitThisRound` are called **once** before the loop.
 - All remaining non-green cups are cleared in the loop (`+1` score per cup); **no extra throws** are added per cup.
 
+### Statistics screens (`lib/screens/games/`)
+
+Three tabs inside `StatisticsScreen` (`/games` route):
+
+| Tab | File | Contents |
+|-----|------|----------|
+| Stats | `personal_statistics_screen.dart` | Hero card (avatar + win-rate arc ring), recent form strip (last 8 W/L circles), 8-tile stat grid |
+| Performance | `performance_screen.dart` | Time-filter chips (All / Last 10 / Last 5), `StatisticsTable` with sparklines + slope %, cup position heatmap |
+| History | `statistics_screen.dart` | Expandable game cards with inline player table |
+
+A full improvement plan (new Breakdown tab, model additions, derived metrics) is documented in
+[`statistics_improvement_plan.md`](statistics_improvement_plan.md) at the project root.
+
+Key gaps to address in future work:
+- `roundCount` and `cupsRemainingWinner` are written to Firestore per game but never parsed back into `GameStatistics`
+- `defended`, `totalHeatingUp`, `hitLastCup` are tracked on `User` but not shown in the stats grid
+- `Player` needs `islandAttempts: int` and `deathCupHits: int` (currently `islandShotUsed` is a `bool`, inconsistent with `islandMakes: int`)
+- `misses` double-counts airballs — use `misses - airballs` for "pure miss" rate
+
+### Live game ticker (`lib/screens/liveticker/`)
+
+Three tabs inside `LiveGameStatsScreen`:
+
+| Tab | File | Notes |
+|-----|------|-------|
+| Cup Layout | `cup_layout_tab.dart` | Team brackets with player stats + mini cup layout |
+| Match Stats | `match_stats_tab.dart` | Dual progress bars per stat category |
+| Timeline | `timeline_tab.dart` | Chronological event log, auto-scrolls to latest |
+
+#### `timeline_tab.dart` design notes
+- `StatefulWidget` with `ScrollController` — auto-scrolls to bottom on each Firestore snapshot
+- "End Turn" events render as full-width amber dividers (`End of turn · MM:SS`), not as regular event tiles
+- `roundNumber` from `GameEvent` drives "Round N" section headers
+- Event tiles use `AppColors.surface2` background (dark-mode safe); hardcoded `Colors.white` was removed
+- Full event type coverage: Normal Hit (green), Bounce Shot (teal), Island Shot (purple), Death Cup (deep-orange), Airball (blue), Bitch Cup (red), On Fire (orange)
+- Empty state rendered when no events exist yet
+
 ### Logging
 Use `AppLogger` (`lib/util/app_logger.dart`) — never `print()`. Methods: `AppLogger.debug()`, `.info()`, `.warning()`, `.error(message, [error, stackTrace])`.
 

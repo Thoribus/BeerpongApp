@@ -3,18 +3,44 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/event.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/theme.dart';
 
-class TimelineTab extends StatelessWidget {
+class TimelineTab extends StatefulWidget {
   final LiveGameData gameData;
 
   const TimelineTab({required this.gameData, super.key});
+
+  @override
+  State<TimelineTab> createState() => _TimelineTabState();
+}
+
+class _TimelineTabState extends State<TimelineTab> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance
           .collection('games')
-          .doc(gameData.gameId)
+          .doc(widget.gameData.gameId)
           .collection('events')
           .orderBy('timestamp', descending: false)
           .snapshots(),
@@ -23,172 +49,243 @@ class TimelineTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        List<GameEvent> events = snapshot.data!.docs
+        final events = snapshot.data!.docs
             .map((doc) =>
-                GameEvent.fromJson(doc.data(), doc.id, gameData.gameId))
+                GameEvent.fromJson(doc.data(), doc.id, widget.gameData.gameId))
             .toList();
 
-        return _buildGroupedEventList(events);
+        if (events.isEmpty) {
+          return _buildEmptyState(context);
+        }
+
+        _scrollToBottom();
+        return _buildEventList(context, events);
       },
     );
   }
 
-  Widget _buildGroupedEventList(List<GameEvent> events) {
-    Map<int, List<GameEvent>> grouped = {};
+  // ── Empty state ────────────────────────────────────────────────────────────
 
-    for (var event in events) {
-      int minute = event.timestamp.difference(gameData.gameStart).inMinutes;
-      grouped.putIfAbsent(minute, () => []).add(event);
-    }
-
-    return ListView(
-      children: grouped.entries.map((entry) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-              child: Text(
-                "Minute ${entry.key.toString().padLeft(2, '0')}:00",
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey),
-              ),
-            ),
-            ...entry.value.map((e) => _buildAnimatedEventRow(e)),
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildAnimatedEventRow(GameEvent event) {
-    final isTeam1 = event.team == gameData.team1.color.toARGB32().toString();
-    Color eventColor = _getEventColor(event.eventType);
-    IconData eventIcon = _getEventIcon(event.eventType);
-
-    return TweenAnimationBuilder(
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 300),
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, (1 - value) * 10),
-            child: child,
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: isTeam1
-                  ? _buildHoverTile(event, eventColor, isTeam1: true)
-                  : const SizedBox(),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.grey.shade200,
-                child: Icon(eventIcon, color: eventColor),
-              ),
-            ),
-            Expanded(
-              child: !isTeam1
-                  ? _buildHoverTile(event, eventColor, isTeam1: false)
-                  : const SizedBox(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHoverTile(GameEvent event, Color color,
-      {required bool isTeam1}) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: _buildEventTile(event, color, isTeam1: isTeam1),
-    );
-  }
-
-  Widget _buildEventTile(GameEvent event, Color color,
-      {required bool isTeam1}) {
-    Duration eventDuration = event.timestamp.difference(gameData.gameStart);
-    String eventTime =
-        '${(eventDuration.inMinutes % 60).toString().padLeft(2, '0')}:${(eventDuration.inSeconds % 60).toString().padLeft(2, '0')}';
-
-    return Container(
-      margin: EdgeInsets.only(
-        left: isTeam1 ? 0 : 8,
-        right: isTeam1 ? 8 : 0,
-      ),
-      padding: const EdgeInsets.all(10.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+  Widget _buildEmptyState(BuildContext context) {
+    final c = AppColors.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.sports_bar_outlined, size: 48, color: c.muted),
+          const SizedBox(height: 12),
+          Text(
+            'No events yet',
+            style: TextStyle(color: c.subtle, fontSize: 15),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── List builder ───────────────────────────────────────────────────────────
+
+  Widget _buildEventList(BuildContext context, List<GameEvent> events) {
+    final items = <_TimelineItem>[];
+    int? lastRound;
+
+    for (final event in events) {
+      if (event.eventType == 'End Turn') {
+        items.add(_TimelineItem.divider(event));
+        lastRound = null;
+        continue;
+      }
+
+      // Insert a round header whenever the round number advances.
+      final round = event.roundNumber;
+      if (round != null && round != lastRound) {
+        items.add(_TimelineItem.roundHeader(round));
+        lastRound = round;
+      }
+
+      items.add(_TimelineItem.event(event));
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return switch (item.type) {
+          _ItemType.roundHeader => _buildRoundHeader(context, item.roundNumber!),
+          _ItemType.divider => _buildTurnDivider(context, item.event!),
+          _ItemType.event => _buildEventRow(context, item.event!),
+        };
+      },
+    );
+  }
+
+  // ── Structural rows ────────────────────────────────────────────────────────
+
+  Widget _buildRoundHeader(BuildContext context, int round) {
+    final c = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: c.divider, thickness: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              'Round $round',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: c.subtle,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: c.divider, thickness: 1)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTurnDivider(BuildContext context, GameEvent event) {
+    final duration = event.timestamp.difference(widget.gameData.gameStart);
+    final mm = duration.inMinutes.toString().padLeft(2, '0');
+    final ss = (duration.inSeconds % 60).toString().padLeft(2, '0');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Divider(
+              color: Colors.amber.withValues(alpha: 0.3),
+              thickness: 1,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              'End of turn · $mm:$ss',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.amber.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Divider(
+              color: Colors.amber.withValues(alpha: 0.3),
+              thickness: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Event row (left = team1, right = team2) ────────────────────────────────
+
+  Widget _buildEventRow(BuildContext context, GameEvent event) {
+    final c = AppColors.of(context);
+    final isTeam1 =
+        event.team == widget.gameData.team1.color.toARGB32().toString();
+    final color = _eventColor(event.eventType);
+    final icon = _eventIcon(event.eventType);
+
+    final duration = event.timestamp.difference(widget.gameData.gameStart);
+    final timeLabel =
+        '${duration.inMinutes.toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
+
+    final tile = _buildEventTile(context, c, event, color, timeLabel, isTeam1);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
+      child: Row(
+        children: [
+          Expanded(child: isTeam1 ? tile : const SizedBox()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: c.surface2,
+              child: Icon(icon, color: color, size: 18),
+            ),
+          ),
+          Expanded(child: !isTeam1 ? tile : const SizedBox()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventTile(
+    BuildContext context,
+    AppColors c,
+    GameEvent event,
+    Color color,
+    String timeLabel,
+    bool isTeam1,
+  ) {
+    return Container(
+      margin: EdgeInsets.only(
+        left: isTeam1 ? 0 : 4,
+        right: isTeam1 ? 4 : 0,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment:
             isTeam1 ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Timestamp + EventType logic
           Row(
-            mainAxisAlignment:
-                isTeam1 ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: isTeam1
                 ? [
                     Text(
-                      event.eventType,
+                      _eventLabel(event.eventType),
                       style: TextStyle(
-                        fontSize: 12,
-                        color: color.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
+                        color: color,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     Text(
-                      eventTime,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      timeLabel,
+                      style: TextStyle(fontSize: 10, color: c.subtle),
                     ),
                   ]
                 : [
                     Text(
-                      eventTime,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      timeLabel,
+                      style: TextStyle(fontSize: 10, color: c.subtle),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     Text(
-                      event.eventType,
+                      _eventLabel(event.eventType),
                       style: TextStyle(
-                        fontSize: 12,
-                        color: color.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.w500,
+                        fontSize: 11,
+                        color: color,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
-            event.player ?? 'End Turn',
+            event.player ?? '—',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: color,
-              fontSize: 14,
+              color: c.onBackground,
+              fontSize: 13,
             ),
           ),
         ],
@@ -196,29 +293,61 @@ class TimelineTab extends StatelessWidget {
     );
   }
 
-  Color _getEventColor(String eventType) {
-    switch (eventType) {
-      case 'Airball':
-        return Colors.blue;
-      case 'Bitchcup':
-        return Colors.red;
-      case 'Normal Hit':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
+  // ── Event metadata ─────────────────────────────────────────────────────────
 
-  IconData _getEventIcon(String eventType) {
-    switch (eventType) {
-      case 'Airball':
-        return BeerpongIcons.airball;
-      case 'Bitchcup':
-        return Icons.warning;
-      case 'Normal Hit':
-        return Icons.sports_bar;
-      default:
-        return Icons.sports;
-    }
-  }
+  Color _eventColor(String type) => switch (type) {
+        'Normal Hit' => Colors.green,
+        'Bounce Shot' => Colors.teal,
+        'Island Shot' => Colors.purple,
+        'Death Cup' => Colors.deepOrange,
+        'Airball' => Colors.blue,
+        'Bitchcup' || 'Bitch Cup' => Colors.red,
+        'On Fire' => Colors.orange,
+        _ => Colors.grey,
+      };
+
+  IconData _eventIcon(String type) => switch (type) {
+        'Normal Hit' => Icons.sports_bar,
+        'Bounce Shot' => Icons.sports_volleyball,
+        'Island Shot' => Icons.place,
+        'Death Cup' => Icons.warning_amber_rounded,
+        'Airball' => BeerpongIcons.airball,
+        'Bitchcup' || 'Bitch Cup' => Icons.report,
+        'On Fire' => Icons.local_fire_department,
+        _ => Icons.sports,
+      };
+
+  String _eventLabel(String type) => switch (type) {
+        'Normal Hit' => 'Hit',
+        'Bounce Shot' => 'Bounce',
+        'Island Shot' => 'Island',
+        'Death Cup' => 'Death Cup',
+        'Airball' => 'Airball',
+        'Bitchcup' || 'Bitch Cup' => 'Bitch Cup',
+        'On Fire' => 'On Fire',
+        _ => type,
+      };
+}
+
+// ── Data helpers ───────────────────────────────────────────────────────────
+
+enum _ItemType { roundHeader, divider, event }
+
+class _TimelineItem {
+  final _ItemType type;
+  final GameEvent? event;
+  final int? roundNumber;
+
+  const _TimelineItem._({
+    required this.type,
+    this.event,
+    this.roundNumber,
+  });
+
+  factory _TimelineItem.event(GameEvent e) =>
+      _TimelineItem._(type: _ItemType.event, event: e);
+  factory _TimelineItem.divider(GameEvent e) =>
+      _TimelineItem._(type: _ItemType.divider, event: e);
+  factory _TimelineItem.roundHeader(int n) =>
+      _TimelineItem._(type: _ItemType.roundHeader, roundNumber: n);
 }
