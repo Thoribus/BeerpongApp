@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beerpongapp/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -18,26 +20,36 @@ Future<void> main() async {
     );
   }
 
-  // Must be registered before any other Firebase Messaging calls so it is
-  // ready when the OS delivers a message to a background/terminated isolate.
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Set up flutter_local_notifications and the Android notification channel.
   await NotificationService.instance.initLocalNotifications();
+
+  // Create UserProvider before runApp so the router can reference it as
+  // a refreshListenable for the auth redirect guard.
+  final userProvider = UserProvider();
+  unawaited(userProvider.loadUser());
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => UserProvider()..loadUser()),
+        ChangeNotifierProvider.value(value: userProvider),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: const MyApp(),
+      child: MyApp(userProvider: userProvider),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  final UserProvider userProvider;
+  const MyApp({super.key, required this.userProvider});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  // Created once; holds a reference to userProvider for auth redirects.
+  late final _router = AppRouter.createRouter(widget.userProvider);
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +59,8 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeProvider.themeMode,
-      routerConfig: AppRouter.router,
+      routerConfig: _router,
     );
   }
 }
+

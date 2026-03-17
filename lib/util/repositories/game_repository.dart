@@ -48,6 +48,9 @@ class GameRepository {
     String? startingTeam,
     bool? timestamp,
     String? tournamentId,
+    bool? endedAt,
+    int? roundCount,
+    int? cupsRemainingWinner,
   }) async {
     final Map<String, dynamic> updates = {};
 
@@ -61,6 +64,9 @@ class GameRepository {
     if (startingTeam != null) updates['startingTeam'] = startingTeam;
     if (timestamp == true) updates['timestamp'] = FieldValue.serverTimestamp();
     if (tournamentId != null) updates['tournamentId'] = tournamentId;
+    if (endedAt == true) updates['endedAt'] = FieldValue.serverTimestamp();
+    if (roundCount != null) updates['roundCount'] = roundCount;
+    if (cupsRemainingWinner != null) updates['cupsRemainingWinner'] = cupsRemainingWinner;
 
     if (team1 != null || team2 != null) {
       if (team1 != null && team2 != null) {
@@ -170,7 +176,8 @@ class GameRepository {
   }
 
   Future<String> addEvent(
-      String gameId, String eventType, Team team, Player? player) async {
+      String gameId, String eventType, Team team, Player? player,
+      {int? roundNumber}) async {
     try {
       final eventsRef =
           _db.collection('games').doc(gameId).collection('events');
@@ -180,6 +187,7 @@ class GameRepository {
         'team': team.color.toARGB32().toString(),
         'player': player?.name,
         'timestamp': FieldValue.serverTimestamp(),
+        if (roundNumber != null) 'roundNumber': roundNumber,
       });
       return docRef.id;
     } catch (e) {

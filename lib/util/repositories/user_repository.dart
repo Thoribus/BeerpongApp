@@ -106,6 +106,10 @@ class UserRepository {
           'hitLastCup': FieldValue.increment(player.lastCupHit ? 1 : 0),
           'wins': FieldValue.increment(player.isWinner ? 1 : 0),
           'losses': FieldValue.increment(player.isWinner ? 0 : 1),
+          'totalHeatingUp': FieldValue.increment(player.heatingUp),
+          'totalBounceAttempts': FieldValue.increment(player.bounceAttempts),
+          'totalBounceMakes': FieldValue.increment(player.bounceMakes),
+          'totalIslandMakes': FieldValue.increment(player.islandMakes),
           for (final cupIndex in player.cupsHit)
             'cupsHitCount.$cupIndex': FieldValue.increment(1),
         });
@@ -164,6 +168,10 @@ class UserRepository {
       cupsHitCount: updatedCupsHitCount,
       wins: oldUser.wins + (player.isWinner ? 1 : 0),
       losses: oldUser.losses + (player.isWinner ? 0 : 1),
+      totalHeatingUp: oldUser.totalHeatingUp + player.heatingUp,
+      totalBounceAttempts: oldUser.totalBounceAttempts + player.bounceAttempts,
+      totalBounceMakes: oldUser.totalBounceMakes + player.bounceMakes,
+      totalIslandMakes: oldUser.totalIslandMakes + player.islandMakes,
     );
   }
 }

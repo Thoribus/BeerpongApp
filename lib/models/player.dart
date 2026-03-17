@@ -11,9 +11,13 @@ class Player {
   List<int> cupsHit;        // List of cup indices that the player has hit
   bool lastCupHit;          // Whether the player hit the last cup
   bool islandShotUsed;      // Whether the player used an island shot
+  int islandMakes;          // Number of island cups successfully sunk
   int defended;             // Number of successful defenses
   int consecutiveHits;      // Tracks consecutive hits
   int onFire;               // Times the player triggered "On Fire"
+  int heatingUp;            // Times the player reached 2 consecutive hits
+  int bounceAttempts;       // Number of bounce shots attempted
+  int bounceMakes;          // Number of bounce shots that sank a cup
   User? user;               // Optional reference to a User object (DB, stats, etc.)
   bool isWinner;            // Whether the player is on the winning team
 
@@ -28,11 +32,15 @@ class Player {
     List<int>? cupsHit,
     this.hitThisRound = 0,
     this.onFire = 0,
+    this.heatingUp = 0,
+    this.bounceAttempts = 0,
+    this.bounceMakes = 0,
     this.islandShotUsed = false,
+    this.islandMakes = 0,
     this.lastCupHit = false,
     this.user,
     this.isWinner = false,
-  }) : 
+  }) :
     consecutiveHits = consecutiveHits ?? 0,
     cupsHit = cupsHit ?? [];
 
@@ -46,8 +54,12 @@ class Player {
       ..defended = defended
       ..consecutiveHits = consecutiveHits
       ..onFire = onFire
+      ..heatingUp = heatingUp
+      ..bounceAttempts = bounceAttempts
+      ..bounceMakes = bounceMakes
       ..hitThisRound = hitThisRound
       ..islandShotUsed = islandShotUsed
+      ..islandMakes = islandMakes
       ..lastCupHit = lastCupHit
       ..cupsHit = List.from(cupsHit)
       ..isWinner = isWinner
@@ -63,6 +75,7 @@ class Player {
   void incrementHitThisRound() {
     hitThisRound++;
     consecutiveHits++;
+    if (consecutiveHits == 2) heatingUp++;
   }
 
   /// Increments the player's score by a specific amount.
@@ -129,9 +142,13 @@ class Player {
       'cupsHit': cupsHit,
       'lastCupHit': lastCupHit,
       'islandShotUsed': islandShotUsed,
+      'islandMakes': islandMakes,
       'defended': defended,
       'consecutiveHits': consecutiveHits,
       'onFire': onFire,
+      'heatingUp': heatingUp,
+      'bounceAttempts': bounceAttempts,
+      'bounceMakes': bounceMakes,
       'isWinner': isWinner,
       'user': user?.toJson(), // Only if user is non-null
     };
@@ -153,9 +170,13 @@ class Player {
       cupsHit: List<int>.from(json['cupsHit'] ?? []),
       hitThisRound: json['hitThisRound'],
       islandShotUsed: json['islandShotUsed'] ?? false,
+      islandMakes: json['islandMakes'] ?? 0,
       defended: json['defended'] ?? 0,
       consecutiveHits: json['consecutiveHits'] ?? 0,
       onFire: json['onFire'] ?? 0,
+      heatingUp: json['heatingUp'] ?? 0,
+      bounceAttempts: json['bounceAttempts'] ?? 0,
+      bounceMakes: json['bounceMakes'] ?? 0,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       lastCupHit: json['lastCupHit'] ?? false,
       isWinner: json['isWinner'] ?? false,
@@ -164,7 +185,7 @@ class Player {
 
   @override
   String toString() {
-    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, isWinner: $isWinner, user: $user)';
+    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, islandMakes: $islandMakes, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, heatingUp: $heatingUp, bounceAttempts: $bounceAttempts, bounceMakes: $bounceMakes, isWinner: $isWinner, user: $user)';
   }
 
   /// Equality based on name (and potentially user).
@@ -175,7 +196,7 @@ class Player {
     return name == other.name;
   }
 
-    Player copyWithResetStats() {
+  Player copyWithResetStats() {
     return Player(
       name: name,
       user: user,
@@ -187,9 +208,13 @@ class Player {
       cupsHit: [],
       lastCupHit: false,
       islandShotUsed: false,
+      islandMakes: 0,
       defended: 0,
       consecutiveHits: 0,
       onFire: 0,
+      heatingUp: 0,
+      bounceAttempts: 0,
+      bounceMakes: 0,
       isWinner: false,
     );
   }
@@ -212,7 +237,11 @@ class Player {
       cupsHit: [...cupsHit, ...matchResult.cupsHit],
       hitThisRound: 0, // Not relevant for tournament totals
       onFire: onFire + matchResult.onFire,
+      heatingUp: heatingUp + matchResult.heatingUp,
+      bounceAttempts: bounceAttempts + matchResult.bounceAttempts,
+      bounceMakes: bounceMakes + matchResult.bounceMakes,
       islandShotUsed: islandShotUsed || matchResult.islandShotUsed,
+      islandMakes: islandMakes + matchResult.islandMakes,
       lastCupHit: lastCupHit || matchResult.lastCupHit,
       isWinner: isWinner || matchResult.isWinner,
     );
@@ -236,7 +265,11 @@ extension PlayerCopyWith on Player {
       cupsHit: cupsHit,
       hitThisRound: hitThisRound,
       onFire: onFire,
+      heatingUp: heatingUp,
+      bounceAttempts: bounceAttempts,
+      bounceMakes: bounceMakes,
       islandShotUsed: islandShotUsed,
+      islandMakes: islandMakes,
       lastCupHit: lastCupHit,
     );
   }
@@ -254,7 +287,11 @@ extension PlayerCopyWith on Player {
       cupsHit: cupsHit,
       hitThisRound: hitThisRound,
       onFire: onFire,
+      heatingUp: heatingUp,
+      bounceAttempts: bounceAttempts,
+      bounceMakes: bounceMakes,
       islandShotUsed: islandShotUsed,
+      islandMakes: islandMakes,
       lastCupHit: lastCupHit,
     );
   }

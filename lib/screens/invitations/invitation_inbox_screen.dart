@@ -78,16 +78,19 @@ class _InvitationCardState extends State<_InvitationCard> {
 
   Future<void> _accept() async {
     setState(() => _loading = true);
-    await FirestoreService.instance.updateInvitationStatus(
+    // Fire status update without awaiting — awaiting it causes the stream to
+    // update, which removes this card from the list and unmounts the widget
+    // before navigation can happen.
+    unawaited(FirestoreService.instance.updateInvitationStatus(
       widget.invitation.id,
       InvitationStatus.accepted.name,
-    );
+    ));
     if (!mounted) return;
-    unawaited(context.push('/waiting', extra: WaitingArgs(
+    context.go('/waiting', extra: WaitingArgs(
       gameId: widget.invitation.gameId,
       hostName: widget.invitation.fromUsername,
       invitationId: widget.invitation.id,
-    )));
+    ));
   }
 
   Future<void> _decline() async {

@@ -243,12 +243,14 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
         radius: 20,
         backgroundColor: c.chip,
         child: ClipOval(
-          child: SvgPicture.asset(
-            user.mapAvatarKeyToAsset(),
-            width: 36,
-            height: 36,
-            fit: BoxFit.cover,
-          ),
+          child: user.mapAvatarKeyToAsset().isEmpty
+              ? const Icon(Icons.person, color: Colors.white54, size: 20)
+              : SvgPicture.asset(
+                  user.mapAvatarKeyToAsset(),
+                  width: 36,
+                  height: 36,
+                  fit: BoxFit.cover,
+                ),
         ),
       ),
       title: Text(user.username,

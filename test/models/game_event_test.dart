@@ -91,6 +91,49 @@ void main() {
       expect(result, contains('Team Blue'));
     });
 
+    test('roundNumber is stored in toJson and read back in fromJson', () {
+      final event = GameEvent(
+        eventId: 'evt7',
+        eventType: 'Normal Hit',
+        gameId: 'game7',
+        player: 'alice',
+        team: 'Team Blue',
+        timestamp: DateTime(2024, 1, 1),
+        roundNumber: 3,
+      );
+
+      final json = event.toJson();
+      expect(json['roundNumber'], 3);
+
+      final restored = GameEvent.fromJson({...json, 'timestamp': null}, 'evt7', 'game7');
+      expect(restored.roundNumber, 3);
+    });
+
+    test('roundNumber is omitted from toJson when null', () {
+      final event = GameEvent(
+        eventId: 'evt8',
+        eventType: 'Airball',
+        gameId: 'game8',
+        player: null,
+        team: 'Team Red',
+        timestamp: DateTime(2024, 1, 1),
+      );
+
+      final json = event.toJson();
+      expect(json.containsKey('roundNumber'), isFalse);
+    });
+
+    test('fromJson with missing roundNumber defaults to null', () {
+      final json = <String, dynamic>{
+        'eventType': 'Hit',
+        'team': 'Team Blue',
+        'player': null,
+        'timestamp': null,
+      };
+      final event = GameEvent.fromJson(json, 'evt9', 'game9');
+      expect(event.roundNumber, isNull);
+    });
+
     test('toString handles null player', () {
       final event = GameEvent(
         eventId: 'evt6',

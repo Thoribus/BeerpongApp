@@ -43,43 +43,36 @@ class AccountScreenState extends State<AccountScreen>
     user = userProvider.user;
     final c = AppColors.of(context);
 
+    if (user == null) return const SizedBox.shrink();
+
     return Scaffold(
       backgroundColor: c.background,
-      body: user == null
-          ? Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  await userProvider.signIn();
-                },
-                child: const Text('Sign in with Google'),
-              ),
-            )
-          : Column(
+      body: Column(
+        children: [
+          _buildTabBarWithLogout(userProvider),
+          const SizedBox(height: 10),
+          Expanded(
+            child: PageView(
+              controller: _tabPageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentTabPage = index;
+                  // Lazy-load friends only when the Social tab is first opened.
+                  if (index == 2 && _friendsFuture == null) {
+                    _friendsFuture =
+                        FirestoreService.instance.getFriends(user!.id);
+                  }
+                });
+              },
               children: [
-                _buildTabBarWithLogout(userProvider),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: PageView(
-                    controller: _tabPageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentTabPage = index;
-                        // Lazy-load friends only when the Social tab is first opened.
-                        if (index == 2 && _friendsFuture == null && user != null) {
-                          _friendsFuture =
-                              FirestoreService.instance.getFriends(user!.id);
-                        }
-                      });
-                    },
-                    children: [
-                      CustomUserScreen(user: user!),
-                      AchievementsScreen(user: user!),
-                      _buildSocialPage(c),
-                    ],
-                  ),
-                ),
+                CustomUserScreen(user: user!),
+                AchievementsScreen(user: user!),
+                _buildSocialPage(c),
               ],
             ),
+          ),
+        ],
+      ),
     );
   }
 

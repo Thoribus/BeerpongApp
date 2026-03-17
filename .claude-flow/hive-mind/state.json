@@ -1,0 +1,22 @@
+{
+  "initialized": true,
+  "topology": "hierarchical",
+  "workers": [
+    "phase8-worker-1773588467980-wmvv",
+    "phase8-worker-1773588467980-6qze",
+    "phase8-worker-1773588467980-341h",
+    "phase8-worker-1773588467980-ii8z"
+  ],
+  "consensus": {
+    "pending": [],
+    "history": []
+  },
+  "sharedMemory": {},
+  "createdAt": "2026-03-15T15:27:42.499Z",
+  "updatedAt": "2026-03-15T15:27:47.981Z",
+  "queen": {
+    "agentId": "queen-phase8",
+    "electedAt": "2026-03-15T15:27:42.499Z",
+    "term": 1
+  }
+}

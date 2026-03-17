@@ -24,6 +24,10 @@ class User {
   int losses;
   List<String> friends;
   List<String> unlockedTitles;
+  int totalHeatingUp;
+  int totalBounceAttempts;
+  int totalBounceMakes;
+  int totalIslandMakes;
 
   User({
     required this.id,
@@ -43,6 +47,10 @@ class User {
     this.losses = 0,
     this.friends = const [],
     this.unlockedTitles = const [],
+    this.totalHeatingUp = 0,
+    this.totalBounceAttempts = 0,
+    this.totalBounceMakes = 0,
+    this.totalIslandMakes = 0,
   });
 
   /// Lowercase version of username, used for case-insensitive uniqueness checks.
@@ -93,6 +101,10 @@ class User {
       'losses': losses,
       'friends': friends,
       'unlockedTitles': unlockedTitles,
+      'totalHeatingUp': totalHeatingUp,
+      'totalBounceAttempts': totalBounceAttempts,
+      'totalBounceMakes': totalBounceMakes,
+      'totalIslandMakes': totalIslandMakes,
     };
   }
 
@@ -121,6 +133,10 @@ class User {
       losses: json['losses'] ?? 0,
       friends: List<String>.from(json['friends'] ?? []),
       unlockedTitles: List<String>.from(json['unlockedTitles'] ?? []),
+      totalHeatingUp: json['totalHeatingUp'] ?? 0,
+      totalBounceAttempts: json['totalBounceAttempts'] ?? 0,
+      totalBounceMakes: json['totalBounceMakes'] ?? 0,
+      totalIslandMakes: json['totalIslandMakes'] ?? 0,
     );
   }
 
@@ -147,6 +163,10 @@ class User {
     int? losses,
     List<String>? friends,
     List<String>? unlockedTitles,
+    int? totalHeatingUp,
+    int? totalBounceAttempts,
+    int? totalBounceMakes,
+    int? totalIslandMakes,
   }) {
     return User(
       id: id, // The ID never changes in this example
@@ -166,6 +186,10 @@ class User {
       losses: losses ?? this.losses,
       friends: friends ?? this.friends,
       unlockedTitles: unlockedTitles ?? this.unlockedTitles,
+      totalHeatingUp: totalHeatingUp ?? this.totalHeatingUp,
+      totalBounceAttempts: totalBounceAttempts ?? this.totalBounceAttempts,
+      totalBounceMakes: totalBounceMakes ?? this.totalBounceMakes,
+      totalIslandMakes: totalIslandMakes ?? this.totalIslandMakes,
     );
   }
 }

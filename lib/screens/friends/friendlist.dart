@@ -171,7 +171,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                     ),
                     const SizedBox(height: 10),
                     ElevatedButton(
-                      onPressed: _scanQRCode,
+                      onPressed: () => _scanQRCode(ctx),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         shape: RoundedRectangleBorder(
@@ -190,7 +190,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                         TextButton(
                           child: Text('Cancel',
                               style: TextStyle(color: c.onBackground)),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => Navigator.of(ctx).pop(),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
@@ -198,7 +198,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                             final String friendId = controller.text.trim();
                             if (friendId.isNotEmpty) {
                               _addFriend(context, friendId, userProvider);
-                              Navigator.of(context).pop();
+                              Navigator.of(ctx).pop();
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -225,7 +225,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   /// Scans a QR code and attempts to add a friend with the scanned ID.
-  Future<void> _scanQRCode() async {
+  Future<void> _scanQRCode(BuildContext dialogCtx) async {
     try {
       final result = await BarcodeScanner.scan();
       if (!mounted) return;
@@ -233,7 +233,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         await _addFriend(context, result.rawContent, userProvider);
         if (!mounted) return;
-        Navigator.of(context).pop(); // close the dialog
+        Navigator.of(dialogCtx).pop(); // close the dialog
       }
     } catch (e) {
       _showErrorSnackBar('Error scanning QR code: $e');
@@ -687,12 +687,14 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 radius: 38,
                 backgroundColor: Colors.black,
                 child: ClipOval(
-                  child: SvgPicture.asset(
-                    user.mapAvatarKeyToAsset(),
-                    width: 76,
-                    height: 76,
-                    fit: BoxFit.cover,
-                  ),
+                  child: user.mapAvatarKeyToAsset().isEmpty
+                      ? const Icon(Icons.person, size: 38, color: Colors.white54)
+                      : SvgPicture.asset(
+                          user.mapAvatarKeyToAsset(),
+                          width: 76,
+                          height: 76,
+                          fit: BoxFit.cover,
+                        ),
                 ),
               ),
             ),
@@ -783,16 +785,19 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   Widget _buildFriendAvatar(User friend, {double radius = 30}) {
+    final assetPath = friend.mapAvatarKeyToAsset();
     return CircleAvatar(
       radius: radius,
       backgroundColor: Colors.white24,
       child: ClipOval(
-        child: SvgPicture.asset(
-          friend.mapAvatarKeyToAsset(),
-          fit: BoxFit.cover,
-          width: radius * 2,
-          height: radius * 2,
-        ),
+        child: assetPath.isEmpty
+            ? Icon(Icons.person, size: radius, color: Colors.white54)
+            : SvgPicture.asset(
+                assetPath,
+                fit: BoxFit.cover,
+                width: radius * 2,
+                height: radius * 2,
+              ),
       ),
     );
   }

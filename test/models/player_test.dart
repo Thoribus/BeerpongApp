@@ -12,6 +12,24 @@ void main() {
       expect(player.onFire, 1);
     });
 
+    test('heatingUp increments when consecutiveHits reaches exactly 2', () {
+      final player = Player(name: 'Alice');
+      player.incrementHitThisRound(); // consecutiveHits = 1 → no heatingUp
+      expect(player.heatingUp, 0);
+      player.incrementHitThisRound(); // consecutiveHits = 2 → heatingUp!
+      expect(player.heatingUp, 1);
+      player.incrementHitThisRound(); // consecutiveHits = 3 → no extra heatingUp
+      expect(player.heatingUp, 1);
+    });
+
+    test('heatingUp does not increment after a miss resets streak', () {
+      final player = Player(name: 'Alice');
+      player.incrementHitThisRound();
+      player.incrementMisses(); // resets consecutiveHits
+      player.incrementHitThisRound(); // back to 1, not 2
+      expect(player.heatingUp, 0);
+    });
+
     test('isOnFire returns false when below 3 consecutive hits', () {
       final player = Player(name: 'Alice');
       player.consecutiveHits = 2;
@@ -32,7 +50,7 @@ void main() {
       expect(player.misses, 1);
     });
 
-    test('toJson / fromJson round-trip preserves all stats', () {
+    test('toJson / fromJson round-trip preserves all stats including new fields', () {
       final player = Player(
         name: 'Bob',
         score: 5.0,
@@ -42,6 +60,10 @@ void main() {
         cupsHit: [0, 2, 4],
         consecutiveHits: 1,
         onFire: 2,
+        heatingUp: 3,
+        bounceAttempts: 4,
+        bounceMakes: 2,
+        islandMakes: 1,
         lastCupHit: true,
         isWinner: true,
       );
@@ -56,16 +78,24 @@ void main() {
       expect(restored.airballs, 1);
       expect(restored.cupsHit, [0, 2, 4]);
       expect(restored.onFire, 2);
+      expect(restored.heatingUp, 3);
+      expect(restored.bounceAttempts, 4);
+      expect(restored.bounceMakes, 2);
+      expect(restored.islandMakes, 1);
       expect(restored.lastCupHit, isTrue);
       expect(restored.isWinner, isTrue);
     });
 
     test('mergedWith combines stats from two players with same name', () {
-      final p1 = Player(name: 'Alice', score: 3, throws: 5);
-      final p2 = Player(name: 'Alice', score: 2, throws: 4);
+      final p1 = Player(name: 'Alice', score: 3, throws: 5, heatingUp: 1, bounceAttempts: 2, bounceMakes: 1, islandMakes: 1);
+      final p2 = Player(name: 'Alice', score: 2, throws: 4, heatingUp: 2, bounceAttempts: 1, bounceMakes: 1, islandMakes: 0);
       final merged = p1.mergedWith(p2);
       expect(merged.score, 5);
       expect(merged.throws, 9);
+      expect(merged.heatingUp, 3);
+      expect(merged.bounceAttempts, 3);
+      expect(merged.bounceMakes, 2);
+      expect(merged.islandMakes, 1);
     });
 
     test('mergedWith throws on name mismatch', () {

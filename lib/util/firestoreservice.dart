@@ -77,6 +77,9 @@ class FirestoreService {
     String? startingTeam,
     bool? timestamp,
     String? tournamentId,
+    bool? endedAt,
+    int? roundCount,
+    int? cupsRemainingWinner,
   }) =>
       GameRepository.instance.updateGameDoc(
         gameId,
@@ -90,6 +93,9 @@ class FirestoreService {
         startingTeam: startingTeam,
         timestamp: timestamp,
         tournamentId: tournamentId,
+        endedAt: endedAt,
+        roundCount: roundCount,
+        cupsRemainingWinner: cupsRemainingWinner,
       );
 
   Stream<DocumentSnapshot> getGameDocStream(String gameId) =>
@@ -108,8 +114,10 @@ class FirestoreService {
       GameRepository.instance.retrieveUserStatsWithDate(user);
 
   Future<String> addEvent(
-          String gameId, String eventType, Team team, Player? player) =>
-      GameRepository.instance.addEvent(gameId, eventType, team, player);
+          String gameId, String eventType, Team team, Player? player,
+          {int? roundNumber}) =>
+      GameRepository.instance
+          .addEvent(gameId, eventType, team, player, roundNumber: roundNumber);
 
   Future<List<GameEvent>> getEvents(String gameId) =>
       GameRepository.instance.getEvents(gameId);
