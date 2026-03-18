@@ -64,5 +64,72 @@ void main() {
       expect(updated.losses, 1); // unchanged
       expect(updated.username, 'Alice'); // unchanged
     });
+
+    test('toJson / fromJson round-trip preserves totalIslandAttempts and totalDeathCupHits', () {
+      final user = User(
+        id: 'u1',
+        username: 'Alice',
+        totalIslandAttempts: 5,
+        totalDeathCupHits: 3,
+      );
+      final json = user.toJson();
+      final restored = User.fromJson({...json, 'id': 'u1'});
+      expect(restored.totalIslandAttempts, 5);
+      expect(restored.totalDeathCupHits, 3);
+    });
+
+    test('fromJson defaults totalIslandAttempts and totalDeathCupHits to 0 when absent', () {
+      final restored = User.fromJson({'id': 'u1', 'username': 'Bob'});
+      expect(restored.totalIslandAttempts, 0);
+      expect(restored.totalDeathCupHits, 0);
+    });
+
+    test('copyWith updates totalIslandAttempts independently', () {
+      final user = User(id: 'u1', username: 'Alice', totalIslandAttempts: 2, totalDeathCupHits: 1);
+      final updated = user.copyWith(totalIslandAttempts: 7);
+      expect(updated.totalIslandAttempts, 7);
+      expect(updated.totalDeathCupHits, 1); // unchanged
+    });
+
+    group('lastGameAt', () {
+      test('defaults to null when absent from JSON', () {
+        final user = User.fromJson({'id': 'u1', 'username': 'Bob'});
+        expect(user.lastGameAt, isNull);
+      });
+
+      test('parses from ISO-8601 string', () {
+        final dt = DateTime.utc(2026, 3, 10, 12);
+        final user = User.fromJson({
+          'id': 'u1',
+          'username': 'Bob',
+          'lastGameAt': dt.toIso8601String(),
+        });
+        expect(user.lastGameAt, dt);
+      });
+
+      test('toJson does not include lastGameAt (server-managed field)', () {
+        final user = User(
+          id: 'u1',
+          username: 'Alice',
+          lastGameAt: DateTime.utc(2026, 3, 10),
+        );
+        expect(user.toJson().containsKey('lastGameAt'), isFalse);
+      });
+
+      test('copyWith preserves lastGameAt when not provided', () {
+        final dt = DateTime.utc(2026, 3, 10);
+        final user = User(id: 'u1', username: 'Alice', lastGameAt: dt);
+        final updated = user.copyWith(username: 'Alice2');
+        expect(updated.lastGameAt, dt);
+      });
+
+      test('copyWith can update lastGameAt', () {
+        final original = DateTime.utc(2026, 3, 1);
+        final newer = DateTime.utc(2026, 3, 15);
+        final user = User(id: 'u1', username: 'Alice', lastGameAt: original);
+        final updated = user.copyWith(lastGameAt: newer);
+        expect(updated.lastGameAt, newer);
+      });
+    });
   });
 }

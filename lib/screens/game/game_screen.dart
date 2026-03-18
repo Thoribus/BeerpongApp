@@ -138,6 +138,7 @@ class GameScreenState extends State<GameScreen> {
       (player) {
         _ctrl.addEvent('Island Shot', _ctrl.currentTeam, player);
         _ctrl.saveCurrentState();
+        player.islandAttempts++;
         if (player == _ctrl.currentIslandShooter) {
           // Island power shot: hit the cup + a random bonus cup
           _ctrl.toggleIslandCups();
@@ -228,6 +229,7 @@ class GameScreenState extends State<GameScreen> {
   void _handleDeathCup(Player player) {
     _ctrl.addEvent('Death Cup', _ctrl.currentTeam, player);
     _ctrl.saveCurrentState();
+    player.deathCupHits++;
     // One throw triggered the death cup — count it once, not per remaining cup.
     _ctrl.incrementPlayerThrows(player);
     _ctrl.incrementPlayerHitThisRound(player);
@@ -264,6 +266,7 @@ class GameScreenState extends State<GameScreen> {
 
     if (_ctrl.tournamentId != '') {
       if (updatedUser != null) await _ctrl.updateCurrentUser(updatedUser);
+      if (!mounted) return;
       final match = TournamentMatch(
         id: _ctrl.id,
         team1: _ctrl.team1,

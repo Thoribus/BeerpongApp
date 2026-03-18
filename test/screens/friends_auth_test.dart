@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
-import 'package:beerpongapp/screens/friends/friendlist.dart';
+import 'package:beerpongapp/screens/friends/friends_screen.dart';
 
 Widget _buildTestApp(UserProvider userProvider) {
   return ChangeNotifierProvider<UserProvider>.value(

@@ -133,6 +133,12 @@ class FirestoreService {
   Future<void> addFriend(String userId, String friendId) =>
       FriendRepository.instance.addFriend(userId, friendId);
 
+  Future<void> removeFriend(String userId, String friendId) =>
+      FriendRepository.instance.removeFriend(userId, friendId);
+
+  Future<List<User>> searchUsers(String query, {required String excludeId}) =>
+      UserRepository.instance.searchUsers(query, excludeId: excludeId);
+
   // ----- Invitations -----
 
   Future<String> sendGameInvitation({

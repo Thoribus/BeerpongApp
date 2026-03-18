@@ -110,14 +110,20 @@ class NotificationService {
   // ---------------------------------------------------------------------------
 
   Future<void> _saveToken(String userId) async {
-    final token = await _messaging.getToken();
-    if (token == null) {
-      AppLogger.warning('[FCM] getToken() returned null — skipping save');
-      return;
+    try {
+      final token = await _messaging.getToken();
+      if (token == null) {
+        AppLogger.warning('[FCM] getToken() returned null — skipping save');
+        return;
+      }
+      _currentToken = token;
+      await FirestoreService.instance.saveFcmToken(userId, token);
+      AppLogger.info('[FCM] Token saved for user $userId');
+    } catch (e) {
+      // On iOS without Push Notifications entitlement (e.g. personal dev team),
+      // getToken() throws apns-token-not-set. Log and continue gracefully.
+      AppLogger.warning('[FCM] getToken() failed — $e');
     }
-    _currentToken = token;
-    await FirestoreService.instance.saveFcmToken(userId, token);
-    AppLogger.info('[FCM] Token saved for user $userId');
   }
 
   void _listenToTokenRefresh(String userId) {

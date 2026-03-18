@@ -16,11 +16,12 @@ Widget _buildTestApp(UserProvider userProvider) {
 
 void main() {
   group('AccountScreen logout', () {
-    testWidgets('shows sign-in button when user is null', (tester) async {
+    testWidgets('shows nothing when user is null', (tester) async {
       final provider = UserProvider();
       await tester.pumpWidget(_buildTestApp(provider));
-      expect(find.text('Sign in with Google'), findsOneWidget);
+      // AccountScreen returns SizedBox.shrink() when no user is signed in
       expect(find.byIcon(Icons.logout), findsNothing);
+      expect(find.text('Sign in with Google'), findsNothing);
     });
 
     testWidgets('shows logout icon when user is signed in', (tester) async {

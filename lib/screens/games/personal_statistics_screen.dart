@@ -29,10 +29,209 @@ class PersonalStatisticsScreen extends StatelessWidget {
             _buildHeroCard(context),
             const SizedBox(height: 14),
             _buildRecentFormStrip(context),
+            const SizedBox(height: 10),
+            _buildDerivedChipsRow(context),
             const SizedBox(height: 14),
             _buildStatsGrid(context),
+            const SizedBox(height: 14),
+            _buildCareerHighlights(context),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Derived stats chips row ───────────────────────────────────────────────
+
+  bool _userWon(GameStatistics g) => g.winningTeam == 'Team 1'
+      ? g.team1Players.any((p) => p.name == user.username)
+      : g.team2Players.any((p) => p.name == user.username);
+
+  ({int length, bool isWin}) _currentStreak() {
+    final sorted = [...games]..sort((a, b) => b.date.compareTo(a.date));
+    if (sorted.isEmpty) return (length: 0, isWin: true);
+    final firstWon = _userWon(sorted.first);
+    int count = 0;
+    for (final g in sorted) {
+      if (_userWon(g) == firstWon) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return (length: count, isWin: firstWon);
+  }
+
+  Widget _buildDerivedChipsRow(BuildContext context) {
+    final totalGames = user.wins + user.losses;
+    if (totalGames == 0) return const SizedBox.shrink();
+
+    final avgCups = user.totalScore / totalGames;
+    final avgThrows = user.totalThrows / totalGames;
+    final streak = _currentStreak();
+    final streakLabel =
+        '${streak.length}-game ${streak.isWin ? 'W' : 'L'} streak';
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _derivedChip(context, Icons.sports_bar, avgCups.toStringAsFixed(1),
+              'cups/game', Colors.orange),
+          const SizedBox(width: 8),
+          _derivedChip(context, Icons.track_changes,
+              avgThrows.toStringAsFixed(1), 'throws/game', Colors.blue),
+          const SizedBox(width: 8),
+          _derivedChip(
+            context,
+            streak.isWin
+                ? Icons.trending_up
+                : Icons.trending_down,
+            streakLabel,
+            '',
+            streak.isWin ? Colors.green : Colors.redAccent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _derivedChip(BuildContext context, IconData icon, String value,
+      String label, Color color) {
+    final c = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            label.isEmpty ? value : '$value $label',
+            style: TextStyle(
+              color: c.onBackground,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Career Highlights ─────────────────────────────────────────────────────
+
+  Widget _buildCareerHighlights(BuildContext context) {
+    final c = AppColors.of(context);
+    if (games.isEmpty) return const SizedBox.shrink();
+
+    // Best single-game hit rate
+    double bestHitRate = 0;
+    int mostCupsInGame = 0;
+    for (final g in games) {
+      final all = g.team1Players + g.team2Players;
+      final p = all.where((p) => p.name == user.username).firstOrNull;
+      if (p == null) continue;
+      final hr = p.throws > 0 ? p.score / p.throws * 100 : 0.0;
+      if (hr > bestHitRate) bestHitRate = hr;
+      if (p.score.toInt() > mostCupsInGame) mostCupsInGame = p.score.toInt();
+    }
+
+    // Longest win streak
+    final sorted = [...games]..sort((a, b) => a.date.compareTo(b.date));
+    int longestStreak = 0;
+    int current = 0;
+    for (final g in sorted) {
+      if (_userWon(g)) {
+        current++;
+        if (current > longestStreak) longestStreak = current;
+      } else {
+        current = 0;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'CAREER HIGHLIGHTS',
+          style: TextStyle(
+            color: c.subtle,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _highlightCard(
+                context,
+                '$longestStreak',
+                'Best Streak',
+                Colors.amber,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _highlightCard(
+                context,
+                '${bestHitRate.toStringAsFixed(0)}%',
+                'Best Hit Rate',
+                Colors.blue,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _highlightCard(
+                context,
+                '$mostCupsInGame',
+                'Most Cups',
+                Colors.deepOrange,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _highlightCard(
+      BuildContext context, String value, String label, Color accent) {
+    final c = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(top: BorderSide(color: accent, width: 3)),
+        boxShadow: const [
+          BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              color: c.onBackground,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(color: c.subtle, fontSize: 10),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -161,7 +360,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
   Widget _buildRecentFormStrip(BuildContext context) {
     final c = AppColors.of(context);
     final sorted = [...games]..sort((a, b) => b.date.compareTo(a.date));
-    final recent = sorted.take(8).toList();
+    final recent = sorted.take(10).toList();
     if (recent.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -177,13 +376,14 @@ class PersonalStatisticsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Row(
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
           children: recent.map((g) {
             final won = g.winningTeam == 'Team 1'
                 ? g.team1Players.any((p) => p.name == user.username)
                 : g.team2Players.any((p) => p.name == user.username);
             return Container(
-              margin: const EdgeInsets.only(right: 6),
               width: 30,
               height: 30,
               decoration: BoxDecoration(
@@ -216,7 +416,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
     );
   }
 
-  // ── 8-tile stat grid ─────────────────────────────────────────────────────
+  // ── 12-tile stat grid ────────────────────────────────────────────────────
 
   Widget _buildStatsGrid(BuildContext context) {
     final totalGames = user.wins + user.losses;
@@ -228,6 +428,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
     final bouncePct = user.totalBounceAttempts > 0
         ? (user.totalBounceMakes / user.totalBounceAttempts * 100)
         : 0.0;
+    final avgCups = totalGames > 0 ? user.totalScore / totalGames : 0.0;
 
     final tiles = [
       _TileDef(Icons.emoji_events, 'Wins', '${user.wins}', Colors.amber),
@@ -268,16 +469,40 @@ class PersonalStatisticsScreen extends StatelessWidget {
         '${user.totalIslandMakes}',
         Colors.teal,
       ),
+      _TileDef(
+        Icons.shield_outlined,
+        'Defended',
+        '${user.defended}',
+        Colors.indigo,
+      ),
+      _TileDef(
+        Icons.thermostat,
+        'Heating Up',
+        '${user.totalHeatingUp}',
+        Colors.orange.shade300,
+      ),
+      _TileDef(
+        Icons.flag_rounded,
+        'Last Cup',
+        '${user.hitLastCup}',
+        Colors.amber,
+      ),
+      _TileDef(
+        Icons.bar_chart,
+        'Avg/Game',
+        avgCups.toStringAsFixed(1),
+        Colors.grey,
+      ),
     ];
 
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
+        crossAxisCount: 3,
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
-        childAspectRatio: 0.85,
+        childAspectRatio: 1.0,
       ),
       itemCount: tiles.length,
       itemBuilder: (context, i) => _buildTile(context, tiles[i]),

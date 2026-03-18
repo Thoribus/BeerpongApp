@@ -63,7 +63,9 @@ void main() {
         heatingUp: 3,
         bounceAttempts: 4,
         bounceMakes: 2,
+        islandAttempts: 3,
         islandMakes: 1,
+        deathCupHits: 2,
         lastCupHit: true,
         isWinner: true,
       );
@@ -81,21 +83,58 @@ void main() {
       expect(restored.heatingUp, 3);
       expect(restored.bounceAttempts, 4);
       expect(restored.bounceMakes, 2);
+      expect(restored.islandAttempts, 3);
       expect(restored.islandMakes, 1);
+      expect(restored.deathCupHits, 2);
       expect(restored.lastCupHit, isTrue);
       expect(restored.isWinner, isTrue);
     });
 
+    test('fromJson defaults islandAttempts and deathCupHits to 0 when absent', () {
+      final json = {
+        'name': 'Alice', 'score': 2.0, 'throws': 5, 'misses': 1,
+        'airballs': 0, 'hitThisRound': 0, 'cupsHit': [],
+        'lastCupHit': false, 'isWinner': false,
+      };
+      final p = Player.fromJson(json);
+      expect(p.islandAttempts, 0);
+      expect(p.deathCupHits, 0);
+    });
+
     test('mergedWith combines stats from two players with same name', () {
-      final p1 = Player(name: 'Alice', score: 3, throws: 5, heatingUp: 1, bounceAttempts: 2, bounceMakes: 1, islandMakes: 1);
-      final p2 = Player(name: 'Alice', score: 2, throws: 4, heatingUp: 2, bounceAttempts: 1, bounceMakes: 1, islandMakes: 0);
+      final p1 = Player(
+        name: 'Alice', score: 3, throws: 5, heatingUp: 1,
+        bounceAttempts: 2, bounceMakes: 1,
+        islandAttempts: 2, islandMakes: 1, deathCupHits: 1,
+      );
+      final p2 = Player(
+        name: 'Alice', score: 2, throws: 4, heatingUp: 2,
+        bounceAttempts: 1, bounceMakes: 1,
+        islandAttempts: 1, islandMakes: 0, deathCupHits: 0,
+      );
       final merged = p1.mergedWith(p2);
       expect(merged.score, 5);
       expect(merged.throws, 9);
       expect(merged.heatingUp, 3);
       expect(merged.bounceAttempts, 3);
       expect(merged.bounceMakes, 2);
+      expect(merged.islandAttempts, 3);
       expect(merged.islandMakes, 1);
+      expect(merged.deathCupHits, 1);
+    });
+
+    test('clone preserves islandAttempts and deathCupHits', () {
+      final p = Player(name: 'Alice', islandAttempts: 4, deathCupHits: 2);
+      final cloned = p.clone();
+      expect(cloned.islandAttempts, 4);
+      expect(cloned.deathCupHits, 2);
+    });
+
+    test('copyWithResetStats zeroes islandAttempts and deathCupHits', () {
+      final p = Player(name: 'Alice', islandAttempts: 3, deathCupHits: 1);
+      final reset = p.copyWithResetStats();
+      expect(reset.islandAttempts, 0);
+      expect(reset.deathCupHits, 0);
     });
 
     test('mergedWith throws on name mismatch', () {

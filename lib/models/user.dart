@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Represents the user in your Beer Pong app.
 class User {
   final String id;
@@ -27,7 +29,14 @@ class User {
   int totalHeatingUp;
   int totalBounceAttempts;
   int totalBounceMakes;
+  int totalIslandAttempts;
   int totalIslandMakes;
+  int totalDeathCupHits;
+
+  /// Timestamp of the last completed game. Written by the server via
+  /// [FieldValue.serverTimestamp()] in [UserRepository.saveGame].
+  /// Used by the friends list to show "last seen" without extra queries.
+  DateTime? lastGameAt;
 
   User({
     required this.id,
@@ -50,7 +59,10 @@ class User {
     this.totalHeatingUp = 0,
     this.totalBounceAttempts = 0,
     this.totalBounceMakes = 0,
+    this.totalIslandAttempts = 0,
     this.totalIslandMakes = 0,
+    this.totalDeathCupHits = 0,
+    this.lastGameAt,
   });
 
   /// Lowercase version of username, used for case-insensitive uniqueness checks.
@@ -101,10 +113,13 @@ class User {
       'losses': losses,
       'friends': friends,
       'unlockedTitles': unlockedTitles,
+      'usernameLower': usernameLower,
       'totalHeatingUp': totalHeatingUp,
       'totalBounceAttempts': totalBounceAttempts,
       'totalBounceMakes': totalBounceMakes,
+      'totalIslandAttempts': totalIslandAttempts,
       'totalIslandMakes': totalIslandMakes,
+      'totalDeathCupHits': totalDeathCupHits,
     };
   }
 
@@ -136,7 +151,15 @@ class User {
       totalHeatingUp: json['totalHeatingUp'] ?? 0,
       totalBounceAttempts: json['totalBounceAttempts'] ?? 0,
       totalBounceMakes: json['totalBounceMakes'] ?? 0,
+      totalIslandAttempts: json['totalIslandAttempts'] ?? 0,
       totalIslandMakes: json['totalIslandMakes'] ?? 0,
+      totalDeathCupHits: json['totalDeathCupHits'] ?? 0,
+      lastGameAt: () {
+        final v = json['lastGameAt'];
+        if (v is Timestamp) return v.toDate();
+        if (v is String) return DateTime.tryParse(v);
+        return null;
+      }(),
     );
   }
 
@@ -166,10 +189,13 @@ class User {
     int? totalHeatingUp,
     int? totalBounceAttempts,
     int? totalBounceMakes,
+    int? totalIslandAttempts,
     int? totalIslandMakes,
+    int? totalDeathCupHits,
+    DateTime? lastGameAt,
   }) {
     return User(
-      id: id, // The ID never changes in this example
+      id: id,
       username: username ?? this.username,
       title: title ?? this.title,
       avatarKey: avatarKey ?? this.avatarKey,
@@ -189,7 +215,10 @@ class User {
       totalHeatingUp: totalHeatingUp ?? this.totalHeatingUp,
       totalBounceAttempts: totalBounceAttempts ?? this.totalBounceAttempts,
       totalBounceMakes: totalBounceMakes ?? this.totalBounceMakes,
+      totalIslandAttempts: totalIslandAttempts ?? this.totalIslandAttempts,
       totalIslandMakes: totalIslandMakes ?? this.totalIslandMakes,
+      totalDeathCupHits: totalDeathCupHits ?? this.totalDeathCupHits,
+      lastGameAt: lastGameAt ?? this.lastGameAt,
     );
   }
 }

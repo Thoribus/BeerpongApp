@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/auth/login_screen.dart';
 import 'package:beerpongapp/screens/friends/compare_stats_screen.dart';
-import 'package:beerpongapp/screens/friends/friendlist.dart';
+import 'package:beerpongapp/screens/friends/friends_screen.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
 import 'package:beerpongapp/screens/home/game_mode_details_screen.dart';
 import 'package:beerpongapp/screens/home/home_screen.dart';

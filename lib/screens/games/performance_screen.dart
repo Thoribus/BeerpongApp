@@ -16,7 +16,7 @@ class PerformanceScreen extends StatefulWidget {
   State<PerformanceScreen> createState() => _PerformanceScreenState();
 }
 
-enum _TimeFilter { all, last10, last5 }
+enum _TimeFilter { all, last10, last5, last3 }
 
 class _PerformanceScreenState extends State<PerformanceScreen> {
   late final Future<List<UserStatsInGame>> _statsFuture;
@@ -34,6 +34,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     return switch (_filter) {
       _TimeFilter.last10 => sorted.take(10).toList(),
       _TimeFilter.last5 => sorted.take(5).toList(),
+      _TimeFilter.last3 => sorted.take(3).toList(),
       _TimeFilter.all => sorted,
     };
   }
@@ -73,6 +74,9 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     const SizedBox(height: 16),
                     _buildSectionTitle('Cups Hit Heat Map'),
                     _buildCard(child: _buildPyramidHeatMap()),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Row Accuracy'),
+                    _buildCard(child: _buildRowAccuracyChart()),
                   ],
                 );
               },
@@ -91,6 +95,8 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         _filterChip('Last 10', _TimeFilter.last10),
         const SizedBox(width: 8),
         _filterChip('Last 5', _TimeFilter.last5),
+        const SizedBox(width: 8),
+        _filterChip('Last 3', _TimeFilter.last3),
       ],
     );
   }
@@ -183,6 +189,86 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
     return counts;
   }
 
+  Widget _buildRowAccuracyChart() {
+    final c = AppColors.of(context);
+    final counts = _countCupsHit();
+    final total = counts.reduce((a, b) => a + b);
+
+    // Row groupings: front [0-3], mid [4-6], back [7-8], apex [9]
+    final rowHits = [
+      counts[0] + counts[1] + counts[2] + counts[3],
+      counts[4] + counts[5] + counts[6],
+      counts[7] + counts[8],
+      counts[9],
+    ];
+    final rowLabels = ['Front', 'Mid', 'Back', 'Apex'];
+
+    if (total == 0) {
+      return Padding(
+        padding: const EdgeInsets.all(8),
+        child: Text('No data yet.',
+            style: TextStyle(color: c.subtle, fontSize: 13)),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: List.generate(4, (i) {
+        final pct = rowHits[i] / total;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 44,
+                child: Text(
+                  rowLabels[i],
+                  style: TextStyle(color: c.subtle, fontSize: 11),
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Container(
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: pct.clamp(0.0, 1.0),
+                      child: Container(
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 36,
+                child: Text(
+                  '${(pct * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: c.onBackground,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
   Color _getHeatColor(int count, List<int> cupCounts) {
     int minCount = cupCounts.reduce((a, b) => a < b ? a : b);
     int maxCount = cupCounts.reduce((a, b) => a > b ? a : b);
@@ -221,6 +307,15 @@ class StatisticsTable extends StatelessWidget {
     final hitRateSpots =
         _buildTrend((p) => p.throws == 0 ? 0.0 : (p.score / p.throws) * 100.0);
     final winRateSpots = _buildTrendWinRate();
+    final bounceRateSpots = _buildTrend((p) => p.bounceAttempts == 0
+        ? 0.0
+        : (p.bounceMakes / p.bounceAttempts) * 100.0);
+    final islandConversionSpots = _buildTrend((p) => p.islandAttempts == 0
+        ? 0.0
+        : (p.islandMakes / p.islandAttempts) * 100.0);
+    final defendedSpots = _buildTrend((p) => p.defended.toDouble());
+    final onFireSpots = _buildTrend((p) => p.onFire.toDouble());
+    final heatingUpSpots = _buildTrend((p) => p.heatingUp.toDouble());
 
     // 2) Compute slope-based "change" for each measure
     final scoreChange = _computeSlopeAsPercentChange(scoreSpots);
@@ -229,6 +324,22 @@ class StatisticsTable extends StatelessWidget {
     final cupsHitChange = _computeSlopeAsPercentChange(cupsHitSpots);
     final hitRateChange = _computeSlopeAsPercentChange(hitRateSpots);
     final winRateChange = _computeSlopeAsPercentChange(winRateSpots);
+    final bounceRateChange = _computeSlopeAsPercentChange(bounceRateSpots);
+    final islandConversionChange =
+        _computeSlopeAsPercentChange(islandConversionSpots);
+    final defendedChange = _computeSlopeAsPercentChange(defendedSpots);
+    final onFireChange = _computeSlopeAsPercentChange(onFireSpots);
+    final heatingUpChange = _computeSlopeAsPercentChange(heatingUpSpots);
+
+    final bounceRateLifetime = user.totalBounceAttempts > 0
+        ? (user.totalBounceMakes / user.totalBounceAttempts * 100).round()
+        : 0;
+    final islandConversionLifetime = user.totalIslandAttempts > 0
+        ? (user.totalIslandMakes / user.totalIslandAttempts * 100).round()
+        : 0;
+
+    final dates =
+        _sortByDate(userStatsList).map((e) => e.date).toList();
 
     // 3) Build the rows
     return ListView(
@@ -236,52 +347,49 @@ class StatisticsTable extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildStatRow(
-          context,
-          'Total Score',
-          user.totalScore.toInt(),
-          Icons.score,
-          scoreChange,
-          scoreSpots,
+          context, 'Total Score', user.totalScore.toInt(),
+          Icons.score, scoreChange, scoreSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Total Misses',
-          user.totalMisses,
-          Icons.close,
-          missesChange,
-          missesSpots,
+          context, 'Total Misses', user.totalMisses,
+          Icons.close, missesChange, missesSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Total Airballs',
-          user.totalAirballs,
-          Icons.air,
-          airballsChange,
-          airballsSpots,
+          context, 'Total Airballs', user.totalAirballs,
+          Icons.air, airballsChange, airballsSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Cups Hit',
-          user.cupsHit.length,
-          Icons.sports_bar,
-          cupsHitChange,
-          cupsHitSpots,
+          context, 'Cups Hit', user.cupsHit.length,
+          Icons.sports_bar, cupsHitChange, cupsHitSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Hit Rate',
-          _hitRateUserLevel(user).round(),
-          Icons.auto_fix_high,
-          hitRateChange,
-          hitRateSpots,
+          context, 'Hit Rate', _hitRateUserLevel(user).round(),
+          Icons.auto_fix_high, hitRateChange, hitRateSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Win Rate',
-          _winRateUserLevel(user).round(),
-          Icons.emoji_events,
-          winRateChange,
-          winRateSpots,
+          context, 'Win Rate', _winRateUserLevel(user).round(),
+          Icons.emoji_events, winRateChange, winRateSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Bounce Rate', bounceRateLifetime,
+          Icons.sports_tennis_rounded, bounceRateChange, bounceRateSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Island Conv.', islandConversionLifetime,
+          Icons.workspaces_outlined, islandConversionChange,
+          islandConversionSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Defended', user.defended,
+          Icons.shield_outlined, defendedChange, defendedSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'On Fire', user.onFire,
+          Icons.local_fire_department, onFireChange, onFireSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Heating Up', user.totalHeatingUp,
+          Icons.thermostat, heatingUpChange, heatingUpSpots, dates,
         ),
       ],
     );
@@ -296,6 +404,7 @@ class StatisticsTable extends StatelessWidget {
     IconData icon,
     double changePercent,
     List<FlSpot> rawData,
+    List<DateTime> dates,
   ) {
     final isPositive =
         _lessIsBetter(attribute) ? changePercent < 0 : changePercent >= 0;
@@ -357,7 +466,7 @@ class StatisticsTable extends StatelessWidget {
           ),
         ],
       ),
-      onTap: () => _showDetailChart(context, attribute, rawData),
+      onTap: () => _showDetailChart(context, attribute, rawData, dates),
     );
   }
 
@@ -372,6 +481,7 @@ class StatisticsTable extends StatelessWidget {
     BuildContext context,
     String attribute,
     List<FlSpot> rawData,
+    List<DateTime> dates,
   ) {
     final line = _createRegressionLine(rawData);
     const slopeColor = Colors.orange;
@@ -392,12 +502,39 @@ class StatisticsTable extends StatelessWidget {
                   drawVerticalLine: true,
                   drawHorizontalLine: true,
                 ),
-                titlesData: const FlTitlesData(
-                  leftTitles: AxisTitles(
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: true),
                   ),
-                  bottomTitles: AxisTitles(
+                  rightTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: dates.isNotEmpty,
+                      reservedSize: 28,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= dates.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final d = dates[idx];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '${d.day}/${d.month}',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 9,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 lineBarsData: [

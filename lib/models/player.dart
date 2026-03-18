@@ -11,7 +11,9 @@ class Player {
   List<int> cupsHit;        // List of cup indices that the player has hit
   bool lastCupHit;          // Whether the player hit the last cup
   bool islandShotUsed;      // Whether the player used an island shot
+  int islandAttempts;       // Number of island shots attempted
   int islandMakes;          // Number of island cups successfully sunk
+  int deathCupHits;         // Number of death cups triggered
   int defended;             // Number of successful defenses
   int consecutiveHits;      // Tracks consecutive hits
   int onFire;               // Times the player triggered "On Fire"
@@ -36,7 +38,9 @@ class Player {
     this.bounceAttempts = 0,
     this.bounceMakes = 0,
     this.islandShotUsed = false,
+    this.islandAttempts = 0,
     this.islandMakes = 0,
+    this.deathCupHits = 0,
     this.lastCupHit = false,
     this.user,
     this.isWinner = false,
@@ -59,7 +63,9 @@ class Player {
       ..bounceMakes = bounceMakes
       ..hitThisRound = hitThisRound
       ..islandShotUsed = islandShotUsed
+      ..islandAttempts = islandAttempts
       ..islandMakes = islandMakes
+      ..deathCupHits = deathCupHits
       ..lastCupHit = lastCupHit
       ..cupsHit = List.from(cupsHit)
       ..isWinner = isWinner
@@ -142,7 +148,9 @@ class Player {
       'cupsHit': cupsHit,
       'lastCupHit': lastCupHit,
       'islandShotUsed': islandShotUsed,
+      'islandAttempts': islandAttempts,
       'islandMakes': islandMakes,
+      'deathCupHits': deathCupHits,
       'defended': defended,
       'consecutiveHits': consecutiveHits,
       'onFire': onFire,
@@ -170,7 +178,9 @@ class Player {
       cupsHit: List<int>.from(json['cupsHit'] ?? []),
       hitThisRound: json['hitThisRound'],
       islandShotUsed: json['islandShotUsed'] ?? false,
+      islandAttempts: json['islandAttempts'] ?? 0,
       islandMakes: json['islandMakes'] ?? 0,
+      deathCupHits: json['deathCupHits'] ?? 0,
       defended: json['defended'] ?? 0,
       consecutiveHits: json['consecutiveHits'] ?? 0,
       onFire: json['onFire'] ?? 0,
@@ -208,7 +218,9 @@ class Player {
       cupsHit: [],
       lastCupHit: false,
       islandShotUsed: false,
+      islandAttempts: 0,
       islandMakes: 0,
+      deathCupHits: 0,
       defended: 0,
       consecutiveHits: 0,
       onFire: 0,
@@ -241,7 +253,9 @@ class Player {
       bounceAttempts: bounceAttempts + matchResult.bounceAttempts,
       bounceMakes: bounceMakes + matchResult.bounceMakes,
       islandShotUsed: islandShotUsed || matchResult.islandShotUsed,
+      islandAttempts: islandAttempts + matchResult.islandAttempts,
       islandMakes: islandMakes + matchResult.islandMakes,
+      deathCupHits: deathCupHits + matchResult.deathCupHits,
       lastCupHit: lastCupHit || matchResult.lastCupHit,
       isWinner: isWinner || matchResult.isWinner,
     );
@@ -269,7 +283,9 @@ extension PlayerCopyWith on Player {
       bounceAttempts: bounceAttempts,
       bounceMakes: bounceMakes,
       islandShotUsed: islandShotUsed,
+      islandAttempts: islandAttempts,
       islandMakes: islandMakes,
+      deathCupHits: deathCupHits,
       lastCupHit: lastCupHit,
     );
   }
@@ -291,7 +307,9 @@ extension PlayerCopyWith on Player {
       bounceAttempts: bounceAttempts,
       bounceMakes: bounceMakes,
       islandShotUsed: islandShotUsed,
+      islandAttempts: islandAttempts,
       islandMakes: islandMakes,
+      deathCupHits: deathCupHits,
       lastCupHit: lastCupHit,
     );
   }

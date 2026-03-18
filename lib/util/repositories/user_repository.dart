@@ -109,7 +109,10 @@ class UserRepository {
           'totalHeatingUp': FieldValue.increment(player.heatingUp),
           'totalBounceAttempts': FieldValue.increment(player.bounceAttempts),
           'totalBounceMakes': FieldValue.increment(player.bounceMakes),
+          'totalIslandAttempts': FieldValue.increment(player.islandAttempts),
           'totalIslandMakes': FieldValue.increment(player.islandMakes),
+          'totalDeathCupHits': FieldValue.increment(player.deathCupHits),
+          'lastGameAt': FieldValue.serverTimestamp(),
           for (final cupIndex in player.cupsHit)
             'cupsHitCount.$cupIndex': FieldValue.increment(1),
         });
@@ -120,6 +123,29 @@ class UserRepository {
       allPlayers.map((p) => getUser(p.user!.id)),
     );
     return updatedUsers.whereType<User>().toList();
+  }
+
+  /// Prefix-searches users by lowercase username.
+  /// Returns up to 10 results, excluding [excludeId] (the searching user).
+  Future<List<User>> searchUsers(String query,
+      {required String excludeId}) async {
+    if (query.trim().isEmpty) return [];
+    final lower = query.toLowerCase().trim();
+    try {
+      final snapshot = await _db
+          .collection('users')
+          .where('usernameLower', isGreaterThanOrEqualTo: lower)
+          .where('usernameLower', isLessThan: '$lower\uf8ff')
+          .limit(10)
+          .get();
+      return snapshot.docs
+          .map((doc) => User.fromJson({...doc.data(), 'id': doc.id}))
+          .where((u) => u.id != excludeId)
+          .toList();
+    } catch (e) {
+      AppLogger.error('Error searching users', e);
+      rethrow;
+    }
   }
 
   // ----- FCM token management -----
@@ -171,7 +197,9 @@ class UserRepository {
       totalHeatingUp: oldUser.totalHeatingUp + player.heatingUp,
       totalBounceAttempts: oldUser.totalBounceAttempts + player.bounceAttempts,
       totalBounceMakes: oldUser.totalBounceMakes + player.bounceMakes,
+      totalIslandAttempts: oldUser.totalIslandAttempts + player.islandAttempts,
       totalIslandMakes: oldUser.totalIslandMakes + player.islandMakes,
+      totalDeathCupHits: oldUser.totalDeathCupHits + player.deathCupHits,
     );
   }
 }

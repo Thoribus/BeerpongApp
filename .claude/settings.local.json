@@ -70,7 +70,14 @@
       "Bash(where firebase:*)",
       "Bash(firebase --version)",
       "Bash(npx -y firebase-tools login --no-localhost)",
-      "Bash(npx -y firebase-tools projects:list)"
+      "Bash(npx -y firebase-tools projects:list)",
+      "Bash($HOME/fvm/default/bin/flutter analyze:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/c.richter/**)",
+      "Bash(/Users/c.richter/projects/flutter/flutter/bin/flutter analyze:*)",
+      "Bash(/Users/c.richter/projects/flutter/flutter/bin/flutter test:*)",
+      "Bash(export PATH=\"$PATH:$HOME/fvm/default/bin:$HOME/.pub-cache/bin\")",
+      "Bash(/Users/c.richter/development/flutter/bin/flutter analyze:*)"
     ]
   }
 }

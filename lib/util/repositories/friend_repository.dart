@@ -56,4 +56,22 @@ class FriendRepository {
       rethrow;
     }
   }
+
+  Future<void> removeFriend(String userId, String friendId) async {
+    try {
+      final userDoc = _db.collection('users').doc(userId);
+      final friendDoc = _db.collection('users').doc(friendId);
+      await _db.runTransaction((transaction) async {
+        transaction.update(userDoc, {
+          'friends': FieldValue.arrayRemove([friendId])
+        });
+        transaction.update(friendDoc, {
+          'friends': FieldValue.arrayRemove([userId])
+        });
+      });
+    } catch (e) {
+      AppLogger.error('Error removing friend', e);
+      rethrow;
+    }
+  }
 }

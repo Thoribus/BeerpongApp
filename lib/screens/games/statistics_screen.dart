@@ -15,6 +15,7 @@ import '../../models/player.dart';
 //----------------------------------------------
 
 //-------------Screens--------------------------
+import '../games/breakdown_screen.dart';
 import '../games/performance_screen.dart';
 import '../games/personal_statistics_screen.dart';
 //----------------------------------------------
@@ -64,7 +65,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildTabPageSelector() {
     return AppTabBar(
-      tabs: const ['Stats', 'Performance', 'History'],
+      tabs: const ['Stats', 'Performance', 'Breakdown', 'History'],
       selectedIndex: _currentTabPage,
       onTabSelected: (index) {
         setState(() => _currentTabPage = index);
@@ -137,6 +138,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               children: [
                 PersonalStatisticsScreen(user: user, games: games),
                 PerformanceScreen(user: user),
+                BreakdownScreen(user: user, games: games),
                 _buildHistoryTab(),
               ],
             ),
@@ -197,61 +199,82 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               size: 18,
             ),
           ),
-          title: Row(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  DateFormat('dd.MM.yy').format(game.date),
-                  style: TextStyle(
-                    color: c.onBackground,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              // Cup scores
-              Text(
-                '$t1Cups',
-                style: TextStyle(
-                  color: game.winningTeam == 'Team 1'
-                      ? Colors.greenAccent
-                      : Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child:
-                    Text('–', style: TextStyle(color: c.subtle, fontSize: 13)),
-              ),
-              Text(
-                '$t2Cups',
-                style: TextStyle(
-                  color: game.winningTeam == 'Team 2'
-                      ? Colors.greenAccent
-                      : Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Your hit rate badge
-              if (userPlayer != null)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '$userHitRate%',
-                    style: const TextStyle(
-                      color: Colors.amber,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      DateFormat('dd.MM.yy').format(game.date),
+                      style: TextStyle(
+                        color: c.onBackground,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                  ),
+                  // Cup scores
+                  Text(
+                    '$t1Cups',
+                    style: TextStyle(
+                      color: game.winningTeam == 'Team 1'
+                          ? Colors.greenAccent
+                          : Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text('–',
+                        style: TextStyle(color: c.subtle, fontSize: 13)),
+                  ),
+                  Text(
+                    '$t2Cups',
+                    style: TextStyle(
+                      color: game.winningTeam == 'Team 2'
+                          ? Colors.greenAccent
+                          : Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Hit rate badge
+                  if (userPlayer != null)
+                    _metaBadge('$userHitRate%', Colors.amber),
+                ],
+              ),
+              // Metadata badges row
+              if (game.durationSeconds != null ||
+                  game.gameMode != 'Single Game' ||
+                  (game.cupsRemainingWinner != null &&
+                      game.cupsRemainingWinner! >= 5) ||
+                  game.specialRules.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Wrap(
+                    spacing: 4,
+                    runSpacing: 2,
+                    children: [
+                      if (game.durationSeconds != null)
+                        _metaBadge(
+                          _formatDuration(game.durationSeconds!),
+                          Colors.blueGrey,
+                        ),
+                      if (game.gameMode != 'Single Game')
+                        _metaBadge(game.gameMode, Colors.purple),
+                      if (game.cupsRemainingWinner != null &&
+                          game.cupsRemainingWinner! >= 5)
+                        _metaBadge(
+                          '+${game.cupsRemainingWinner}',
+                          Colors.green,
+                        ),
+                      ...game.specialRules.map(
+                        (r) => _metaBadge(r, Colors.teal),
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -265,24 +288,56 @@ class StatisticsScreenState extends State<StatisticsScreen> {
             onPressed: () => context.push('/spectate-live/${game.id}'),
           ),
           children: [
-            _buildInlinePlayerTable(context, 'Team 1', game.team1Players),
+            _buildInlinePlayerTable(context, 'Team 1', game.team1Players, mvpName: _mvpName(game)),
             const SizedBox(height: 8),
-            _buildInlinePlayerTable(context, 'Team 2', game.team2Players),
+            _buildInlinePlayerTable(context, 'Team 2', game.team2Players, mvpName: _mvpName(game)),
           ],
         ),
       ),
     );
   }
 
+  /// Returns the name of the player with the highest hit rate in [game].
+  String _mvpName(GameStatistics game) {
+    final all = game.team1Players + game.team2Players;
+    Player? mvp;
+    double best = -1;
+    for (final p in all) {
+      final rate = p.throws > 0 ? p.score / p.throws : 0.0;
+      if (rate > best) {
+        best = rate;
+        mvp = p;
+      }
+    }
+    return mvp?.name ?? '';
+  }
+
   Widget _buildInlinePlayerTable(
-      BuildContext context, String teamLabel, List<Player> players) {
+      BuildContext context, String teamLabel, List<Player> players,
+      {String mvpName = ''}) {
     final c = AppColors.of(context);
     final headerStyle =
         TextStyle(color: c.subtle, fontSize: 10, fontWeight: FontWeight.w600);
     final cellStyle = TextStyle(color: c.onBackground, fontSize: 11);
 
+    const double col0 = 96; // Player name
+    const double col1 = 36; // Score
+    const double col2 = 42; // Throws
+    const double col3 = 36; // Miss
+    const double col4 = 38; // Hit%
+    const double col5 = 52; // Bounce
+    const double col6 = 28; // 🔥
+    const double col7 = 30; // Def
+
+    Widget cell(Widget child, double width,
+            {TextAlign align = TextAlign.center}) =>
+        SizedBox(width: width, child: child);
+
+    Widget headerCell(String label, double width) =>
+        cell(Text(label, style: headerStyle, textAlign: TextAlign.center), width);
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(teamLabel,
             style: TextStyle(
@@ -291,71 +346,215 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.3)),
         const SizedBox(height: 4),
-        Table(
-          columnWidths: const {
-            0: FlexColumnWidth(2.5),
-            1: FlexColumnWidth(1),
-            2: FlexColumnWidth(1),
-            3: FlexColumnWidth(1),
-            4: FlexColumnWidth(1.2),
-          },
-          children: [
-            TableRow(
-              children: [
-                Text('Player', style: headerStyle),
-                Text('Score', style: headerStyle, textAlign: TextAlign.center),
-                Text('Throws', style: headerStyle, textAlign: TextAlign.center),
-                Text('Miss', style: headerStyle, textAlign: TextAlign.center),
-                Text('Hit%', style: headerStyle, textAlign: TextAlign.center),
-              ],
-            ),
-            ...players.map((p) {
-              final hr = p.throws > 0
-                  ? '${(p.score / p.throws * 100).toStringAsFixed(0)}%'
-                  : '--';
-              return TableRow(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Text(
-                      p.name.length > 12
-                          ? '${p.name.substring(0, 12)}…'
-                          : p.name,
-                      style: cellStyle,
-                      overflow: TextOverflow.ellipsis,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header row
+              Row(children: [
+                cell(Text('Player', style: headerStyle), col0),
+                headerCell('Score', col1),
+                headerCell('Throws', col2),
+                headerCell('Miss', col3),
+                headerCell('Hit%', col4),
+                headerCell('Bounce', col5),
+                headerCell('🔥', col6),
+                headerCell('Def', col7),
+              ]),
+              const SizedBox(height: 2),
+              // Data rows
+              ...players.map((p) {
+                final hr = p.throws > 0
+                    ? '${(p.score / p.throws * 100).toStringAsFixed(0)}%'
+                    : '--';
+                final bounce = p.bounceAttempts > 0
+                    ? '${p.bounceMakes}/${p.bounceAttempts}'
+                    : '--';
+                final isMvp = p.name == mvpName && mvpName.isNotEmpty;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(children: [
+                    SizedBox(
+                      width: col0,
+                      child: Row(
+                        children: [
+                          if (isMvp)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 3),
+                              child: Text('⭐',
+                                  style: TextStyle(fontSize: 10)),
+                            ),
+                          Expanded(
+                            child: Text(
+                              p.name.length > 11
+                                  ? '${p.name.substring(0, 11)}…'
+                                  : p.name,
+                              style: isMvp
+                                  ? cellStyle.copyWith(
+                                      color: Colors.amber,
+                                      fontWeight: FontWeight.bold)
+                                  : cellStyle,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Text('${p.score.toInt()}',
-                      style: cellStyle, textAlign: TextAlign.center),
-                  Text('${p.throws}',
-                      style: cellStyle, textAlign: TextAlign.center),
-                  Text('${p.misses}',
-                      style: cellStyle, textAlign: TextAlign.center),
-                  Text(hr,
-                      style: cellStyle.copyWith(color: Colors.amber),
-                      textAlign: TextAlign.center),
-                ],
-              );
-            }),
-          ],
+                    cell(Text('${p.score.toInt()}',
+                        style: cellStyle, textAlign: TextAlign.center), col1),
+                    cell(Text('${p.throws}',
+                        style: cellStyle, textAlign: TextAlign.center), col2),
+                    cell(Text('${p.misses}',
+                        style: cellStyle, textAlign: TextAlign.center), col3),
+                    cell(Text(hr,
+                        style: cellStyle.copyWith(color: Colors.amber),
+                        textAlign: TextAlign.center), col4),
+                    cell(Text(bounce,
+                        style: cellStyle.copyWith(color: Colors.purple.shade200),
+                        textAlign: TextAlign.center), col5),
+                    cell(Text('${p.onFire}',
+                        style: cellStyle.copyWith(color: Colors.deepOrange),
+                        textAlign: TextAlign.center), col6),
+                    cell(Text('${p.defended}',
+                        style: cellStyle.copyWith(color: Colors.indigo.shade200),
+                        textAlign: TextAlign.center), col7),
+                  ]),
+                );
+              }),
+            ],
+          ),
         ),
       ],
     );
   }
 
+  Widget _metaBadge(String label, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+
+  String _formatDuration(int seconds) {
+    final m = seconds ~/ 60;
+    return '${m}min';
+  }
+
+  // ── Streak helpers ────────────────────────────────────────────────────────
+
+  bool _userWonGame(GameStatistics g) => g.winningTeam == 'Team 1'
+      ? g.team1Players.any((p) => p.name == user.username)
+      : g.team2Players.any((p) => p.name == user.username);
+
+  ({int length, bool isWin}) _computeCurrentStreak() {
+    final sorted = [...games]..sort((a, b) => b.date.compareTo(a.date));
+    if (sorted.isEmpty) return (length: 0, isWin: true);
+    final firstWon = _userWonGame(sorted.first);
+    int count = 0;
+    for (final g in sorted) {
+      if (_userWonGame(g) == firstWon) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return (length: count, isWin: firstWon);
+  }
+
+  // ── Streak banner ─────────────────────────────────────────────────────────
+
+  Widget _buildStreakBanner() {
+    final c = AppColors.of(context);
+    final streak = _computeCurrentStreak();
+    final sorted = [...games]..sort((a, b) => b.date.compareTo(a.date));
+    final last10 = sorted.take(10).toList();
+    final wins10 = last10.where(_userWonGame).length;
+    final losses10 = last10.length - wins10;
+    final pct10 = last10.isEmpty ? 0 : (wins10 / last10.length * 100).round();
+
+    final streakColor = streak.isWin ? Colors.green : Colors.redAccent;
+    final streakLabel =
+        '${streak.length}${streak.isWin ? 'W' : 'L'} streak';
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: streakColor.withValues(alpha: 0.35), width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            streak.isWin ? Icons.local_fire_department : Icons.trending_down,
+            color: streakColor,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Current streak: $streakLabel',
+              style: TextStyle(
+                color: c.onBackground,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Last ${last10.length}:  ${wins10}W  ${losses10}L',
+                style: TextStyle(color: c.onBackground, fontSize: 12),
+              ),
+              Text(
+                '$pct10%',
+                style: TextStyle(
+                  color: wins10 >= losses10 ? Colors.green : Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHistoryTab() {
+    final c = AppColors.of(context);
     if (games.isEmpty) {
       return Center(
         child: Text(
           'No games recorded yet.',
-          style: TextStyle(color: AppColors.of(context).subtle),
+          style: TextStyle(color: c.subtle),
         ),
       );
     }
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: games.length,
-      itemBuilder: (context, index) => _buildGameCard(games[index], index),
+    return Column(
+      children: [
+        _buildStreakBanner(),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 4, bottom: 8),
+            itemCount: games.length,
+            itemBuilder: (context, index) => _buildGameCard(games[index], index),
+          ),
+        ),
+      ],
     );
   }
 }
