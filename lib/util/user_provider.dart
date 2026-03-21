@@ -52,6 +52,22 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Re-reads the current user from Firestore and updates local state WITHOUT
+  /// writing back to Firestore. Use this after operations that update Firestore
+  /// directly (e.g. star purchases via transactions) to sync the local cache.
+  ///
+  /// Safe to call after closing a dialog — [notifyListeners] only rebuilds
+  /// widgets, it does not trigger GoRouter navigation redirects unless a route
+  /// guard's condition actually changes.
+  Future<void> refreshUser() async {
+    if (_user == null) return;
+    final refreshed = await FirestoreService.instance.getUser(_user!.id);
+    if (refreshed != null) {
+      _user = refreshed;
+      notifyListeners();
+    }
+  }
+
   /// Claims [newUsername] atomically in Firestore and updates the local user.
   Future<void> claimUsername(String newUsername) async {
     if (_user == null) return;

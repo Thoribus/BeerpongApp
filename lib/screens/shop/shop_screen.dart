@@ -3,6 +3,8 @@ import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'avatar_shop_view.dart';
+import 'user_card_shop_view.dart';
+import 'in_game_shop_view.dart';
 import '../../widgets/app_tab_bar.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -45,10 +47,10 @@ class ShopScreenState extends State<ShopScreen> {
             _currentTabPage = index;
           });
         },
-        children: [
+        children: const [
           AvatarShopScreen(),
-          const Center(child: Text('User Card Shop — coming soon')),
-          const Center(child: Text('In-Game Shop — coming soon')),
+          UserCardShopView(),
+          InGameShopView(),
         ],
       ),
     );
