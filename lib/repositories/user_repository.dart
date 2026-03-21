@@ -122,6 +122,16 @@ class UserRepository {
         final newStreak = player.isWinner ? prevStreak + 1 : 0;
         final newBest = newStreak > prevBest ? newStreak : prevBest;
 
+        final starsGained = LevelSystem.calculateStarsGained(
+          isWinner: player.isWinner,
+          cupsHit: player.score.toInt(),
+          onFire: player.onFire,
+          bounceMakes: player.bounceMakes,
+          islandMakes: player.islandMakes,
+          deathCupHits: player.deathCupHits,
+          hitLastCup: player.lastCupHit,
+        );
+
         final xpGained = LevelSystem.calculateXpGained(
           isWinner: player.isWinner,
           cupsHit: player.score.toInt(),
@@ -155,6 +165,7 @@ class UserRepository {
           'totalIslandMakes': FieldValue.increment(player.islandMakes),
           'totalDeathCupHits': FieldValue.increment(player.deathCupHits),
           'xp': FieldValue.increment(xpGained),
+          'stars': FieldValue.increment(starsGained),
           'currentWinStreak': newStreak,
           'bestWinStreak': newBest,
           if (isPerfect) 'perfectGames': FieldValue.increment(1),
@@ -170,6 +181,38 @@ class UserRepository {
       allPlayers.map((p) => getUser(p.user!.id)),
     );
     return updatedUsers.whereType<User>().toList();
+  }
+
+  /// Atomically deducts [amount] stars and records [itemId] as purchased.
+  /// Throws [InsufficientStarsException] if the current balance is too low.
+  Future<void> spendStars({
+    required String userId,
+    required int amount,
+    required String itemId,
+  }) async {
+    final userRef = _db.collection('users').doc(userId);
+    await _db.runTransaction((tx) async {
+      final snap = await tx.get(userRef);
+      final current = (snap.data()?['stars'] as num?)?.toInt() ?? 0;
+      if (current < amount) {
+        throw InsufficientStarsException(
+            'Need $amount ⭐ but only have $current');
+      }
+      tx.update(userRef, {
+        'stars': FieldValue.increment(-amount),
+        'purchasedItems': FieldValue.arrayUnion([itemId]),
+      });
+    });
+  }
+
+  /// Atomically credits [amount] stars to the user (rewarded ad reward).
+  Future<void> creditStars({
+    required String userId,
+    required int amount,
+  }) async {
+    await _db.collection('users').doc(userId).update({
+      'stars': FieldValue.increment(amount),
+    });
   }
 
   /// Prefix-searches users by lowercase username.
@@ -257,4 +300,14 @@ class UserRepository {
       perfectGames: oldUser.perfectGames + (isPerfect ? 1 : 0),
     );
   }
+}
+
+/// Thrown by [UserRepository.spendStars] when the user's star balance is
+/// insufficient to complete the purchase.
+class InsufficientStarsException implements Exception {
+  final String message;
+  const InsufficientStarsException(this.message);
+
+  @override
+  String toString() => 'InsufficientStarsException: $message';
 }

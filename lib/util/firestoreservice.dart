@@ -60,6 +60,20 @@ class FirestoreService {
   }) =>
       UserRepository.instance.saveGame(team1: team1, team2: team2);
 
+  Future<void> spendStars({
+    required String userId,
+    required int amount,
+    required String itemId,
+  }) =>
+      UserRepository.instance
+          .spendStars(userId: userId, amount: amount, itemId: itemId);
+
+  Future<void> creditStars({
+    required String userId,
+    required int amount,
+  }) =>
+      UserRepository.instance.creditStars(userId: userId, amount: amount);
+
   static User mapPlayerToUser(Player player) =>
       UserRepository.mapPlayerToUser(player);
 

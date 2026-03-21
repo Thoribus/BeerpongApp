@@ -83,6 +83,29 @@ class LevelSystem {
   // XP award
   // ---------------------------------------------------------------------------
 
+  /// Stars earned for one game result. Mirrors [calculateXpGained] in structure.
+  ///
+  /// Typical range: 25–80 ⭐, so a 100-star shop item takes ~2–5 games.
+  static int calculateStarsGained({
+    required bool isWinner,
+    required int cupsHit,
+    required int onFire,
+    required int bounceMakes,
+    required int islandMakes,
+    required int deathCupHits,
+    required bool hitLastCup,
+  }) {
+    int stars = 10; // participation
+    if (isWinner) stars += 20;
+    stars += cupsHit * 2;
+    stars += onFire * 5;
+    stars += bounceMakes * 8;
+    stars += islandMakes * 10;
+    stars += deathCupHits * 15;
+    if (hitLastCup) stars += 30;
+    return stars;
+  }
+
   /// XP earned for one game result.
   static int calculateXpGained({
     required bool isWinner,
