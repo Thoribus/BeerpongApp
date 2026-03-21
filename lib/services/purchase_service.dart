@@ -41,12 +41,16 @@ class PurchaseService extends ChangeNotifier {
     'com.tecbreak.beerpongapp.stars_200',
     'com.tecbreak.beerpongapp.stars_600',
     'com.tecbreak.beerpongapp.stars_1500',
+    'com.tecbreak.beerpongapp.supporter_pack',
   };
+
+  static const String supporterPackId = 'com.tecbreak.beerpongapp.supporter_pack';
 
   static const Map<String, int> _starAmounts = {
     'com.tecbreak.beerpongapp.stars_200': 200,
     'com.tecbreak.beerpongapp.stars_600': 600,
     'com.tecbreak.beerpongapp.stars_1500': 1500,
+    'com.tecbreak.beerpongapp.supporter_pack': 300,
   };
 
   final _eventController = StreamController<PurchaseEvent>.broadcast();
@@ -111,8 +115,12 @@ class PurchaseService extends ChangeNotifier {
     if (_isPurchasing || !_isAvailable) return;
     _isPurchasing = true;
     notifyListeners();
-    await InAppPurchase.instance
-        .buyConsumable(purchaseParam: PurchaseParam(productDetails: product));
+    final param = PurchaseParam(productDetails: product);
+    if (product.id == supporterPackId) {
+      await InAppPurchase.instance.buyNonConsumable(purchaseParam: param);
+    } else {
+      await InAppPurchase.instance.buyConsumable(purchaseParam: param);
+    }
     // _isPurchasing is reset in _handleUpdate once the stream fires.
   }
 

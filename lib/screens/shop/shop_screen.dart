@@ -175,9 +175,28 @@ class _GetStarsSheetState extends State<_GetStarsSheet> {
     if (!mounted) return;
     if (event is PurchaseSuccess) {
       context.read<UserProvider>().refreshUser();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You got ${event.starsAwarded} ⭐!')),
-      );
+      if (event.productId == PurchaseService.supporterPackId) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Thank you! ⭐'),
+            content: const Text(
+              'You\'re now a Supporter! Your Supporter badge is live on your profile, '
+              'and you\'ve received 300 ⭐ bonus stars.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Awesome!'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You got ${event.starsAwarded} ⭐!')),
+        );
+      }
     } else if (event is PurchaseFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Purchase failed: ${event.message}')),
@@ -280,6 +299,8 @@ class _GetStarsSheetState extends State<_GetStarsSheet> {
             // ── IAP packs ───────────────────────────────────────────────────
             Builder(builder: (context) {
               final ps = context.watch<PurchaseService>();
+              final isSupporter =
+                  context.watch<UserProvider>().user?.isSupporter ?? false;
               if (ps.isAvailable && ps.products.isNotEmpty) {
                 return Column(
                   children: [
@@ -287,6 +308,9 @@ class _GetStarsSheetState extends State<_GetStarsSheet> {
                       _IapPackRow(
                         product: product,
                         isPurchasing: ps.isPurchasing,
+                        isAlreadyOwned: product.id ==
+                                PurchaseService.supporterPackId &&
+                            isSupporter,
                         onTap: () => ps.buy(product),
                       ),
                       if (product != ps.products.last)
@@ -420,11 +444,13 @@ class _IapPackRow extends StatelessWidget {
   const _IapPackRow({
     required this.product,
     required this.isPurchasing,
+    required this.isAlreadyOwned,
     required this.onTap,
   });
 
   final dynamic product; // ProductDetails from in_app_purchase
   final bool isPurchasing;
+  final bool isAlreadyOwned;
   final VoidCallback onTap;
 
   Color get _iconColor {
@@ -461,13 +487,32 @@ class _IapPackRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$stars ⭐${isBestValue ? '  ·  Best value' : ''}',
+                    product.id == PurchaseService.supporterPackId
+                        ? '$stars ⭐  ·  Supporter badge on your profile'
+                        : '$stars ⭐${isBestValue ? '  ·  Best value' : ''}',
                     style: TextStyle(color: c.subtle, fontSize: 12),
                   ),
                 ],
               ),
             ),
-            if (isPurchasing)
+            if (isAlreadyOwned)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                ),
+                child: const Text(
+                  'You\'re a Supporter ✓',
+                  style: TextStyle(
+                    color: Colors.amber,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            else if (isPurchasing)
               SizedBox(
                 width: 20,
                 height: 20,

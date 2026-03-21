@@ -58,7 +58,11 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
   List<String> get _availableTitles {
     final unlocked = widget.user.unlockedTitles;
-    return unlocked.isNotEmpty ? unlocked : ['Beginner', 'Pro Player', 'Champion'];
+    final base = unlocked.isNotEmpty ? unlocked : ['Beginner', 'Pro Player', 'Champion'];
+    if (widget.user.isSupporter && !base.contains('Supporter')) {
+      return [...base, 'Supporter'];
+    }
+    return base;
   }
 
   bool get _canSave =>

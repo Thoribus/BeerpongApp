@@ -59,6 +59,10 @@ class User {
   /// IDs of shop items the user has purchased (distinct from level-gated unlocks).
   List<String> purchasedItems;
 
+  /// True when the user has purchased the Supporter Pack.
+  /// Set server-side by [validatePurchase] — never trust a client-supplied value.
+  bool isSupporter;
+
   /// Timestamp of the last completed game. Written by the server via
   /// [FieldValue.serverTimestamp()] in [UserRepository.saveGame].
   /// Used by the friends list to show "last seen" without extra queries.
@@ -101,6 +105,7 @@ class User {
     this.unlockedAchievementStages = const {},
     this.stars = 0,
     this.purchasedItems = const [],
+    this.isSupporter = false,
     this.lastGameAt,
     this.activeGameId,
   });
@@ -168,6 +173,7 @@ class User {
       'unlockedAchievementStages': unlockedAchievementStages,
       'stars': stars,
       'purchasedItems': purchasedItems,
+      'isSupporter': isSupporter,
     };
   }
 
@@ -215,6 +221,7 @@ class User {
       ),
       stars: json['stars'] ?? 0,
       purchasedItems: List<String>.from(json['purchasedItems'] ?? []),
+      isSupporter: json['isSupporter'] as bool? ?? false,
       lastGameAt: () {
         final v = json['lastGameAt'];
         if (v is Timestamp) return v.toDate();
@@ -262,6 +269,7 @@ class User {
     Map<String, int>? unlockedAchievementStages,
     int? stars,
     List<String>? purchasedItems,
+    bool? isSupporter,
     DateTime? lastGameAt,
     String? activeGameId,
   }) {
@@ -298,6 +306,7 @@ class User {
           unlockedAchievementStages ?? this.unlockedAchievementStages,
       stars: stars ?? this.stars,
       purchasedItems: purchasedItems ?? this.purchasedItems,
+      isSupporter: isSupporter ?? this.isSupporter,
       lastGameAt: lastGameAt ?? this.lastGameAt,
       activeGameId: activeGameId ?? this.activeGameId,
     );

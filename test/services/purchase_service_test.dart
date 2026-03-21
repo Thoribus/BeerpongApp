@@ -33,8 +33,15 @@ void main() {
       );
     });
 
-    test('productIds has exactly three entries', () {
-      expect(PurchaseService.productIds.length, 3);
+    test('productIds has exactly four entries (three star packs + supporter pack)', () {
+      expect(PurchaseService.productIds.length, 4);
+    });
+
+    test('productIds contains supporter pack', () {
+      expect(
+        PurchaseService.productIds,
+        contains(PurchaseService.supporterPackId),
+      );
     });
   });
 

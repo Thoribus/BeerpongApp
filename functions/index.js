@@ -209,7 +209,10 @@ const STAR_AMOUNTS = {
   "com.tecbreak.beerpongapp.stars_200": 200,
   "com.tecbreak.beerpongapp.stars_600": 600,
   "com.tecbreak.beerpongapp.stars_1500": 1500,
+  "com.tecbreak.beerpongapp.supporter_pack": 300, // bonus stars included with pack
 };
+
+const SUPPORTER_PACK_ID = "com.tecbreak.beerpongapp.supporter_pack";
 
 /**
  * Validates an Apple App Store receipt by posting to Apple's verifyReceipt endpoint.
@@ -332,7 +335,14 @@ exports.validatePurchase = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Receipt validation failed");
   }
 
-  // 4. Atomically credit stars and record the transaction.
+  // 4. Atomically credit stars (and set isSupporter for the Supporter Pack).
+  const userUpdate = {
+    stars: admin.firestore.FieldValue.increment(stars),
+  };
+  if (productId === SUPPORTER_PACK_ID) {
+    userUpdate.isSupporter = true;
+  }
+
   await db.runTransaction(async (tx) => {
     tx.set(processedRef, {
       userId,
@@ -341,13 +351,11 @@ exports.validatePurchase = onCall(async (request) => {
       starsAwarded: stars,
       processedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-    tx.update(db.collection("users").doc(userId), {
-      stars: admin.firestore.FieldValue.increment(stars),
-    });
+    tx.update(db.collection("users").doc(userId), userUpdate);
   });
 
   console.log(`validatePurchase: credited ${stars} stars to ${userId} for ${productId}`);
-  return {success: true, starsAwarded: stars};
+  return {success: true, starsAwarded: stars, isSupporter: productId === SUPPORTER_PACK_ID};
 });
 
 // ---------------------------------------------------------------------------

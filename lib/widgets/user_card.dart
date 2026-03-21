@@ -91,6 +91,36 @@ class UserCard extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if (user.isSupporter) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: Colors.amber.withValues(alpha: 0.7),
+                                width: 1),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.star_rounded,
+                                  color: Colors.amber, size: 12),
+                              SizedBox(width: 3),
+                              Text(
+                                'Supporter',
+                                style: TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 10),
