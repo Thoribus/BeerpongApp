@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:beerpongapp/services/ad_rate_limiter.dart';
 import 'package:beerpongapp/services/ad_service.dart';
+import 'package:beerpongapp/services/purchase_service.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -153,11 +156,34 @@ class _GetStarsSheet extends StatefulWidget {
 class _GetStarsSheetState extends State<_GetStarsSheet> {
   int _remaining = AdRateLimiter.dailyLimit;
   bool _isLoadingAd = false;
+  StreamSubscription<PurchaseEvent>? _purchaseSub;
 
   @override
   void initState() {
     super.initState();
     _loadRemaining();
+    _purchaseSub = context.read<PurchaseService>().events.listen(_onPurchaseEvent);
+  }
+
+  @override
+  void dispose() {
+    _purchaseSub?.cancel();
+    super.dispose();
+  }
+
+  void _onPurchaseEvent(PurchaseEvent event) {
+    if (!mounted) return;
+    if (event is PurchaseSuccess) {
+      context.read<UserProvider>().refreshUser();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You got ${event.starsAwarded} ⭐!')),
+      );
+    } else if (event is PurchaseFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Purchase failed: ${event.message}')),
+      );
+    }
+    // PurchaseCanceled — no feedback needed.
   }
 
   Future<void> _loadRemaining() async {
@@ -251,35 +277,68 @@ class _GetStarsSheetState extends State<_GetStarsSheet> {
               onTap: _remaining > 0 ? _watchAd : null,
             ),
             const Divider(height: 24),
-            // ── IAP packs (Phase 12) ────────────────────────────────────────
-            const _SheetRow(
-              icon: Icons.star_rounded,
-              iconColor: Colors.amber,
-              title: 'Starter Pack  ·  €1.99',
-              subtitle: '200 ⭐',
-              badgeLabel: 'Coming soon',
-            ),
-            const SizedBox(height: 12),
-            const _SheetRow(
-              icon: Icons.star_rounded,
-              iconColor: Colors.orange,
-              title: 'Popular Pack  ·  €4.99',
-              subtitle: '600 ⭐  ·  Best value',
-              badgeLabel: 'Coming soon',
-            ),
-            const SizedBox(height: 12),
-            const _SheetRow(
-              icon: Icons.star_rounded,
-              iconColor: Colors.deepOrange,
-              title: 'Mega Pack  ·  €9.99',
-              subtitle: '1 500 ⭐',
-              badgeLabel: 'Coming soon',
-            ),
+            // ── IAP packs ───────────────────────────────────────────────────
+            Builder(builder: (context) {
+              final ps = context.watch<PurchaseService>();
+              if (ps.isAvailable && ps.products.isNotEmpty) {
+                return Column(
+                  children: [
+                    for (final product in ps.products) ...[
+                      _IapPackRow(
+                        product: product,
+                        isPurchasing: ps.isPurchasing,
+                        onTap: () => ps.buy(product),
+                      ),
+                      if (product != ps.products.last)
+                        const SizedBox(height: 12),
+                    ],
+                  ],
+                );
+              }
+              // Fallback when store is unavailable or products not yet loaded.
+              return const Column(
+                children: [
+                  _SheetRow(
+                    icon: Icons.star_rounded,
+                    iconColor: Colors.amber,
+                    title: 'Starter Pack  ·  €1.99',
+                    subtitle: '200 ⭐',
+                    badgeLabel: 'Coming soon',
+                  ),
+                  SizedBox(height: 12),
+                  _SheetRow(
+                    icon: Icons.star_rounded,
+                    iconColor: Colors.orange,
+                    title: 'Popular Pack  ·  €4.99',
+                    subtitle: '600 ⭐  ·  Best value',
+                    badgeLabel: 'Coming soon',
+                  ),
+                  SizedBox(height: 12),
+                  _SheetRow(
+                    icon: Icons.star_rounded,
+                    iconColor: Colors.deepOrange,
+                    title: 'Mega Pack  ·  €9.99',
+                    subtitle: '1 500 ⭐',
+                    badgeLabel: 'Coming soon',
+                  ),
+                ],
+              );
+            }),
             const SizedBox(height: 20),
             Center(
               child: Text(
                 'Earn stars for free by playing games!',
                 style: TextStyle(color: c.subtle, fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: TextButton(
+                onPressed: () => context.read<PurchaseService>().restorePurchases(),
+                child: Text(
+                  'Restore Purchases',
+                  style: TextStyle(color: c.subtle, fontSize: 12),
+                ),
               ),
             ),
           ],
@@ -349,6 +408,82 @@ class _WatchVideoRow extends StatelessWidget {
               )
             else if (remaining <= 0)
               Icon(Icons.check_circle_outline, color: c.subtle, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Live IAP pack row — shows the OS-localised price and a buy button.
+class _IapPackRow extends StatelessWidget {
+  const _IapPackRow({
+    required this.product,
+    required this.isPurchasing,
+    required this.onTap,
+  });
+
+  final dynamic product; // ProductDetails from in_app_purchase
+  final bool isPurchasing;
+  final VoidCallback onTap;
+
+  Color get _iconColor {
+    final stars = PurchaseService.starsForProduct(product.id);
+    if (stars >= 1500) return Colors.deepOrange;
+    if (stars >= 600) return Colors.orange;
+    return Colors.amber;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final stars = PurchaseService.starsForProduct(product.id);
+    final isBestValue = product.id.contains('stars_600');
+
+    return InkWell(
+      onTap: isPurchasing ? null : onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(Icons.star_rounded, color: _iconColor, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${product.title.replaceAll(RegExp(r'\(.*?\)'), '').trim()}  ·  ${product.price}',
+                    style: TextStyle(
+                      color: c.onBackground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    '$stars ⭐${isBestValue ? '  ·  Best value' : ''}',
+                    style: TextStyle(color: c.subtle, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            if (isPurchasing)
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: c.subtle),
+              )
+            else
+              FilledButton(
+                onPressed: onTap,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.amber.shade700,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+                child: const Text('Buy'),
+              ),
           ],
         ),
       ),

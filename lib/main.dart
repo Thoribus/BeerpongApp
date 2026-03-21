@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:beerpongapp/services/ad_service.dart';
 import 'package:beerpongapp/services/notification_service.dart';
+import 'package:beerpongapp/services/purchase_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +41,7 @@ Future<void> main() async {
 
   await MobileAds.instance.initialize();
   unawaited(AdService.instance.preload());
+  unawaited(PurchaseService.instance.initialize());
 
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await NotificationService.instance.initLocalNotifications();
@@ -52,26 +54,22 @@ Future<void> main() async {
   await SentryFlutter.init(
     (options) {
       options.dsn = 'https://d8383eb3dbe512aff8d55ff5335b2f87@o4511078596870144.ingest.de.sentry.io/4511078600147024';
-      // Adds request headers and IP for users, for more info visit:
-      // https://docs.sentry.io/platforms/dart/guides/flutter/data-management/data-collected/
       options.sendDefaultPii = true;
       options.enableLogs = true;
-      // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
-      // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;
-      // Configure Session Replay
       options.replay.sessionSampleRate = 0.1;
       options.replay.onErrorSampleRate = 1.0;
     },
-    appRunner: () => runApp(SentryWidget(child: 
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: userProvider),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: MyApp(userProvider: userProvider),
-    ),
-  )),
+    appRunner: () => runApp(SentryWidget(child:
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: userProvider),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider.value(value: PurchaseService.instance),
+        ],
+        child: MyApp(userProvider: userProvider),
+      ),
+    )),
   );
 }
 
@@ -84,8 +82,26 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Created once; holds a reference to userProvider for auth redirects.
   late final _router = AppRouter.createRouter(widget.userProvider);
+  StreamSubscription<PurchaseEvent>? _purchaseSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Refresh balance whenever a purchase completes — even if the sheet
+    // is no longer open.
+    _purchaseSub = PurchaseService.instance.events.listen((event) {
+      if (event is PurchaseSuccess) {
+        widget.userProvider.refreshUser();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _purchaseSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

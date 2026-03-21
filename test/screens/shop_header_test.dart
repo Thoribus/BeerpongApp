@@ -1,13 +1,29 @@
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/screens/shop/shop_screen.dart';
+import 'package:beerpongapp/services/purchase_service.dart';
+import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
-import 'package:beerpongapp/screens/shop/shop_screen.dart';
-import 'package:beerpongapp/util/user_provider.dart';
-import 'package:beerpongapp/models/user.dart';
+
+class _FakePurchaseService extends ChangeNotifier implements PurchaseService {
+  @override bool get isAvailable => false;
+  @override bool get isPurchasing => false;
+  @override List<ProductDetails> get products => const [];
+  @override Stream<PurchaseEvent> get events => const Stream.empty();
+  @override Future<void> initialize() async {}
+  @override Future<void> buy(ProductDetails p) async {}
+  @override Future<void> restorePurchases() async {}
+  @override dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
 
 Widget _buildApp(UserProvider provider) {
-  return ChangeNotifierProvider<UserProvider>.value(
-    value: provider,
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider<UserProvider>.value(value: provider),
+      ChangeNotifierProvider<PurchaseService>(create: (_) => _FakePurchaseService()),
+    ],
     child: const MaterialApp(home: ShopScreen()),
   );
 }

@@ -1,7 +1,9 @@
 /* eslint-disable max-len */
 const {onDocumentCreated, onDocumentUpdated} = require("firebase-functions/v2/firestore");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const https = require("https");
 admin.initializeApp();
 
 // ---------------------------------------------------------------------------
@@ -193,6 +195,160 @@ exports.onGameStarted = onDocumentUpdated(
       );
     },
 );
+
+// ---------------------------------------------------------------------------
+// Scheduled: expire pending invitations every 30 minutes
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Callable: validate IAP receipt and credit stars
+// ---------------------------------------------------------------------------
+
+/** Star amounts per product ID. Must match the Flutter PurchaseService. */
+const STAR_AMOUNTS = {
+  "com.tecbreak.beerpongapp.stars_200": 200,
+  "com.tecbreak.beerpongapp.stars_600": 600,
+  "com.tecbreak.beerpongapp.stars_1500": 1500,
+};
+
+/**
+ * Validates an Apple App Store receipt by posting to Apple's verifyReceipt endpoint.
+ * Set the shared secret via: firebase functions:secrets:set APPLE_SHARED_SECRET
+ * @param {string} receiptData - Base64-encoded App Store receipt.
+ * @param {string} productId - Expected product ID.
+ * @return {Promise<boolean>} True if the receipt is valid and contains the product.
+ */
+async function validateAppleReceipt(receiptData, productId) {
+  const sharedSecret = process.env.APPLE_SHARED_SECRET;
+  if (!sharedSecret) throw new HttpsError("internal", "Apple shared secret not configured");
+
+  const body = JSON.stringify({
+    "receipt-data": receiptData,
+    "password": sharedSecret,
+    "exclude-old-transactions": true,
+  });
+
+  const postToApple = (url) => new Promise((resolve, reject) => {
+    const req = https.request(url, {method: "POST", headers: {"Content-Type": "application/json"}}, (res) => {
+      let data = "";
+      res.on("data", (chunk) => data += chunk);
+      res.on("end", () => resolve(JSON.parse(data)));
+    });
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+
+  // Try production first; fall back to sandbox (status 21007).
+  let response = await postToApple("https://buy.itunes.apple.com/verifyReceipt");
+  if (response.status === 21007) {
+    response = await postToApple("https://sandbox.itunes.apple.com/verifyReceipt");
+  }
+
+  if (response.status !== 0) return false;
+
+  const receipts = response.latest_receipt_info || [];
+  return receipts.some((r) => r.product_id === productId);
+}
+
+/**
+ * Validates a Google Play purchase token.
+ * Requires a service account key stored as a secret:
+ *   firebase functions:secrets:set GOOGLE_SERVICE_ACCOUNT_KEY
+ * The value should be the full JSON key file stringified.
+ * @param {string} purchaseToken - The purchase token from the client.
+ * @param {string} productId - The product ID to validate against.
+ * @return {Promise<boolean>} True if the purchase is valid.
+ */
+async function validateGooglePurchase(purchaseToken, productId) {
+  // Uses the Google APIs Node.js client (googleapis) if available.
+  // Add "googleapis": "^144.0.0" to functions/package.json to enable.
+  try {
+    // eslint-disable-next-line
+    const {google} = require("googleapis");
+    const keyJson = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+    if (!keyJson) throw new HttpsError("internal", "Google service account not configured");
+
+    const key = JSON.parse(keyJson);
+    const auth = new google.auth.GoogleAuth({
+      credentials: key,
+      scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+    });
+    const androidPublisher = google.androidpublisher({version: "v3", auth});
+    const result = await androidPublisher.purchases.products.get({
+      packageName: "com.tecbreak.beerpongapp",
+      productId,
+      token: purchaseToken,
+    });
+    // purchaseState 0 = Purchased, 1 = Cancelled, 2 = Pending
+    return result.data.purchaseState === 0;
+  } catch (e) {
+    console.error("validateGooglePurchase error:", e.message);
+    return false;
+  }
+}
+
+exports.validatePurchase = onCall(async (request) => {
+  // 1. Require authentication.
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Must be signed in to purchase");
+  }
+
+  const {productId, transactionId, receiptData, platform} = request.data;
+  const userId = request.auth.uid;
+
+  if (!productId || !transactionId || !receiptData || !platform) {
+    throw new HttpsError("invalid-argument", "Missing required fields");
+  }
+
+  const stars = STAR_AMOUNTS[productId];
+  if (!stars) {
+    throw new HttpsError("invalid-argument", `Unknown product: ${productId}`);
+  }
+
+  const db = admin.firestore();
+
+  // 2. Idempotency — prevent the same transaction from being credited twice.
+  const processedRef = db.collection("processedPurchases").doc(
+      `${platform}_${transactionId}`,
+  );
+  const processed = await processedRef.get();
+  if (processed.exists) {
+    console.log(`validatePurchase: already processed ${transactionId}`);
+    return {success: true, starsAwarded: stars, alreadyProcessed: true};
+  }
+
+  // 3. Validate receipt with the appropriate store.
+  let valid = false;
+  if (platform === "ios") {
+    valid = await validateAppleReceipt(receiptData, productId);
+  } else if (platform === "android") {
+    valid = await validateGooglePurchase(receiptData, productId);
+  } else {
+    throw new HttpsError("invalid-argument", `Unknown platform: ${platform}`);
+  }
+
+  if (!valid) {
+    throw new HttpsError("invalid-argument", "Receipt validation failed");
+  }
+
+  // 4. Atomically credit stars and record the transaction.
+  await db.runTransaction(async (tx) => {
+    tx.set(processedRef, {
+      userId,
+      productId,
+      platform,
+      starsAwarded: stars,
+      processedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+    tx.update(db.collection("users").doc(userId), {
+      stars: admin.firestore.FieldValue.increment(stars),
+    });
+  });
+
+  console.log(`validatePurchase: credited ${stars} stars to ${userId} for ${productId}`);
+  return {success: true, starsAwarded: stars};
+});
 
 // ---------------------------------------------------------------------------
 // Scheduled: expire pending invitations every 30 minutes
