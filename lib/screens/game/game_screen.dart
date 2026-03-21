@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -122,7 +123,7 @@ class GameScreenState extends State<GameScreen> {
     await DialogHelpers.showSelectionDialog(
       context,
       'Select Player',
-      _ctrl.currentTeam.currentPlayers.where((p) => !p.islandShotUsed).toList(),
+      _ctrl.currentTeam.currentPlayers.where((p) => p.islandAttempts == 0).toList(),
       (player) {
         _ctrl.saveCurrentState();
         _ctrl.selectIslandShooter(player);
@@ -138,7 +139,6 @@ class GameScreenState extends State<GameScreen> {
       (player) {
         _ctrl.addEvent('Island Shot', _ctrl.currentTeam, player);
         _ctrl.saveCurrentState();
-        player.islandAttempts++;
         if (player == _ctrl.currentIslandShooter) {
           // Island power shot: hit the cup + a random bonus cup
           _ctrl.toggleIslandCups();
@@ -261,6 +261,12 @@ class GameScreenState extends State<GameScreen> {
 
     await GamePersistence.clearGameState(false);
     final updatedUser = await _ctrl.saveGameStatistics();
+
+    // Clear the in-progress game marker for all registered players.
+    for (final p in [..._ctrl.team1.players, ..._ctrl.team2.players]) {
+      final uid = p.user?.id;
+      if (uid != null) unawaited(FirestoreService.instance.clearActiveGameId(uid));
+    }
 
     if (!mounted) return;
 

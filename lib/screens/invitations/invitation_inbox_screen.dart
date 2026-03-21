@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/route_args.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -86,7 +87,7 @@ class _InvitationCardState extends State<_InvitationCard> {
       InvitationStatus.accepted.name,
     ));
     if (!mounted) return;
-    context.go('/waiting', extra: WaitingArgs(
+    context.go(AppRoutes.waiting, extra: WaitingArgs(
       gameId: widget.invitation.gameId,
       hostName: widget.invitation.fromUsername,
       invitationId: widget.invitation.id,

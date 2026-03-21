@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:beerpongapp/util/app_logger.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/route_args.dart';
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -225,13 +226,13 @@ class NotificationService {
     AppLogger.info('[FCM route] type=$type');
     switch (type) {
       case 'game_invitation':
-        AppRouter.router.go('/invitations');
+        AppRouter.router.go(AppRoutes.invitations);
       case 'invitation_accepted':
       case 'invitation_declined':
         // The lobby's Firestore stream already updated the slot UI while the
         // host was in GameModeDetailsScreen. If they tapped the notification
         // from outside the app, bring them home.
-        AppRouter.router.go('/home');
+        AppRouter.router.go(AppRoutes.home);
       case 'game_started':
         final gameId = data['gameId'] ?? '';
         final hostName = data['hostName'] ?? '';

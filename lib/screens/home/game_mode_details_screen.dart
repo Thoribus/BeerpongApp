@@ -277,6 +277,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
 
   Future<void> _onStartGame() async {
     if (_gameCtrl!.gameId == null) return;
+    final hostId = Provider.of<UserProvider>(context, listen: false).user?.id;
     final chosenTeam = await _showStartingTeamDialog();
     if (chosenTeam == null) return;
 
@@ -284,7 +285,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
       await FirestoreService.instance
           .updateInvitationGameId(inviteId, _gameCtrl!.gameId!);
     }
-    await _gameCtrl!.startGame(chosenTeam);
+    await _gameCtrl!.startGame(chosenTeam, hostUserId: hostId);
     if (!mounted) return;
 
     context.pushReplacement(

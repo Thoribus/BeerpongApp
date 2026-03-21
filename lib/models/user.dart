@@ -27,16 +27,41 @@ class User {
   List<String> friends;
   List<String> unlockedTitles;
   int totalHeatingUp;
-  int totalBounceAttempts;
-  int totalBounceMakes;
-  int totalIslandAttempts;
-  int totalIslandMakes;
-  int totalDeathCupHits;
+  int bounceAttempts;
+  int bounceMakes;
+  int islandAttempts;
+  int islandMakes;
+  int deathCupHits;
+
+  /// XP earned across all games. Drives the level system.
+  int xp;
+
+  /// Games won in a row right now. Reset to 0 on any loss.
+  int currentWinStreak;
+
+  /// All-time best consecutive-win streak.
+  int bestWinStreak;
+
+  /// Games completed with zero misses.
+  int perfectGames;
+
+  /// Games played after 23:00 local time.
+  int nightGames;
+
+  /// Highest achievement stage unlocked per achievement ID.
+  /// e.g. `{'cups_hit': 2, 'on_fire': 1}` — 0 = locked, 1 = Bronze, …, 4 = Diamond.
+  /// Written by [AchievementEngine.checkAndGrantTitles] after each game.
+  Map<String, int> unlockedAchievementStages;
 
   /// Timestamp of the last completed game. Written by the server via
   /// [FieldValue.serverTimestamp()] in [UserRepository.saveGame].
   /// Used by the friends list to show "last seen" without extra queries.
   DateTime? lastGameAt;
+
+  /// The Firestore game document ID of an in-progress game the user is
+  /// currently playing. Set when the host starts a game; cleared when the game
+  /// ends. Used by the friends list to surface a "Watch" button.
+  String? activeGameId;
 
   User({
     required this.id,
@@ -57,12 +82,19 @@ class User {
     this.friends = const [],
     this.unlockedTitles = const [],
     this.totalHeatingUp = 0,
-    this.totalBounceAttempts = 0,
-    this.totalBounceMakes = 0,
-    this.totalIslandAttempts = 0,
-    this.totalIslandMakes = 0,
-    this.totalDeathCupHits = 0,
+    this.bounceAttempts = 0,
+    this.bounceMakes = 0,
+    this.islandAttempts = 0,
+    this.islandMakes = 0,
+    this.deathCupHits = 0,
+    this.xp = 0,
+    this.currentWinStreak = 0,
+    this.bestWinStreak = 0,
+    this.perfectGames = 0,
+    this.nightGames = 0,
+    this.unlockedAchievementStages = const {},
     this.lastGameAt,
+    this.activeGameId,
   });
 
   /// Lowercase version of username, used for case-insensitive uniqueness checks.
@@ -82,10 +114,10 @@ class User {
   /// Flat list of cup positions hit, reconstructed from counts. Used by legacy stats screens.
   List<int> get cupsHit {
     final result = <int>[];
-    cupsHitCount.forEach((k, count) {
+    cupsHitCount.forEach((k, hitCount) {
       final idx = int.tryParse(k);
       if (idx != null) {
-        for (var i = 0; i < count; i++) {
+        for (var i = 0; i < hitCount; i++) {
           result.add(idx);
         }
       }
@@ -115,11 +147,17 @@ class User {
       'unlockedTitles': unlockedTitles,
       'usernameLower': usernameLower,
       'totalHeatingUp': totalHeatingUp,
-      'totalBounceAttempts': totalBounceAttempts,
-      'totalBounceMakes': totalBounceMakes,
-      'totalIslandAttempts': totalIslandAttempts,
-      'totalIslandMakes': totalIslandMakes,
-      'totalDeathCupHits': totalDeathCupHits,
+      'totalBounceAttempts': bounceAttempts,
+      'totalBounceMakes': bounceMakes,
+      'totalIslandAttempts': islandAttempts,
+      'totalIslandMakes': islandMakes,
+      'totalDeathCupHits': deathCupHits,
+      'xp': xp,
+      'currentWinStreak': currentWinStreak,
+      'bestWinStreak': bestWinStreak,
+      'perfectGames': perfectGames,
+      'nightGames': nightGames,
+      'unlockedAchievementStages': unlockedAchievementStages,
     };
   }
 
@@ -149,17 +187,29 @@ class User {
       friends: List<String>.from(json['friends'] ?? []),
       unlockedTitles: List<String>.from(json['unlockedTitles'] ?? []),
       totalHeatingUp: json['totalHeatingUp'] ?? 0,
-      totalBounceAttempts: json['totalBounceAttempts'] ?? 0,
-      totalBounceMakes: json['totalBounceMakes'] ?? 0,
-      totalIslandAttempts: json['totalIslandAttempts'] ?? 0,
-      totalIslandMakes: json['totalIslandMakes'] ?? 0,
-      totalDeathCupHits: json['totalDeathCupHits'] ?? 0,
+      bounceAttempts: json['totalBounceAttempts'] ?? 0,
+      bounceMakes: json['totalBounceMakes'] ?? 0,
+      islandAttempts: json['totalIslandAttempts'] ?? 0,
+      islandMakes: json['totalIslandMakes'] ?? 0,
+      deathCupHits: json['totalDeathCupHits'] ?? 0,
+      xp: json['xp'] ?? 0,
+      currentWinStreak: json['currentWinStreak'] ?? 0,
+      bestWinStreak: json['bestWinStreak'] ?? 0,
+      perfectGames: json['perfectGames'] ?? 0,
+      nightGames: json['nightGames'] ?? 0,
+      unlockedAchievementStages: Map<String, int>.from(
+        (json['unlockedAchievementStages'] as Map?)?.map(
+              (k, v) => MapEntry(k.toString(), (v as num).toInt()),
+            ) ??
+            {},
+      ),
       lastGameAt: () {
         final v = json['lastGameAt'];
         if (v is Timestamp) return v.toDate();
         if (v is String) return DateTime.tryParse(v);
         return null;
       }(),
+      activeGameId: json['activeGameId'] as String?,
     );
   }
 
@@ -187,12 +237,19 @@ class User {
     List<String>? friends,
     List<String>? unlockedTitles,
     int? totalHeatingUp,
-    int? totalBounceAttempts,
-    int? totalBounceMakes,
-    int? totalIslandAttempts,
-    int? totalIslandMakes,
-    int? totalDeathCupHits,
+    int? bounceAttempts,
+    int? bounceMakes,
+    int? islandAttempts,
+    int? islandMakes,
+    int? deathCupHits,
+    int? xp,
+    int? currentWinStreak,
+    int? bestWinStreak,
+    int? perfectGames,
+    int? nightGames,
+    Map<String, int>? unlockedAchievementStages,
     DateTime? lastGameAt,
+    String? activeGameId,
   }) {
     return User(
       id: id,
@@ -213,12 +270,20 @@ class User {
       friends: friends ?? this.friends,
       unlockedTitles: unlockedTitles ?? this.unlockedTitles,
       totalHeatingUp: totalHeatingUp ?? this.totalHeatingUp,
-      totalBounceAttempts: totalBounceAttempts ?? this.totalBounceAttempts,
-      totalBounceMakes: totalBounceMakes ?? this.totalBounceMakes,
-      totalIslandAttempts: totalIslandAttempts ?? this.totalIslandAttempts,
-      totalIslandMakes: totalIslandMakes ?? this.totalIslandMakes,
-      totalDeathCupHits: totalDeathCupHits ?? this.totalDeathCupHits,
+      bounceAttempts: bounceAttempts ?? this.bounceAttempts,
+      bounceMakes: bounceMakes ?? this.bounceMakes,
+      islandAttempts: islandAttempts ?? this.islandAttempts,
+      islandMakes: islandMakes ?? this.islandMakes,
+      deathCupHits: deathCupHits ?? this.deathCupHits,
+      xp: xp ?? this.xp,
+      currentWinStreak: currentWinStreak ?? this.currentWinStreak,
+      bestWinStreak: bestWinStreak ?? this.bestWinStreak,
+      perfectGames: perfectGames ?? this.perfectGames,
+      nightGames: nightGames ?? this.nightGames,
+      unlockedAchievementStages:
+          unlockedAchievementStages ?? this.unlockedAchievementStages,
       lastGameAt: lastGameAt ?? this.lastGameAt,
+      activeGameId: activeGameId ?? this.activeGameId,
     );
   }
 }

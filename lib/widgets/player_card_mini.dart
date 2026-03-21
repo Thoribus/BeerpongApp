@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/screens/profile/achievements_screen.dart';
+import 'package:beerpongapp/util/level_system.dart';
 
 /// A compact player card for use inside the game screen.
 ///
@@ -38,6 +39,8 @@ class PlayerCardMini extends StatelessWidget {
     final titleColor = hasTitle
         ? AchievementsScreen.getColorForUnlockedTitle(user.title, user)
         : Colors.white54;
+    final level = LevelSystem.levelFromXp(user.xp);
+    final tier = LevelSystem.tierForLevel(level);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
@@ -89,6 +92,31 @@ class PlayerCardMini extends StatelessWidget {
                     ],
                   ),
                 ),
+                // Level badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: tier.color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: tier.color.withValues(alpha: 0.6)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.bolt, color: tier.color, size: 10),
+                      const SizedBox(width: 2),
+                      Text(
+                        'Lv $level',
+                        style: TextStyle(
+                          color: tier.color,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
                 _ScoreBadge(score: player.score.toInt()),
               ],
             ),

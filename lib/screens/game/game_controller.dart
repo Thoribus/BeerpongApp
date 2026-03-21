@@ -85,10 +85,12 @@ class GameController extends ChangeNotifier {
     islandShotActive = map['islandShotActive'] ?? false;
     invitations = List<String>.from(map['invitations']);
     selectedRules = Map<String, bool>.from(map['selectedRules']);
+    tournamentId = map['tournamentId'] ?? '';
     currentTeam = isTeamOneTurn ? team1 : team2;
     currentTeam.currentPlayers = currentTeam.rotatePlayers();
     notifyListeners();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIslandBackgroundColor());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _updateIslandBackgroundColor());
   }
 
   Future<void> persistIfNotEnded() async {
@@ -156,8 +158,10 @@ class GameController extends ChangeNotifier {
 
     for (final cup in currentTeam.cups) {
       if (cup.index == index || !cup.isVisible) continue;
-      final renderBox1 = cup.key.currentContext?.findRenderObject() as RenderBox?;
-      final renderBox2 = targetCup.key.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox1 =
+          cup.key.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox2 =
+          targetCup.key.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox1 != null && renderBox2 != null) {
         final distance = _calculateDistance(
           renderBox1.localToGlobal(Offset.zero),
@@ -205,7 +209,8 @@ class GameController extends ChangeNotifier {
   }
 
   void checkBitchCup(int index, BuildContext ctx) {
-    if (currentTeam.cups.every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
+    if (currentTeam.cups
+            .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
         index == 4 &&
         currentTeam.cups.length == 10) {
       addEvent('Bitchcup', currentTeam, null);
@@ -242,7 +247,8 @@ class GameController extends ChangeNotifier {
     if (isTeamOneTurn) roundCount++;
     currentTeam = isTeamOneTurn ? team1 : team2;
     currentTeam.currentPlayers = currentTeam.rotatePlayers();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIslandBackgroundColor());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _updateIslandBackgroundColor());
     notifyListeners();
   }
 
@@ -287,10 +293,10 @@ class GameController extends ChangeNotifier {
   /// Selects the island shooter, marks the shot used, and activates the island highlight.
   void selectIslandShooter(Player player) {
     currentIslandShooter = player;
-    player.islandShotUsed = true;
+    player.islandAttempts++;
     islandShotActive = false;
     toggleIslandCups(); // notifyListeners inside
-    if (currentTeam.players.every((p) => p.islandShotUsed)) {
+    if (currentTeam.players.every((p) => p.islandAttempts > 0)) {
       currentTeam.canIslandShot = false;
       islandBackgroundColor = Colors.grey;
       notifyListeners();
@@ -303,9 +309,13 @@ class GameController extends ChangeNotifier {
     const double proximityThreshold = 100.0;
     int closeCupsCount = 0;
     for (final otherCup in currentTeam.cups) {
-      if (cup.index == otherCup.index || !otherCup.isVisible || !cup.isVisible) continue;
-      final renderBox1 = cup.key.currentContext?.findRenderObject() as RenderBox?;
-      final renderBox2 = otherCup.key.currentContext?.findRenderObject() as RenderBox?;
+      if (cup.index == otherCup.index || !otherCup.isVisible || !cup.isVisible) {
+        continue;
+      }
+      final renderBox1 =
+          cup.key.currentContext?.findRenderObject() as RenderBox?;
+      final renderBox2 =
+          otherCup.key.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox1 != null && renderBox2 != null) {
         final distance = _calculateDistance(
           renderBox1.localToGlobal(Offset.zero),
@@ -318,9 +328,11 @@ class GameController extends ChangeNotifier {
   }
 
   void _updateIslandBackgroundColor() {
-    final hasIslandCup = currentTeam.cups.any((c) => c.isVisible && _isIslandCup(c));
-    islandBackgroundColor =
-        (hasIslandCup && currentTeam.canIslandShot) ? Colors.amber : Colors.grey;
+    final hasIslandCup =
+        currentTeam.cups.any((c) => c.isVisible && _isIslandCup(c));
+    islandBackgroundColor = (hasIslandCup && currentTeam.canIslandShot)
+        ? Colors.amber
+        : Colors.grey;
     notifyListeners();
   }
 
@@ -331,7 +343,9 @@ class GameController extends ChangeNotifier {
 
   int getRandomCupIndex(List<Cup> cups, int cupIndex, Color teamColor) {
     final possible = cups.where((c) {
-      return c.index != cupIndex && c.isVisible && (c.color == teamColor || c.color == Colors.yellow);
+      return c.index != cupIndex &&
+          c.isVisible &&
+          (c.color == teamColor || c.color == Colors.yellow);
     }).toList();
     if (possible.isEmpty) throw Exception('No matching cups found');
     return possible[Random().nextInt(possible.length)].index;
@@ -339,8 +353,8 @@ class GameController extends ChangeNotifier {
 
   // ----- Game End Helpers -----
 
-  bool areAllCupsGone() =>
-      currentTeam.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
+  bool areAllCupsGone() => currentTeam.cups
+      .every((cup) => !cup.isVisible || cup.color == Colors.green);
 
   void removeLastCupHit(int cupIndex) {
     final cup = currentTeam.cups.firstWhere((c) => c.index == cupIndex);
@@ -354,7 +368,8 @@ class GameController extends ChangeNotifier {
 
   void setGameEnded() {
     gameEnded = true;
-    final blueTeamWin = team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
+    final blueTeamWin =
+        team1.cups.every((cup) => !cup.isVisible || cup.color == Colors.green);
     winner = blueTeamWin ? 'Team 1' : 'Team 2';
     // Count cups the winning team still had remaining (measure of dominance).
     final winningTeam = blueTeamWin ? team1 : team2;
@@ -400,7 +415,8 @@ class GameController extends ChangeNotifier {
 
   void incrementPlayerAirballs(Player player, BuildContext ctx) {
     player.incrementAirballs();
-    final totalAirballs = currentTeam.players.fold<int>(0, (sum, p) => sum + p.airballs);
+    final totalAirballs =
+        currentTeam.players.fold<int>(0, (sum, p) => sum + p.airballs);
     if (totalAirballs % 3 == 0) {
       DialogHelpers.showAirballDialog(ctx, totalAirballs);
     }
@@ -430,7 +446,8 @@ class GameController extends ChangeNotifier {
       'events': List<String>.from(_events),
     });
     _events.clear();
-    await FirestoreService.instance.updateGameDoc(id, team1: team1, team2: team2);
+    await FirestoreService.instance
+        .updateGameDoc(id, team1: team1, team2: team2);
     notifyListeners();
   }
 
@@ -456,7 +473,8 @@ class GameController extends ChangeNotifier {
       removeEvent(event);
     }
     currentTeam = isTeamOneTurn ? team1 : team2;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIslandBackgroundColor());
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _updateIslandBackgroundColor());
     notifyListeners();
   }
 

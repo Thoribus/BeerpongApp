@@ -5,11 +5,11 @@ import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
 import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/util/repositories/friend_repository.dart';
-import 'package:beerpongapp/util/repositories/game_repository.dart';
-import 'package:beerpongapp/util/repositories/invitation_repository.dart';
-import 'package:beerpongapp/util/repositories/tournament_repository.dart';
-import 'package:beerpongapp/util/repositories/user_repository.dart';
+import 'package:beerpongapp/repositories/friend_repository.dart';
+import 'package:beerpongapp/repositories/game_repository.dart';
+import 'package:beerpongapp/repositories/invitation_repository.dart';
+import 'package:beerpongapp/repositories/tournament_repository.dart';
+import 'package:beerpongapp/repositories/user_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Firestore access facade. Delegates to domain repositories.
@@ -31,6 +31,12 @@ class FirestoreService {
 
   Future<void> deleteUser(String userId) =>
       UserRepository.instance.deleteUser(userId);
+
+  Future<void> setActiveGameId(String userId, String gameId) =>
+      UserRepository.instance.setActiveGameId(userId, gameId);
+
+  Future<void> clearActiveGameId(String userId) =>
+      UserRepository.instance.clearActiveGameId(userId);
 
   Future<bool> checkUsernameAvailable(
           String usernameLower, String currentUserId) =>

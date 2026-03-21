@@ -259,11 +259,23 @@ class GameLobbyController extends ChangeNotifier {
     return true;
   }
 
-  Future<void> startGame(String chosenTeam) async {
+  Future<void> startGame(String chosenTeam, {String? hostUserId}) async {
     started = true;
     startingTeam = chosenTeam;
     notifyListeners();
     await updateGameDoc();
+
+    final gid = gameId;
+    if (gid != null) {
+      final uids = <String>[
+        if (hostUserId != null) hostUserId,
+        ...blueFriendMap.values.map((u) => u.id),
+        ...redFriendMap.values.map((u) => u.id),
+      ];
+      for (final uid in uids) {
+        unawaited(FirestoreService.instance.setActiveGameId(uid, gid));
+      }
+    }
   }
 
   // ----- Firestore sync -----

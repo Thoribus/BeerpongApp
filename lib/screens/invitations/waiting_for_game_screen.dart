@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/theme.dart';
@@ -86,7 +87,7 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
       );
     }
     if (!mounted) return;
-    context.go('/home');
+    context.go(AppRoutes.home);
   }
 
   @override

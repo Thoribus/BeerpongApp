@@ -13,10 +13,10 @@ User _user({
   int totalThrows = 60,
   int totalMisses = 30,
   int hitLastCup = 2,
-  int totalBounceAttempts = 6,
-  int totalBounceMakes = 3,
-  int totalIslandAttempts = 4,
-  int totalIslandMakes = 2,
+  int bounceAttempts = 6,
+  int bounceMakes = 3,
+  int islandAttempts = 4,
+  int islandMakes = 2,
 }) =>
     User(
       id: 'u1',
@@ -27,10 +27,10 @@ User _user({
       totalThrows: totalThrows,
       totalMisses: totalMisses,
       hitLastCup: hitLastCup,
-      totalBounceAttempts: totalBounceAttempts,
-      totalBounceMakes: totalBounceMakes,
-      totalIslandAttempts: totalIslandAttempts,
-      totalIslandMakes: totalIslandMakes,
+      bounceAttempts: bounceAttempts,
+      bounceMakes: bounceMakes,
+      islandAttempts: islandAttempts,
+      islandMakes: islandMakes,
     );
 
 Player _player(String name, {double score = 5, int throws = 10, bool isWinner = true}) =>
@@ -75,7 +75,7 @@ void main() {
       expect(bounceConversion(_user()), closeTo(0.5, 0.001)); // 3/6
     });
     test('returns 0 when no attempts', () {
-      expect(bounceConversion(_user(totalBounceAttempts: 0, totalBounceMakes: 0)), 0.0);
+      expect(bounceConversion(_user(bounceAttempts: 0, bounceMakes: 0)), 0.0);
     });
   });
 
@@ -84,7 +84,7 @@ void main() {
       expect(islandConversion(_user()), closeTo(0.5, 0.001)); // 2/4
     });
     test('returns 0 when no attempts', () {
-      expect(islandConversion(_user(totalIslandAttempts: 0, totalIslandMakes: 0)), 0.0);
+      expect(islandConversion(_user(islandAttempts: 0, islandMakes: 0)), 0.0);
     });
   });
 

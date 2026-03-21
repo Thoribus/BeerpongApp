@@ -1,6 +1,7 @@
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/util/app_logger.dart';
+import 'package:beerpongapp/util/level_system.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserRepository {
@@ -45,6 +46,20 @@ class UserRepository {
       AppLogger.error('Error deleting user', e);
       rethrow;
     }
+  }
+
+  Future<void> setActiveGameId(String userId, String gameId) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .update({'activeGameId': gameId});
+  }
+
+  Future<void> clearActiveGameId(String userId) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .update({'activeGameId': FieldValue.delete()});
   }
 
   User _userFromDoc(DocumentSnapshot doc) {
@@ -96,6 +111,33 @@ class UserRepository {
     await Future.wait(allPlayers.map((player) async {
       final userRef = _db.collection('users').doc(player.user!.id);
       await _db.runTransaction((tx) async {
+        // Read current streak values so we can compute the new streak
+        // and best-streak without a separate round-trip after the write.
+        final snap = await tx.get(userRef);
+        final data = snap.data() ?? {};
+
+        final prevStreak = (data['currentWinStreak'] as num?)?.toInt() ?? 0;
+        final prevBest = (data['bestWinStreak'] as num?)?.toInt() ?? 0;
+
+        final newStreak = player.isWinner ? prevStreak + 1 : 0;
+        final newBest = newStreak > prevBest ? newStreak : prevBest;
+
+        final xpGained = LevelSystem.calculateXpGained(
+          isWinner: player.isWinner,
+          cupsHit: player.score.toInt(),
+          onFire: player.onFire,
+          bounceMakes: player.bounceMakes,
+          islandMakes: player.islandMakes,
+          deathCupHits: player.deathCupHits,
+          defended: player.defended,
+          hitLastCup: player.lastCupHit,
+          newStreak: newStreak,
+        );
+
+        final isPerfect = player.misses == 0 && player.throws > 0;
+        final hour = DateTime.now().hour;
+        final isNight = hour >= 23 || hour < 4;
+
         tx.update(userRef, {
           'totalScore': FieldValue.increment(player.score),
           'totalMisses': FieldValue.increment(player.misses),
@@ -112,6 +154,11 @@ class UserRepository {
           'totalIslandAttempts': FieldValue.increment(player.islandAttempts),
           'totalIslandMakes': FieldValue.increment(player.islandMakes),
           'totalDeathCupHits': FieldValue.increment(player.deathCupHits),
+          'xp': FieldValue.increment(xpGained),
+          'currentWinStreak': newStreak,
+          'bestWinStreak': newBest,
+          if (isPerfect) 'perfectGames': FieldValue.increment(1),
+          if (isNight) 'nightGames': FieldValue.increment(1),
           'lastGameAt': FieldValue.serverTimestamp(),
           for (final cupIndex in player.cupsHit)
             'cupsHitCount.$cupIndex': FieldValue.increment(1),
@@ -183,6 +230,11 @@ class UserRepository {
       final key = cupIndex.toString();
       updatedCupsHitCount[key] = (updatedCupsHitCount[key] ?? 0) + 1;
     }
+    final isPerfect = player.misses == 0 && player.throws > 0;
+    // Streak is approximated here (no Firestore read) — used only for
+    // achievement diffs, not for persistent storage.
+    final newStreak = player.isWinner ? oldUser.currentWinStreak + 1 : 0;
+    final newBest = newStreak > oldUser.bestWinStreak ? newStreak : oldUser.bestWinStreak;
     return oldUser.copyWith(
       totalScore: oldUser.totalScore + player.score,
       totalMisses: oldUser.totalMisses + player.misses,
@@ -195,11 +247,14 @@ class UserRepository {
       wins: oldUser.wins + (player.isWinner ? 1 : 0),
       losses: oldUser.losses + (player.isWinner ? 0 : 1),
       totalHeatingUp: oldUser.totalHeatingUp + player.heatingUp,
-      totalBounceAttempts: oldUser.totalBounceAttempts + player.bounceAttempts,
-      totalBounceMakes: oldUser.totalBounceMakes + player.bounceMakes,
-      totalIslandAttempts: oldUser.totalIslandAttempts + player.islandAttempts,
-      totalIslandMakes: oldUser.totalIslandMakes + player.islandMakes,
-      totalDeathCupHits: oldUser.totalDeathCupHits + player.deathCupHits,
+      bounceAttempts: oldUser.bounceAttempts + player.bounceAttempts,
+      bounceMakes: oldUser.bounceMakes + player.bounceMakes,
+      islandAttempts: oldUser.islandAttempts + player.islandAttempts,
+      islandMakes: oldUser.islandMakes + player.islandMakes,
+      deathCupHits: oldUser.deathCupHits + player.deathCupHits,
+      currentWinStreak: newStreak,
+      bestWinStreak: newBest,
+      perfectGames: oldUser.perfectGames + (isPerfect ? 1 : 0),
     );
   }
 }

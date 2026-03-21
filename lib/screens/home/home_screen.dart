@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/team.dart';
@@ -213,7 +214,7 @@ class HomeScreenState extends State<HomeScreen> {
         final count = snapshot.data?.length ?? 0;
         if (count == 0) return const SizedBox.shrink();
         return GestureDetector(
-          onTap: () => context.push('/invitations'),
+          onTap: () => context.push(AppRoutes.invitations),
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding:

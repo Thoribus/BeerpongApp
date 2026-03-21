@@ -5,6 +5,7 @@ import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/game_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/router.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -458,14 +459,14 @@ class DialogHelpers {
       ),
       btnOkOnPress: () {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
-          AppRouter.router.go('/games');
+          AppRouter.router.go(AppRoutes.games);
           await onNavigate?.call();
         });
       },
       btnOkText: 'Go to Stats',
       btnCancelOnPress: () {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
-          AppRouter.router.go('/home');
+          AppRouter.router.go(AppRoutes.home);
           await onNavigate?.call();
         });
       },

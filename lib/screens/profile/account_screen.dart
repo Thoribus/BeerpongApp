@@ -1,46 +1,18 @@
+import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/theme.dart';
-import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:beerpongapp/models/user.dart';
-import 'achievements_screen.dart';
 import '../profile/custom_user_screen.dart';
-import '../../widgets/app_tab_bar.dart';
 
-/// Example account screen refactored to use avatarKey/backgroundKey instead of Icons.
-class AccountScreen extends StatefulWidget {
+class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
-
-  @override
-  AccountScreenState createState() => AccountScreenState();
-}
-
-class AccountScreenState extends State<AccountScreen>
-    with SingleTickerProviderStateMixin {
-  User? user;
-  Future<List<User>>? _friendsFuture;
-
-  int _currentTabPage = 0;
-  late PageController _tabPageController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabPageController = PageController(initialPage: _currentTabPage);
-  }
-
-  @override
-  void dispose() {
-    _tabPageController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    user = userProvider.user;
+    final User? user = userProvider.user;
     final c = AppColors.of(context);
 
     if (user == null) return const SizedBox.shrink();
@@ -49,114 +21,44 @@ class AccountScreenState extends State<AccountScreen>
       backgroundColor: c.background,
       body: Column(
         children: [
-          _buildTabBarWithLogout(userProvider),
-          const SizedBox(height: 10),
-          Expanded(
-            child: PageView(
-              controller: _tabPageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentTabPage = index;
-                  // Lazy-load friends only when the Social tab is first opened.
-                  if (index == 2 && _friendsFuture == null) {
-                    _friendsFuture =
-                        FirestoreService.instance.getFriends(user!.id);
-                  }
-                });
-              },
-              children: [
-                CustomUserScreen(user: user!),
-                AchievementsScreen(user: user!),
-                _buildSocialPage(c),
-              ],
-            ),
-          ),
+          _buildHeader(context, userProvider, c),
+          Expanded(child: CustomUserScreen(user: user)),
         ],
       ),
     );
   }
 
-  Widget _buildSocialPage(AppColors c) {
-    return FutureBuilder<List<User>>(
-      future: _friendsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final friends = snapshot.data ?? [];
-        if (friends.isEmpty) {
-          return const Center(
-            child: Text('No friends yet. Add some friends to see their activity!'),
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          itemCount: friends.length,
-          itemBuilder: (context, index) {
-            final friend = friends[index];
-            final totalGames = friend.wins + friend.losses;
-            return Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              color: Colors.greenAccent.shade100,
-              elevation: 2,
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                leading: CircleAvatar(
-                  backgroundColor: c.border,
-                  child: Text(
-                    friend.username.isNotEmpty ? friend.username[0] : '?',
-                    style: const TextStyle(color: Colors.black),
-                  ),
-                ),
-                title: Text(
-                  friend.username,
-                  style: TextStyle(fontSize: 13, color: c.onBackground),
-                ),
-                subtitle: Text(
-                  '${friend.wins} wins · ${friend.losses} losses · $totalGames games played',
-                  style: TextStyle(fontSize: 11, color: c.onBackground),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildTabBarWithLogout(UserProvider userProvider) {
+  Widget _buildHeader(
+      BuildContext context, UserProvider userProvider, AppColors c) {
     return ColoredBox(
       color: Colors.grey.shade800,
       child: Row(
         children: [
-          Expanded(
-            child: AppTabBar(
-              tabs: const ['Customize', 'Achievements', 'Activity'],
-              selectedIndex: _currentTabPage,
-              onTabSelected: (index) {
-                if (_currentTabPage != index) {
-                  setState(() => _currentTabPage = index);
-                }
-              },
-              pageController: _tabPageController,
-              backgroundColor: Colors.grey.shade800,
+          const Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Text(
+                'Profile',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
             tooltip: 'Sign out',
-            onPressed: () => _confirmSignOut(userProvider),
+            onPressed: () => _confirmSignOut(context, userProvider),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _confirmSignOut(UserProvider userProvider) async {
+  Future<void> _confirmSignOut(
+      BuildContext context, UserProvider userProvider) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -169,8 +71,7 @@ class AccountScreenState extends State<AccountScreen>
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child:
-                const Text('Sign out', style: TextStyle(color: Colors.red)),
+            child: const Text('Sign out', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -179,5 +80,4 @@ class AccountScreenState extends State<AccountScreen>
       await userProvider.signOut();
     }
   }
-
 }

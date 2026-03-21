@@ -1,8 +1,14 @@
 //-------------Packages-------------------------
+import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/models/achievement_def.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/achievement_engine.dart';
+import 'package:beerpongapp/util/debug_seeder.dart';
+import 'package:beerpongapp/util/level_system.dart';
 import 'package:go_router/go_router.dart';
 import 'package:beerpongapp/util/user_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -18,6 +24,7 @@ import '../../models/player.dart';
 import '../games/breakdown_screen.dart';
 import '../games/performance_screen.dart';
 import '../games/personal_statistics_screen.dart';
+import '../profile/achievements_screen.dart';
 //----------------------------------------------
 
 //-------------Widgets--------------------------
@@ -65,7 +72,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildTabPageSelector() {
     return AppTabBar(
-      tabs: const ['Stats', 'Performance', 'Breakdown', 'History'],
+      tabs: const ['Stats', 'Performance', 'Progress', 'Breakdown', 'History'],
       selectedIndex: _currentTabPage,
       onTabSelected: (index) {
         setState(() => _currentTabPage = index);
@@ -138,6 +145,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               children: [
                 PersonalStatisticsScreen(user: user, games: games),
                 PerformanceScreen(user: user),
+                _ProgressTab(user: user),
                 BreakdownScreen(user: user, games: games),
                 _buildHistoryTab(),
               ],
@@ -285,7 +293,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 size: 14, color: Colors.white54),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            onPressed: () => context.push('/spectate-live/${game.id}'),
+            onPressed: () => context.push(AppRoutes.spectateLivePath(game.id)),
           ),
           children: [
             _buildInlinePlayerTable(context, 'Team 1', game.team1Players, mvpName: _mvpName(game)),
@@ -559,6 +567,538 @@ class StatisticsScreenState extends State<StatisticsScreen> {
   }
 }
 
+// ── Progress tab ─────────────────────────────────────────────────────────────
+
+class _ProgressTab extends StatelessWidget {
+  final User user;
+  const _ProgressTab({required this.user});
+
+  static const _tierLevels = [
+    (LevelTier.benchWarmer, 1),
+    (LevelTier.partyStarter, 6),
+    (LevelTier.cupHunter, 11),
+    (LevelTier.tableRegular, 16),
+    (LevelTier.foamRoller, 21),
+    (LevelTier.bounceArtist, 26),
+    (LevelTier.deathCupDealer, 31),
+    (LevelTier.pongVeteran, 36),
+    (LevelTier.islandMaster, 41),
+    (LevelTier.pongLegend, 46),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final level = LevelSystem.levelFromXp(user.xp);
+    final tier = LevelSystem.tierForLevel(level);
+    final progress = LevelSystem.progressInLevel(user.xp);
+    final toNext = LevelSystem.xpToNextLevel(user.xp);
+    final isMax = level >= LevelSystem.maxLevel;
+
+    final grouped = AchievementEngine.evaluateGrouped(user);
+    final upcoming = AchievementEngine.upcomingUnlocks(user).take(5).toList();
+
+    final tierIndex = _tierLevels.indexWhere((t) => t.$1 == tier);
+    final hasNextTier = tierIndex < _tierLevels.length - 1;
+    final nextTierLevel = hasNextTier ? _tierLevels[tierIndex + 1].$2 : null;
+    final nextTier = hasNextTier ? _tierLevels[tierIndex + 1].$1 : null;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        // ── View all achievements button ───────────────────────────────────
+        OutlinedButton.icon(
+          icon: const Icon(Icons.emoji_events_outlined, size: 16),
+          label: const Text('View all achievements'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.amber,
+            side: const BorderSide(color: Colors.amber),
+          ),
+          onPressed: () => context.push(AppRoutes.achievements),
+        ),
+
+        const SizedBox(height: 16),
+
+        // ── XP / Level card ───────────────────────────────────────────────
+        Card(
+          color: c.card,
+          elevation: 4,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [tier.color, tier.color.withValues(alpha: 0.6)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: tier.color.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Lv $level',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tier.displayName,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: tier.color,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 10,
+                          backgroundColor: c.border,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(tier.color),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isMax
+                            ? 'Max level reached — ${user.xp} XP total'
+                            : '${user.xp} XP · $toNext XP to Level ${level + 1}',
+                        style: TextStyle(fontSize: 11, color: c.subtle),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // ── Next tier callout ─────────────────────────────────────────────
+        if (hasNextTier && nextTier != null && nextTierLevel != null)
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: nextTier.color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: nextTier.color.withValues(alpha: 0.35), width: 1),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_open_outlined,
+                    color: nextTier.color, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Reach Level $nextTierLevel to unlock ${nextTier.displayName}',
+                    style: TextStyle(
+                        color: nextTier.color,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Text(
+                  '${nextTierLevel - level} lvl${nextTierLevel - level == 1 ? '' : 's'}',
+                  style: TextStyle(
+                      color: nextTier.color.withValues(alpha: 0.7),
+                      fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+
+        const SizedBox(height: 20),
+
+        // ── Tier roadmap ──────────────────────────────────────────────────
+        Text('Tier Roadmap',
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: c.onBackground)),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 72,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _tierLevels.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, i) {
+              final (t, minLv) = _tierLevels[i];
+              final isCurrent = t == tier;
+              final isUnlocked = level >= minLv;
+              return Container(
+                width: 90,
+                decoration: BoxDecoration(
+                  color: isCurrent
+                      ? t.color.withValues(alpha: 0.18)
+                      : isUnlocked
+                          ? c.card
+                          : c.card.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isCurrent
+                        ? t.color
+                        : isUnlocked
+                            ? t.color.withValues(alpha: 0.4)
+                            : c.border.withValues(alpha: 0.3),
+                    width: isCurrent ? 2 : 1,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (!isUnlocked)
+                      Icon(Icons.lock,
+                          size: 11,
+                          color: c.subtle.withValues(alpha: 0.5)),
+                    Text(
+                      t.displayName,
+                      style: TextStyle(
+                        color: isUnlocked
+                            ? t.color
+                            : c.subtle.withValues(alpha: 0.4),
+                        fontSize: 10,
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Lv $minLv+',
+                      style: TextStyle(
+                        color: isUnlocked
+                            ? t.color.withValues(alpha: 0.7)
+                            : c.subtle.withValues(alpha: 0.3),
+                        fontSize: 9,
+                      ),
+                    ),
+                    if (isCurrent) ...[
+                      const SizedBox(height: 3),
+                      Container(
+                        width: 20,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: t.color,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // ── Achievement category overview ─────────────────────────────────
+        Text('Achievement Progress',
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: c.onBackground)),
+        const SizedBox(height: 10),
+        for (final entry in grouped.entries)
+          _StatsCategoryProgressRow(
+              category: entry.key, progressList: entry.value),
+
+        const SizedBox(height: 24),
+
+        // ── Unlocked titles ───────────────────────────────────────────────
+        if (user.unlockedTitles.isNotEmpty) ...[
+          Text('Unlocked Titles',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: c.onBackground)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: user.unlockedTitles.map((title) {
+              final isEquipped = user.title == title;
+              final color =
+                  AchievementsScreen.getColorForUnlockedTitle(title, user);
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color:
+                      color.withValues(alpha: isEquipped ? 0.2 : 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: color
+                          .withValues(alpha: isEquipped ? 0.8 : 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isEquipped) ...[
+                      Icon(Icons.check_circle, color: color, size: 12),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      title,
+                      style: TextStyle(
+                          color: color,
+                          fontSize: 12,
+                          fontWeight: isEquipped
+                              ? FontWeight.bold
+                              : FontWeight.normal),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 24),
+        ],
+
+        // ── Upcoming unlocks ──────────────────────────────────────────────
+        if (upcoming.isNotEmpty) ...[
+          Text('Almost There',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: c.onBackground)),
+          const SizedBox(height: 10),
+          for (final p in upcoming) _StatsUpcomingTile(progress: p),
+        ],
+
+        // ── Debug seed button (debug builds only) ─────────────────────────
+        if (kDebugMode) ...[
+          const SizedBox(height: 32),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.science_outlined, size: 16),
+            label: const Text('Seed Test Data'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.orange,
+              side: const BorderSide(color: Colors.orange),
+            ),
+            onPressed: () async {
+              final provider =
+                  Provider.of<UserProvider>(context, listen: false);
+              try {
+                await DebugSeeder.seedUser(user.id);
+                await provider.loadUser();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Test data seeded!'),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Seed failed: $e'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Category progress row ──────────────────────────────────────────────────
+
+class _StatsCategoryProgressRow extends StatelessWidget {
+  final AchievementCategory category;
+  final List<AchievementProgress> progressList;
+
+  const _StatsCategoryProgressRow(
+      {required this.category, required this.progressList});
+
+  static IconData _iconFor(AchievementCategory cat) => switch (cat) {
+        AchievementCategory.performance => Icons.local_fire_department,
+        AchievementCategory.consistency => Icons.repeat,
+        AchievementCategory.accuracy => Icons.gps_fixed,
+        AchievementCategory.social => Icons.group,
+        AchievementCategory.fun => Icons.celebration,
+      };
+
+  static Color _colorFor(AchievementCategory cat) => switch (cat) {
+        AchievementCategory.performance => Colors.deepOrange,
+        AchievementCategory.consistency => Colors.green,
+        AchievementCategory.accuracy => Colors.blue,
+        AchievementCategory.social => Colors.purple,
+        AchievementCategory.fun => Colors.amber,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final color = _colorFor(category);
+    final totalStages =
+        progressList.fold(0, (sum, p) => sum + p.def.thresholds.length);
+    final unlockedStages =
+        progressList.fold(0, (sum, p) => sum + p.currentStageIndex);
+    final pct = totalStages > 0 ? unlockedStages / totalStages : 0.0;
+    final label =
+        category.name[0].toUpperCase() + category.name.substring(1);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+          color: c.card, borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        children: [
+          Icon(_iconFor(category), color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(label,
+                        style: TextStyle(
+                            color: c.onBackground,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600)),
+                    const Spacer(),
+                    Text('$unlockedStages / $totalStages stages',
+                        style: TextStyle(color: c.subtle, fontSize: 11)),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: pct,
+                    minHeight: 5,
+                    backgroundColor: c.border,
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsUpcomingTile extends StatelessWidget {
+  final AchievementProgress progress;
+  const _StatsUpcomingTile({required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = progress;
+    final c = AppColors.of(context);
+    final nextStageLabel = p.def.stageNames.length > p.currentStageIndex
+        ? p.def.stageNames[p.currentStageIndex]
+        : 'Max';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: c.card,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(p.def.icon, color: p.stageColor, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(p.def.title,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: c.onBackground,
+                            fontSize: 13)),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: p.stageColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        nextStageLabel,
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: p.stageColor,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: p.progressToNextStage,
+                    minHeight: 5,
+                    backgroundColor: c.border,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(p.stageColor),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${p.currentValue} / ${p.nextThreshold} · ${p.gapToNextStage} to go',
+                  style: TextStyle(fontSize: 10, color: c.subtle),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 class GameDetailsPage extends StatefulWidget {
   final GameStatistics game;
 
@@ -663,7 +1203,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
   Widget _buildViewTableButton(GameStatistics game) {
     return ElevatedButton(
       onPressed: () {
-        context.push('/spectate-live/${game.id}');
+        context.push(AppRoutes.spectateLivePath(game.id));
       },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
       child: const Text(

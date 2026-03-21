@@ -10,6 +10,7 @@ import 'package:beerpongapp/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +29,21 @@ Future<void> main() async {
   final userProvider = UserProvider();
   unawaited(userProvider.loadUser());
 
-  runApp(
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = 'https://d8383eb3dbe512aff8d55ff5335b2f87@o4511078596870144.ingest.de.sentry.io/4511078600147024';
+      // Adds request headers and IP for users, for more info visit:
+      // https://docs.sentry.io/platforms/dart/guides/flutter/data-management/data-collected/
+      options.sendDefaultPii = true;
+      options.enableLogs = true;
+      // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+      // We recommend adjusting this value in production.
+      options.tracesSampleRate = 1.0;
+      // Configure Session Replay
+      options.replay.sessionSampleRate = 0.1;
+      options.replay.onErrorSampleRate = 1.0;
+    },
+    appRunner: () => runApp(SentryWidget(child: 
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: userProvider),
@@ -36,6 +51,7 @@ Future<void> main() async {
       ],
       child: MyApp(userProvider: userProvider),
     ),
+  )),
   );
 }
 

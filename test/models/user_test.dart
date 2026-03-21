@@ -65,30 +65,30 @@ void main() {
       expect(updated.username, 'Alice'); // unchanged
     });
 
-    test('toJson / fromJson round-trip preserves totalIslandAttempts and totalDeathCupHits', () {
+    test('toJson / fromJson round-trip preserves islandAttempts and deathCupHits', () {
       final user = User(
         id: 'u1',
         username: 'Alice',
-        totalIslandAttempts: 5,
-        totalDeathCupHits: 3,
+        islandAttempts: 5,
+        deathCupHits: 3,
       );
       final json = user.toJson();
       final restored = User.fromJson({...json, 'id': 'u1'});
-      expect(restored.totalIslandAttempts, 5);
-      expect(restored.totalDeathCupHits, 3);
+      expect(restored.islandAttempts, 5);
+      expect(restored.deathCupHits, 3);
     });
 
-    test('fromJson defaults totalIslandAttempts and totalDeathCupHits to 0 when absent', () {
+    test('fromJson defaults islandAttempts and deathCupHits to 0 when absent', () {
       final restored = User.fromJson({'id': 'u1', 'username': 'Bob'});
-      expect(restored.totalIslandAttempts, 0);
-      expect(restored.totalDeathCupHits, 0);
+      expect(restored.islandAttempts, 0);
+      expect(restored.deathCupHits, 0);
     });
 
-    test('copyWith updates totalIslandAttempts independently', () {
-      final user = User(id: 'u1', username: 'Alice', totalIslandAttempts: 2, totalDeathCupHits: 1);
-      final updated = user.copyWith(totalIslandAttempts: 7);
-      expect(updated.totalIslandAttempts, 7);
-      expect(updated.totalDeathCupHits, 1); // unchanged
+    test('copyWith updates islandAttempts independently', () {
+      final user = User(id: 'u1', username: 'Alice', islandAttempts: 2, deathCupHits: 1);
+      final updated = user.copyWith(islandAttempts: 7);
+      expect(updated.islandAttempts, 7);
+      expect(updated.deathCupHits, 1); // unchanged
     });
 
     group('lastGameAt', () {

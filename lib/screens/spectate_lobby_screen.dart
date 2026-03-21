@@ -1,5 +1,6 @@
+import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,11 +19,8 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
   @override
   Widget build(BuildContext context) {
     // Listen to the game doc
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('games')
-          .doc(widget.gameId)
-          .snapshots(),
+    return StreamBuilder(
+      stream: FirestoreService.instance.getGameDocStream(widget.gameId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Scaffold(
@@ -53,7 +51,7 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
           // Navigate to LiveGameStatsScreen
           // Because this is in a build method, do a post-frame callback
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) context.pushReplacement('/spectate-live/${widget.gameId}');
+            if (mounted) context.pushReplacement(AppRoutes.spectateLivePath(widget.gameId));
           });
         }
 

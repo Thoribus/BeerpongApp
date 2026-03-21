@@ -23,13 +23,13 @@ class ComparisonScreen extends StatelessWidget {
       u.totalThrows > 0 ? u.totalScore / u.totalThrows * 100 : 0;
 
   double _bounceRate(User u) =>
-      u.totalBounceAttempts > 0
-          ? u.totalBounceMakes / u.totalBounceAttempts * 100
+      u.bounceAttempts > 0
+          ? u.bounceMakes / u.bounceAttempts * 100
           : 0;
 
   double _islandRate(User u) =>
-      u.totalIslandAttempts > 0
-          ? u.totalIslandMakes / u.totalIslandAttempts * 100
+      u.islandAttempts > 0
+          ? u.islandMakes / u.islandAttempts * 100
           : 0;
 
   @override

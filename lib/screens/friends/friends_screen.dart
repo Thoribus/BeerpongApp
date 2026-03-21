@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -16,7 +17,27 @@ import 'package:beerpongapp/util/route_args.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_tab_bar.dart';
 
-enum ActionType { wonGame, achievement }
+enum _FeedEventType { sharedGame, winStreak, achievement, friendActive }
+
+class _FeedEvent {
+  const _FeedEvent({
+    required this.type,
+    required this.date,
+    required this.title,
+    required this.subtitle,
+    this.friend,
+    this.game,
+    this.userWon,
+  });
+
+  final _FeedEventType type;
+  final DateTime date;
+  final String title;
+  final String subtitle;
+  final User? friend; // null for winStreak
+  final GameStatistics? game; // for sharedGame
+  final bool? userWon; // for sharedGame
+}
 
 enum _SortKey {
   totalScore('Total Score'),
@@ -28,38 +49,6 @@ enum _SortKey {
 
   const _SortKey(this.label);
   final String label;
-}
-
-class FriendAction {
-  final User user;
-  final ActionType type;
-  final String description;
-  final DateTime date;
-
-  FriendAction({
-    required this.user,
-    required this.type,
-    required this.description,
-    required this.date,
-  });
-}
-
-Color getActionColor(ActionType type) {
-  switch (type) {
-    case ActionType.wonGame:
-      return Colors.green.shade800;
-    case ActionType.achievement:
-      return Colors.indigo.shade700;
-  }
-}
-
-IconData _actionIcon(ActionType type) {
-  switch (type) {
-    case ActionType.wonGame:
-      return Icons.emoji_events_outlined;
-    case ActionType.achievement:
-      return Icons.star_outline;
-  }
 }
 
 /// Returns a human-readable relative time string, e.g. "just now", "3d ago".
@@ -85,8 +74,8 @@ double _sortValue(_SortKey key, User u) {
     case _SortKey.onFire:
       return u.onFire.toDouble();
     case _SortKey.bounceRate:
-      return u.totalBounceAttempts > 0
-          ? u.totalBounceMakes / u.totalBounceAttempts
+      return u.bounceAttempts > 0
+          ? u.bounceMakes / u.bounceAttempts
           : 0;
     case _SortKey.gamesPlayed:
       return (u.wins + u.losses).toDouble();
@@ -104,8 +93,8 @@ String _sortDisplay(_SortKey key, User u) {
     case _SortKey.onFire:
       return u.onFire.toString();
     case _SortKey.bounceRate:
-      return u.totalBounceAttempts > 0
-          ? '${(u.totalBounceMakes / u.totalBounceAttempts * 100).toStringAsFixed(0)}%'
+      return u.bounceAttempts > 0
+          ? '${(u.bounceMakes / u.bounceAttempts * 100).toStringAsFixed(0)}%'
           : '--';
     case _SortKey.gamesPlayed:
       return '${u.wins + u.losses}';
@@ -113,7 +102,17 @@ String _sortDisplay(_SortKey key, User u) {
 }
 
 class FriendsListScreen extends StatefulWidget {
-  const FriendsListScreen({super.key});
+  const FriendsListScreen({
+    super.key,
+    this.friendsLoader,
+    this.gamesLoader,
+  });
+
+  /// Optional loader override for tests to avoid direct Firestore calls.
+  final Future<List<User>> Function(String userId)? friendsLoader;
+
+  /// Optional loader override for tests to avoid direct Firestore calls.
+  final Future<List<GameStatistics>> Function(User user)? gamesLoader;
 
   @override
   FriendsListScreenState createState() => FriendsListScreenState();
@@ -138,9 +137,14 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     super.didChangeDependencies();
     final user = Provider.of<UserProvider>(context, listen: false).user;
     if (user != null && _friends == null) {
-      _friends = FirestoreService.instance.getFriends(user.id);
+      final loadFriends =
+          widget.friendsLoader ?? FirestoreService.instance.getFriends;
+      final loadGames =
+          widget.gamesLoader ?? FirestoreService.instance.retrieveGames;
+
+      _friends = loadFriends(user.id);
       _friendsWithUser = _friends!.then((friends) => [user, ...friends]);
-      _myGames = FirestoreService.instance.retrieveGames(user);
+      _myGames = loadGames(user);
     }
   }
 
@@ -177,7 +181,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         await _addFriend(context, result.rawContent, userProvider);
         if (!mounted) return;
-        if (dialogCtx.mounted) Navigator.of(dialogCtx).pop(); // close the dialog
+        if (dialogCtx.mounted) {
+          Navigator.of(dialogCtx).pop(); // close the dialog
+        }
       }
     } catch (e) {
       _showErrorSnackBar('Error scanning QR code: $e');
@@ -191,7 +197,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     UserProvider userProvider,
   ) async {
     try {
-      await FirestoreService.instance.addFriend(userProvider.user!.id, friendId);
+      await FirestoreService.instance
+          .addFriend(userProvider.user!.id, friendId);
       _refreshFriends(userProvider);
     } catch (e) {
       _showErrorSnackBar('Error adding friend: $e');
@@ -202,39 +209,24 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   Future<void> _removeFriend(User friend) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     try {
-      await FirestoreService.instance.removeFriend(userProvider.user!.id, friend.id);
+      await FirestoreService.instance
+          .removeFriend(userProvider.user!.id, friend.id);
       _refreshFriends(userProvider);
     } catch (e) {
       _showErrorSnackBar('Error removing friend: $e');
     }
   }
 
-  /// Navigates to Single Game mode details with the friend's username
-  /// pre-announced via a SnackBar so the user knows who they're challenging.
-  void _challengeFriend(User friend) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Setting up a game vs ${friend.username}…'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-    context.push(
-      '/game-mode',
-      extra: const GameModeArgs(
-        title: 'Single Game',
-        subtitle: '1v1 or 2v2',
-        details: 'Classic beer pong rules.',
-        iconPath: 'assets/icons/game_mode_single.svg',
-        color: Colors.orange,
-      ),
-    );
-  }
-
   void _refreshFriends(UserProvider userProvider) {
     setState(() {
-      _friends = FirestoreService.instance.getFriends(userProvider.user!.id);
-      _friendsWithUser = _friends!.then((friends) => [userProvider.user!, ...friends]);
-      _myGames = FirestoreService.instance.retrieveGames(userProvider.user!);
+      final loadFriends =
+          widget.friendsLoader ?? FirestoreService.instance.getFriends;
+      final loadGames =
+          widget.gamesLoader ?? FirestoreService.instance.retrieveGames;
+      _friends = loadFriends(userProvider.user!.id);
+      _friendsWithUser =
+          _friends!.then((friends) => [userProvider.user!, ...friends]);
+      _myGames = loadGames(userProvider.user!);
     });
   }
 
@@ -253,10 +245,11 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       return;
     }
 
-    context.push('/compare', extra: ComparisonArgs(
-      currentUser: userProvider.user!,
-      friend: friend,
-    ));
+    context.push(AppRoutes.compare,
+        extra: ComparisonArgs(
+          currentUser: userProvider.user!,
+          friend: friend,
+        ));
   }
 
   @override
@@ -405,7 +398,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                   h2hGames: h2hGames,
                   onTap: () => _showComparisonScreen(friend),
                   onRemove: () => _removeFriend(friend),
-                  onChallenge: () => _challengeFriend(friend),
                 );
               },
             ),
@@ -415,131 +407,334 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     );
   }
 
-  Future<List<FriendAction>> _buildFriendActions(List<User> friends) async {
-    final List<FriendAction> actions = [];
-    await Future.wait(friends.map((friend) async {
-      final stats =
-          await FirestoreService.instance.retrieveUserStatsWithDate(friend);
-      if (stats.isNotEmpty) {
-        actions.add(FriendAction(
-          user: friend,
-          type: ActionType.wonGame,
-          description: 'played a game · ${stats.length} total',
-          date: stats.first.date,
+  // ---------------------------------------------------------------------------
+  // Social feed — pure computation (no extra Firestore calls)
+  // ---------------------------------------------------------------------------
+
+  List<_FeedEvent> _buildFeedEvents(
+    List<User> friends,
+    List<GameStatistics> myGames,
+    String currentUserId,
+  ) {
+    final events = <_FeedEvent>[];
+    final friendById = {for (final f in friends) f.id: f};
+
+    // 1. Shared-game events — one card per (game × friend who participated)
+    for (final game in myGames) {
+      for (final participantId in game.participants) {
+        if (participantId == currentUserId) continue;
+        final friend = friendById[participantId];
+        if (friend == null) continue;
+
+        final onTeam1 =
+            game.team1Players.any((p) => p.user?.id == currentUserId);
+        final userWon = game.winningTeam == (onTeam1 ? 'Team 1' : 'Team 2');
+
+        final myTeam = onTeam1 ? game.team1Players : game.team2Players;
+        final oppTeam = onTeam1 ? game.team2Players : game.team1Players;
+
+        final myScore = myTeam.fold<double>(0, (s, p) => s + p.score).toInt();
+        final oppScore = oppTeam.fold<double>(0, (s, p) => s + p.score).toInt();
+
+        final myPlayers =
+            myTeam.where((p) => p.user?.id == currentUserId).toList();
+        final hitPct = myPlayers.isNotEmpty && myPlayers.first.throws > 0
+            ? (myPlayers.first.score / myPlayers.first.throws * 100).round()
+            : 0;
+
+        events.add(_FeedEvent(
+          type: _FeedEventType.sharedGame,
+          date: game.date,
+          title: userWon
+              ? 'Beat ${friend.username}'
+              : 'Lost to ${friend.username}',
+          subtitle: '$myScore–$oppScore · $hitPct% hit rate',
+          friend: friend,
+          game: game,
+          userWon: userWon,
         ));
       }
-      // Emit achievement events for win milestones (10, 25, 50, 100 …)
-      const milestones = [10, 25, 50, 100, 200];
-      for (final m in milestones) {
+    }
+
+    // 2. Current-user win streak (≥ 3)
+    final sorted = [...myGames]..sort((a, b) => b.date.compareTo(a.date));
+    var streak = 0;
+    for (final g in sorted) {
+      final onTeam1 = g.team1Players.any((p) => p.user?.id == currentUserId);
+      final won = g.winningTeam == (onTeam1 ? 'Team 1' : 'Team 2');
+      if (won) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    if (streak >= 3) {
+      events.add(_FeedEvent(
+        type: _FeedEventType.winStreak,
+        date: sorted.isNotEmpty ? sorted.first.date : DateTime.now(),
+        title: '🔥 $streak-game win streak!',
+        subtitle: "You're on fire — keep the momentum going.",
+      ));
+    }
+
+    // 3. Friend achievements — highest milestone only per category per friend
+    const winMilestones = [200, 100, 50, 25, 10];
+    const fireMilestones = [100, 50, 25];
+    for (final friend in friends) {
+      for (final m in winMilestones) {
         if (friend.wins >= m) {
-          actions.add(FriendAction(
-            user: friend,
-            type: ActionType.achievement,
-            description: 'reached $m wins 🏆',
-            date: stats.isNotEmpty ? stats.first.date : DateTime.now(),
+          events.add(_FeedEvent(
+            type: _FeedEventType.achievement,
+            date: friend.lastGameAt ?? DateTime.now(),
+            title: '🏆 ${friend.username} reached $m wins',
+            subtitle: 'A true beer pong legend.',
+            friend: friend,
           ));
-          break; // only the highest milestone
+          break;
         }
       }
-    }));
-    actions.sort((a, b) => b.date.compareTo(a.date));
-    return actions;
+      for (final m in fireMilestones) {
+        if (friend.onFire >= m) {
+          events.add(_FeedEvent(
+            type: _FeedEventType.achievement,
+            date: friend.lastGameAt ?? DateTime.now(),
+            title: '🔥 ${friend.username} went on fire $m+ times',
+            subtitle: 'Serious heat.',
+            friend: friend,
+          ));
+          break;
+        }
+      }
+    }
+
+    // 4. Friends active in the last 3 days
+    for (final friend in friends) {
+      if (friend.lastGameAt != null &&
+          DateTime.now().difference(friend.lastGameAt!).inDays <= 3) {
+        events.add(_FeedEvent(
+          type: _FeedEventType.friendActive,
+          date: friend.lastGameAt!,
+          title: '${friend.username} is active',
+          subtitle:
+              'Played ${_timeAgo(friend.lastGameAt!)} · ${friend.wins + friend.losses} total games',
+          friend: friend,
+        ));
+      }
+    }
+
+    events.sort((a, b) => b.date.compareTo(a.date));
+    return events;
   }
 
   Widget _buildSocialPage() {
-    return FutureBuilder<List<User>>(
-      future: _friends,
-      builder: (context, friendsSnapshot) {
-        if (friendsSnapshot.connectionState == ConnectionState.waiting) {
+    return FutureBuilder<List<Object>>(
+      future: Future.wait([_friends!, _myGames!]),
+      builder: (context, snapshot) {
+        final c = AppColors.of(context);
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        final c = AppColors.of(context);
-        if (!friendsSnapshot.hasData || friendsSnapshot.data!.isEmpty) {
+        if (snapshot.hasError) {
           return Center(
-            child: Text('No friend activity yet.',
-                style: TextStyle(color: c.onBackground)),
+              child: Text('Error: ${snapshot.error}',
+                  style: TextStyle(color: c.onBackground)));
+        }
+
+        final friends = snapshot.data![0] as List<User>;
+        final myGames = snapshot.data![1] as List<GameStatistics>;
+        final currentUserId =
+            Provider.of<UserProvider>(context, listen: false).user?.id ?? '';
+
+        final events = _buildFeedEvents(friends, myGames, currentUserId);
+
+        if (events.isEmpty && friends.isEmpty) {
+          return Center(
+            child: Text('Add friends to see activity here.',
+                style: TextStyle(color: c.subtle)),
           );
         }
-        return FutureBuilder<List<FriendAction>>(
-          future: _buildFriendActions(friendsSnapshot.data!),
-          builder: (context, actionsSnapshot) {
-            if (actionsSnapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final actions = actionsSnapshot.data ?? [];
-            if (actions.isEmpty) {
-              return Center(
-                child: Text('No recent friend activity.',
-                    style: TextStyle(color: c.onBackground)),
-              );
-            }
-            return ListView.builder(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              itemCount: actions.length,
-              itemBuilder: (context, index) {
-                final action = actions[index];
-                final c = AppColors.of(context);
-                final accentColor = action.type == ActionType.wonGame
-                    ? Colors.green
-                    : Colors.indigo;
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  decoration: BoxDecoration(
-                    color: c.card,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border(
-                      left: BorderSide(color: accentColor, width: 3),
-                    ),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
-                    leading: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        _buildCompactFriendAvatar(action.user),
-                        Positioned(
-                          bottom: -2,
-                          right: -2,
-                          child: CircleAvatar(
-                            radius: 9,
-                            backgroundColor: accentColor,
-                            child: Icon(
-                              _actionIcon(action.type),
-                              size: 11,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    title: Text(
-                      action.user.username,
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: c.onBackground,
-                          fontWeight: FontWeight.w600),
-                    ),
-                    subtitle: Text(
-                      action.description,
-                      style: TextStyle(fontSize: 11, color: c.subtle),
-                    ),
-                    trailing: Text(
-                      _timeAgo(action.date),
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: c.subtle,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                );
-              },
-            );
-          },
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          children: [
+            if (events.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 32),
+                  child: Text('No recent activity yet.',
+                      style: TextStyle(color: c.subtle)),
+                ),
+              )
+            else
+              ...events.map((e) => _buildFeedCard(context, e)),
+          ],
         );
       },
     );
+  }
+
+  Widget _buildFeedCard(BuildContext context, _FeedEvent event) {
+    final c = AppColors.of(context);
+
+    switch (event.type) {
+      // ── Shared game ────────────────────────────────────────────────────
+      case _FeedEventType.sharedGame:
+        final won = event.userWon ?? false;
+        final accent = won ? Colors.green : Colors.red.shade700;
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border(left: BorderSide(color: accent, width: 3)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                if (event.friend != null)
+                  _buildCompactFriendAvatar(event.friend!),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              event.title,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: c.onBackground,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: accent,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              won ? 'W' : 'L',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(event.subtitle,
+                          style: TextStyle(fontSize: 11, color: c.subtle)),
+                      const SizedBox(height: 6),
+                      Text(_timeAgo(event.date),
+                          style: TextStyle(fontSize: 10, color: c.subtle)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+
+      // ── Win streak ─────────────────────────────────────────────────────
+      case _FeedEventType.winStreak:
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.orange.shade800,
+                Colors.amber.shade600,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                event.title,
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
+              const SizedBox(height: 4),
+              Text(event.subtitle,
+                  style: const TextStyle(fontSize: 12, color: Colors.white70)),
+            ],
+          ),
+        );
+
+      // ── Achievement ────────────────────────────────────────────────────
+      case _FeedEventType.achievement:
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border(
+                left: BorderSide(color: Colors.amber.shade700, width: 3)),
+          ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            leading: event.friend != null
+                ? _buildCompactFriendAvatar(event.friend!)
+                : const Icon(Icons.emoji_events, color: Colors.amber),
+            title: Text(event.title,
+                style: TextStyle(
+                    fontSize: 13,
+                    color: c.onBackground,
+                    fontWeight: FontWeight.w600)),
+            subtitle: Text(event.subtitle,
+                style: TextStyle(fontSize: 11, color: c.subtle)),
+            trailing: Text(_timeAgo(event.date),
+                style: TextStyle(fontSize: 10, color: c.subtle)),
+            onTap: event.friend != null
+                ? () => _showComparisonScreen(event.friend!)
+                : null,
+          ),
+        );
+
+      // ── Friend active ──────────────────────────────────────────────────
+      case _FeedEventType.friendActive:
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(12),
+            border:
+                Border(left: BorderSide(color: Colors.blue.shade400, width: 3)),
+          ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            leading: event.friend != null
+                ? _buildCompactFriendAvatar(event.friend!, isActive: true)
+                : null,
+            title: Text(event.title,
+                style: TextStyle(
+                    fontSize: 13,
+                    color: c.onBackground,
+                    fontWeight: FontWeight.w600)),
+            subtitle: Text(event.subtitle,
+                style: TextStyle(fontSize: 11, color: c.subtle)),
+            trailing: Text(_timeAgo(event.date),
+                style: TextStyle(fontSize: 10, color: c.subtle)),
+            onTap: event.friend != null
+                ? () => _showComparisonScreen(event.friend!)
+                : null,
+          ),
+        );
+    }
   }
 
   /// Builds the “Leaderboard” page, which includes the user + friends sorted by an attribute.
@@ -643,7 +838,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 backgroundColor: Colors.black,
                 child: ClipOval(
                   child: user.mapAvatarKeyToAsset().isEmpty
-                      ? const Icon(Icons.person, size: 38, color: Colors.white54)
+                      ? const Icon(Icons.person,
+                          size: 38, color: Colors.white54)
                       : SvgPicture.asset(
                           user.mapAvatarKeyToAsset(),
                           width: 76,
@@ -673,8 +869,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         ),
         Text(
           _sortDisplay(_sortKey, user),
-          style:
-              TextStyle(color: c.onBackground, fontWeight: FontWeight.bold),
+          style: TextStyle(color: c.onBackground, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -739,8 +934,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               style: TextStyle(
                 color: isMe ? Colors.amber : c.subtle,
                 fontSize: 16,
-                fontWeight:
-                    isMe ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
               ),
             ),
             title: Row(
@@ -752,8 +946,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                     isMe ? '${u.username} (you)' : u.username,
                     style: TextStyle(
                       color: isMe ? Colors.amber : c.onBackground,
-                      fontWeight:
-                          isMe ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -764,8 +957,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               _sortDisplay(_sortKey, u),
               style: TextStyle(
                 color: isMe ? Colors.amber : c.subtle,
-                fontWeight:
-                    isMe ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ),
@@ -794,7 +986,6 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
   Widget _buildCompactFriendAvatar(User user, {bool isActive = false}) =>
       _FriendAvatar(user: user, isActive: isActive);
-
 }
 
 // ---------------------------------------------------------------------------
@@ -866,7 +1057,6 @@ class FriendTile extends StatelessWidget {
     required this.h2hGames,
     required this.onTap,
     required this.onRemove,
-    this.onChallenge,
   });
 
   final User friend;
@@ -877,18 +1067,14 @@ class FriendTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
-  /// If non-null, a challenge icon button is shown in the trailing column.
-  final VoidCallback? onChallenge;
-
   bool get _isActive =>
       friend.lastGameAt != null &&
-      DateTime.now().difference(friend.lastGameAt!).inDays < 7;
+      DateTime.now().difference(friend.lastGameAt!).inDays <= 7;
 
   ({int wins, int losses}) get _h2h {
     int wins = 0, losses = 0;
     for (final g in h2hGames) {
-      final onTeam1 =
-          g.team1Players.any((p) => p.user?.id == currentUserId);
+      final onTeam1 = g.team1Players.any((p) => p.user?.id == currentUserId);
       final won = g.winningTeam == (onTeam1 ? 'Team 1' : 'Team 2');
       if (won) {
         wins++;
@@ -923,8 +1109,8 @@ class FriendTile extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, true),
-                child: const Text('Remove',
-                    style: TextStyle(color: Colors.red)),
+                child:
+                    const Text('Remove', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -942,8 +1128,7 @@ class FriendTile extends StatelessWidget {
         child: const Icon(Icons.person_remove, color: Colors.white),
       ),
       child: Card(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         color: c.card,
         elevation: 1,
         margin: const EdgeInsets.symmetric(vertical: 5),
@@ -951,8 +1136,7 @@ class FriendTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           onTap: onTap,
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               children: [
                 _FriendAvatar(user: friend, isActive: _isActive),
@@ -970,8 +1154,7 @@ class FriendTile extends StatelessWidget {
                       ),
                       if (friend.title.isNotEmpty)
                         Text(friend.title,
-                            style:
-                                TextStyle(fontSize: 11, color: c.subtle)),
+                            style: TextStyle(fontSize: 11, color: c.subtle)),
                       const SizedBox(height: 6),
                       Row(
                         children: [
@@ -1002,9 +1185,7 @@ class FriendTile extends StatelessWidget {
                               margin: const EdgeInsets.only(right: 3),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: won
-                                    ? Colors.green
-                                    : Colors.red.shade700,
+                                color: won ? Colors.green : Colors.red.shade700,
                               ),
                             );
                           }),
@@ -1016,43 +1197,38 @@ class FriendTile extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('last seen',
-                        style:
-                            TextStyle(fontSize: 10, color: c.subtle)),
-                    const SizedBox(height: 2),
-                    Text(
-                      lastSeen,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: c.onBackground,
-                      ),
-                    ),
-                    if (onChallenge != null)
-                      GestureDetector(
-                        onTap: onChallenge,
-                        child: Container(
-                          key: const Key('challenge-btn'),
-                          margin: const EdgeInsets.only(top: 4),
+                    if (friend.activeGameId != null &&
+                        friend.activeGameId!.isNotEmpty)
+                      TextButton.icon(
+                        key: const Key('watch-btn'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.amber,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade800,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.flash_on,
-                                  size: 11, color: Colors.white),
-                              SizedBox(width: 2),
-                              Text('Challenge',
-                                  style: TextStyle(
-                                      fontSize: 10, color: Colors.white)),
-                            ],
-                          ),
+                              horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        icon:
+                            const Icon(Icons.remove_red_eye_outlined, size: 14),
+                        label: const Text('Watch',
+                            style: TextStyle(fontSize: 12)),
+                        onPressed: () => context.push(
+                            AppRoutes.spectateLobbyPath(
+                                friend.activeGameId!)),
+                      )
+                    else ...[
+                      Text('last seen',
+                          style: TextStyle(fontSize: 10, color: c.subtle)),
+                      const SizedBox(height: 2),
+                      Text(
+                        lastSeen,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: c.onBackground,
                         ),
                       ),
+                    ],
                   ],
                 ),
               ],
@@ -1149,8 +1325,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   decoration: InputDecoration(
                     hintText: 'Search by username…',
                     hintStyle: TextStyle(fontSize: 14, color: c.subtle),
-                    prefixIcon:
-                        Icon(Icons.search, color: c.subtle, size: 20),
+                    prefixIcon: Icon(Icons.search, color: c.subtle, size: 20),
                     filled: true,
                     fillColor: c.surface,
                     contentPadding: const EdgeInsets.symmetric(
@@ -1191,8 +1366,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text('No users found.',
-                              style: TextStyle(
-                                  color: c.subtle, fontSize: 13)),
+                              style: TextStyle(color: c.subtle, fontSize: 13)),
                         );
                       }
                       return ListView.builder(
@@ -1235,21 +1409,17 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                 // ── QR section (collapsible) ─────────────────────────
                 const Divider(height: 20),
                 GestureDetector(
-                  onTap: () =>
-                      setState(() => _qrExpanded = !_qrExpanded),
+                  onTap: () => setState(() => _qrExpanded = !_qrExpanded),
                   child: Row(
                     children: [
                       Icon(
-                        _qrExpanded
-                            ? Icons.expand_less
-                            : Icons.expand_more,
+                        _qrExpanded ? Icons.expand_less : Icons.expand_more,
                         color: c.subtle,
                         size: 18,
                       ),
                       const SizedBox(width: 6),
                       Text('Share / Scan QR',
-                          style:
-                              TextStyle(fontSize: 13, color: c.subtle)),
+                          style: TextStyle(fontSize: 13, color: c.subtle)),
                     ],
                   ),
                 ),
@@ -1258,20 +1428,18 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   Center(
                     child: GestureDetector(
                       onTap: () {
-                        final messenger =
-                            ScaffoldMessenger.of(context);
-                        Clipboard.setData(ClipboardData(
-                                text: widget.currentUser.id))
+                        final messenger = ScaffoldMessenger.of(context);
+                        Clipboard.setData(
+                                ClipboardData(text: widget.currentUser.id))
                             .then((_) => messenger.showSnackBar(
                                   const SnackBar(
-                                      content:
-                                          Text('ID copied to clipboard')),
+                                      content: Text('ID copied to clipboard')),
                                 ));
                       },
                       child: Text(
                         'ID: ${widget.currentUser.id}',
-                        style: const TextStyle(
-                            color: Colors.blue, fontSize: 12),
+                        style:
+                            const TextStyle(color: Colors.blue, fontSize: 12),
                       ),
                     ),
                   ),
@@ -1279,16 +1447,14 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   Center(
                     child: Container(
                       decoration: BoxDecoration(
-                        border:
-                            Border.all(color: Colors.orange, width: 2),
+                        border: Border.all(color: Colors.orange, width: 2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.all(8),
                       child: QrImageView(
                         data: widget.currentUser.id,
                         version: QrVersions.auto,
-                        size:
-                            MediaQuery.of(context).size.width * 0.5,
+                        size: MediaQuery.of(context).size.width * 0.5,
                       ),
                     ),
                   ),
@@ -1314,8 +1480,8 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text('Close',
-                        style: TextStyle(color: c.onBackground)),
+                    child:
+                        Text('Close', style: TextStyle(color: c.onBackground)),
                   ),
                 ),
               ],

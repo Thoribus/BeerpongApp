@@ -331,11 +331,11 @@ class StatisticsTable extends StatelessWidget {
     final onFireChange = _computeSlopeAsPercentChange(onFireSpots);
     final heatingUpChange = _computeSlopeAsPercentChange(heatingUpSpots);
 
-    final bounceRateLifetime = user.totalBounceAttempts > 0
-        ? (user.totalBounceMakes / user.totalBounceAttempts * 100).round()
+    final bounceRateLifetime = user.bounceAttempts > 0
+        ? (user.bounceMakes / user.bounceAttempts * 100).round()
         : 0;
-    final islandConversionLifetime = user.totalIslandAttempts > 0
-        ? (user.totalIslandMakes / user.totalIslandAttempts * 100).round()
+    final islandConversionLifetime = user.islandAttempts > 0
+        ? (user.islandMakes / user.islandAttempts * 100).round()
         : 0;
 
     final dates =

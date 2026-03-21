@@ -10,7 +10,6 @@ class Player {
   int hitThisRound;         // Hits in the current round
   List<int> cupsHit;        // List of cup indices that the player has hit
   bool lastCupHit;          // Whether the player hit the last cup
-  bool islandShotUsed;      // Whether the player used an island shot
   int islandAttempts;       // Number of island shots attempted
   int islandMakes;          // Number of island cups successfully sunk
   int deathCupHits;         // Number of death cups triggered
@@ -37,7 +36,6 @@ class Player {
     this.heatingUp = 0,
     this.bounceAttempts = 0,
     this.bounceMakes = 0,
-    this.islandShotUsed = false,
     this.islandAttempts = 0,
     this.islandMakes = 0,
     this.deathCupHits = 0,
@@ -62,7 +60,6 @@ class Player {
       ..bounceAttempts = bounceAttempts
       ..bounceMakes = bounceMakes
       ..hitThisRound = hitThisRound
-      ..islandShotUsed = islandShotUsed
       ..islandAttempts = islandAttempts
       ..islandMakes = islandMakes
       ..deathCupHits = deathCupHits
@@ -147,7 +144,6 @@ class Player {
       'hitThisRound': hitThisRound,
       'cupsHit': cupsHit,
       'lastCupHit': lastCupHit,
-      'islandShotUsed': islandShotUsed,
       'islandAttempts': islandAttempts,
       'islandMakes': islandMakes,
       'deathCupHits': deathCupHits,
@@ -177,7 +173,6 @@ class Player {
       airballs: json['airballs'],
       cupsHit: List<int>.from(json['cupsHit'] ?? []),
       hitThisRound: json['hitThisRound'],
-      islandShotUsed: json['islandShotUsed'] ?? false,
       islandAttempts: json['islandAttempts'] ?? 0,
       islandMakes: json['islandMakes'] ?? 0,
       deathCupHits: json['deathCupHits'] ?? 0,
@@ -195,7 +190,7 @@ class Player {
 
   @override
   String toString() {
-    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, islandMakes: $islandMakes, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, heatingUp: $heatingUp, bounceAttempts: $bounceAttempts, bounceMakes: $bounceMakes, isWinner: $isWinner, user: $user)';
+    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandAttempts: $islandAttempts, islandMakes: $islandMakes, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, heatingUp: $heatingUp, bounceAttempts: $bounceAttempts, bounceMakes: $bounceMakes, isWinner: $isWinner, user: $user)';
   }
 
   /// Equality based on name (and potentially user).
@@ -217,7 +212,6 @@ class Player {
       hitThisRound: 0,
       cupsHit: [],
       lastCupHit: false,
-      islandShotUsed: false,
       islandAttempts: 0,
       islandMakes: 0,
       deathCupHits: 0,
@@ -252,7 +246,6 @@ class Player {
       heatingUp: heatingUp + matchResult.heatingUp,
       bounceAttempts: bounceAttempts + matchResult.bounceAttempts,
       bounceMakes: bounceMakes + matchResult.bounceMakes,
-      islandShotUsed: islandShotUsed || matchResult.islandShotUsed,
       islandAttempts: islandAttempts + matchResult.islandAttempts,
       islandMakes: islandMakes + matchResult.islandMakes,
       deathCupHits: deathCupHits + matchResult.deathCupHits,
@@ -282,7 +275,6 @@ extension PlayerCopyWith on Player {
       heatingUp: heatingUp,
       bounceAttempts: bounceAttempts,
       bounceMakes: bounceMakes,
-      islandShotUsed: islandShotUsed,
       islandAttempts: islandAttempts,
       islandMakes: islandMakes,
       deathCupHits: deathCupHits,
@@ -306,7 +298,6 @@ extension PlayerCopyWith on Player {
       heatingUp: heatingUp,
       bounceAttempts: bounceAttempts,
       bounceMakes: bounceMakes,
-      islandShotUsed: islandShotUsed,
       islandAttempts: islandAttempts,
       islandMakes: islandMakes,
       deathCupHits: deathCupHits,

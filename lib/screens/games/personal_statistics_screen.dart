@@ -425,8 +425,8 @@ class PersonalStatisticsScreen extends StatelessWidget {
     final hitPct = user.totalThrows > 0
         ? (user.totalScore / user.totalThrows * 100)
         : 0.0;
-    final bouncePct = user.totalBounceAttempts > 0
-        ? (user.totalBounceMakes / user.totalBounceAttempts * 100)
+    final bouncePct = user.bounceAttempts > 0
+        ? (user.bounceMakes / user.bounceAttempts * 100)
         : 0.0;
     final avgCups = totalGames > 0 ? user.totalScore / totalGames : 0.0;
 
@@ -466,7 +466,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
       _TileDef(
         Icons.workspaces_outlined,
         'Islands',
-        '${user.totalIslandMakes}',
+        '${user.islandMakes}',
         Colors.teal,
       ),
       _TileDef(
@@ -492,6 +492,12 @@ class PersonalStatisticsScreen extends StatelessWidget {
         'Avg/Game',
         avgCups.toStringAsFixed(1),
         Colors.grey,
+      ),
+      _TileDef(
+        Icons.nightlight_round,
+        'Night Games',
+        '${user.nightGames}',
+        Colors.deepPurple,
       ),
     ];
 

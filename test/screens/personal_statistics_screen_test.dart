@@ -16,9 +16,9 @@ User _makeUser({
   int defended = 1,
   int hitLastCup = 3,
   int totalHeatingUp = 5,
-  int totalBounceAttempts = 4,
-  int totalBounceMakes = 2,
-  int totalIslandMakes = 1,
+  int bounceAttempts = 4,
+  int bounceMakes = 2,
+  int islandMakes = 1,
 }) =>
     User(
       id: 'u1',
@@ -31,9 +31,9 @@ User _makeUser({
       defended: defended,
       hitLastCup: hitLastCup,
       totalHeatingUp: totalHeatingUp,
-      totalBounceAttempts: totalBounceAttempts,
-      totalBounceMakes: totalBounceMakes,
-      totalIslandMakes: totalIslandMakes,
+      bounceAttempts: bounceAttempts,
+      bounceMakes: bounceMakes,
+      islandMakes: islandMakes,
       cupsHitCount: {'0': 3, '1': 2, '9': 1},
     );
 

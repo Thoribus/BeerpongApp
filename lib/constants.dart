@@ -47,6 +47,26 @@ class AppConstants {
   // ── SharedPreferences keys ───────────────────────────────────────────────────
   static const String prefGameState = 'currentGameState';
 
+  // ── Background keys ──────────────────────────────────────────────────────────
+  static const List<String> backgroundKeys = [
+    'bg_default',
+    'bg_amber',
+    'bg_blue',
+    'bg_green',
+    'bg_purple',
+    'bg_dark',
+  ];
+
+  /// Minimum level required to equip each background.
+  static const Map<String, int> backgroundLevelRequirements = {
+    'bg_default': 1,
+    'bg_amber':   1,
+    'bg_blue':    6,   // Party Starter
+    'bg_green':   11,  // Cup Hunter
+    'bg_purple':  16,  // Table Regular
+    'bg_dark':    21,  // Foam Roller
+  };
+
   // ── Avatar asset keys ────────────────────────────────────────────────────────
   static const List<String> avatarKeys = [
     'avatar_aggroracoon',
@@ -56,4 +76,63 @@ class AppConstants {
     'avatar_cupbeer',
     'avatar_frogisland',
   ];
+
+  /// Minimum level required to equip each avatar.
+  /// Avatars not listed here are free (level 1).
+  static const Map<String, int> avatarLevelRequirements = {
+    'avatar_aggroracoon': 1,
+    'avatar_catbeer': 1,
+    'avatar_catpants': 6,   // Party Starter
+    'avatar_cheering': 11,  // Cup Hunter
+    'avatar_cupbeer': 16,   // Table Regular
+    'avatar_frogisland': 26, // Bounce Artist
+  };
+}
+
+/// Programmatic gradient backgrounds for the user card.
+///
+/// `bg_default` is handled specially in [UserCard] — it renders the SVG asset
+/// instead of this gradient, so the value here is never actually used for it.
+abstract final class AppBackgrounds {
+  static LinearGradient gradientFor(String key) => switch (key) {
+        'bg_amber' => const LinearGradient(
+            colors: [Color(0xFFB45309), Color(0xFF78350F)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        'bg_blue' => const LinearGradient(
+            colors: [Color(0xFF1D4ED8), Color(0xFF1E3A5F)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        'bg_green' => const LinearGradient(
+            colors: [Color(0xFF15803D), Color(0xFF14532D)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        'bg_purple' => const LinearGradient(
+            colors: [Color(0xFF7C3AED), Color(0xFF4C1D95)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        'bg_dark' => const LinearGradient(
+            colors: [Color(0xFF1F2937), Color(0xFF111827)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        _ /* bg_default */ => const LinearGradient(
+            colors: [Color(0xFF374151), Color(0xFF1F2937)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+      };
+
+  static String labelFor(String key) => switch (key) {
+        'bg_amber'  => 'Amber',
+        'bg_blue'   => 'Blue',
+        'bg_green'  => 'Green',
+        'bg_purple' => 'Purple',
+        'bg_dark'   => 'Dark',
+        _           => 'Default',
+      };
 }

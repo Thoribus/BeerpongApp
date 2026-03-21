@@ -14,13 +14,13 @@ double avgThrowsPerGame(User u) {
 }
 
 /// Bounce shot conversion rate (bounceMakes / bounceAttempts), 0–1.
-double bounceConversion(User u) => u.totalBounceAttempts > 0
-    ? u.totalBounceMakes / u.totalBounceAttempts
+double bounceConversion(User u) => u.bounceAttempts > 0
+    ? u.bounceMakes / u.bounceAttempts
     : 0;
 
 /// Island shot conversion rate (islandMakes / islandAttempts), 0–1.
-double islandConversion(User u) => u.totalIslandAttempts > 0
-    ? u.totalIslandMakes / u.totalIslandAttempts
+double islandConversion(User u) => u.islandAttempts > 0
+    ? u.islandMakes / u.islandAttempts
     : 0;
 
 /// Win rate (wins / gamesPlayed), 0–1.

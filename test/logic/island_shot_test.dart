@@ -110,16 +110,16 @@ void main() {
     });
   });
 
-  group('Player.islandShotUsed tracking', () {
-    test('starts as false', () {
+  group('Player.islandAttempts tracking', () {
+    test('starts at 0', () {
       final player = Player(name: 'Alice');
-      expect(player.islandShotUsed, isFalse);
+      expect(player.islandAttempts, 0);
     });
 
     test('persists through toJson/fromJson round-trip', () {
-      final player = Player(name: 'Alice')..islandShotUsed = true;
+      final player = Player(name: 'Alice')..islandAttempts = 1;
       final copy = Player.fromJson(player.toJson());
-      expect(copy.islandShotUsed, isTrue);
+      expect(copy.islandAttempts, 1);
     });
   });
 

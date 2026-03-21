@@ -59,8 +59,8 @@ void main() {
   group('FriendTile — active dot', () {
     testWidgets('shows active dot when lastGameAt is within 7 days',
         (tester) async {
-      final friend =
-          _user('f1', lastGameAt: DateTime.now().subtract(const Duration(days: 3)));
+      final friend = _user('f1',
+          lastGameAt: DateTime.now().subtract(const Duration(days: 3)));
       await tester.pumpWidget(_wrap(_tile(friend: friend)));
 
       expect(find.byKey(const Key('active-dot')), findsOneWidget);
@@ -80,6 +80,17 @@ void main() {
       await tester.pumpWidget(_wrap(_tile(friend: friend)));
 
       expect(find.byKey(const Key('active-dot')), findsNothing);
+    });
+
+    testWidgets('shows active dot when lastGameAt is exactly 7 days ago',
+        (tester) async {
+      final friend = _user(
+        'f1',
+        lastGameAt: DateTime.now().subtract(const Duration(days: 7)),
+      );
+      await tester.pumpWidget(_wrap(_tile(friend: friend)));
+
+      expect(find.byKey(const Key('active-dot')), findsOneWidget);
     });
   });
 
@@ -150,11 +161,33 @@ void main() {
     });
 
     testWidgets('shows relative time when lastGameAt is set', (tester) async {
-      final friend =
-          _user('f1', lastGameAt: DateTime.now().subtract(const Duration(days: 2)));
+      final friend = _user('f1',
+          lastGameAt: DateTime.now().subtract(const Duration(days: 2)));
       await tester.pumpWidget(_wrap(_tile(friend: friend)));
 
       expect(find.text('2d ago'), findsOneWidget);
+    });
+
+    testWidgets('shows week/month/year buckets for older activity',
+        (tester) async {
+      final weekFriend = _user('week',
+          lastGameAt: DateTime.now().subtract(const Duration(days: 14)));
+      final monthFriend = _user('month',
+          lastGameAt: DateTime.now().subtract(const Duration(days: 65)));
+      final yearFriend = _user('year',
+          lastGameAt: DateTime.now().subtract(const Duration(days: 370)));
+
+      await tester.pumpWidget(_wrap(Column(
+        children: [
+          _tile(friend: weekFriend),
+          _tile(friend: monthFriend),
+          _tile(friend: yearFriend),
+        ],
+      )));
+
+      expect(find.text('2w ago'), findsOneWidget);
+      expect(find.text('2mo ago'), findsOneWidget);
+      expect(find.text('1y ago'), findsOneWidget);
     });
   });
 
@@ -162,7 +195,8 @@ void main() {
     testWidgets('swiping left reveals remove confirmation dialog',
         (tester) async {
       final friend = _user('f1');
-      await tester.pumpWidget(_wrap(ListView(children: [_tile(friend: friend)])));
+      await tester
+          .pumpWidget(_wrap(ListView(children: [_tile(friend: friend)])));
 
       await tester.drag(find.byType(FriendTile), const Offset(-500, 0));
       await tester.pumpAndSettle();
@@ -173,7 +207,8 @@ void main() {
 
     testWidgets('tapping Cancel keeps the tile', (tester) async {
       final friend = _user('f1');
-      await tester.pumpWidget(_wrap(ListView(children: [_tile(friend: friend)])));
+      await tester
+          .pumpWidget(_wrap(ListView(children: [_tile(friend: friend)])));
 
       await tester.drag(find.byType(FriendTile), const Offset(-500, 0));
       await tester.pumpAndSettle();
@@ -187,9 +222,8 @@ void main() {
     testWidgets('tapping Remove calls onRemove callback', (tester) async {
       bool removed = false;
       final friend = _user('f1');
-      await tester.pumpWidget(_wrap(ListView(children: [
-        _tile(friend: friend, onRemove: () => removed = true)
-      ])));
+      await tester.pumpWidget(_wrap(ListView(
+          children: [_tile(friend: friend, onRemove: () => removed = true)])));
 
       await tester.drag(find.byType(FriendTile), const Offset(-500, 0));
       await tester.pumpAndSettle();

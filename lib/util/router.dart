@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/auth/login_screen.dart';
+import 'package:beerpongapp/screens/profile/achievements_screen.dart';
 import 'package:beerpongapp/screens/friends/compare_stats_screen.dart';
 import 'package:beerpongapp/screens/friends/friends_screen.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
@@ -8,11 +9,13 @@ import 'package:beerpongapp/screens/home/home_screen.dart';
 import 'package:beerpongapp/screens/invitations/invitation_inbox_screen.dart';
 import 'package:beerpongapp/screens/invitations/waiting_for_game_screen.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
+import 'package:beerpongapp/screens/spectate_lobby_screen.dart';
 import 'package:beerpongapp/screens/profile/account_screen.dart';
 import 'package:beerpongapp/screens/shop/shop_screen.dart';
 import 'package:beerpongapp/screens/games/statistics_screen.dart';
 import 'package:beerpongapp/screens/tournament/tournament_page_view.dart';
 import 'package:beerpongapp/screens/base/base_screen.dart';
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/route_args.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -26,22 +29,22 @@ class AppRouter {
 
   static GoRouter createRouter(UserProvider userProvider) {
     router = GoRouter(
-      initialLocation: '/login',
+      initialLocation: AppRoutes.login,
       refreshListenable: userProvider,
       redirect: (context, state) {
         // Wait for session restore before making auth decisions.
         if (userProvider.isLoading) return null;
 
         final loggedIn = userProvider.user != null;
-        final onLogin = state.matchedLocation == '/login';
+        final onLogin = state.matchedLocation == AppRoutes.login;
 
-        if (!loggedIn && !onLogin) return '/login';
-        if (loggedIn && onLogin) return '/home';
+        if (!loggedIn && !onLogin) return AppRoutes.login;
+        if (loggedIn && onLogin) return AppRoutes.home;
         return null;
       },
       routes: [
         GoRoute(
-          path: '/login',
+          path: AppRoutes.login,
           builder: (_, __) => const LoginScreen(),
         ),
         StatefulShellRoute.indexedStack(
@@ -49,31 +52,31 @@ class AppRouter {
           branches: [
             StatefulShellBranch(routes: [
               GoRoute(
-                  path: '/shop', builder: (_, __) => const ShopScreen()),
+                  path: AppRoutes.shop, builder: (_, __) => const ShopScreen()),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
-                  path: '/friends',
+                  path: AppRoutes.friends,
                   builder: (_, __) => const FriendsListScreen()),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
-                  path: '/home', builder: (_, __) => const HomeScreen()),
+                  path: AppRoutes.home, builder: (_, __) => const HomeScreen()),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
-                  path: '/games',
+                  path: AppRoutes.games,
                   builder: (_, __) => const StatisticsScreen()),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
-                  path: '/profile',
+                  path: AppRoutes.profile,
                   builder: (_, __) => const AccountScreen()),
             ]),
           ],
         ),
         GoRoute(
-          path: '/game-mode',
+          path: AppRoutes.gameMode,
           builder: (context, state) {
             final args = state.extra as GameModeArgs;
             return GameModeDetailsScreen(
@@ -86,10 +89,10 @@ class AppRouter {
           },
         ),
         GoRoute(
-          path: '/game',
+          path: AppRoutes.game,
           // Guard against GoRouter rebuilding this route without extras (e.g.
           // when refreshListenable fires after userProvider.updateUser()).
-          redirect: (_, state) => state.extra == null ? '/home' : null,
+          redirect: (_, state) => state.extra == null ? AppRoutes.home : null,
           builder: (context, state) {
             // Double-guard: the redirect above handles the common case, but
             // go_router may still invoke the builder during refreshListenable
@@ -108,7 +111,7 @@ class AppRouter {
           },
         ),
         GoRoute(
-          path: '/tournament/:id',
+          path: AppRoutes.tournament,
           builder: (context, state) {
             final args = state.extra as TournamentPageViewArgs;
             return TournamentPageView(
@@ -118,14 +121,21 @@ class AppRouter {
           },
         ),
         GoRoute(
-          path: '/spectate-live/:gameId',
+          path: AppRoutes.spectateLobby,
+          builder: (context, state) {
+            final gameId = state.pathParameters['gameId']!;
+            return ReadOnlyLobbyScreen(gameId: gameId);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.spectateLive,
           builder: (context, state) {
             final gameId = state.pathParameters['gameId']!;
             return LiveGameStatsScreen(gameId: gameId);
           },
         ),
         GoRoute(
-          path: '/compare',
+          path: AppRoutes.compare,
           builder: (context, state) {
             final args = state.extra as ComparisonArgs;
             return ComparisonScreen(
@@ -135,14 +145,22 @@ class AppRouter {
           },
         ),
         GoRoute(
-          path: '/invitations',
+          path: AppRoutes.invitations,
           builder: (_, __) => const InvitationInboxScreen(),
         ),
         GoRoute(
-          path: '/waiting',
+          path: AppRoutes.waiting,
           builder: (context, state) {
             final args = state.extra as WaitingArgs;
             return WaitingForGameScreen(args: args);
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.achievements,
+          builder: (context, state) {
+            final user = userProvider.user;
+            if (user == null) return const Scaffold(body: SizedBox.shrink());
+            return AchievementsScreen(user: user);
           },
         ),
       ],
