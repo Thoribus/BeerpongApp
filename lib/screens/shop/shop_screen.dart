@@ -1,4 +1,7 @@
+import 'package:beerpongapp/services/ad_rate_limiter.dart';
+import 'package:beerpongapp/services/ad_service.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -139,9 +142,83 @@ class _ShopHeader extends StatelessWidget {
   }
 }
 
-/// Bottom sheet stub — rewarded ads and IAP packs wired in Phases 11 & 12.
-class _GetStarsSheet extends StatelessWidget {
+/// Bottom sheet — rewarded video ads + IAP packs (packs wired in Phase 12).
+class _GetStarsSheet extends StatefulWidget {
   const _GetStarsSheet();
+
+  @override
+  State<_GetStarsSheet> createState() => _GetStarsSheetState();
+}
+
+class _GetStarsSheetState extends State<_GetStarsSheet> {
+  int _remaining = AdRateLimiter.dailyLimit;
+  bool _isLoadingAd = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRemaining();
+  }
+
+  Future<void> _loadRemaining() async {
+    final r = await AdRateLimiter.instance.remainingToday();
+    if (mounted) setState(() => _remaining = r);
+  }
+
+  Future<void> _watchAd() async {
+    if (_remaining <= 0 || _isLoadingAd) return;
+    setState(() => _isLoadingAd = true);
+
+    // Capture before any async gaps.
+    final userProvider = context.read<UserProvider>();
+    final userId = userProvider.user?.id;
+
+    // Preload if not ready yet.
+    if (!AdService.instance.isReady) {
+      await AdService.instance.preload();
+      // Poll briefly — ad loads are async.
+      for (var i = 0; i < 6; i++) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (AdService.instance.isReady) break;
+      }
+    }
+
+    if (!AdService.instance.isReady) {
+      if (mounted) {
+        setState(() => _isLoadingAd = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No ad available right now. Try again later.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    AdService.instance.showRewardedAd(
+      onRewarded: () async {
+        await AdRateLimiter.instance.recordWatch();
+        if (userId != null) {
+          await FirestoreService.instance
+              .creditStars(userId: userId, amount: 50);
+          await userProvider.refreshUser();
+        }
+        if (mounted) {
+          setState(() {
+            _remaining = (_remaining - 1).clamp(0, AdRateLimiter.dailyLimit);
+            _isLoadingAd = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You earned 50 ⭐!')),
+          );
+        }
+      },
+      onFailed: () {
+        if (mounted) setState(() => _isLoadingAd = false);
+      },
+    );
+    // _isLoadingAd is reset inside the ad callbacks above, not here.
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -153,59 +230,126 @@ class _GetStarsSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          Text(
-            'Get Stars',
-            style: TextStyle(
-              color: c.onBackground,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
+            Text(
+              'Get Stars',
+              style: TextStyle(
+                color: c.onBackground,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Earn ⭐ stars to spend in the shop.',
-            style: TextStyle(color: c.subtle, fontSize: 13),
-          ),
-          const SizedBox(height: 20),
-          const _SheetRow(
-            icon: Icons.play_circle_outline_rounded,
-            iconColor: Colors.green,
-            title: 'Watch a short video',
-            subtitle: '+50 ⭐  ·  Up to 5 times per day',
-            badgeLabel: 'Coming soon',
-          ),
-          const Divider(height: 24),
-          const _SheetRow(
-            icon: Icons.star_rounded,
-            iconColor: Colors.amber,
-            title: 'Starter Pack  ·  €1.99',
-            subtitle: '200 ⭐',
-            badgeLabel: 'Coming soon',
-          ),
-          const SizedBox(height: 12),
-          const _SheetRow(
-            icon: Icons.star_rounded,
-            iconColor: Colors.orange,
-            title: 'Popular Pack  ·  €4.99',
-            subtitle: '600 ⭐  ·  Best value',
-            badgeLabel: 'Coming soon',
-          ),
-          const SizedBox(height: 12),
-          const _SheetRow(
-            icon: Icons.star_rounded,
-            iconColor: Colors.deepOrange,
-            title: 'Mega Pack  ·  €9.99',
-            subtitle: '1 500 ⭐',
-            badgeLabel: 'Coming soon',
-          ),
-          const SizedBox(height: 20),
-          Center(
-            child: Text(
-              'Earn stars for free by playing games!',
-              style: TextStyle(color: c.subtle, fontSize: 12),
+            const SizedBox(height: 4),
+            Text(
+              'Earn ⭐ stars to spend in the shop.',
+              style: TextStyle(color: c.subtle, fontSize: 13),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            // ── Rewarded video ──────────────────────────────────────────────
+            _WatchVideoRow(
+              remaining: _remaining,
+              isLoading: _isLoadingAd,
+              onTap: _remaining > 0 ? _watchAd : null,
+            ),
+            const Divider(height: 24),
+            // ── IAP packs (Phase 12) ────────────────────────────────────────
+            const _SheetRow(
+              icon: Icons.star_rounded,
+              iconColor: Colors.amber,
+              title: 'Starter Pack  ·  €1.99',
+              subtitle: '200 ⭐',
+              badgeLabel: 'Coming soon',
+            ),
+            const SizedBox(height: 12),
+            const _SheetRow(
+              icon: Icons.star_rounded,
+              iconColor: Colors.orange,
+              title: 'Popular Pack  ·  €4.99',
+              subtitle: '600 ⭐  ·  Best value',
+              badgeLabel: 'Coming soon',
+            ),
+            const SizedBox(height: 12),
+            const _SheetRow(
+              icon: Icons.star_rounded,
+              iconColor: Colors.deepOrange,
+              title: 'Mega Pack  ·  €9.99',
+              subtitle: '1 500 ⭐',
+              badgeLabel: 'Coming soon',
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: Text(
+                'Earn stars for free by playing games!',
+                style: TextStyle(color: c.subtle, fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Rewarded-video row with live remaining-count and loading spinner.
+class _WatchVideoRow extends StatelessWidget {
+  const _WatchVideoRow({
+    required this.remaining,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  final int remaining;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final canWatch = remaining > 0 && !isLoading;
+    return InkWell(
+      onTap: canWatch ? onTap : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(
+              Icons.play_circle_outline_rounded,
+              color: canWatch ? Colors.green : c.subtle,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Watch a short video',
+                    style: TextStyle(
+                      color: c.onBackground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    remaining > 0
+                        ? '+50 ⭐  ·  $remaining of ${AdRateLimiter.dailyLimit} watches remaining today'
+                        : 'Daily limit reached — come back tomorrow',
+                    style: TextStyle(color: c.subtle, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            if (isLoading)
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: c.subtle,
+                ),
+              )
+            else if (remaining <= 0)
+              Icon(Icons.check_circle_outline, color: c.subtle, size: 20),
+          ],
         ),
       ),
     );

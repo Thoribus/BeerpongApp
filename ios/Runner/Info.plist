@@ -47,6 +47,9 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
+	<!-- AdMob: App ID (test ID — replace before production) -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

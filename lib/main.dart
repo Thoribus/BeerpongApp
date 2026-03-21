@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:beerpongapp/services/ad_service.dart';
 import 'package:beerpongapp/services/notification_service.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -20,6 +22,9 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
+
+  await MobileAds.instance.initialize();
+  unawaited(AdService.instance.preload());
 
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
   await NotificationService.instance.initLocalNotifications();
