@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/screens/games/statistics_screen.dart';
 
@@ -47,6 +48,24 @@ void main() {
       await tester.pump();
 
       expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+    });
+
+    // Phase 5.2 — Progress tab is absent when signed out (same guard as others)
+    testWidgets('does not show Progress tab when user is null', (tester) async {
+      final provider = UserProvider();
+
+      await tester.pumpWidget(_buildTestApp(provider));
+      await tester.pump();
+
+      expect(find.text('Progress'), findsNothing);
+      expect(find.text('Breakdown'), findsNothing);
+    });
+  });
+
+  // Phase 5.3 — /achievements route constant exists
+  group('AppRoutes — achievements route', () {
+    test('AppRoutes.achievements constant is correct', () {
+      expect(AppRoutes.achievements, equals('/achievements'));
     });
   });
 }

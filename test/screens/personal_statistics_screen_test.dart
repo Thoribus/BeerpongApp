@@ -19,6 +19,7 @@ User _makeUser({
   int bounceAttempts = 4,
   int bounceMakes = 2,
   int islandMakes = 1,
+  int nightGames = 2,
 }) =>
     User(
       id: 'u1',
@@ -34,6 +35,7 @@ User _makeUser({
       bounceAttempts: bounceAttempts,
       bounceMakes: bounceMakes,
       islandMakes: islandMakes,
+      nightGames: nightGames,
       cupsHitCount: {'0': 3, '1': 2, '9': 1},
     );
 
@@ -72,16 +74,18 @@ void main() {
   final user = _makeUser();
 
   group('PersonalStatisticsScreen — stat grid', () {
-    testWidgets('shows 12 stat tiles', (tester) async {
+    testWidgets('shows 13 stat tiles including Night Games', (tester) async {
       await tester.pumpWidget(_wrap(
         PersonalStatisticsScreen(user: user, games: const []),
       ));
-      // Verify new tiles present in the 3-col/12-tile grid
+      // Phase 6 tiles (surface hidden stats)
       expect(find.text('Defended'), findsOneWidget);
       expect(find.text('Heating Up'), findsOneWidget);
       expect(find.text('Last Cup'), findsOneWidget);
       expect(find.text('Avg/Game'), findsOneWidget);
-      // Legacy tiles still present
+      // Phase 6.1 — new Night Games tile
+      expect(find.text('Night Games'), findsOneWidget);
+      // Legacy tiles
       expect(find.text('Wins'), findsOneWidget);
       expect(find.text('Losses'), findsOneWidget);
       expect(find.text('Win Rate'), findsOneWidget);
@@ -90,6 +94,15 @@ void main() {
       expect(find.text('On Fire'), findsOneWidget);
       expect(find.text('Bounce%'), findsOneWidget);
       expect(find.text('Islands'), findsOneWidget);
+    });
+
+    testWidgets('Night Games tile shows nightGames value', (tester) async {
+      await tester.pumpWidget(_wrap(
+        PersonalStatisticsScreen(
+            user: _makeUser(nightGames: 7), games: const []),
+      ));
+      expect(find.text('Night Games'), findsOneWidget);
+      expect(find.text('7'), findsWidgets);
     });
 
     testWidgets('Defended tile shows user.defended value', (tester) async {

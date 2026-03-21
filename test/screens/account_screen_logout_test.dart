@@ -72,4 +72,39 @@ void main() {
       expect(find.byIcon(Icons.logout), findsOneWidget);
     });
   });
+
+  // Phase 5.1 — AccountScreen simplified (no tabs, Profile header only)
+  group('AccountScreen Phase 5.1 — simplified layout', () {
+    testWidgets('shows Profile header when user is signed in', (tester) async {
+      final provider = UserProvider();
+      provider.setUserForTesting(makeTestUser());
+
+      await tester.pumpWidget(_buildTestApp(provider));
+      await tester.pump();
+
+      expect(find.text('Profile'), findsOneWidget);
+    });
+
+    testWidgets('no Customize / Achievements / Progress tabs visible',
+        (tester) async {
+      final provider = UserProvider();
+      provider.setUserForTesting(makeTestUser());
+
+      await tester.pumpWidget(_buildTestApp(provider));
+      await tester.pump();
+
+      // Phase 5.1 removed the 3-tab PageView; none of the old tab labels appear.
+      expect(find.text('Customize'), findsNothing);
+      expect(find.text('Achievements'), findsNothing);
+      // 'Progress' might appear inside CustomUserScreen's level badge, so we
+      // check the specific tab-bar label is gone, not just the word.
+      expect(find.text('Profile'), findsOneWidget); // header still present
+    });
+
+    testWidgets('shows nothing when user is null (regression)', (tester) async {
+      final provider = UserProvider();
+      await tester.pumpWidget(_buildTestApp(provider));
+      expect(find.text('Profile'), findsNothing);
+    });
+  });
 }

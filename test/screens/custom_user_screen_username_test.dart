@@ -1,3 +1,4 @@
+import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/screens/profile/custom_user_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -74,6 +75,34 @@ void main() {
     test('all values are distinct', () {
       const values = UsernameStatus.values;
       expect(values.toSet().length, equals(values.length));
+    });
+  });
+
+  // Phase 7.2 — Background key constants used by the selection grid
+  group('AppConstants — backgroundKeys (Phase 7.2)', () {
+    test('backgroundKeys has 6 entries matching the grid columns', () {
+      expect(AppConstants.backgroundKeys.length, 6);
+    });
+
+    test('every backgroundKey has a level requirement', () {
+      for (final key in AppConstants.backgroundKeys) {
+        expect(
+          AppConstants.backgroundLevelRequirements.containsKey(key),
+          isTrue,
+          reason: 'Missing level requirement for $key',
+        );
+      }
+    });
+
+    test('bg_default is available at level 1', () {
+      expect(AppConstants.backgroundLevelRequirements['bg_default'], 1);
+    });
+
+    test('higher-tier backgrounds require higher levels', () {
+      expect(AppConstants.backgroundLevelRequirements['bg_purple']!,
+          greaterThan(AppConstants.backgroundLevelRequirements['bg_default']!));
+      expect(AppConstants.backgroundLevelRequirements['bg_dark']!,
+          greaterThan(AppConstants.backgroundLevelRequirements['bg_amber']!));
     });
   });
 }

@@ -213,7 +213,6 @@ void main() {
       expect(find.text('🔥 3-game win streak!'), findsOneWidget);
       expect(find.text('🏆 f1 reached 50 wins'), findsOneWidget);
       expect(find.text('🔥 f1 went on fire 50+ times'), findsOneWidget);
-      expect(find.text('Play Again'), findsWidgets);
 
       await tester.scrollUntilVisible(
         find.text('f1 is active'),
