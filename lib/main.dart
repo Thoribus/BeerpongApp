@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'dart:io';
+
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:beerpongapp/services/ad_service.dart';
 import 'package:beerpongapp/services/notification_service.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -21,6 +24,18 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+  }
+
+  // On iOS 14+, request ATT permission before initialising ads so AdMob can
+  // serve personalised ads. On Android this is a no-op.
+  if (Platform.isIOS) {
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      // Brief delay recommended by Apple to avoid showing the prompt before
+      // the app's first frame is visible.
+      await Future.delayed(const Duration(milliseconds: 200));
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
   }
 
   await MobileAds.instance.initialize();
