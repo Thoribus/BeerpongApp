@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:beerpongapp/util/app_logger.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
-import 'package:beerpongapp/util/route_args.dart';
 import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/router.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -221,7 +220,7 @@ class NotificationService {
   /// | game_invitation       | → /invitations (recipient views pending invites)|
   /// | invitation_accepted   | → /home (host: lobby listener already updated)  |
   /// | invitation_declined   | → /home (host: lobby listener already updated)  |
-  /// | game_started          | → /waiting (recipient joins; auto-enters /game) |
+  /// | game_started          | → /spectate-live/:gameId (game already running) |
   void _routeByType(String type, Map<String, String> data) {
     AppLogger.info('[FCM route] type=$type');
     switch (type) {
@@ -235,11 +234,9 @@ class NotificationService {
         AppRouter.router.go(AppRoutes.home);
       case 'game_started':
         final gameId = data['gameId'] ?? '';
-        final hostName = data['hostName'] ?? '';
-        AppRouter.router.go(
-          '/waiting',
-          extra: WaitingArgs(gameId: gameId, hostName: hostName),
-        );
+        if (gameId.isNotEmpty) {
+          AppRouter.router.go(AppRoutes.spectateLivePath(gameId));
+        }
       default:
         break;
     }

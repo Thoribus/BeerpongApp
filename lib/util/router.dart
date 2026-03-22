@@ -124,7 +124,8 @@ class AppRouter {
           path: AppRoutes.spectateLobby,
           builder: (context, state) {
             final gameId = state.pathParameters['gameId']!;
-            return ReadOnlyLobbyScreen(gameId: gameId);
+            final invitationId = state.extra as String?;
+            return ReadOnlyLobbyScreen(gameId: gameId, invitationId: invitationId);
           },
         ),
         GoRoute(
