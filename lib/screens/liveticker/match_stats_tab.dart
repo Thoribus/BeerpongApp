@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
+import 'package:beerpongapp/theme.dart';
 
 class MatchStatsTab extends StatelessWidget {
   final LiveGameData gameData;
@@ -8,6 +9,8 @@ class MatchStatsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
     double sumStat(List players, double Function(dynamic) f) =>
         players.fold<double>(0, (s, p) => s + f(p));
 
@@ -46,7 +49,7 @@ class MatchStatsTab extends StatelessWidget {
               margin: const EdgeInsets.symmetric(vertical: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade600,
+                color: c.surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -64,24 +67,24 @@ class MatchStatsTab extends StatelessWidget {
                     children: [
                       Text(
                         team1Value.toInt().toString(),
-                        style: const TextStyle(
-                          color: Colors.white, //Colors.blueAccent,
+                        style: TextStyle(
+                          color: c.onBackground,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         stat['title'] as String,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: c.subtle,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
                         team2Value.toInt().toString(),
-                        style: const TextStyle(
-                          color: Colors.white, // Colors.redAccent,
+                        style: TextStyle(
+                          color: c.onBackground,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),

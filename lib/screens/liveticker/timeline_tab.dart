@@ -149,6 +149,7 @@ class _TimelineTabState extends State<TimelineTab> {
   }
 
   Widget _buildTurnDivider(BuildContext context, GameEvent event) {
+    final c = AppColors.of(context);
     final duration = event.timestamp.difference(widget.gameData.gameStart);
     final mm = duration.inMinutes.toString().padLeft(2, '0');
     final ss = (duration.inSeconds % 60).toString().padLeft(2, '0');
@@ -159,7 +160,7 @@ class _TimelineTabState extends State<TimelineTab> {
         children: [
           Expanded(
             child: Divider(
-              color: Colors.amber.withValues(alpha: 0.3),
+              color: c.border,
               thickness: 1,
             ),
           ),
@@ -169,14 +170,14 @@ class _TimelineTabState extends State<TimelineTab> {
               'End of turn · $mm:$ss',
               style: TextStyle(
                 fontSize: 10,
-                color: Colors.amber.withValues(alpha: 0.6),
+                color: c.subtle,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           Expanded(
             child: Divider(
-              color: Colors.amber.withValues(alpha: 0.3),
+              color: c.border,
               thickness: 1,
             ),
           ),
