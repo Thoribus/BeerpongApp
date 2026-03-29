@@ -5,9 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-// Flip to true once Apple Sign-In is configured in Firebase Console
-// and the Apple Developer account is set up.
-const bool _kAppleSignInEnabled = false;
+const bool _kAppleSignInEnabled = true;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

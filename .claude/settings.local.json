@@ -77,7 +77,27 @@
       "Bash(/Users/c.richter/projects/flutter/flutter/bin/flutter analyze:*)",
       "Bash(/Users/c.richter/projects/flutter/flutter/bin/flutter test:*)",
       "Bash(export PATH=\"$PATH:$HOME/fvm/default/bin:$HOME/.pub-cache/bin\")",
-      "Bash(/Users/c.richter/development/flutter/bin/flutter analyze:*)"
+      "Bash(/Users/c.richter/development/flutter/bin/flutter analyze:*)",
+      "Bash(~/.fvm/default/bin/flutter analyze:*)",
+      "Bash(grep -v \"^Analyzing\\\\|^$\\\\|game_controller.dart:313\\\\|activity_screen\\\\|achievements_test\")",
+      "Bash(find /Users/c.richter/projects/BeerpongApp/lib -name \"*.dart\" -exec grep -l \"setState\" {})",
+      "Bash(grep -v \"^$\\\\|Analyzing\\\\|^  \")",
+      "Bash(/Users/c.richter/fvm/versions/3.29.2/bin/flutter analyze:*)",
+      "Bash(fvm flutter:*)",
+      "Bash(~/.local/share/mise/shims/flutter analyze:*)",
+      "Bash(git push:*)",
+      "Bash(export PATH=\"$PATH:/Users/c.richter/flutter/bin\")",
+      "Bash(export PATH=\"$PATH:$HOME/flutter/bin\")",
+      "Bash(export PATH=\"$PATH:$HOME/projects/flutter/flutter/bin\")",
+      "Bash(python3 -c \":*)",
+      "Bash(git -C /Users/c.richter/projects/BeerpongApp log --oneline --all)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(git check-ignore:*)",
+      "Bash(git rm:*)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "claude-flow"
+  ]
 }

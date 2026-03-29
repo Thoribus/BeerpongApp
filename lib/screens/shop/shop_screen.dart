@@ -320,30 +320,38 @@ class _GetStarsSheetState extends State<_GetStarsSheet> {
                 );
               }
               // Fallback when store is unavailable or products not yet loaded.
-              return const Column(
+              return Column(
                 children: [
-                  _SheetRow(
+                  const _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.amber,
                     title: 'Starter Pack  ·  €1.99',
                     subtitle: '200 ⭐',
                     badgeLabel: 'Coming soon',
                   ),
-                  SizedBox(height: 12),
-                  _SheetRow(
+                  const SizedBox(height: 12),
+                  const _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.orange,
                     title: 'Popular Pack  ·  €4.99',
                     subtitle: '600 ⭐  ·  Best value',
                     badgeLabel: 'Coming soon',
                   ),
-                  SizedBox(height: 12),
-                  _SheetRow(
+                  const SizedBox(height: 12),
+                  const _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.deepOrange,
                     title: 'Mega Pack  ·  €9.99',
                     subtitle: '1 500 ⭐',
                     badgeLabel: 'Coming soon',
+                  ),
+                  const SizedBox(height: 12),
+                  _SheetRow(
+                    icon: Icons.star_rounded,
+                    iconColor: Colors.amber,
+                    title: 'Supporter Pack  ·  €2.99',
+                    subtitle: '300 ⭐  ·  Supporter badge on your profile',
+                    badgeLabel: isSupporter ? 'You\'re a Supporter ✓' : 'Coming soon',
                   ),
                 ],
               );

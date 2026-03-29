@@ -18,8 +18,8 @@ class AdService {
   bool _isLoading = false;
 
   // Official Google test ad unit IDs — swap before production.
-  static const _androidAdUnitId = 'ca-app-pub-3940256099942544/5224354917';
-  static const _iosAdUnitId = 'ca-app-pub-3940256099942544/1712485313';
+  static const _androidAdUnitId = 'ca-app-pub-6815089400235059/1626702859';
+  static const _iosAdUnitId = 'ca-app-pub-6815089400235059/5804086160';
 
   String get _adUnitId =>
       Platform.isAndroid ? _androidAdUnitId : _iosAdUnitId;

@@ -60,4 +60,14 @@ app.*.map.json
 **/linux/flutter/generated_plugins.cmake
 .claude/worktrees/
 
+# Xcode Swift Package Manager resolution files (generated)
+**/xcshareddata/swiftpm/
+
 sentry.properties
+
+# Firebase service account credentials — never commit
+beerpong-companion-*.json
+*-firebase-adminsdk-*.json
+
+# Temporary / generated files
+encoded_file.txt

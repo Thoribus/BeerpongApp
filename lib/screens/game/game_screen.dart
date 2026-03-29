@@ -468,7 +468,7 @@ class GameScreenState extends State<GameScreen> {
     return Column(
       children: [
         _buildScoreStrip(),
-        _buildAirballZone(),
+        if (_ctrl.selectedRules['Airballs'] == true) _buildAirballZone(),
         Expanded(child: _buildTableContainer()),
       ],
     );
@@ -796,11 +796,12 @@ class GameScreenState extends State<GameScreen> {
             label: 'Undo',
             onTap: _ctrl.undoLastAction,
           ),
-          _buildDockButton(
-            icon: Icons.workspaces_outlined,
-            label: 'Cups',
-            onTap: () => _ctrl.toggleRearranged(context),
-          ),
+          if (_ctrl.selectedRules['Rearrange'] == true)
+            _buildDockButton(
+              icon: Icons.workspaces_outlined,
+              label: 'Cups',
+              onTap: () => _ctrl.toggleRearranged(context),
+            ),
           _buildDockButton(
             icon: Icons.more_horiz_rounded,
             label: 'More',
@@ -889,20 +890,22 @@ class GameScreenState extends State<GameScreen> {
                           .any((c) => c.isVisible && _ctrl.isIslandCup(c)),
                   onTap: _highlightIslandCups,
                 ),
-              _buildSheetAction(
-                ctx: ctx,
-                icon: Icons.sports_tennis_rounded,
-                label: 'Bounce Shot',
-                color: Colors.orange,
-                onTap: _handleBounceShot,
-              ),
-              _buildSheetAction(
-                ctx: ctx,
-                icon: Icons.workspaces_outlined,
-                label: 'Rearrange Cups',
-                color: Colors.green,
-                onTap: () => _ctrl.toggleRearranged(context),
-              ),
+              if (_ctrl.selectedRules['Bounce'] == true)
+                _buildSheetAction(
+                  ctx: ctx,
+                  icon: Icons.sports_tennis_rounded,
+                  label: 'Bounce Shot',
+                  color: Colors.orange,
+                  onTap: _handleBounceShot,
+                ),
+              if (_ctrl.selectedRules['Rearrange'] == true)
+                _buildSheetAction(
+                  ctx: ctx,
+                  icon: Icons.workspaces_outlined,
+                  label: 'Rearrange Cups',
+                  color: Colors.green,
+                  onTap: () => _ctrl.toggleRearranged(context),
+                ),
             ],
           ),
         ),
