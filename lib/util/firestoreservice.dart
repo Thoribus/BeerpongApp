@@ -250,4 +250,22 @@ class FirestoreService {
           String tournamentId, String matchId) =>
       TournamentRepository.instance
           .getTournamentMatch(tournamentId, matchId);
+
+  // ----- Feedback -----
+
+  Future<void> submitFeedback({
+    required String userId,
+    required String username,
+    required String platform,
+    required String category,
+    required String message,
+  }) =>
+      FirebaseFirestore.instance.collection('feedback').add({
+        'userId': userId,
+        'username': username,
+        'platform': platform,
+        'category': category,
+        'message': message,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 }
