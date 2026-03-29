@@ -27,6 +27,9 @@ class Cup {
   }
 
   /// Builds the widget representing this cup.
+  ///
+  /// Visual design: outer rim (colored circle with white border + colored glow)
+  /// wrapping an inner circle (darker fill) to simulate a top-down cup view.
   Widget widget({required VoidCallback onTap, int? hitCount}) {
     return Visibility(
       visible: isVisible,
@@ -41,19 +44,36 @@ class Cup {
           width: 60.0,
           height: 60.0,
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.white, width: 2),
+            border: Border.all(color: Colors.white60, width: 2),
             color: color,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.55),
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
           ),
-          child: hitCount != null
-              ? Center(
-                  child: Text(
-                    '$hitCount', // Display the count in the cup
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                )
-              : null,
+          child: Center(
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withValues(alpha: 0.18),
+              ),
+              child: hitCount != null
+                  ? Center(
+                      child: Text(
+                        '$hitCount',
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  : null,
+            ),
+          ),
         ),
       ),
     );
@@ -64,7 +84,7 @@ class Cup {
     return {
       'index': index,
       'isVisible': isVisible,
-      'color': color.value, // store color as integer
+      'color': color.toARGB32(), // store color as integer
     };
   }
 

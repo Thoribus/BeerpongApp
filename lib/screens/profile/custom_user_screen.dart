@@ -1,15 +1,30 @@
-import 'package:beerpongapp/models/cup.dart';
-import 'package:beerpongapp/models/player.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/models/user.dart';
-import 'package:beerpongapp/models/game_statistics.dart';
-import 'package:beerpongapp/util/firestoreservice.dart';
-import 'package:beerpongapp/widgets/user_card.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:beerpongapp/constants.dart';
+import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/level_system.dart';
+import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/widgets/user_card.dart';
+
+enum UsernameStatus { idle, checking, available, taken, invalid }
+
+/// Regex: 3–20 chars, starts/ends with alphanumeric, may contain underscores,
+/// no consecutive underscores.
+final _usernameRegex = RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_]{1,18}[a-zA-Z0-9]$');
+
+bool _isValidUsername(String value) {
+  if (!_usernameRegex.hasMatch(value)) return false;
+  if (value.contains('__')) return false;
+  return true;
+}
 
 class CustomUserScreen extends StatefulWidget {
   final User user;
-
   const CustomUserScreen({super.key, required this.user});
 
   @override
@@ -17,220 +32,540 @@ class CustomUserScreen extends StatefulWidget {
 }
 
 class _CustomUserScreenState extends State<CustomUserScreen> {
-  String? selectedIcon;
-  String? selectedAchievement;
-  String? selectedTitle;
+  static const _avatarKeys = AppConstants.avatarKeys;
+  static const _backgroundKeys = AppConstants.backgroundKeys;
 
-  final List<String> availableIcons = [
-    'assets/avatars/avatar_aggroracoon.png',
-    'assets/avatars/avatar_catbeer.png',
-    'assets/avatars/avatar_catpants.png',
-    'assets/avatars/avatar_cheering.png',
-    'assets/avatars/avatar_cupbeer.png',
-    'assets/avatars/avatar_frogisland.png',
-  ];
+  late String _selectedAvatarKey;
+  late String _selectedBackgroundKey;
+  late String _selectedTitle;
+  bool _isSaving = false;
+  UsernameStatus _usernameStatus = UsernameStatus.idle;
+  String _currentUsername = '';
 
-  final List<String> availableAchievements = [
-    'assets/achievements/ach_holyknight.png',
-    'assets/achievements/ach_animalparty.png',
-    'assets/achievements/ach_catblock.png',
-    'assets/achievements/ach_catsniper.png',
-    'assets/achievements/ach_moletable.png',
-    'assets/achievements/ach_racoontrophy.png',
-    'assets/achievements/ach_cheersshot.png',
-    'assets/achievements/ach_sadlooser.png',
-    'assets/achievements/ach_twerkfrog.png',
-    'assets/achievements/ach_header.png',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _selectedAvatarKey = _avatarKeys.contains(widget.user.avatarKey)
+        ? widget.user.avatarKey
+        : _avatarKeys.first;
+    _selectedBackgroundKey =
+        _backgroundKeys.contains(widget.user.backgroundKey)
+            ? widget.user.backgroundKey
+            : _backgroundKeys.first;
+    _selectedTitle = widget.user.title;
+    _currentUsername = widget.user.username;
+  }
 
-  final List<String> availableTitles = [
-    'Beginner',
-    'Pro Player',
-    'Champion',
-  ];
+  List<String> get _availableTitles {
+    final unlocked = widget.user.unlockedTitles;
+    final base = unlocked.isNotEmpty ? unlocked : ['Beginner', 'Pro Player', 'Champion'];
+    if (widget.user.isSupporter && !base.contains('Supporter')) {
+      return [...base, 'Supporter'];
+    }
+    return base;
+  }
 
-  void _resetSelections() {
-    setState(() {
-      selectedIcon = null;
-      selectedAchievement = null;
-      selectedTitle = null;
-    });
+  bool get _canSave =>
+      _usernameStatus != UsernameStatus.checking &&
+      _usernameStatus != UsernameStatus.taken &&
+      _usernameStatus != UsernameStatus.invalid &&
+      !_isSaving;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Selections saved and reset.")),
-    );
+  User get _previewUser => widget.user.copyWith(
+        avatarKey: _selectedAvatarKey,
+        backgroundKey: _selectedBackgroundKey,
+        title: _selectedTitle,
+      );
+
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    try {
+      final provider = Provider.of<UserProvider>(context, listen: false);
+
+      if (_currentUsername != widget.user.username) {
+        await provider.claimUsername(_currentUsername);
+      }
+
+      await provider.updateUser(_previewUser.copyWith(
+        username: _currentUsername,
+      ));
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _resetSelections,
-        label: const Text("Save"),
-        icon: const Icon(Icons.save),
-        backgroundColor: Colors.orange,
+        onPressed: _canSave ? _save : null,
+        backgroundColor: _canSave ? Colors.orange : Colors.grey,
+        foregroundColor: Colors.white,
+        icon: _isSaving
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.check),
+        label: Text(_isSaving ? 'Saving…' : 'Save'),
       ),
-      body: FutureBuilder<List<UserStatsInGame>>(
-        future: FirestoreService().retrieveUserStatsWithDate(widget.user),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Live preview card — wrapped in RepaintBoundary so only avatar/title
+            // changes trigger a repaint; username typing does not.
+            RepaintBoundary(
+              child: UserCard(
+                user: _previewUser,
+                onTitleTap: () {},
+                onAvatarTap: () {},
+              ),
+            ),
+            const SizedBox(height: 28),
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            const _SectionHeader(title: 'Username'),
+            const SizedBox(height: 12),
+            // Extracted into its own StatefulWidget so username status changes
+            // only rebuild the field, not the whole screen.
+            _UsernameField(
+              initialUsername: widget.user.username,
+              userId: widget.user.id,
+              onStatusChanged: (status, value) => setState(() {
+                _usernameStatus = status;
+                _currentUsername = value;
+              }),
+            ),
+
+            const SizedBox(height: 28),
+
+            const _SectionHeader(title: 'Avatar'),
+            const SizedBox(height: 12),
+            _buildAvatarGrid(),
+
+            const SizedBox(height: 28),
+
+            const _SectionHeader(title: 'Background'),
+            const SizedBox(height: 12),
+            _buildBackgroundGrid(),
+
+            const SizedBox(height: 28),
+
+            const _SectionHeader(title: 'Title'),
+            const SizedBox(height: 12),
+            _buildTitlePicker(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarGrid() {
+    final c = AppColors.of(context);
+    final userLevel = LevelSystem.levelFromXp(widget.user.xp);
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1,
+      ),
+      itemCount: _avatarKeys.length,
+      itemBuilder: (context, index) {
+        final key = _avatarKeys[index];
+        final isSelected = _selectedAvatarKey == key;
+        final requiredLevel = AppConstants.avatarLevelRequirements[key] ?? 1;
+        final isLocked = userLevel < requiredLevel;
+
+        return GestureDetector(
+          onTap: isLocked ? null : () => setState(() => _selectedAvatarKey = key),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: isLocked
+                  ? c.card.withValues(alpha: 0.5)
+                  : isSelected
+                      ? Colors.orange.withValues(alpha: 0.12)
+                      : c.card,
+              border: Border.all(
+                color: isLocked
+                    ? c.border.withValues(alpha: 0.4)
+                    : isSelected
+                        ? Colors.orange
+                        : c.border,
+                width: isSelected ? 2.5 : 1,
+              ),
+            ),
+            child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: UserCard(
-                    user: widget.user,
-                    onTitleTap: () {},
-                    onAvatarTap: () {},
+                  padding: const EdgeInsets.all(14),
+                  child: Opacity(
+                    opacity: isLocked ? 0.25 : 1.0,
+                    child: SvgPicture.asset(
+                      'assets/avatars/$key.svg',
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                _buildSectionTitle('Choose User Icon'),
-                _buildIconGrid(availableIcons, selectedIcon, (icon) {
-                  setState(() => selectedIcon = icon);
-                }),
-
-                _buildSectionTitle('Choose Achievement Icon'),
-                _buildIconGridOptimized(
-                  icons: availableAchievements,
-                  selected: selectedAchievement,
-                  onSelect: (icon) {
-                    setState(() => selectedAchievement = icon);
-                  },
-                ),
-
-                const SizedBox(height: 24),
-                _buildSectionTitle('Choose Title'),
-                _buildTitleSelection(),
-                const SizedBox(height: 80), // Leave room for FAB
+                if (isLocked)
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock, color: c.subtle, size: 22),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Lv $requiredLevel',
+                          style: TextStyle(
+                            color: c.subtle,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (isSelected && !isLocked)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check,
+                          size: 11, color: Colors.white),
+                    ),
+                  ),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  Widget _buildIconGrid(
-    List<String> icons,
-    String? selected,
-    Function(String) onSelect,
-  ) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: icons.map((iconPath) {
-        final isSelected = selected == iconPath;
-        return GestureDetector(
-          onTap: () => onSelect(iconPath),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? Colors.orange : Colors.transparent,
-                width: 3,
-              ),
-            ),
-            child: CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.grey[200],
-                child: Image.asset(iconPath,
-                    width: 36, height: 36, fit: BoxFit.cover)),
           ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildTitleSelection() {
-    return Wrap(
-      spacing: 8,
-      children: availableTitles.map((title) {
-        final isSelected = selectedTitle == title;
-        return ChoiceChip(
-          label: Text(title),
-          selected: isSelected,
-          onSelected: (_) => setState(() => selectedTitle = title),
-          selectedColor: Colors.orange.shade100,
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.orange : Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildIconGridOptimized({
-    required List<String> icons,
-    required String? selected,
-    required Function(String) onSelect,
-  }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const int crossAxisCount = 4;
-        const double spacing = 12;
-        final itemWidth =
-            (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
-                crossAxisCount;
-
-        return GridView.builder(
-          itemCount: icons.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: spacing,
-            crossAxisSpacing: spacing,
-            childAspectRatio: 1,
-          ),
-          itemBuilder: (context, index) {
-            final iconPath = icons[index];
-            final isSelected = selected == iconPath;
-
-            return GestureDetector(
-              onTap: () => onSelect(iconPath),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? Colors.orange : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-                child: CircleAvatar(
-                  backgroundColor: Colors.grey[200],
-                  child: Image.asset(iconPath,
-                      width: 36, height: 36, fit: BoxFit.cover),
-                ),
-              ),
-            );
-          },
         );
       },
+    );
+  }
+
+  Widget _buildBackgroundGrid() {
+    final c = AppColors.of(context);
+    final userLevel = LevelSystem.levelFromXp(widget.user.xp);
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.6,
+      ),
+      itemCount: _backgroundKeys.length,
+      itemBuilder: (context, index) {
+        final key = _backgroundKeys[index];
+        final isSelected = _selectedBackgroundKey == key;
+        final requiredLevel =
+            AppConstants.backgroundLevelRequirements[key] ?? 1;
+        final isLocked = userLevel < requiredLevel;
+        final gradient = AppBackgrounds.gradientFor(key);
+
+        return GestureDetector(
+          onTap: isLocked
+              ? null
+              : () => setState(() => _selectedBackgroundKey = key),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: isLocked
+                  ? LinearGradient(
+                      colors: [
+                        gradient.colors.first.withValues(alpha: 0.25),
+                        gradient.colors.last.withValues(alpha: 0.25),
+                      ],
+                      begin: gradient.begin,
+                      end: gradient.end,
+                    )
+                  : gradient,
+              border: Border.all(
+                color: isLocked
+                    ? c.border.withValues(alpha: 0.4)
+                    : isSelected
+                        ? Colors.orange
+                        : c.border,
+                width: isSelected ? 2.5 : 1,
+              ),
+            ),
+            child: Stack(
+              children: [
+                if (isLocked)
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.lock, color: Colors.white70, size: 18),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Lv $requiredLevel',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Center(
+                    child: Text(
+                      AppBackgrounds.labelFor(key),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        shadows: [
+                          Shadow(color: Colors.black54, blurRadius: 4),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (isSelected && !isLocked)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check,
+                          size: 10, color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTitlePicker() {
+    final c = AppColors.of(context);
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _availableTitles.map((title) {
+        final isSelected = _selectedTitle == title;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedTitle = title),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: isSelected ? Colors.orange : c.card,
+              border: Border.all(
+                color: isSelected ? Colors.orange : c.border,
+              ),
+            ),
+            child: Text(
+              title,
+              style: TextStyle(
+                color: isSelected ? Colors.white : c.subtle,
+                fontWeight:
+                    isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Username field — isolated StatefulWidget so typing only rebuilds itself ────
+
+class _UsernameField extends StatefulWidget {
+  final String initialUsername;
+  final String userId;
+  final void Function(UsernameStatus status, String value) onStatusChanged;
+
+  const _UsernameField({
+    required this.initialUsername,
+    required this.userId,
+    required this.onStatusChanged,
+  });
+
+  @override
+  State<_UsernameField> createState() => _UsernameFieldState();
+}
+
+class _UsernameFieldState extends State<_UsernameField> {
+  late final TextEditingController _controller;
+  UsernameStatus _status = UsernameStatus.idle;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialUsername);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    final trimmed = value.trim();
+
+    if (trimmed == widget.initialUsername) {
+      _setStatus(UsernameStatus.idle, trimmed);
+      return;
+    }
+    if (!_isValidUsername(trimmed)) {
+      _setStatus(UsernameStatus.invalid, trimmed);
+      return;
+    }
+
+    _setStatus(UsernameStatus.checking, trimmed);
+
+    _debounce = Timer(const Duration(milliseconds: 600), () async {
+      final available = await FirestoreService.instance.checkUsernameAvailable(
+        trimmed.toLowerCase(),
+        widget.userId,
+      );
+      if (!mounted) return;
+      _setStatus(
+        available ? UsernameStatus.available : UsernameStatus.taken,
+        trimmed,
+      );
+    });
+  }
+
+  void _setStatus(UsernameStatus s, String value) {
+    setState(() => _status = s);
+    widget.onStatusChanged(s, value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final (color, icon, hint) = switch (_status) {
+      UsernameStatus.idle => (Colors.grey.shade600, null, ''),
+      UsernameStatus.checking =>
+        (Colors.grey.shade400, Icons.hourglass_empty, 'Checking…'),
+      UsernameStatus.available =>
+        (Colors.green, Icons.check_circle_outline, 'Available'),
+      UsernameStatus.taken =>
+        (Colors.red, Icons.cancel_outlined, 'Already taken'),
+      UsernameStatus.invalid => (
+          Colors.orange,
+          Icons.warning_amber_outlined,
+          '3–20 chars, letters/numbers/underscores, no consecutive __'
+        ),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _controller,
+          maxLength: 20,
+          style: TextStyle(color: c.onBackground),
+          decoration: InputDecoration(
+            hintText: 'Choose a username',
+            hintStyle: TextStyle(color: c.subtle),
+            counterStyle: TextStyle(color: c.subtle),
+            filled: true,
+            fillColor: c.card,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: c.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: color, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: color, width: 2),
+            ),
+            suffixIcon: _status == UsernameStatus.checking
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white54),
+                    ),
+                  )
+                : icon != null
+                    ? Icon(icon, color: color, size: 22)
+                    : null,
+          ),
+          onChanged: _onChanged,
+        ),
+        if (hint.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 4),
+            child: Text(hint, style: TextStyle(color: color, fontSize: 12)),
+          ),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Text(
+      title,
+      style: TextStyle(
+        color: c.onBackground,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
     );
   }
 }

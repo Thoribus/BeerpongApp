@@ -1,377 +1,106 @@
-import 'package:beerpongapp/models/player.dart';
-import 'package:beerpongapp/util/firestoreservice.dart';
-import 'package:flutter/material.dart';
+import 'package:beerpongapp/models/achievement_def.dart';
 import 'package:beerpongapp/models/user.dart';
-
-class CustomDialog extends StatelessWidget {
-  final String title;
-  final String description;
-  final List<TextButton> actions;
-  final String? imagePath;
-  final Color stageColor; // Color for the current stage
-  final int stageProgress; // Current progress for the stage
-
-  const CustomDialog({
-    super.key,
-    required this.title,
-    required this.description,
-    required this.actions,
-    this.imagePath,
-    required this.stageColor,
-    required this.stageProgress,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      elevation: 24.0,
-      backgroundColor: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          image: const DecorationImage(
-            image: AssetImage("assets/background_achievement.png"),
-            fit: BoxFit.fill,
-          ),
-        ),
-        child: _renderDialogContent(context),
-      ),
-    );
-  }
-
-  Widget _renderDialogContent(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 100),
-        if (imagePath != null) _renderImageWithBorder(imagePath!, context),
-        const SizedBox(height: 10),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                offset: Offset(0, 1),
-                blurRadius: 4,
-                color: Colors.black54,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  offset: Offset(0, 1),
-                  blurRadius: 4,
-                  color: Colors.black54,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: actions,
-        ),
-        const SizedBox(height: 10),
-      ],
-    );
-  }
-
-  Widget _renderImageWithBorder(String imagePath, BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: stageColor, // Stage color for border
-              width: 8.0, // Bold border width
-            ),
-            borderRadius: BorderRadius.circular(10),
-            image: DecorationImage(
-              image: AssetImage("assets/$imagePath"),
-              fit: BoxFit.scaleDown,
-            ),
-          ),
-          width: 130,
-          height: 130,
-        ),
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: Colors.red, // Notification bubble color
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white, // Optional white border around the bubble
-                width: 2.0,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                "$stageProgress", // Display progress
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
+import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/achievement_engine.dart';
+import 'package:beerpongapp/util/level_system.dart';
+import 'package:flutter/material.dart';
 
 class AchievementsScreen extends StatelessWidget {
   final User user;
 
   const AchievementsScreen({super.key, required this.user});
 
-  static void checkAchievements(User user) async {
-    bool changed = false;
-    List<Map<String, Object>> achievements = getAchievements(user);
+  // ── Backwards-compatible static API ────────────────────────────────────────
 
-    for (var ach in achievements) {
-      List<int> stages = ach['stages'] as List<int>;
-      int stage1Threshold = stages[1];
-      int currentProgress = ach['currentProgress'] as int;
-      String titleToGrant = ach['titleToGrant'] as String;
+  /// Grants titles for newly reached achievement stages and persists to
+  /// Firestore. Called by [GameController] after each game.
+  static void checkAchievements(User user) =>
+      AchievementEngine.checkAndGrantTitles(user);
 
-      // If user has not unlocked this title yet, check if they meet stage1 threshold
-      if (currentProgress >= stage1Threshold &&
-          !user.unlockedTitles.contains(titleToGrant)) {
-        user.unlockedTitles.add(titleToGrant);
-        changed = true;
-      }
-    }
+  /// Returns the stage colour for the achievement associated with [titleToGrant].
+  /// Used by [PlayerCardMini] to colour the title badge.
+  static Color getColorForUnlockedTitle(String titleToGrant, User user) =>
+      AchievementEngine.getColorForTitle(titleToGrant, user);
 
-    if (changed) {
-      await FirestoreService().updateUser(user);
-    }
-  }
-
-  static List<Map<String, String>> getUpgradedAchivements(Player player) {
-    if (player.user == null) {
-      return [];
-    }
-    List<Map<String, String>> upgradedAchievements = [];
-    List<Map<String, Object>> achievements = getAchievements(player.user!);
-    List<Map<String, Object>> updatedAchivements =
-        getAchievements(FirestoreService.mapPlayerToUser(player));
-
-    for (var ach in achievements) {
-      List<int> stages = ach['stages'] as List<int>;
-      int currentStage =
-          _getCurrentStageIndex(ach['currentProgress'] as int, stages);
-      final achievement = updatedAchivements
-          .firstWhere((element) => element['title'] == ach['title']);
-      int newStage =
-          _getCurrentStageIndex(achievement['currentProgress'] as int, stages);
-      if (newStage > currentStage) {
-        upgradedAchievements.add({
-          'title': ach['title'] as String,
-          'oldStage': currentStage.toString(),
-          'newStage': newStage.toString(),
-        });
-      }
-    }
-
-    return upgradedAchievements;
-  }
-
-  static List<Map<String, Object>> getAchievements(User user) {
-    List<Map<String, Object>> achievements = [
-      {
-        'imagePath': "ach_wins.png",
-        'title': 'Wins',
-        'titleToGrant': 'Beginner Winner',
-        'currentProgress': user.wins,
-        'stages': [0, 25, 50, 100, 100], // Bronze, Silver, Amber, Violet
-      },
-      {
-        'imagePath': "ach_lost.png",
-        'title': 'Losses',
-        'titleToGrant': 'Unlucky Warrior',
-        'currentProgress': user.losses,
-        'stages': [0, 25, 50, 100, 100],
-      },
-      {
-        'imagePath': "ach_friends.png",
-        'title': 'Friendships',
-        'titleToGrant': 'Social Butterfly',
-        'currentProgress': user.friends.length,
-        'stages': [0, 5, 15, 20, 100],
-      },
-      {
-        'imagePath': "ach_champion.png",
-        'title': 'Champion',
-        'titleToGrant': 'Heavy hitter',
-        'currentProgress': user.totalScore.round(),
-        'stages': [0, 20, 100, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_loses.png",
-        'title': 'Misses',
-        'titleToGrant': 'Clumsy',
-        'currentProgress': user.totalMisses,
-        'stages': [0, 25, 50, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': 0, //user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': 1001, //user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-      {
-        'imagePath': "ach_airball.png",
-        'title': 'Airballs',
-        'titleToGrant': 'Airballer',
-        'currentProgress': user.totalAirballs,
-        'stages': [0, 10, 20, 1000, 5000],
-      },
-    ];
-    return achievements;
-  }
-
-  /// Given a 'titleToGrant' like "Heavy hitter", find the corresponding
-  /// achievements row. E.g., row with 'titleToGrant' == "Heavy hitter".
-  static Map<String, Object>? findAchievementForTitle(
-      String titleToGrant, User user) {
-    // Build the achievements list for this user
-    final achievements = AchievementsScreen.getAchievements(user);
-
-    // Find the row that has 'titleToGrant' == the passed-in string
-    for (var ach in achievements) {
-      if (ach['titleToGrant'] == titleToGrant) {
-        return ach;
-      }
-    }
-    return null; // Not found
-  }
-
-  /// Then you can compute the color for that title
-  static Color getColorForUnlockedTitle(String titleToGrant, User user) {
-    final ach = findAchievementForTitle(titleToGrant, user);
-    if (ach == null) {
-      return Colors.grey; // If for some reason we can't find it
-    }
-
-    // stage logic:
-    final currentProgress = ach['currentProgress'] as int;
-    final stages = ach['stages'] as List<int>;
-    final stageIndex = _getCurrentStageIndex(currentProgress, stages);
-    return _getStageColor(stageIndex);
-  }
+  // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildUserCard(),
-          const SizedBox(height: 16),
-          _buildAchievementsGrid(context),
+    final grouped = AchievementEngine.evaluateGrouped(user);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        _LevelCard(user: user),
+        const SizedBox(height: 20),
+        for (final category in AchievementCategory.values) ...[
+          _CategoryHeader(
+            category: category,
+            progresses: grouped[category] ?? [],
+          ),
+          const SizedBox(height: 10),
+          _AchievementGrid(
+            progresses: grouped[category] ?? [],
+            onTap: (p) => _showDetail(context, p),
+          ),
+          const SizedBox(height: 20),
         ],
-      ),
+      ],
     );
   }
 
-  Widget _buildUserCard() {
-    // Dummy data
-    final String username = "PlayerOne";
-    final int level = 12;
-    final int achievementsCompleted = 32;
-    final int totalAchievements = 50;
-    final double progress =
-        (achievementsCompleted / totalAchievements).clamp(0.0, 1.0);
+  void _showDetail(BuildContext context, AchievementProgress p) {
+    showDialog(
+      context: context,
+      builder: (_) => _AchievementDetailDialog(progress: p),
+    );
+  }
+}
+
+// ── Level card ────────────────────────────────────────────────────────────────
+
+class _LevelCard extends StatelessWidget {
+  final User user;
+  const _LevelCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final level = LevelSystem.levelFromXp(user.xp);
+    final tier = LevelSystem.tierForLevel(level);
+    final progress = LevelSystem.progressInLevel(user.xp);
+    final toNext = LevelSystem.xpToNextLevel(user.xp);
+    final isMax = level >= LevelSystem.maxLevel;
+
+    final allProgress = AchievementEngine.evaluate(user);
+    final unlocked = allProgress.where((p) => !p.isLocked).length;
+    final total = allProgress.length;
 
     return Card(
-      color: Colors.white,
+      color: c.card,
       elevation: 4,
-      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top row with avatar and name
             Row(
               children: [
-                // Level Badge
+                // Level badge
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.amber, Colors.orange],
+                    gradient: LinearGradient(
+                      colors: [tier.color, tier.color.withValues(alpha: 0.6)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.amber.withOpacity(0.6),
+                        color: tier.color.withValues(alpha: 0.5),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -383,62 +112,70 @@ class AchievementsScreen extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 15,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Username & Stats
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        username,
-                        style: const TextStyle(
+                        user.username,
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
+                          color: c.onBackground,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      // Progress Bar
+                      const SizedBox(height: 2),
+                      Text(
+                        tier.displayName,
+                        style: TextStyle(fontSize: 13, color: tier.color),
+                      ),
+                      const SizedBox(height: 8),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(6),
                         child: LinearProgressIndicator(
                           value: progress,
-                          minHeight: 10,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.amber,
-                          ),
+                          minHeight: 8,
+                          backgroundColor: c.border,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(tier.color),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$achievementsCompleted / $totalAchievements Achievements',
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.black54),
+                        isMax
+                            ? 'Max level reached'
+                            : '${user.xp} XP · $toNext XP to Level ${level + 1}',
+                        style: TextStyle(fontSize: 11, color: c.subtle),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Achievement emblems row
+            const SizedBox(height: 14),
+            Divider(color: c.divider, height: 1),
+            const SizedBox(height: 10),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                const Text(
-                  'Emblems:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 8),
-                Icon(Icons.star, color: Colors.amber[800]),
-                const SizedBox(width: 6),
-                Icon(Icons.military_tech, color: Colors.grey[700]),
-                const SizedBox(width: 6),
-                Icon(Icons.emoji_events, color: Colors.deepOrange),
+                _StatChip(
+                    icon: Icons.emoji_events,
+                    label: '$unlocked / $total',
+                    sub: 'Achievements'),
+                _StatChip(
+                    icon: Icons.trending_up,
+                    label: '${user.bestWinStreak}',
+                    sub: 'Best Streak'),
+                _StatChip(
+                    icon: Icons.gps_fixed,
+                    label: '${(user.hitRate * 100).toStringAsFixed(0)}%',
+                    sub: 'Hit Rate'),
               ],
             ),
           ],
@@ -446,219 +183,348 @@ class AchievementsScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildAchievementsGrid(BuildContext context) {
-    List<Map<String, Object>> achievements = getAchievements(user);
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.75, // Adjust aspect ratio to make the cards taller
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      physics:
-          const NeverScrollableScrollPhysics(), // Prevent scrolling on the grid
-      shrinkWrap: true,
-      itemCount: achievements.length,
-      itemBuilder: (context, index) {
-        return _buildAchievementCard(
-          context,
-          imagePath: achievements[index]['imagePath'] as String,
-          title: achievements[index]['title'] as String,
-          currentProgress: achievements[index]['currentProgress'] as int,
-          stages: achievements[index]['stages'] as List<int>,
-        );
-      },
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String sub;
+  const _StatChip(
+      {required this.icon, required this.label, required this.sub});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Column(
+      children: [
+        Icon(icon, color: Colors.orange, size: 20),
+        const SizedBox(height: 4),
+        Text(label,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: c.onBackground,
+                fontSize: 14)),
+        Text(sub, style: TextStyle(fontSize: 10, color: c.subtle)),
+      ],
     );
   }
+}
 
-  Widget _buildAchievementCard(
-    BuildContext context, {
-    required String imagePath,
-    required String title,
-    required int currentProgress,
-    required List<int> stages,
-  }) {
-    // Ensure the stages list is not empty or invalid
-    if (stages.isEmpty) {
-      return const SizedBox(); // Avoid rendering a card if stages are empty
-    }
+// ── Category header ────────────────────────────────────────────────────────────
 
-    int stageIndex = _getCurrentStageIndex(currentProgress, stages);
-    if (stageIndex < 0 || stageIndex >= stages.length) {
-      stageIndex = 0; // Default to the first stage if index is invalid
-    }
+class _CategoryHeader extends StatelessWidget {
+  final AchievementCategory category;
+  final List<AchievementProgress> progresses;
+  const _CategoryHeader(
+      {required this.category, required this.progresses});
 
-    Color stageColor = (currentProgress == 0 || currentProgress < stages[1])
-        ? Colors.grey // Grey color for no achievement
-        : _getStageColor(stageIndex);
-
-    double progressPercentage =
-        (currentProgress / stages[stageIndex]).clamp(0.0, 1.0);
-
-    return GestureDetector(
-      onTap: () {
-        _showAchievementDialog(
-            context, title, currentProgress, stages, imagePath);
-      },
-      child: Card(
-        elevation: 4,
-        color: stageColor,
-        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Image.asset(
-                "assets/$imagePath",
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                  value: progressPercentage,
-                  backgroundColor: Colors.grey,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.white) // stage color einfügen wenn progress stimmt
-                  //valueColor: AlwaysStoppedAnimation<Color>(stageColor),
-                  ),
-              const SizedBox(height: 2),
-              Text(
-                '$currentProgress / ${stages[stageIndex + 1]}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final unlocked = progresses.where((p) => !p.isLocked).length;
+    return Row(
+      children: [
+        Text(
+          category.label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: c.onBackground,
           ),
         ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '$unlocked / ${progresses.length}',
+            style:
+                const TextStyle(fontSize: 11, color: Colors.orange),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Achievement grid ───────────────────────────────────────────────────────────
+
+class _AchievementGrid extends StatelessWidget {
+  final List<AchievementProgress> progresses;
+  final void Function(AchievementProgress) onTap;
+  const _AchievementGrid({required this.progresses, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 0.78,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: progresses.length,
+      itemBuilder: (context, i) =>
+          _AchievementCard(progress: progresses[i], onTap: onTap),
+    );
+  }
+}
+
+// ── Achievement card ───────────────────────────────────────────────────────────
+
+class _AchievementCard extends StatelessWidget {
+  final AchievementProgress progress;
+  final void Function(AchievementProgress) onTap;
+  const _AchievementCard({required this.progress, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = progress;
+    final locked = p.isLocked;
+    final cardColor = locked ? const Color(0xFF424242) : p.stageColor;
+
+    return GestureDetector(
+      onTap: () => onTap(p),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: locked
+              ? null
+              : [
+                  BoxShadow(
+                    color: p.stageColor.withValues(alpha: 0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
+                ],
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  p.def.icon,
+                  size: 36,
+                  color: locked
+                      ? Colors.white24
+                      : Colors.white.withValues(alpha: 0.9),
+                ),
+                if (locked)
+                  const Icon(Icons.lock, size: 16, color: Colors.white38),
+              ],
+            ),
+            Text(
+              p.def.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: locked ? Colors.white38 : Colors.white,
+              ),
+            ),
+            Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: p.progressToNextStage,
+                    minHeight: 4,
+                    backgroundColor: Colors.black26,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      locked ? Colors.white24 : Colors.white70,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  locked
+                      ? '0 / ${p.nextThreshold}'
+                      : p.isMaxed
+                          ? 'Maxed!'
+                          : '${p.currentValue} / ${p.nextThreshold}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: locked ? Colors.white30 : Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  static int _getCurrentStageIndex(int currentProgress, List<int> stages) {
-    // Return the current stage index based on progress
-    for (int i = stages.length - 1; i >= 0; i--) {
-      if (currentProgress >= stages[i]) {
-        return i;
-      }
-    }
-    return 0; // Default to first stage
-  }
+// ── Detail dialog ──────────────────────────────────────────────────────────────
 
-  static Color _getStageColor(int stageIndex) {
-    // Return the appropriate color for the stage
-    switch (stageIndex) {
-      case 3:
-        return Colors.purple; // Violet
-      case 2:
-        return Colors.amber; // Amber
-      case 1:
-        return Colors.blueGrey; // Silver
-      default:
-        return Colors.brown; // Bronze
-    }
-  }
+class _AchievementDetailDialog extends StatelessWidget {
+  final AchievementProgress progress;
+  const _AchievementDetailDialog({required this.progress});
 
-  void _showAchievementDialog(
-    BuildContext context,
-    String title,
-    int currentProgress,
-    List<int> stages,
-    String imagePath, // Add imagePath as a parameter
-  ) {
-    // Determine the current stage index
-    int stageIndex = _getCurrentStageIndex(currentProgress, stages);
+  @override
+  Widget build(BuildContext context) {
+    final p = progress;
+    final c = AppColors.of(context);
+    final stageLabels = ['Bronze', 'Silver', 'Gold', 'Diamond'];
 
-    // Define stage colors for each stage
-    List<Color> stageColors = [
-      Colors.grey, // Grey (no achievement earned)
-      Colors.brown, // Bronze
-      Colors.blue, // Silver
-      Colors.amber, // Amber
-      Colors.purple // Violet
-    ];
-
-    // Ensure valid stage index
-    if (stageIndex < 0 || stageIndex >= stageColors.length) {
-      stageIndex = 0;
-    }
-
-    // Description text
-    String description =
-        'You have completed $currentProgress out of ${stages.last} for this achievement.\n'
-        'Current stage: ${_getStageName(currentProgress, stages)}';
-
-    // Build icons for each stage with the current stage highlighted
-    List<Widget> stageIcons = [];
-    for (int i = 0; i < stages.length; i++) {
-      stageIcons.add(
-        Icon(
-          Icons.star, // Achievement icon
-          size: 40.0,
-          color: i == stageIndex
-              ? stageColors[i].withOpacity(1.0) // Highlight current stage
-              : stageColors[i].withOpacity(0.4), // Dim other stages
-        ),
-      );
-      if (i < stages.length - 1) {
-        stageIcons.add(const SizedBox(width: 10.0)); // Spacing between icons
-      }
-    }
-
-    // Show the custom dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return CustomDialog(
-          title: title,
-          description: description,
-          imagePath: imagePath, // Dynamically use the passed imagePath
-          stageColor: stageColors[stageIndex], // Example stage color
-          stageProgress: currentProgress, // Example stage progress
-          actions: [
-            TextButton(
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
+    return AlertDialog(
+      backgroundColor: c.card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Row(
+        children: [
+          Icon(p.def.icon, color: p.stageColor, size: 28),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(p.def.title,
+                style: TextStyle(
+                    color: c.onBackground, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(p.def.description,
+              style: TextStyle(color: c.subtle, fontSize: 13)),
+          const SizedBox(height: 16),
+          // Stage progress dots
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (int i = 0; i < p.def.thresholds.length; i++) ...[
+                _StageDot(
+                  label: stageLabels[i],
+                  threshold: p.def.thresholds[i],
+                  unlocked: p.currentStageIndex > i,
+                  isCurrent: p.currentStageIndex == i + 1,
+                  stageIndex: i + 1,
+                ),
+                if (i < p.def.thresholds.length - 1)
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      color: p.currentStageIndex > i
+                          ? Colors.amber
+                          : Colors.grey.shade700,
+                    ),
+                  ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            p.isMaxed
+                ? 'Fully mastered!'
+                : 'Progress: ${p.currentValue} / ${p.nextThreshold}',
+            style:
+                TextStyle(color: c.onBackground, fontWeight: FontWeight.w600),
+          ),
+          if (!p.isMaxed) ...[
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: p.progressToNextStage,
+                minHeight: 8,
+                backgroundColor: c.border,
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(p.stageColor),
+              ),
             ),
           ],
-        );
-      },
+          if (p.def.titleToGrant != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Unlocks title: "${p.def.titleToGrant}"',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.amber,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Close', style: TextStyle(color: c.onBackground)),
+        ),
+      ],
     );
   }
+}
 
-  String _getStageName(int currentProgress, List<int> stages) {
-    // Return the name of the current stage
-    int stageIndex = _getCurrentStageIndex(currentProgress, stages);
+class _StageDot extends StatelessWidget {
+  final String label;
+  final int threshold;
+  final bool unlocked;
+  final bool isCurrent;
+  final int stageIndex;
+
+  const _StageDot({
+    required this.label,
+    required this.threshold,
+    required this.unlocked,
+    required this.isCurrent,
+    required this.stageIndex,
+  });
+
+  Color get _color {
     switch (stageIndex) {
+      case 4:
+        return const Color(0xFF00BCD4);
       case 3:
-        return 'Violet';
+        return const Color(0xFFFFD700);
       case 2:
-        return 'Amber';
-      case 1:
-        return 'Silver';
+        return const Color(0xFFB0BEC5);
       default:
-        return 'Bronze';
+        return const Color(0xFF8D6E63);
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: unlocked ? _color : Colors.grey.shade800,
+            border: isCurrent
+                ? Border.all(color: _color, width: 2)
+                : null,
+          ),
+          child: unlocked
+              ? const Icon(Icons.check, size: 16, color: Colors.white)
+              : null,
+        ),
+        const SizedBox(height: 4),
+        Text(label,
+            style: TextStyle(
+                fontSize: 9,
+                color: unlocked ? _color : Colors.grey.shade600)),
+        Text('$threshold',
+            style: TextStyle(
+                fontSize: 9,
+                color: unlocked ? _color : Colors.grey.shade600)),
+      ],
+    );
   }
 }

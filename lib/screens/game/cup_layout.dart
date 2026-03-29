@@ -1,105 +1,91 @@
 import 'package:beerpongapp/models/team.dart';
 import 'package:flutter/material.dart';
 import '../../models/cup.dart';
-import 'game_screen.dart'; // so we can reference _GameScreenState
 
 /// A utility class for building the UI layout of cups (default or rearranged).
 class CupLayout {
-  /// The top-level method that decides whether to build default or rearranged layout.
+  /// Builds the cup area for [team]. Pass [onCupTap] to make cups interactive.
   static Widget buildCupsArea({
-    GameScreenState? state,
-    Team? team,
+    required Team team,
+    void Function(int cupIndex)? onCupTap,
   }) {
-    bool isRearranged;
-    List<Cup> cups;
-    if (state != null) {
-      isRearranged = state.currentTeam.isRearranged;
-      cups = state.currentTeam.cups;
-    } else {
-      isRearranged = team!.isRearranged;
-      cups = team.cups;
-    }
-
-    return isRearranged
-        ? _buildRearrangedCupsLayout(state, cups)
-        : _buildDefaultCupsLayout(state, cups);
+    return team.isRearranged
+        ? _buildRearrangedCupsLayout(team.cups, onCupTap)
+        : _buildDefaultCupsLayout(team.cups, onCupTap);
   }
 
   static Widget _buildDefaultCupsLayout(
-      GameScreenState? state, List<Cup> cups) {
+      List<Cup> cups, void Function(int)? onCupTap) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildCupRow(state, cups.sublist(6, 10)),
-        _buildCupRow(state, cups.sublist(3, 6)),
-        _buildCupRow(state, cups.sublist(1, 3)),
-        _buildCupRow(state, cups.sublist(0, 1)),
+        _buildCupRow(cups.sublist(6, 10), onCupTap),
+        _buildCupRow(cups.sublist(3, 6), onCupTap),
+        _buildCupRow(cups.sublist(1, 3), onCupTap),
+        _buildCupRow(cups.sublist(0, 1), onCupTap),
       ],
     );
   }
 
   static Widget _buildRearrangedCupsLayout(
-      GameScreenState? state, List<Cup> cups) {
+      List<Cup> cups, void Function(int)? onCupTap) {
     switch (cups.length) {
       case 6:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(state, cups.sublist(0, 3)),
-            _buildCupRow(state, cups.sublist(3, 5)),
-            _buildCupRow(state, cups.sublist(5, 6)),
+            _buildCupRow(cups.sublist(0, 3), onCupTap),
+            _buildCupRow(cups.sublist(3, 5), onCupTap),
+            _buildCupRow(cups.sublist(5, 6), onCupTap),
           ],
         );
       case 5:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(state, cups.sublist(0, 1)),
-            _buildCupRow(state, cups.sublist(1, 3)),
-            _buildCupRow(state, cups.sublist(3, 4)),
-            _buildCupRow(state, cups.sublist(4, 5)),
+            _buildCupRow(cups.sublist(0, 1), onCupTap),
+            _buildCupRow(cups.sublist(1, 3), onCupTap),
+            _buildCupRow(cups.sublist(3, 4), onCupTap),
+            _buildCupRow(cups.sublist(4, 5), onCupTap),
           ],
         );
       case 4:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(state, cups.sublist(0, 1)),
-            _buildCupRow(state, cups.sublist(1, 3)),
-            _buildCupRow(state, cups.sublist(3, 4)),
+            _buildCupRow(cups.sublist(0, 1), onCupTap),
+            _buildCupRow(cups.sublist(1, 3), onCupTap),
+            _buildCupRow(cups.sublist(3, 4), onCupTap),
           ],
         );
       case 3:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(state, cups.sublist(0, 2)),
-            _buildCupRow(state, cups.sublist(2, 3)),
+            _buildCupRow(cups.sublist(0, 2), onCupTap),
+            _buildCupRow(cups.sublist(2, 3), onCupTap),
           ],
         );
       case 2:
-        return _buildCupRow(state, cups.sublist(0, 2));
+        return _buildCupRow(cups.sublist(0, 2), onCupTap);
       default:
-        // fallback for 1 or 0
-        return _buildCupRow(state, cups.take(1).toList());
+        return _buildCupRow(cups.take(1).toList(), onCupTap);
     }
   }
 
-  static Widget _buildCupRow(GameScreenState? state, List<Cup> cups) {
+  static Widget _buildCupRow(List<Cup> cups, void Function(int)? onCupTap) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: cups.map((cup) {
-        if (state != null) {
-          return cup.widget(onTap: () => state.onCupTap(cup.index));
-        } else {
-          return cup.widget(onTap: () => {});
-        }
+        return cup.widget(
+          onTap: onCupTap != null ? () => onCupTap(cup.index) : () {},
+        );
       }).toList(),
     );
   }
 
   //region ----- Assign Indices for Rearranged Cups -----
-  /// Assigns new indices to the given cups based on how many are left for the rearranged layout.
+  /// Assigns new indices to the given cups based on how many are left.
   static List<Cup> assignSpecificIndices(List<Cup> cups) {
     List<int> newIndices;
     switch (cups.length) {
@@ -122,13 +108,11 @@ class CupLayout {
         newIndices = [7];
         break;
       default:
-        // fallback if more than 6 or no special arrangement
         newIndices = cups.map((c) => c.index).toList();
     }
 
     for (int i = 0; i < cups.length; i++) {
-      cups[i] =
-          Cup(index: newIndices[i], color: cups[i].color, isVisible: true);
+      cups[i] = Cup(index: newIndices[i], color: cups[i].color, isVisible: true);
     }
     return cups;
   }

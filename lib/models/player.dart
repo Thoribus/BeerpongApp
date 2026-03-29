@@ -3,17 +3,22 @@ import 'user.dart';
 /// A class representing a player in the game.
 class Player {
   final String name;        // The player's name
-  num score;                // The player's score
+  double score;             // The player's score
   int throws;               // Number of throws the player made
   int misses;               // Number of misses by the player
   int airballs;             // Number of airballs by the player
   int hitThisRound;         // Hits in the current round
   List<int> cupsHit;        // List of cup indices that the player has hit
   bool lastCupHit;          // Whether the player hit the last cup
-  bool islandShotUsed;      // Whether the player used an island shot
+  int islandAttempts;       // Number of island shots attempted
+  int islandMakes;          // Number of island cups successfully sunk
+  int deathCupHits;         // Number of death cups triggered
   int defended;             // Number of successful defenses
   int consecutiveHits;      // Tracks consecutive hits
   int onFire;               // Times the player triggered "On Fire"
+  int heatingUp;            // Times the player reached 2 consecutive hits
+  int bounceAttempts;       // Number of bounce shots attempted
+  int bounceMakes;          // Number of bounce shots that sank a cup
   User? user;               // Optional reference to a User object (DB, stats, etc.)
   bool isWinner;            // Whether the player is on the winning team
 
@@ -28,11 +33,16 @@ class Player {
     List<int>? cupsHit,
     this.hitThisRound = 0,
     this.onFire = 0,
-    this.islandShotUsed = false,
+    this.heatingUp = 0,
+    this.bounceAttempts = 0,
+    this.bounceMakes = 0,
+    this.islandAttempts = 0,
+    this.islandMakes = 0,
+    this.deathCupHits = 0,
     this.lastCupHit = false,
     this.user,
     this.isWinner = false,
-  }) : 
+  }) :
     consecutiveHits = consecutiveHits ?? 0,
     cupsHit = cupsHit ?? [];
 
@@ -46,8 +56,13 @@ class Player {
       ..defended = defended
       ..consecutiveHits = consecutiveHits
       ..onFire = onFire
+      ..heatingUp = heatingUp
+      ..bounceAttempts = bounceAttempts
+      ..bounceMakes = bounceMakes
       ..hitThisRound = hitThisRound
-      ..islandShotUsed = islandShotUsed
+      ..islandAttempts = islandAttempts
+      ..islandMakes = islandMakes
+      ..deathCupHits = deathCupHits
       ..lastCupHit = lastCupHit
       ..cupsHit = List.from(cupsHit)
       ..isWinner = isWinner
@@ -63,6 +78,7 @@ class Player {
   void incrementHitThisRound() {
     hitThisRound++;
     consecutiveHits++;
+    if (consecutiveHits == 2) heatingUp++;
   }
 
   /// Increments the player's score by a specific amount.
@@ -128,10 +144,15 @@ class Player {
       'hitThisRound': hitThisRound,
       'cupsHit': cupsHit,
       'lastCupHit': lastCupHit,
-      'islandShotUsed': islandShotUsed,
+      'islandAttempts': islandAttempts,
+      'islandMakes': islandMakes,
+      'deathCupHits': deathCupHits,
       'defended': defended,
       'consecutiveHits': consecutiveHits,
       'onFire': onFire,
+      'heatingUp': heatingUp,
+      'bounceAttempts': bounceAttempts,
+      'bounceMakes': bounceMakes,
       'isWinner': isWinner,
       'user': user?.toJson(), // Only if user is non-null
     };
@@ -140,22 +161,27 @@ class Player {
   /// Decode a Player from a JSON map.
   factory Player.fromJson(Map<String, dynamic> json) {
     // Handle cases where 'hitThisRound' might be stored as a bool
-    if (json["hitThisRound"] is bool) {
-      json["hitThisRound"] = json["hitThisRound"] ? 1 : 0;
+    if (json['hitThisRound'] is bool) {
+      json['hitThisRound'] = json['hitThisRound'] ? 1 : 0;
     }
 
     return Player(
       name: json['name'],
-      score: json['score'],
+      score: (json['score'] as num).toDouble(),
       throws: json['throws'],
       misses: json['misses'],
       airballs: json['airballs'],
       cupsHit: List<int>.from(json['cupsHit'] ?? []),
       hitThisRound: json['hitThisRound'],
-      islandShotUsed: json['islandShotUsed'] ?? false,
+      islandAttempts: json['islandAttempts'] ?? 0,
+      islandMakes: json['islandMakes'] ?? 0,
+      deathCupHits: json['deathCupHits'] ?? 0,
       defended: json['defended'] ?? 0,
-      consecutiveHits: json['consecutiveHits'] ?? json['consecuteiveHits'] ?? 0,
+      consecutiveHits: json['consecutiveHits'] ?? 0,
       onFire: json['onFire'] ?? 0,
+      heatingUp: json['heatingUp'] ?? 0,
+      bounceAttempts: json['bounceAttempts'] ?? 0,
+      bounceMakes: json['bounceMakes'] ?? 0,
       user: json['user'] != null ? User.fromJson(json['user']) : null,
       lastCupHit: json['lastCupHit'] ?? false,
       isWinner: json['isWinner'] ?? false,
@@ -164,7 +190,7 @@ class Player {
 
   @override
   String toString() {
-    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandShotUsed: $islandShotUsed, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, isWinner: $isWinner, user: $user)';
+    return 'Player($name, score: $score, throws: $throws, misses: $misses, airballs: $airballs, hitThisRound: $hitThisRound, cupsHit: $cupsHit, lastCupHit: $lastCupHit, islandAttempts: $islandAttempts, islandMakes: $islandMakes, defended: $defended, consecutiveHits: $consecutiveHits, onFire: $onFire, heatingUp: $heatingUp, bounceAttempts: $bounceAttempts, bounceMakes: $bounceMakes, isWinner: $isWinner, user: $user)';
   }
 
   /// Equality based on name (and potentially user).
@@ -175,7 +201,7 @@ class Player {
     return name == other.name;
   }
 
-    Player copyWithResetStats() {
+  Player copyWithResetStats() {
     return Player(
       name: name,
       user: user,
@@ -186,10 +212,15 @@ class Player {
       hitThisRound: 0,
       cupsHit: [],
       lastCupHit: false,
-      islandShotUsed: false,
+      islandAttempts: 0,
+      islandMakes: 0,
+      deathCupHits: 0,
       defended: 0,
       consecutiveHits: 0,
       onFire: 0,
+      heatingUp: 0,
+      bounceAttempts: 0,
+      bounceMakes: 0,
       isWinner: false,
     );
   }
@@ -212,12 +243,65 @@ class Player {
       cupsHit: [...cupsHit, ...matchResult.cupsHit],
       hitThisRound: 0, // Not relevant for tournament totals
       onFire: onFire + matchResult.onFire,
-      islandShotUsed: islandShotUsed || matchResult.islandShotUsed,
+      heatingUp: heatingUp + matchResult.heatingUp,
+      bounceAttempts: bounceAttempts + matchResult.bounceAttempts,
+      bounceMakes: bounceMakes + matchResult.bounceMakes,
+      islandAttempts: islandAttempts + matchResult.islandAttempts,
+      islandMakes: islandMakes + matchResult.islandMakes,
+      deathCupHits: deathCupHits + matchResult.deathCupHits,
       lastCupHit: lastCupHit || matchResult.lastCupHit,
       isWinner: isWinner || matchResult.isWinner,
     );
   }
 
   @override
-  int get hashCode => name.hashCode ^ score.hashCode;
+  int get hashCode => name.hashCode;
+}
+
+extension PlayerCopyWith on Player {
+  Player copyWithName(String newName) {
+    return Player(
+      name: newName,
+      user: user,
+      score: score,
+      throws: throws,
+      misses: misses,
+      airballs: airballs,
+      defended: defended,
+      consecutiveHits: consecutiveHits,
+      cupsHit: cupsHit,
+      hitThisRound: hitThisRound,
+      onFire: onFire,
+      heatingUp: heatingUp,
+      bounceAttempts: bounceAttempts,
+      bounceMakes: bounceMakes,
+      islandAttempts: islandAttempts,
+      islandMakes: islandMakes,
+      deathCupHits: deathCupHits,
+      lastCupHit: lastCupHit,
+    );
+  }
+
+  Player copyWithUser(User? newUser) {
+    return Player(
+      name: name,
+      user: newUser,
+      score: score,
+      throws: throws,
+      misses: misses,
+      airballs: airballs,
+      defended: defended,
+      consecutiveHits: consecutiveHits,
+      cupsHit: cupsHit,
+      hitThisRound: hitThisRound,
+      onFire: onFire,
+      heatingUp: heatingUp,
+      bounceAttempts: bounceAttempts,
+      bounceMakes: bounceMakes,
+      islandAttempts: islandAttempts,
+      islandMakes: islandMakes,
+      deathCupHits: deathCupHits,
+      lastCupHit: lastCupHit,
+    );
+  }
 }

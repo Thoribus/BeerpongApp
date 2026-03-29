@@ -17,21 +17,21 @@ class TournamentAnalysisScreen extends StatelessWidget {
         child: ListView(
           children: [
             const Text(
-              "Win Distribution",
+              'Win Distribution',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildWinBarChart(),
             const SizedBox(height: 24),
             const Text(
-              "Score Distribution",
+              'Score Distribution',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             _buildScoreLineChart(),
             const SizedBox(height: 24),
             const Text(
-              "Confrontation Matrix",
+              'Confrontation Matrix',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -66,7 +66,7 @@ class TournamentAnalysisScreen extends StatelessWidget {
           barGroups: barGroups,
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
+            leftTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: true),
             ),
             bottomTitles: AxisTitles(
@@ -75,7 +75,7 @@ class TournamentAnalysisScreen extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
                   if (index >= 0 && index < tournament.teams.length) {
-                    return Text("T${index + 1}",
+                    return Text('T${index + 1}',
                         style: const TextStyle(fontSize: 10));
                   }
                   return const SizedBox.shrink();
@@ -117,13 +117,13 @@ class TournamentAnalysisScreen extends StatelessWidget {
             LineChartBarData(
               isCurved: true,
               spots: spots,
-              dotData: FlDotData(show: true),
+              dotData: const FlDotData(show: true),
               color: Colors.blue,
               belowBarData: BarAreaData(show: false),
             )
           ],
           borderData: FlBorderData(show: false),
-          titlesData: FlTitlesData(
+          titlesData: const FlTitlesData(
             leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
             bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
@@ -135,6 +135,17 @@ class TournamentAnalysisScreen extends StatelessWidget {
   Widget _buildConfrontationMatrix() {
     final teams = tournament.teams;
 
+    // Build lookup: "rowColorKey-colColorKey" → true if row team won
+    final Map<String, bool> results = {};
+    for (final match in tournament.matches) {
+      if (!match.played || match.winner == null) continue;
+      final r = match.team1.color.toARGB32().toString();
+      final c = match.team2.color.toARGB32().toString();
+      final team1Won = match.winner!.color.toARGB32() == match.team1.color.toARGB32();
+      results['$r-$c'] = team1Won;
+      results['$c-$r'] = !team1Won;
+    }
+
     return Table(
       border: TableBorder.all(color: Colors.grey.shade400),
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -143,29 +154,35 @@ class TournamentAnalysisScreen extends StatelessWidget {
           children: [
             const SizedBox(),
             ...teams
-                .map((t) => Center(child: Text("T${teams.indexOf(t) + 1}"))),
+                .map((t) => Center(child: Text('T${teams.indexOf(t) + 1}'))),
           ],
         ),
         ...teams.asMap().entries.map((rowEntry) {
           final rowIndex = rowEntry.key;
+          final rowTeam = rowEntry.value;
+          final rowKey = rowTeam.color.toARGB32().toString();
           return TableRow(
             children: [
-              Center(child: Text("T${rowIndex + 1}")),
-              ...teams.asMap().entries.map((colEntry) {
-                final colIndex = colEntry.key;
-                if (rowIndex == colIndex) {
-                  return const Center(child: Text("✕"));
+              Center(child: Text('T${rowIndex + 1}')),
+              ...teams.map((colTeam) {
+                if (colTeam.color.toARGB32() == rowTeam.color.toARGB32()) {
+                  return const Center(child: Text('✕'));
                 }
-                // Fake result generation (replace with real match data if available)
-                final won = (rowIndex + colIndex) % 2 == 0;
+                final colKey = colTeam.color.toARGB32().toString();
+                final result = results['$rowKey-$colKey'];
+                if (result == null) {
+                  return const Center(
+                    child: Text('?', style: TextStyle(color: Colors.grey)),
+                  );
+                }
                 return Center(
                   child: Icon(
-                    won ? Icons.check : Icons.close,
-                    color: won ? Colors.green : Colors.red,
+                    result ? Icons.check : Icons.close,
+                    color: result ? Colors.green : Colors.red,
                     size: 16,
                   ),
                 );
-              }).toList(),
+              }),
             ],
           );
         }),

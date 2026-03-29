@@ -7,6 +7,7 @@ class GameEvent {
   final String? player;      // The ID of the player (if relevant)
   final String team;        // The ID of the team (if relevant)
   final DateTime timestamp; // When the event occurred, as a DateTime in Dart
+  final int? roundNumber;   // Which round this event occurred in
 
   // Constructor: we won't assign a DateTime here because we'll rely on
   // FieldValue.serverTimestamp() when writing to Firestore. However, we
@@ -18,6 +19,7 @@ class GameEvent {
     this.player,
     required this.team,
     required this.timestamp,
+    this.roundNumber,
   });
 
   /// Construct from Firestore data. 
@@ -25,16 +27,27 @@ class GameEvent {
   factory GameEvent.fromJson(Map<String, dynamic> json, String id, String gameId) {
     return GameEvent(
       eventId: id,
-      eventType: json["eventType"] as String,
+      eventType: json['eventType'] as String,
       gameId: gameId,
-      player: json["player"] as String?,
-      team: json["team"] as String,
-      timestamp: (json["timestamp"] as Timestamp).toDate(),
+      player: json['player'] as String?,
+      team: json['team'] as String,
+      timestamp: (json['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      roundNumber: json['roundNumber'] as int?,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'eventType': eventType,
+      'team': team,
+      'player': player,
+      'timestamp': FieldValue.serverTimestamp(),
+      if (roundNumber != null) 'roundNumber': roundNumber,
+    };
   }
 
   @override
   String toString() {
-    return "GameEvent($eventType, player: $player, team: $team, timestamp: $timestamp)";
+    return 'GameEvent($eventType, player: $player, team: $team, timestamp: $timestamp)';
   }
 }

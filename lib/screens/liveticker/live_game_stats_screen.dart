@@ -1,13 +1,10 @@
-import 'package:beerpongapp/models/event.dart';
-import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
-import 'package:beerpongapp/models/player.dart';
+import 'package:beerpongapp/widgets/app_tab_bar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // new screens/tabs
 import 'package:beerpongapp/screens/liveticker/cup_layout_tab.dart';
@@ -29,6 +26,8 @@ class LiveGameData {
   final String gameId;
   final DateTime gameStart;
   final String? winner;
+  final String gameMode;
+  final List<String> specialRules;
 
   LiveGameData({
     required this.team1,
@@ -36,53 +35,74 @@ class LiveGameData {
     required this.gameId,
     required this.gameStart,
     this.winner,
+    this.gameMode = '',
+    this.specialRules = const [],
   });
 }
 
 class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     with SingleTickerProviderStateMixin {
-  final FirestoreService _firestoreService = FirestoreService();
+  final FirestoreService _firestoreService = FirestoreService.instance;
   int _currentTabPage = 0;
   late PageController _tabPageController;
-  late DateTime gameStart;
   LiveGameData? _cachedGameData;
   bool _dialogShown = false;
+  bool _gameAlreadyOver = false;
+
+  // Animation controller for the LIVE badge pulse
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _tabPageController = PageController(initialPage: _currentTabPage);
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
     _tabPageController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(50.0),
-        child: AppBar(
-          backgroundColor: const Color(0xFFFF9800),
-          title: const Text(
-            'Live Ticker',
-            style: TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+      appBar: AppBar(
+        backgroundColor: c.surface,
+        elevation: 0,
+        title: Text(
+          _cachedGameData?.winner != null ? 'Game Summary' : 'Live Game',
+          style: TextStyle(
+            color: c.onBackground,
+            fontWeight: FontWeight.bold,
           ),
-          centerTitle: true,
         ),
+        iconTheme: IconThemeData(color: c.onBackground),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       body: Column(
         children: [
-          _buildTabPageSelector(),
-          // Use only ONE Expanded to take full remaining space
+          AppTabBar(
+            tabs: const ['Table', 'Stats', 'Timeline'],
+            selectedIndex: _currentTabPage,
+            onTabSelected: (index) {
+              setState(() {
+                _currentTabPage = index;
+              });
+            },
+            pageController: _tabPageController,
+          ),
           Expanded(
             child: StreamBuilder<DocumentSnapshot>(
               stream: _firestoreService.getGameDocStream(widget.gameId),
@@ -102,6 +122,10 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                 final gameStart = gameDataRaw['timestamp'].toDate();
                 final winner = gameDataRaw['winner'];
                 final gameId = widget.gameId;
+                final gameMode = gameDataRaw['gameMode'] as String? ?? '';
+                final specialRules =
+                    ((gameDataRaw['specialRules'] as List?) ?? [])
+                        .cast<String>();
 
                 final updatedGameData = LiveGameData(
                   team1: team1,
@@ -109,6 +133,8 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                   gameId: gameId,
                   gameStart: gameStart,
                   winner: winner,
+                  gameMode: gameMode,
+                  specialRules: specialRules,
                 );
 
                 // Update cache & dialog outside the build method
@@ -129,10 +155,16 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                   if (winner != null &&
                       winner.toString().isNotEmpty &&
                       !_dialogShown) {
-                    _dialogShown = true;
-                    final winningPlayers =
-                        (winner == "Team Blue") ? team1.players : team2.players;
-                    DialogHelpers.showGameEndDialog(context, winningPlayers);
+                    if (_cachedGameData == null) {
+                      // First data load — game was already over when screen opened
+                      _gameAlreadyOver = true;
+                    } else if (!_gameAlreadyOver) {
+                      _dialogShown = true;
+                      final winningPlayers = (winner == 'Team Blue')
+                          ? team1.players
+                          : team2.players;
+                      DialogHelpers.showGameEndDialog(context, winningPlayers);
+                    }
                   }
                 });
 
@@ -153,7 +185,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
   Widget _buildGameTabs(LiveGameData gameData) {
     return Column(
       children: [
-        _buildTopBracket(gameData.team1, gameData.team2),
+        _buildHeader(gameData),
         Expanded(
           child: PageView(
             controller: _tabPageController,
@@ -173,92 +205,187 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
     );
   }
 
-  Widget _buildTopBracket(Team team1, Team team2) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20),
-      child: Container(
-        // Apply shadow and border radius here
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              offset: const Offset(0, 2),
-              blurRadius: 4,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: Container(
-          // Clip only the inner content
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          clipBehavior: Clip.hardEdge, // This only affects inner content
-          child: Stack(
+  Widget _buildHeader(LiveGameData gameData) {
+    final c = AppColors.of(context);
+    final team1 = gameData.team1;
+    final team2 = gameData.team2;
+    final isLive = gameData.winner == null;
+
+    final chips = <String>[
+      if (gameData.gameMode.isNotEmpty) gameData.gameMode,
+      ...gameData.specialRules,
+    ];
+
+    return Container(
+      color: c.surface,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      child: Column(
+        children: [
+          // Score row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // SVG Background
-              Positioned.fill(
-                child: SvgPicture.asset(
-                  'assets/sun-tornado.svg',
-                  fit: BoxFit.cover,
+              // Team 1 side
+              Expanded(
+                child: _buildTeamSide(
+                  team: team1,
+                  alignment: CrossAxisAlignment.start,
+                  c: c,
                 ),
               ),
+
+              // Centre column: score + badge
               Column(
                 children: [
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Round 16',
+                  Text(
+                    '${totalScore(team1).round()}  :  ${totalScore(team2).round()}',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      color: c.onBackground,
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildTeamLogo(
-                          'assets/brevard-county-manatees-1.svg', 'Team Blue'),
-                      Column(
-                        children: [
-                          Text(
-                            '${totalScore(team1).round()} : ${totalScore(team2).round()}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Text(
-                              'LIVE',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      _buildTeamLogo(
-                          'assets/hamilton-bulldogs.svg', 'Team Red'),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  isLive ? _buildLiveBadge() : _buildFinalBadge(c),
                 ],
+              ),
+
+              // Team 2 side
+              Expanded(
+                child: _buildTeamSide(
+                  team: team2,
+                  alignment: CrossAxisAlignment.end,
+                  c: c,
+                ),
               ),
             ],
           ),
+
+          // Chips row (game mode + special rules)
+          if (chips.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              alignment: WrapAlignment.center,
+              children: chips
+                  .map(
+                    (label) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: c.surface2,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: c.subtle,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTeamSide({
+    required Team team,
+    required CrossAxisAlignment alignment,
+    required AppColors c,
+  }) {
+    final cupsLeft = team.cups.where((cup) => cup.isVisible).length;
+    final teamName = team.color == const Color(0xFF2196F3) ||
+            (team.color.b * 255.0).round() > (team.color.r * 255.0).round()
+        ? 'Team Blue'
+        : 'Team Red';
+
+    return Column(
+      crossAxisAlignment: alignment,
+      children: [
+        Text(
+          teamName,
+          style: TextStyle(
+            color: team.color,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '$cupsLeft cups left',
+          style: TextStyle(
+            color: c.subtle,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLiveBadge() {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _pulseAnimation.value,
+          child: child,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.green.shade700,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 5),
+            const Text(
+              'LIVE',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinalBadge(AppColors c) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: c.surface2,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        'FINAL',
+        style: TextStyle(
+          color: c.subtle,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.8,
         ),
       ),
     );
@@ -266,87 +393,5 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
 
   num totalScore(Team team) {
     return team.players.map((player) => player.score).reduce((a, b) => a + b);
-  }
-
-  Widget _buildTeamLogo(String assetPath, String teamName) {
-    return Column(
-      children: [
-        SvgPicture.asset(
-          assetPath,
-          height: 80,
-          width: 80,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          teamName,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabPageSelector() {
-    final List<String> tabs = ["Table", "Statistics", "Timeline"];
-
-    return Container(
-      height: 48,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.orange,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      child: Row(
-        children: tabs.asMap().entries.map((entry) {
-          final index = entry.key;
-          final title = entry.value;
-          final isSelected = _currentTabPage == index;
-
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () {
-                  if (_currentTabPage != index) {
-                    _tabPageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                    // ❌ DON'T setState manually here
-                    // let onPageChanged handle _currentTabPage update
-                  }
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Colors.grey.shade600
-                        : Colors.orange.shade400,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    softWrap: false,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.white70,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
   }
 }

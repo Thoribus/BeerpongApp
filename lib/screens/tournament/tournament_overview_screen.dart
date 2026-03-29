@@ -2,8 +2,9 @@ import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/route_args.dart';
 import 'package:flutter/material.dart';
-import '../game/game_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class TournamentOverviewScreen extends StatefulWidget {
   final String tournamentId;
@@ -40,7 +41,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
   }
 
   Future<void> _reloadTournamentData() async {
-    final latest = await FirestoreService().getTournament(widget.tournamentId);
+    final latest = await FirestoreService.instance.getTournament(widget.tournamentId);
     if (latest != null) {
       setState(() {
         tournament = latest;
@@ -55,8 +56,8 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
     required List<Player> team1Players,
     required List<Player> team2Players,
   }) async {
-    const team1Name = "Team Blue";
-    const team2Name = "Team Red";
+    const team1Name = 'Team Blue';
+    const team2Name = 'Team Red';
 
     return showDialog<String>(
       context: context,
@@ -86,12 +87,12 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(team1Name),
-              child: Text('$team1Name starts',
+              child: const Text('$team1Name starts',
                   style: TextStyle(color: Colors.blue)),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(team2Name),
-              child: Text('$team2Name starts',
+              child: const Text('$team2Name starts',
                   style: TextStyle(color: Colors.red)),
             ),
           ],
@@ -140,7 +141,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          "Teams",
+          'Teams',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
@@ -167,7 +168,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withValues(alpha: 0.2),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2)),
                           ],
@@ -200,10 +201,10 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
     // Use a delayed post-frame callback to ensure the widget is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final renderBox = context.findRenderObject();
-      if (renderBox == null || !(renderBox is RenderBox)) return;
+      if (renderBox == null || renderBox is! RenderBox) return;
 
       final overlay = Overlay.of(context);
-      final button = renderBox as RenderBox;
+      final button = renderBox;
 
       final position = button.localToGlobal(
         Offset(button.size.width / 2, button.size.height),
@@ -224,7 +225,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -272,7 +273,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
         TextButton(
           onPressed: () {},
           child: const Text(
-            "See all",
+            'See all',
             style: TextStyle(color: Colors.blue),
           ),
         ),
@@ -303,7 +304,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -316,7 +317,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
             child: Column(
               children: [
                 Text(
-                  "Match",
+                  'Match',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -331,7 +332,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                     const Column(
                       children: [
                         Text(
-                          "VS",
+                          'VS',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -339,7 +340,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          "14:00", // Replace with actual time if available
+                          '14:00', // Replace with actual time if available
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey,
@@ -390,7 +391,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                     ),
                     onPressed: () => _startMatch(index),
                     child: const Text(
-                      "Start Match",
+                      'Start Match',
                       style: TextStyle(fontSize: 14),
                     ),
                   ),
@@ -413,7 +414,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -448,21 +449,6 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
     );
   }
 
-  Widget _buildPlayerColumn(String name, Color color) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: color,
-          child: const Icon(Icons.person, color: Colors.white, size: 28),
-        ),
-        const SizedBox(height: 6),
-        Text(name,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-      ],
-    );
-  }
-
   Future<void> _startMatch(int index) async {
     var match = tournament.matches[index];
     final chosenTeam = await _showStartingTeamDialog(
@@ -471,13 +457,14 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       team2Players: match.team2.players,
     );
     if (chosenTeam == null) return;
+    if (!mounted) return;
 
     // 1. Create the Firestore document for the game.
-    final gameId = await FirestoreService().createEmptyGameDoc(
+    final gameId = await FirestoreService.instance.createEmptyGameDoc(
       team1: match.team1,
       team2: match.team2,
     );
-    await FirestoreService().updateGameDoc(
+    await FirestoreService.instance.updateGameDoc(
       gameId,
       rules: match.selectedRules.entries
           .where((entry) => entry.value)
@@ -487,8 +474,9 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       invitations: match.invitations,
       started: true,
       timestamp: true,
-      tournamendId: tournament.id,
+      tournamentId: tournament.id,
     );
+    if (!mounted) return;
 
     // 2. (Optional) Save gameId to the TournamentMatch and update the tournament doc in Firestore.
     // If your TournamentMatch has a gameId field, do:
@@ -506,28 +494,27 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
         players: cleanTeam2Players,
         cups: match.team2.cups);
 
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => GameScreen(
-          id: gameId,
-          team1: team1,
-          team2: team2,
-          selectedRules: match.selectedRules,
-          invitations: match.invitations,
-          startingTeam: chosenTeam == "Team Blue",
-          tournamentId: widget.tournamentId,
-        ),
+    final result = await context.push<Map<String, dynamic>>(
+      '/game',
+      extra: GameArgs(
+        id: gameId,
+        team1: team1,
+        team2: team2,
+        selectedRules: match.selectedRules,
+        invitations: match.invitations,
+        startingTeam: chosenTeam == 'Team Blue',
+        tournamentId: widget.tournamentId,
       ),
     );
+    if (!mounted) return;
 
     if (result != null) {
-      tournament.matches[index] = result["match"];
+      tournament.matches[index] = result['match'];
       mergeMatchResultsIntoTournament(
         tournamentTeams: tournament.teams,
-        matchTeams: [result["match"].team1, result["match"].team2],
+        matchTeams: [result['match'].team1, result['match'].team2],
       );
-      await FirestoreService().updateTournament(tournament);
+      await FirestoreService.instance.updateTournament(tournament);
       await _reloadTournamentData();
     }
   }
@@ -535,16 +522,17 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
   void _checkIfTournamentComplete() {
     if (tournament.matches.every((m) => m.played)) {
       Future.delayed(Duration.zero, () {
+        if (!mounted) return;
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text("Tournament Complete!"),
+            title: const Text('Tournament Complete!'),
             content: const Text(
-                "All matches have been played.\nCheck out the standings!"),
+                'All matches have been played.\nCheck out the standings!'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text("OK"),
+                child: const Text('OK'),
               ),
             ],
           ),

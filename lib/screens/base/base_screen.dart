@@ -1,52 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:beerpongapp/constants.dart';
-import 'package:beerpongapp/screens/profile/account_screen.dart';
-import 'package:beerpongapp/screens/friends/friendlist.dart';
-import 'package:beerpongapp/screens/home/home_screen.dart';
-import 'package:beerpongapp/screens/shop/shop_screen.dart';
-import 'package:beerpongapp/screens/games/statistics_screen.dart';
-import 'package:beerpongapp/widgets/user_card.dart';
-
+import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/theme_provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
+import 'package:beerpongapp/widgets/user_card.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class BaseScreen extends StatefulWidget {
-  final int selectedIndex;
-  const BaseScreen({required this.selectedIndex, super.key});
+  final StatefulNavigationShell shell;
+  const BaseScreen({required this.shell, super.key});
 
   @override
   BaseScreenState createState() => BaseScreenState();
 }
 
 class BaseScreenState extends State<BaseScreen> {
-  late int _selectedIndex = widget.selectedIndex;
-  late PageController _pageController;
-
-  bool isDarkMode = true;
-  String language = 'en'; // 'en' or 'de'
-
-  final double _itemWidth = 78;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController(initialPage: _selectedIndex);
-  }
-
   void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-    _pageController.jumpToPage(index);
+    widget.shell.goBranch(index);
   }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final user = userProvider.user;
+    final isDarkMode = themeProvider.isDarkMode;
+    final selectedIndex = widget.shell.currentIndex;
+    final c = AppColors.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0F11),
+      backgroundColor: c.background,
       drawer: Drawer(
         backgroundColor:
-            isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFEDEDED),
+            isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -57,18 +43,16 @@ class BaseScreenState extends State<BaseScreen> {
                   children: [
                     DrawerHeader(
                       decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? const Color(0xFF2C2F36)
-                            : const Color(0xFFDCDCDC),
+                        color: c.drawerHeader,
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const CircleAvatar(
+                          CircleAvatar(
                             radius: 28,
-                            backgroundColor: Colors.grey,
+                            backgroundColor: c.border,
                             child: Icon(Icons.person,
-                                size: 28, color: Colors.white),
+                                size: 28, color: c.onBackground),
                           ),
                           const SizedBox(width: 12),
                           Column(
@@ -80,17 +64,14 @@ class BaseScreenState extends State<BaseScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color:
-                                      isDarkMode ? Colors.white : Colors.black,
+                                  color: c.onBackground,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '@wutzi',
+                                '@${user?.username ?? 'guest'}',
                                 style: TextStyle(
-                                  color: isDarkMode
-                                      ? Colors.grey[400]
-                                      : Colors.grey[700],
+                                  color: c.subtle,
                                 ),
                               ),
                             ],
@@ -116,43 +97,25 @@ class BaseScreenState extends State<BaseScreen> {
             // === Bottom Section: Settings Toggles ===
             Column(
               children: [
-                const Divider(color: Colors.grey),
+                Divider(color: c.divider),
                 SwitchListTile(
                   title: Text(
-                    language == 'en' ? 'Dark Mode' : 'Dunkelmodus',
-                    style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black),
+                    'Dark Mode',
+                    style: TextStyle(color: c.onBackground),
                   ),
                   value: isDarkMode,
-                  onChanged: (value) => setState(() => isDarkMode = value),
+                  onChanged: (_) => themeProvider.toggle(),
                   secondary: Icon(
                     Icons.dark_mode,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-                SwitchListTile(
-                  title: Text(
-                    language == 'en' ? 'Language: English' : 'Sprache: Deutsch',
-                    style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black),
-                  ),
-                  value: language == 'en',
-                  onChanged: (value) =>
-                      setState(() => language = value ? 'en' : 'de'),
-                  secondary: Icon(
-                    Icons.language,
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: c.onBackground,
                   ),
                 ),
                 ListTile(
                   leading: Icon(Icons.privacy_tip_outlined,
-                      color: isDarkMode ? Colors.white : Colors.black),
+                      color: c.onBackground),
                   title: Text(
-                    language == 'en'
-                        ? 'Privacy Settings'
-                        : 'Datenschutzeinstellungen',
-                    style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black),
+                    'Privacy Settings',
+                    style: TextStyle(color: c.onBackground),
                   ),
                   onTap: () {
                     // Optional: navigate to privacy settings
@@ -168,11 +131,7 @@ class BaseScreenState extends State<BaseScreen> {
         preferredSize: const Size.fromHeight(52),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade800, //Color(0xFF151924),
-            //borderRadius: BorderRadius.only(
-            //bottomLeft: Radius.circular(16),
-            //bottomRight: Radius.circular(16),
-            //),
+            color: c.appBar,
           ),
           child: SafeArea(
             child: Padding(
@@ -181,7 +140,7 @@ class BaseScreenState extends State<BaseScreen> {
                 children: [
                   Builder(
                     builder: (context) => IconButton(
-                      icon: const Icon(Icons.settings, color: Colors.white),
+                      icon: Icon(Icons.settings, color: c.onBackground),
                       onPressed: () {
                         Scaffold.of(context).openDrawer();
                       },
@@ -190,9 +149,9 @@ class BaseScreenState extends State<BaseScreen> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        _getAppBarTitle(_selectedIndex),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        _getAppBarTitle(selectedIndex),
+                        style: TextStyle(
+                          color: c.onBackground,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -202,9 +161,9 @@ class BaseScreenState extends State<BaseScreen> {
                   const SizedBox(width: 8),
                   IconButton(
                     icon: const Icon(Icons.notifications_none),
-                    color: Colors.white,
+                    color: c.onBackground,
                     onPressed: () {
-                      // TODO: Notification action
+                      // Push notifications: not yet implemented
                     },
                   ),
                 ],
@@ -213,23 +172,12 @@ class BaseScreenState extends State<BaseScreen> {
           ),
         ),
       ),
-      body: PageView(
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        onPageChanged: (index) => setState(() => _selectedIndex = index),
-        children: const [
-          ShopScreen(),
-          FriendsListScreen(),
-          HomeScreen(),
-          StatisticsScreen(),
-          AccountScreen(),
-        ],
-      ),
+      body: widget.shell,
       bottomNavigationBar: Container(
         height: 60,
-        decoration: const BoxDecoration(
-          color: Color(0xFF131417),
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: c.navBar,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(28),
             topRight: Radius.circular(28),
           ),
@@ -239,7 +187,7 @@ class BaseScreenState extends State<BaseScreen> {
             final itemWidth = constraints.maxWidth / 5;
             const indicatorWidth = 42.0;
             final indicatorLeft =
-                _selectedIndex * itemWidth + (itemWidth - indicatorWidth) / 2;
+                selectedIndex * itemWidth + (itemWidth - indicatorWidth) / 2;
 
             return Stack(
               alignment: Alignment.topCenter,
@@ -253,7 +201,7 @@ class BaseScreenState extends State<BaseScreen> {
                     width: indicatorWidth,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.orange, // AppConstants.primaryColor,
+                      color: Colors.orange,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -261,11 +209,11 @@ class BaseScreenState extends State<BaseScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildNavItem(Icons.shopping_bag_outlined, 'Shop', 0),
-                    _buildNavItem(Icons.favorite_outline, 'Friends', 1),
-                    _buildNavItem(Icons.sports_bar_outlined, 'Home', 2),
-                    _buildNavItem(Icons.workspaces_outlined, 'Games', 3),
-                    _buildNavItem(Icons.account_circle_outlined, 'Profile', 4),
+                    _buildNavItem(Icons.shopping_bag_outlined, 'Shop', 0, selectedIndex),
+                    _buildNavItem(Icons.favorite_outline, 'Friends', 1, selectedIndex),
+                    _buildNavItem(Icons.sports_bar_outlined, 'Home', 2, selectedIndex),
+                    _buildNavItem(Icons.workspaces_outlined, 'Games', 3, selectedIndex),
+                    _buildNavItem(Icons.account_circle_outlined, 'Profile', 4, selectedIndex),
                   ],
                 ),
               ],
@@ -276,19 +224,18 @@ class BaseScreenState extends State<BaseScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, int index) {
-    final isSelected = _selectedIndex == index;
+  Widget _buildNavItem(IconData icon, String label, int index, int selectedIndex) {
+    final isSelected = selectedIndex == index;
     final color = isSelected ? Colors.orange : Colors.grey.shade500;
-//AppConstants.primaryColor : Colors.grey.shade500;
 
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       child: SizedBox(
-        width: _itemWidth,
+        width: 78,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 22), // Smaller icon
+            Icon(icon, color: color, size: 22),
             const SizedBox(height: 2),
             Text(
               label,

@@ -1,27 +1,57 @@
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/player.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 
-class PerformanceScreen extends StatelessWidget {
+class PerformanceScreen extends StatefulWidget {
   final User user;
 
   const PerformanceScreen({super.key, required this.user});
 
   @override
+  State<PerformanceScreen> createState() => _PerformanceScreenState();
+}
+
+enum _TimeFilter { all, last10, last5, last3 }
+
+class _PerformanceScreenState extends State<PerformanceScreen> {
+  late final Future<List<UserStatsInGame>> _statsFuture;
+  _TimeFilter _filter = _TimeFilter.all;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsFuture =
+        FirestoreService.instance.retrieveUserStatsWithDate(widget.user);
+  }
+
+  List<UserStatsInGame> _applyFilter(List<UserStatsInGame> all) {
+    final sorted = [...all]..sort((a, b) => b.date.compareTo(a.date));
+    return switch (_filter) {
+      _TimeFilter.last10 => sorted.take(10).toList(),
+      _TimeFilter.last5 => sorted.take(5).toList(),
+      _TimeFilter.last3 => sorted.take(3).toList(),
+      _TimeFilter.all => sorted,
+    };
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: c.background,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 1) Load userStatsInGame from Firestore
+            _buildFilterChips(),
+            const SizedBox(height: 8),
             FutureBuilder<List<UserStatsInGame>>(
-              future: FirestoreService().retrieveUserStatsWithDate(user),
+              future: _statsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -29,27 +59,24 @@ class PerformanceScreen extends StatelessWidget {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
-                final userStatsList = snapshot.data ?? [];
+                final filtered = _applyFilter(snapshot.data ?? []);
 
-                // 2) Now we have userStatsList for line charts etc.
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // "Performance Summary": use a custom card
-                    _buildSectionTitle("Performance Summary"),
+                    _buildSectionTitle('Performance Summary'),
                     _buildCard(
                       child: StatisticsTable(
-                        user: user,
-                        userStatsList: userStatsList, // pass it here
+                        user: widget.user,
+                        userStatsList: filtered,
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Heat Map
-                    _buildSectionTitle("Cups Hit Heat Map"),
-                    _buildCard(
-                      child: _buildPyramidHeatMap(),
-                    ),
+                    _buildSectionTitle('Cups Hit Heat Map'),
+                    _buildCard(child: _buildPyramidHeatMap()),
+                    const SizedBox(height: 16),
+                    _buildSectionTitle('Row Accuracy'),
+                    _buildCard(child: _buildRowAccuracyChart()),
                   ],
                 );
               },
@@ -60,23 +87,62 @@ class PerformanceScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildFilterChips() {
+    return Row(
+      children: [
+        _filterChip('All', _TimeFilter.all),
+        const SizedBox(width: 8),
+        _filterChip('Last 10', _TimeFilter.last10),
+        const SizedBox(width: 8),
+        _filterChip('Last 5', _TimeFilter.last5),
+        const SizedBox(width: 8),
+        _filterChip('Last 3', _TimeFilter.last3),
+      ],
+    );
+  }
+
+  Widget _filterChip(String label, _TimeFilter value) {
+    final selected = _filter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _filter = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? Colors.amber : Colors.white12,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.black : Colors.white70,
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionTitle(String title) {
+    final c = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.black,
+          color: c.onBackground,
         ),
       ),
     );
   }
 
   Widget _buildCard({required Widget child}) {
+    final c = AppColors.of(context);
     return Card(
-      color: Colors.grey[200],
+      color: c.surface2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 5,
       child: Padding(
@@ -115,12 +181,92 @@ class PerformanceScreen extends StatelessWidget {
 
   List<int> _countCupsHit() {
     List<int> counts = List.filled(10, 0);
-    for (var hit in user.cupsHit) {
+    for (var hit in widget.user.cupsHit) {
       if (hit >= 0 && hit < counts.length) {
         counts[hit]++;
       }
     }
     return counts;
+  }
+
+  Widget _buildRowAccuracyChart() {
+    final c = AppColors.of(context);
+    final counts = _countCupsHit();
+    final total = counts.reduce((a, b) => a + b);
+
+    // Row groupings: front [0-3], mid [4-6], back [7-8], apex [9]
+    final rowHits = [
+      counts[0] + counts[1] + counts[2] + counts[3],
+      counts[4] + counts[5] + counts[6],
+      counts[7] + counts[8],
+      counts[9],
+    ];
+    final rowLabels = ['Front', 'Mid', 'Back', 'Apex'];
+
+    if (total == 0) {
+      return Padding(
+        padding: const EdgeInsets.all(8),
+        child: Text('No data yet.',
+            style: TextStyle(color: c.subtle, fontSize: 13)),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: List.generate(4, (i) {
+        final pct = rowHits[i] / total;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 44,
+                child: Text(
+                  rowLabels[i],
+                  style: TextStyle(color: c.subtle, fontSize: 11),
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Container(
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: pct.clamp(0.0, 1.0),
+                      child: Container(
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 36,
+                child: Text(
+                  '${(pct * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: c.onBackground,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
   }
 
   Color _getHeatColor(int count, List<int> cupCounts) {
@@ -143,7 +289,7 @@ class PerformanceScreen extends StatelessWidget {
 /// The table widget
 class StatisticsTable extends StatelessWidget {
   final User user;
-  final List<UserStatsInGame> userStatsList; // All the user’s games
+  final List<UserStatsInGame> userStatsList; // All the user's games
 
   const StatisticsTable({
     super.key,
@@ -161,6 +307,15 @@ class StatisticsTable extends StatelessWidget {
     final hitRateSpots =
         _buildTrend((p) => p.throws == 0 ? 0.0 : (p.score / p.throws) * 100.0);
     final winRateSpots = _buildTrendWinRate();
+    final bounceRateSpots = _buildTrend((p) => p.bounceAttempts == 0
+        ? 0.0
+        : (p.bounceMakes / p.bounceAttempts) * 100.0);
+    final islandConversionSpots = _buildTrend((p) => p.islandAttempts == 0
+        ? 0.0
+        : (p.islandMakes / p.islandAttempts) * 100.0);
+    final defendedSpots = _buildTrend((p) => p.defended.toDouble());
+    final onFireSpots = _buildTrend((p) => p.onFire.toDouble());
+    final heatingUpSpots = _buildTrend((p) => p.heatingUp.toDouble());
 
     // 2) Compute slope-based "change" for each measure
     final scoreChange = _computeSlopeAsPercentChange(scoreSpots);
@@ -169,6 +324,22 @@ class StatisticsTable extends StatelessWidget {
     final cupsHitChange = _computeSlopeAsPercentChange(cupsHitSpots);
     final hitRateChange = _computeSlopeAsPercentChange(hitRateSpots);
     final winRateChange = _computeSlopeAsPercentChange(winRateSpots);
+    final bounceRateChange = _computeSlopeAsPercentChange(bounceRateSpots);
+    final islandConversionChange =
+        _computeSlopeAsPercentChange(islandConversionSpots);
+    final defendedChange = _computeSlopeAsPercentChange(defendedSpots);
+    final onFireChange = _computeSlopeAsPercentChange(onFireSpots);
+    final heatingUpChange = _computeSlopeAsPercentChange(heatingUpSpots);
+
+    final bounceRateLifetime = user.bounceAttempts > 0
+        ? (user.bounceMakes / user.bounceAttempts * 100).round()
+        : 0;
+    final islandConversionLifetime = user.islandAttempts > 0
+        ? (user.islandMakes / user.islandAttempts * 100).round()
+        : 0;
+
+    final dates =
+        _sortByDate(userStatsList).map((e) => e.date).toList();
 
     // 3) Build the rows
     return ListView(
@@ -176,52 +347,49 @@ class StatisticsTable extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildStatRow(
-          context,
-          'Total Score',
-          user.totalScore.toInt(),
-          Icons.score,
-          scoreChange,
-          scoreSpots,
+          context, 'Total Score', user.totalScore.toInt(),
+          Icons.score, scoreChange, scoreSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Total Misses',
-          user.totalMisses,
-          Icons.close,
-          missesChange,
-          missesSpots,
+          context, 'Total Misses', user.totalMisses,
+          Icons.close, missesChange, missesSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Total Airballs',
-          user.totalAirballs,
-          Icons.air,
-          airballsChange,
-          airballsSpots,
+          context, 'Total Airballs', user.totalAirballs,
+          Icons.air, airballsChange, airballsSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Cups Hit',
-          user.cupsHit.length,
-          Icons.sports_bar,
-          cupsHitChange,
-          cupsHitSpots,
+          context, 'Cups Hit', user.cupsHit.length,
+          Icons.sports_bar, cupsHitChange, cupsHitSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Hit Rate',
-          _hitRateUserLevel(user).round(),
-          Icons.auto_fix_high,
-          hitRateChange,
-          hitRateSpots,
+          context, 'Hit Rate', _hitRateUserLevel(user).round(),
+          Icons.auto_fix_high, hitRateChange, hitRateSpots, dates,
         ),
         _buildStatRow(
-          context,
-          'Win Rate',
-          _winRateUserLevel(user).round(),
-          Icons.emoji_events,
-          winRateChange,
-          winRateSpots,
+          context, 'Win Rate', _winRateUserLevel(user).round(),
+          Icons.emoji_events, winRateChange, winRateSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Bounce Rate', bounceRateLifetime,
+          Icons.sports_tennis_rounded, bounceRateChange, bounceRateSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Island Conv.', islandConversionLifetime,
+          Icons.workspaces_outlined, islandConversionChange,
+          islandConversionSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Defended', user.defended,
+          Icons.shield_outlined, defendedChange, defendedSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'On Fire', user.onFire,
+          Icons.local_fire_department, onFireChange, onFireSpots, dates,
+        ),
+        _buildStatRow(
+          context, 'Heating Up', user.totalHeatingUp,
+          Icons.thermostat, heatingUpChange, heatingUpSpots, dates,
         ),
       ],
     );
@@ -236,19 +404,21 @@ class StatisticsTable extends StatelessWidget {
     IconData icon,
     double changePercent,
     List<FlSpot> rawData,
+    List<DateTime> dates,
   ) {
     final isPositive =
         _lessIsBetter(attribute) ? changePercent < 0 : changePercent >= 0;
     final trendColor = isPositive ? Colors.green : Colors.red;
 
+    final c = AppColors.of(context);
     return ListTile(
       leading: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             attribute,
-            style: const TextStyle(
-                color: Colors.black, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: c.onBackground, fontWeight: FontWeight.bold),
           ),
           Icon(icon, color: Colors.orange, size: 20),
         ],
@@ -280,8 +450,8 @@ class StatisticsTable extends StatelessWidget {
         children: [
           Text(
             '$value',
-            style: const TextStyle(
-              color: Colors.black,
+            style: TextStyle(
+              color: c.onBackground,
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
@@ -296,14 +466,14 @@ class StatisticsTable extends StatelessWidget {
           ),
         ],
       ),
-      onTap: () => _showDetailChart(context, attribute, rawData),
+      onTap: () => _showDetailChart(context, attribute, rawData, dates),
     );
   }
 
   bool _lessIsBetter(String attribute) {
     // If the attribute name is "Total Misses" or "Total Airballs", returning true
-    // means we’ll invert the color logic (negative slope => green).
-    return attribute == "Total Misses" || attribute == "Total Airballs";
+    // means we'll invert the color logic (negative slope => green).
+    return attribute == 'Total Misses' || attribute == 'Total Airballs';
   }
 
   /// On tap, show a bigger chart with BOTH raw data and the regression line
@@ -311,6 +481,7 @@ class StatisticsTable extends StatelessWidget {
     BuildContext context,
     String attribute,
     List<FlSpot> rawData,
+    List<DateTime> dates,
   ) {
     final line = _createRegressionLine(rawData);
     const slopeColor = Colors.orange;
@@ -331,12 +502,39 @@ class StatisticsTable extends StatelessWidget {
                   drawVerticalLine: true,
                   drawHorizontalLine: true,
                 ),
-                titlesData: const FlTitlesData(
-                  leftTitles: AxisTitles(
+                titlesData: FlTitlesData(
+                  leftTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: true),
                   ),
-                  bottomTitles: AxisTitles(
+                  rightTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: dates.isNotEmpty,
+                      reservedSize: 28,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= dates.length) {
+                          return const SizedBox.shrink();
+                        }
+                        final d = dates[idx];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '${d.day}/${d.month}',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 9,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 lineBarsData: [

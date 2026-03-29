@@ -3,9 +3,10 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
-import 'package:beerpongapp/screens/base/base_screen.dart';
+import 'package:beerpongapp/screens/game/game_controller.dart';
 import 'package:flutter/material.dart';
-import 'game_screen.dart';
+import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/util/router.dart';
 import 'package:flutter_svg/svg.dart';
 
 /// A utility class to hold all the AwesomeDialog-based methods.
@@ -33,7 +34,7 @@ class DialogHelpers {
           ),
           const SizedBox(height: 10.0),
           const Text(
-            "Select the player for the cup action:",
+            'Select the player for the cup action:',
             style: TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -55,15 +56,18 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "Cancel",
-    ).show();
+      btnCancelText: 'Cancel',
+    ).show().ignore();
   }
 
   /// Dialog to pick a player for the Airball rule.
-  static Future<void> showAirballPlayerSelectionDialog(GameScreenState state,
-      Team currentTeam, Function(Player) onSelected) async {
+  static Future<void> showAirballPlayerSelectionDialog(
+    BuildContext context,
+    Team currentTeam,
+    Function(Player) onSelected,
+  ) async {
     await DialogHelpers.showSelectionDialog(
-      state.context,
+      context,
       'Select Player',
       currentTeam.currentPlayers,
       onSelected,
@@ -75,7 +79,6 @@ class DialogHelpers {
     String title,
     List<Player> players,
   ) {
-    // Create a Completer that we'll complete when user picks or cancels.
     final completer = Completer<Player?>();
 
     AwesomeDialog(
@@ -94,7 +97,7 @@ class DialogHelpers {
           ),
           const SizedBox(height: 10.0),
           const Text(
-            "Select the player for the cup action:",
+            'Select the player for the cup action:',
             style: TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -106,11 +109,9 @@ class DialogHelpers {
             children: players.map((player) {
               return GestureDetector(
                 onTap: () {
-                  // Complete with this player's choice
                   if (!completer.isCompleted) {
                     completer.complete(player);
                   }
-                  // Dismiss the dialog
                   Navigator.of(context).pop();
                 },
                 child: Card(
@@ -154,34 +155,35 @@ class DialogHelpers {
           ),
         ],
       ),
-      btnCancelText: "Cancel",
+      btnCancelText: 'Cancel',
       btnCancelOnPress: () {
-        // If user cancels, we complete with null
         if (!completer.isCompleted) {
           completer.complete(null);
         }
       },
-    ).show();
+    ).show().ignore();
 
-    // Return the Future that completes when user picks a player or cancels
     return completer.future;
   }
 
   /// Dialog for picking a player for the Death Cup rule.
-  static Future<void> showDeathcupSelectionDialog(GameScreenState state,
-      Team currentTeam, Function(Player) onselected) async {
+  static Future<void> showDeathcupSelectionDialog(
+    BuildContext context,
+    Team currentTeam,
+    Function(Player) onSelected,
+  ) async {
     await DialogHelpers.showSelectionDialog(
-        state.context, 'Select Player', currentTeam.currentPlayers, onselected);
-  }
-
-  static Future<void> highlightIslandCups(GameScreenState state) async {
-    // logic for picking the island-shooter
+      context,
+      'Select Player',
+      currentTeam.currentPlayers,
+      onSelected,
+    );
   }
 
   /// Shows a dialog for rearrange-error if more than 6 cups remain.
-  static Future<void> showRearrangeErrorDialog(GameScreenState state) async {
+  static Future<void> showRearrangeErrorDialog(BuildContext context) async {
     AwesomeDialog(
-      context: state.context,
+      context: context,
       dialogType: DialogType.error,
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
@@ -215,14 +217,14 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "OK",
-    ).show();
+      btnCancelText: 'OK',
+    ).show().ignore();
   }
 
   /// Confirmation dialog to end the turn.
-  static Future<void> confirmEndTurn(GameScreenState state) async {
+  static Future<void> confirmEndTurn(BuildContext context, GameController ctrl) async {
     AwesomeDialog(
-      context: state.context,
+      context: context,
       dialogType: DialogType.success,
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
@@ -254,20 +256,19 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "Cancel",
+      btnCancelText: 'Cancel',
       btnOkOnPress: () {
-        state.saveCurrentState();
-        state.endTurn();
+        ctrl.saveCurrentState();
+        ctrl.endTurn();
       },
-      btnOkText: "End Turn",
-    ).show();
+      btnOkText: 'End Turn',
+    ).show().ignore();
   }
 
   /// Shows an airball milestone dialog when airballs % 3 == 0.
-  static Future<void> showAirballDialog(
-      GameScreenState state, int airballs) async {
+  static Future<void> showAirballDialog(BuildContext context, int airballs) async {
     AwesomeDialog(
-      context: state.context,
+      context: context,
       dialogType: DialogType.success,
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
@@ -298,14 +299,14 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: "OK",
-    ).show();
+      btnOkText: 'OK',
+    ).show().ignore();
   }
 
   /// Shows an AwesomeDialog indicating the team got Balls Back.
-  static Future<void> showBallsBackDialog(GameScreenState state) async {
+  static Future<void> showBallsBackDialog(BuildContext context) async {
     AwesomeDialog(
-      context: state.context,
+      context: context,
       dialogType: DialogType.infoReverse,
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
@@ -337,14 +338,14 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: "OK",
-    ).show();
+      btnOkText: 'OK',
+    ).show().ignore();
   }
 
-  /// Shows an AwesomeDialog indicating the player is “On Fire.”
-  static Future<void> showOnFireDialog(GameScreenState state) async {
+  /// Shows an AwesomeDialog indicating the player is "On Fire."
+  static Future<void> showOnFireDialog(BuildContext context) async {
     AwesomeDialog(
-      context: state.context,
+      context: context,
       dialogType: DialogType.success,
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
@@ -369,14 +370,14 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: "OK",
-    ).show();
+      btnOkText: 'OK',
+    ).show().ignore();
   }
 
-  /// Shows an AwesomeDialog for the “Bitch Cup.”
-  static Future<void> showBitchCupDialog(GameScreenState state) async {
+  /// Shows an AwesomeDialog for the "Bitch Cup."
+  static Future<void> showBitchCupDialog(BuildContext context) async {
     AwesomeDialog(
-      context: state.context,
+      context: context,
       dialogType: DialogType.error,
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
@@ -399,11 +400,9 @@ class DialogHelpers {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.directions_walk_outlined,
-                  size: 50.0, color: Colors.red),
+              Icon(Icons.directions_walk_outlined, size: 50.0, color: Colors.red),
               SizedBox(width: 10.0),
-              Icon(Icons.arrow_downward_outlined,
-                  size: 50.0, color: Colors.red),
+              Icon(Icons.arrow_downward_outlined, size: 50.0, color: Colors.red),
               SizedBox(width: 10.0),
               Icon(Icons.dry_cleaning_outlined, size: 50.0, color: Colors.red),
             ],
@@ -412,13 +411,20 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: "OK",
-    ).show();
+      btnCancelText: 'OK',
+    ).show().ignore();
   }
 
   /// Shows the game-over dialog and navigates to Stats or Home screen.
+  ///
+  /// [onNavigate] is called after navigation; use it to trigger any
+  /// post-game state updates (e.g. updateUser) that would otherwise cause
+  /// a GoRouter rebuild and invalidate the dialog context before dismiss.
   static Future<void> showGameEndDialog(
-      BuildContext context, List<Player> players) async {
+    BuildContext context,
+    List<Player> players, {
+    Future<void> Function()? onNavigate,
+  }) async {
     AwesomeDialog(
       context: context,
       dialogType: DialogType.warning,
@@ -435,7 +441,7 @@ class DialogHelpers {
           ),
           const SizedBox(height: 10.0),
           Text(
-            "${players.map((p) => p.name).join(', ')} have won the game!",
+            '${players.map((p) => p.name).join(', ')} have won the game!',
             style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -452,35 +458,34 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {
-        // Go to Stats
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 3)),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          AppRouter.router.go(AppRoutes.games);
+          await onNavigate?.call();
+        });
       },
-      btnOkText: "Go to Stats",
+      btnOkText: 'Go to Stats',
       btnCancelOnPress: () {
-        // Go to Home
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const BaseScreen(selectedIndex: 2)),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          AppRouter.router.go(AppRoutes.home);
+          await onNavigate?.call();
+        });
       },
-      btnCancelText: "Go to Home",
-    ).show();
+      btnCancelText: 'Go to Home',
+    ).show().ignore();
   }
+
 }
 
 Widget _buildPlayerName(Player player) {
   return Container(
-    padding: const EdgeInsets.all(8.0), // Inner padding
+    padding: const EdgeInsets.all(8.0),
     decoration: BoxDecoration(
-      color: Colors.brown.shade600, // Background color for card
+      color: Colors.brown.shade600,
       border: Border.all(
-        color: Colors.grey.withOpacity(0.5), // Semi-transparent border
+        color: Colors.grey.withValues(alpha: 0.5),
         width: 0.5,
       ),
-      borderRadius: BorderRadius.circular(8.0), // Rounded corners
+      borderRadius: BorderRadius.circular(8.0),
     ),
     child: Row(
       children: [
@@ -494,15 +499,17 @@ Widget _buildPlayerName(Player player) {
                 radius: 20,
                 backgroundColor: Colors.white24,
                 child: ClipOval(
-                  child: SvgPicture.asset(
-                    _mapAvatarKeyToAsset(player.user!.avatarKey),
-                    fit: BoxFit.cover,
-                    width: 20 * 2,
-                    height: 20 * 2,
-                  ),
+                  child: player.user!.mapAvatarKeyToAsset().isEmpty
+                      ? const Icon(Icons.person, color: Colors.white)
+                      : SvgPicture.asset(
+                          player.user!.mapAvatarKeyToAsset(),
+                          fit: BoxFit.cover,
+                          width: 20 * 2,
+                          height: 20 * 2,
+                        ),
                 ),
               ),
-        const SizedBox(width: 8.0), // Space between avatar and text
+        const SizedBox(width: 8.0),
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -510,18 +517,18 @@ Widget _buildPlayerName(Player player) {
             children: [
               Text(
                 player.name.length > 13
-                    ? '${player.name.substring(0, 12)}...' // Truncate long names
+                    ? '${player.name.substring(0, 12)}...'
                     : player.name,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 14.0,
                 ),
-                overflow: TextOverflow.ellipsis, // Handles very long names
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4.0),
               const Text(
-                'Title: X', // Dummy level
+                'Title: X',
                 style: TextStyle(color: Colors.grey, fontSize: 12.0),
               ),
             ],
@@ -530,9 +537,4 @@ Widget _buildPlayerName(Player player) {
       ],
     ),
   );
-}
-
-String _mapAvatarKeyToAsset(String avatarKey) {
-  if (avatarKey.isEmpty) return '';
-  return 'assets/avatars/$avatarKey.svg';
 }

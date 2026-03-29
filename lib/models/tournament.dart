@@ -57,9 +57,9 @@ class Tournament {
       teams: (json['teams'] as List<dynamic>)
           .map((e) => Team.fromJson(e as Map<String, dynamic>))
           .toList(),
-      matches: (json['matches'] as List<dynamic>)
-          .map((e) => TournamentMatch.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      matches: (json['matches'] as List<dynamic>?)
+          ?.map((e) => TournamentMatch.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
       started: json['started'] ?? false,
       finished: json['finished'] ?? false,
       createdAt: json['createdAt'] != null
@@ -69,15 +69,23 @@ class Tournament {
   }
 
   Map<String, dynamic> toJson() {
+    // Collect all participant user IDs from all teams' players
+    final participantIds = teams
+        .expand((t) => t.players)
+        .where((p) => p.user != null)
+        .map((p) => p.user!.id)
+        .toSet()
+        .toList();
+
     return {
       'id': id,
       'name': name,
       'type': type.toString(),
       'teams': teams.map((t) => t.toJson()).toList(),
-      'matches': matches.map((m) => m.toJson()).toList(),
       'started': started,
       'finished': finished,
       'createdAt': createdAt.toIso8601String(),
+      'participantIds': participantIds,
     };
   }
 }
@@ -208,17 +216,17 @@ List<TeamStanding> computeStandings(
     List<Team> teams, List<TournamentMatch> matches) {
   final standings = {
     for (final team in teams)
-      team.color.value.toString() +
+      team.color.toARGB32().toString() +
               team.players.map((p) => p.name).join('-'): // Unique-ish key
           TeamStanding(team: team, wins: 0, losses: 0)
   };
 
   for (final match in matches) {
     if (!match.played || match.winner == null) continue;
-    final keyWinner = match.winner!.color.value.toString() +
+    final keyWinner = match.winner!.color.toARGB32().toString() +
         match.winner!.players.map((p) => p.name).join('-');
     final loserTeam = (match.team1 == match.winner) ? match.team2 : match.team1;
-    final keyLoser = loserTeam.color.value.toString() +
+    final keyLoser = loserTeam.color.toARGB32().toString() +
         loserTeam.players.map((p) => p.name).join('-');
 
     standings[keyWinner]!.wins++;

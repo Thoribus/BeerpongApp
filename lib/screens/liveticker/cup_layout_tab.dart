@@ -4,6 +4,7 @@ import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
+import 'package:beerpongapp/theme.dart';
 
 class CupLayoutTab extends StatelessWidget {
   final LiveGameData gameData;
@@ -25,7 +26,7 @@ class CupLayoutTab extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Cup layout in center
-          _buildCupLayoutsRow(gameData.team1, gameData.team2),
+          _buildCupLayoutsRow(context, gameData.team1, gameData.team2),
 
           const SizedBox(height: 16),
 
@@ -45,21 +46,23 @@ class CupLayoutTab extends StatelessWidget {
   Widget _buildTeamBracket(BuildContext context, Team team,
       {required bool isLeftSide}) {
     final bool isLeft = isLeftSide;
-    final badgeTitles = ["Cups Hit", "Airballs", "Throws", "Misses"];
+    final badgeTitles = ['Cups Hit', 'Airballs', 'Throws', 'Misses'];
+    final c = AppColors.of(context);
 
-    return Expanded(
-      child: Container(
+    return Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isLeft
-                ? [Colors.blue.shade700, Colors.grey.shade800]
-                : [Colors.grey.shade800, Colors.red.shade700],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
+          color: c.surface,
           borderRadius: BorderRadius.circular(12),
+          border: Border(
+            left: isLeft
+                ? BorderSide(color: team.color, width: 4)
+                : BorderSide.none,
+            right: isLeft
+                ? BorderSide.none
+                : BorderSide(color: team.color, width: 4),
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +77,7 @@ class CupLayoutTab extends StatelessWidget {
                 children: team.players.map((player) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: _buildAvatarName(player, alignLeft: isLeft),
+                    child: _buildAvatarName(context, player, alignLeft: isLeft),
                   );
                 }).toList(),
               ),
@@ -97,9 +100,9 @@ class CupLayoutTab extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Text(
                             title,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 8,
-                              color: Colors.white70,
+                              color: c.subtle,
                             ),
                           ),
                         );
@@ -111,7 +114,7 @@ class CupLayoutTab extends StatelessWidget {
                   ...team.players.map((player) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: _buildStatBadgesRowOnlyNumbers(player),
+                      child: _buildStatBadgesRowOnlyNumbers(context, player),
                     );
                   }),
                 ],
@@ -119,12 +122,12 @@ class CupLayoutTab extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 
 // Build badges row with only numbers, no labels
-  Widget _buildStatBadgesRowOnlyNumbers(Player player) {
+  Widget _buildStatBadgesRowOnlyNumbers(BuildContext context, Player player) {
+    final c = AppColors.of(context);
     final stats = [
       player.cupsHit.length.toString(),
       player.airballs.toString(),
@@ -140,15 +143,15 @@ class CupLayoutTab extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.grey.shade800,
+              color: c.surface2,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: c.onBackground,
               ),
             ),
           ),
@@ -157,16 +160,17 @@ class CupLayoutTab extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarName(Player player, {required bool alignLeft}) {
+  Widget _buildAvatarName(BuildContext context, Player player, {required bool alignLeft}) {
+    final c = AppColors.of(context);
     final avatar = player.user == null
-        ? const CircleAvatar(
+        ? CircleAvatar(
             radius: 16,
-            backgroundColor: Colors.white24,
-            child: Icon(Icons.person, color: Colors.white70, size: 18),
+            backgroundColor: c.border,
+            child: Icon(Icons.person, color: c.subtle, size: 18),
           )
         : CircleAvatar(
             radius: 16,
-            backgroundColor: Colors.white24,
+            backgroundColor: c.border,
             child: ClipOval(
               child: SvgPicture.asset(
                 player.user!.mapAvatarKeyToAsset(),
@@ -182,9 +186,9 @@ class CupLayoutTab extends StatelessWidget {
         player.name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
-          color: Colors.white,
+          color: c.onBackground,
         ),
       ),
     );
@@ -205,7 +209,8 @@ class CupLayoutTab extends StatelessWidget {
     );
   }
 
-  Widget _buildCupLayoutsRow(Team team1, Team team2) {
+  Widget _buildCupLayoutsRow(BuildContext context, Team team1, Team team2) {
+    final c = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
       child: SizedBox(
@@ -213,24 +218,9 @@ class CupLayoutTab extends StatelessWidget {
         width: double.infinity,
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.amber.withOpacity(0.2),
-                Colors.grey.shade600,
-                Colors.amber.withOpacity(0.2)
-              ],
-              stops: const [0.0, 0.5, 1.0],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            color: c.surface,
             borderRadius: BorderRadius.circular(20.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: c.border),
           ),
           child: Stack(
             children: [
@@ -264,7 +254,7 @@ class CupLayoutTab extends StatelessWidget {
               Center(
                 child: Container(
                   width: 1,
-                  color: Colors.white.withOpacity(0.6),
+                  color: c.divider,
                 ),
               ),
             ],
