@@ -1,4 +1,5 @@
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/screens/profile/feedback_sheet.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -80,6 +81,15 @@ class AccountScreen extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.feedback_outlined,
+                color: Colors.white70, size: 20),
+            tooltip: 'Send feedback',
+            onPressed: () {
+              final user = userProvider.user;
+              if (user != null) FeedbackSheet.show(context, user);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
