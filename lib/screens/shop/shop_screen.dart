@@ -134,26 +134,27 @@ class _ShopHeader extends StatelessWidget {
     );
   }
 
-  void _showGetStarsSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => const _GetStarsSheet(),
-    );
-  }
+  void _showGetStarsSheet(BuildContext context) =>
+      GetStarsSheet.show(context);
 }
 
 /// Bottom sheet — rewarded video ads + IAP packs (packs wired in Phase 12).
-class _GetStarsSheet extends StatefulWidget {
-  const _GetStarsSheet();
+class GetStarsSheet extends StatefulWidget {
+  const GetStarsSheet();
+
+  static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) => const GetStarsSheet(),
+      );
 
   @override
-  State<_GetStarsSheet> createState() => _GetStarsSheetState();
+  State<GetStarsSheet> createState() => _GetStarsSheetState();
 }
 
-class _GetStarsSheetState extends State<_GetStarsSheet> {
+class _GetStarsSheetState extends State<GetStarsSheet> {
   int _remaining = AdRateLimiter.dailyLimit;
   bool _isLoadingAd = false;
   StreamSubscription<PurchaseEvent>? _purchaseSub;

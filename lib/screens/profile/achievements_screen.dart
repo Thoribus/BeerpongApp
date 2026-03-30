@@ -417,9 +417,7 @@ class _AchievementDetailDialog extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 2,
-                      color: p.currentStageIndex > i
-                          ? Colors.amber
-                          : Colors.grey.shade700,
+                      color: Colors.grey.shade700,
                     ),
                   ),
               ],
