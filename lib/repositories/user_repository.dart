@@ -62,6 +62,18 @@ class UserRepository {
         .update({'activeGameId': FieldValue.delete()});
   }
 
+  /// Sets a single equip field (e.g. 'activeCupSkin') to [itemId].
+  /// Pass null to clear (unequip).
+  Future<void> equipItem({
+    required String userId,
+    required String field,
+    required String? itemId,
+  }) async {
+    await _db.collection('users').doc(userId).update({
+      field: itemId ?? FieldValue.delete(),
+    });
+  }
+
   User _userFromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return User.fromJson({...data, 'id': doc.id});

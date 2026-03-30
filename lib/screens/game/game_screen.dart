@@ -680,14 +680,32 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  /// Green felt table surface with cups and player cards.
+  static const _tableThemeGradients = {
+    'ingame_dark_table': [Color(0xFF1A1A2E), Color(0xFF0D0D1A)],
+    'ingame_beach_table': [Color(0xFFD4A855), Color(0xFF8B6E33)],
+  };
+
+  static const _cupSkinColors = {
+    'ingame_gold_cups': Colors.amber,
+    'ingame_neon_cups': Colors.cyanAccent,
+  };
+
+  /// Green felt (or themed) table surface with cups and player cards.
   Widget _buildTableContainer() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final tableTheme = userProvider.user?.activeTableTheme;
+    final cupSkin = userProvider.user?.activeCupSkin;
+
+    final gradientColors = _tableThemeGradients[tableTheme] ??
+        const [Color(0xFF1B5E20), Color(0xFF0D3B14)];
+    final skinColor = _cupSkinColors[cupSkin];
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF0D3B14)],
+        gradient: LinearGradient(
+          colors: gradientColors,
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -703,6 +721,7 @@ class GameScreenState extends State<GameScreen> {
             child: CupLayout.buildCupsArea(
               team: _ctrl.currentTeam,
               onCupTap: onCupTap,
+              skinColor: skinColor,
             ),
           ),
           Container(

@@ -5,80 +5,92 @@ import '../../models/cup.dart';
 /// A utility class for building the UI layout of cups (default or rearranged).
 class CupLayout {
   /// Builds the cup area for [team]. Pass [onCupTap] to make cups interactive.
+  /// [skinColor] overrides the visual colour of cups that are in their normal
+  /// (un-hit, non-island) state — yellow and green cups are unaffected.
   static Widget buildCupsArea({
     required Team team,
     void Function(int cupIndex)? onCupTap,
+    Color? skinColor,
   }) {
     return team.isRearranged
-        ? _buildRearrangedCupsLayout(team.cups, onCupTap)
-        : _buildDefaultCupsLayout(team.cups, onCupTap);
+        ? _buildRearrangedCupsLayout(team.cups, onCupTap, skinColor)
+        : _buildDefaultCupsLayout(team.cups, onCupTap, skinColor);
   }
 
   static Widget _buildDefaultCupsLayout(
-      List<Cup> cups, void Function(int)? onCupTap) {
+      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildCupRow(cups.sublist(6, 10), onCupTap),
-        _buildCupRow(cups.sublist(3, 6), onCupTap),
-        _buildCupRow(cups.sublist(1, 3), onCupTap),
-        _buildCupRow(cups.sublist(0, 1), onCupTap),
+        _buildCupRow(cups.sublist(6, 10), onCupTap, skinColor),
+        _buildCupRow(cups.sublist(3, 6), onCupTap, skinColor),
+        _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor),
+        _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor),
       ],
     );
   }
 
   static Widget _buildRearrangedCupsLayout(
-      List<Cup> cups, void Function(int)? onCupTap) {
+      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor) {
     switch (cups.length) {
       case 6:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 3), onCupTap),
-            _buildCupRow(cups.sublist(3, 5), onCupTap),
-            _buildCupRow(cups.sublist(5, 6), onCupTap),
+            _buildCupRow(cups.sublist(0, 3), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(3, 5), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(5, 6), onCupTap, skinColor),
           ],
         );
       case 5:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 1), onCupTap),
-            _buildCupRow(cups.sublist(1, 3), onCupTap),
-            _buildCupRow(cups.sublist(3, 4), onCupTap),
-            _buildCupRow(cups.sublist(4, 5), onCupTap),
+            _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(3, 4), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(4, 5), onCupTap, skinColor),
           ],
         );
       case 4:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 1), onCupTap),
-            _buildCupRow(cups.sublist(1, 3), onCupTap),
-            _buildCupRow(cups.sublist(3, 4), onCupTap),
+            _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(3, 4), onCupTap, skinColor),
           ],
         );
       case 3:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 2), onCupTap),
-            _buildCupRow(cups.sublist(2, 3), onCupTap),
+            _buildCupRow(cups.sublist(0, 2), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(2, 3), onCupTap, skinColor),
           ],
         );
       case 2:
-        return _buildCupRow(cups.sublist(0, 2), onCupTap);
+        return _buildCupRow(cups.sublist(0, 2), onCupTap, skinColor);
       default:
-        return _buildCupRow(cups.take(1).toList(), onCupTap);
+        return _buildCupRow(cups.take(1).toList(), onCupTap, skinColor);
     }
   }
 
-  static Widget _buildCupRow(List<Cup> cups, void Function(int)? onCupTap) {
+  static Widget _buildCupRow(
+      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: cups.map((cup) {
+        // Apply skin only to normal cups — yellow (island) and green (hit) keep
+        // their semantic colours for correct game-logic reads.
+        final override = (skinColor != null &&
+                cup.color != Colors.yellow &&
+                cup.color != Colors.green)
+            ? skinColor
+            : null;
         return cup.widget(
           onTap: onCupTap != null ? () => onCupTap(cup.index) : () {},
+          overrideColor: override,
         );
       }).toList(),
     );
