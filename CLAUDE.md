@@ -1,3 +1,5 @@
+#
+
 ## Workflow Orchestration
 
 ### 1. Plan Mode Defaults
@@ -50,6 +52,18 @@
 4. Explain Changes: High-level summary at each step
 5. Document Results: Add review section to tasks/todo.md
 6. Capture Lessons: Update tasks/lessons.md after corrections
+
+## Commit Workflow
+
+Each bug fix, suggestion, or feature gets its **own separate commit** immediately after it is complete and verified.
+
+- Commit granularity: one logical change = one commit
+- Commit message format: `<type>: <short description>`
+  - `fix:` for bug fixes
+  - `feat:` for new features or suggestions
+  - `refactor:` for code restructuring without behaviour change
+- Commit **as soon as** the change works — do not batch multiple changes into one commit
+- This enables a clean per-item changelog when cutting a release
 
 ## Core Principles
 
