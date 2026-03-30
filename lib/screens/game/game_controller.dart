@@ -192,6 +192,11 @@ class GameController extends ChangeNotifier {
 
   void checkBallsBack(BuildContext ctx) {
     if (currentTeam.ballsBack()) {
+      // Remove cups hit this round immediately so they cannot be tapped or
+      // trigger bomb detection during the Balls Back second round of throws.
+      for (final cup in currentTeam.cups) {
+        if (cup.color == Colors.green) cup.isVisible = false;
+      }
       for (final player in currentTeam.currentPlayers) {
         player.resetHitThisRound();
       }

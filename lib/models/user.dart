@@ -73,6 +73,12 @@ class User {
   /// ends. Used by the friends list to surface a "Watch" button.
   String? activeGameId;
 
+  /// ID of the equipped cup skin shop item (e.g. 'ingame_gold_cups'), or null.
+  String? activeCupSkin;
+
+  /// ID of the equipped table theme shop item (e.g. 'ingame_dark_table'), or null.
+  String? activeTableTheme;
+
   User({
     required this.id,
     required this.username,
@@ -108,6 +114,8 @@ class User {
     this.isSupporter = false,
     this.lastGameAt,
     this.activeGameId,
+    this.activeCupSkin,
+    this.activeTableTheme,
   });
 
   /// Lowercase version of username, used for case-insensitive uniqueness checks.
@@ -174,6 +182,8 @@ class User {
       'stars': stars,
       'purchasedItems': purchasedItems,
       'isSupporter': isSupporter,
+      'activeCupSkin': activeCupSkin,
+      'activeTableTheme': activeTableTheme,
     };
   }
 
@@ -222,6 +232,8 @@ class User {
       stars: json['stars'] ?? 0,
       purchasedItems: List<String>.from(json['purchasedItems'] ?? []),
       isSupporter: json['isSupporter'] as bool? ?? false,
+      activeCupSkin: json['activeCupSkin'] as String?,
+      activeTableTheme: json['activeTableTheme'] as String?,
       lastGameAt: () {
         final v = json['lastGameAt'];
         if (v is Timestamp) return v.toDate();
@@ -273,6 +285,8 @@ class User {
     DateTime? lastGameAt,
     String? activeGameId,
   }) {
+    // activeCupSkin / activeTableTheme are nullable and cleared via equipItem +
+    // refreshUser, not through copyWith, so they are intentionally omitted here.
     return User(
       id: id,
       username: username ?? this.username,
@@ -309,6 +323,8 @@ class User {
       isSupporter: isSupporter ?? this.isSupporter,
       lastGameAt: lastGameAt ?? this.lastGameAt,
       activeGameId: activeGameId ?? this.activeGameId,
+      activeCupSkin: activeCupSkin,
+      activeTableTheme: activeTableTheme,
     );
   }
 }

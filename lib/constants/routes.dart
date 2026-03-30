@@ -18,6 +18,7 @@ abstract final class AppRoutes {
   static const invitations   = '/invitations';
   static const waiting       = '/waiting';
   static const achievements  = '/achievements';
+  static const rulebook      = '/rulebook';
 
   // Parameterised helpers
   static String tournamentPath(String id)       => '/tournament/$id';

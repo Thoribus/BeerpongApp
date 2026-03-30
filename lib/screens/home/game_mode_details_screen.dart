@@ -35,8 +35,7 @@ class GameModeDetailsScreen extends StatefulWidget {
   State<GameModeDetailsScreen> createState() => _GameModeDetailsScreenState();
 }
 
-class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
-    with SingleTickerProviderStateMixin {
+class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   static const _ruleDefs = [
     (BeerpongIcons.airball, 'Airballs'),
     (Icons.roundabout_left, 'Bounce'),
@@ -46,7 +45,6 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
     (BeerpongIcons.umstellen, 'Rearrange'),
   ];
 
-  late TabController _tabController;
   late bool _isTournament;
 
   // Exactly one is non-null at any time
@@ -68,7 +66,6 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
   void initState() {
     super.initState();
     _isTournament = widget.isTournament;
-    _tabController = TabController(length: 2, vsync: this);
     _initController();
   }
 
@@ -127,7 +124,6 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
   @override
   void dispose() {
     _disposeController();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -461,42 +457,39 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
                     child: _buildModeToggle(c),
                   ),
 
-                  // Tab bar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: c.chip,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TabBar(
-                        controller: _tabController,
-                        indicator: BoxDecoration(
-                          color: _activeColor,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        labelColor: Colors.white,
-                        unselectedLabelColor: c.subtle,
-                        labelStyle: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 14),
-                        dividerColor: Colors.transparent,
-                        tabs: const [Tab(text: 'Rules'), Tab(text: 'Lobby')],
-                      ),
-                    ),
-                  ),
-
-                  // Tab content
+                  // Merged scrollable content
                   Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildRulesTab(c),
-                        _isTournament
-                            ? _buildTournamentLobbyTab(c)
-                            : _buildSingleGameLobbyTab(c),
-                      ],
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionHeader('Rules', c),
+                          const SizedBox(height: 12),
+                          GridView.count(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 1.0,
+                            children: List.generate(
+                              _ruleDefs.length,
+                              (i) => _buildRuleTile(i, c),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Divider(color: c.divider),
+                          const SizedBox(height: 16),
+                          _sectionHeader(
+                              _isTournament ? 'Players' : 'Teams', c),
+                          const SizedBox(height: 12),
+                          _isTournament
+                              ? _buildTournamentLobbyContent(c)
+                              : _buildSingleGameLobbyContent(c),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -577,21 +570,18 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
     );
   }
 
-  // ----- Rules tab -----
-
-  Widget _buildRulesTab(AppColors c) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.0,
+  Widget _sectionHeader(String title, AppColors c) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+        color: c.onBackground,
       ),
-      itemCount: _ruleDefs.length,
-      itemBuilder: (context, i) => _buildRuleTile(i, c),
     );
   }
+
+  // ----- Rule tile -----
 
   Widget _buildRuleTile(int index, AppColors c) {
     final (icon, label) = _ruleDefs[index];
@@ -636,38 +626,35 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
 
   // ----- Single game lobby -----
 
-  Widget _buildSingleGameLobbyTab(AppColors c) {
+  Widget _buildSingleGameLobbyContent(AppColors c) {
     final ctrl = _gameCtrl!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: _buildTeamPanel(
-              c: c,
-              color: Colors.blue,
-              label: 'BLUE',
-              players: ctrl.playersBlue,
-              statuses: ctrl.blueInvitationStatuses,
-              isBlue: true,
-              maxPlayers: 4,
-            ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _buildTeamPanel(
+            c: c,
+            color: Colors.blue,
+            label: 'BLUE',
+            players: ctrl.playersBlue,
+            statuses: ctrl.blueInvitationStatuses,
+            isBlue: true,
+            maxPlayers: 4,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildTeamPanel(
-              c: c,
-              color: Colors.red,
-              label: 'RED',
-              players: ctrl.playersRed,
-              statuses: ctrl.redInvitationStatuses,
-              isBlue: false,
-              maxPlayers: 4,
-            ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildTeamPanel(
+            c: c,
+            color: Colors.red,
+            label: 'RED',
+            players: ctrl.playersRed,
+            statuses: ctrl.redInvitationStatuses,
+            isBlue: false,
+            maxPlayers: 4,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -750,12 +737,10 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
 
   // ----- Tournament lobby -----
 
-  Widget _buildTournamentLobbyTab(AppColors c) {
+  Widget _buildTournamentLobbyContent(AppColors c) {
     final ctrl = _tournCtrl!;
     final players = ctrl.players;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Container(
+    return Container(
         decoration: BoxDecoration(
           color: c.card,
           borderRadius: BorderRadius.circular(16),
@@ -822,7 +807,6 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen>
             ],
           ],
         ),
-      ),
     );
   }
 

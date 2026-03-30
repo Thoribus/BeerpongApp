@@ -30,7 +30,8 @@ class Cup {
   ///
   /// Visual design: outer rim (colored circle with white border + colored glow)
   /// wrapping an inner circle (darker fill) to simulate a top-down cup view.
-  Widget widget({required VoidCallback onTap, int? hitCount}) {
+  Widget widget({required VoidCallback onTap, int? hitCount, Color? overrideColor}) {
+    final displayColor = overrideColor ?? color;
     return Visibility(
       visible: isVisible,
       maintainSize: true,
@@ -45,11 +46,11 @@ class Cup {
           height: 60.0,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.white60, width: 2),
-            color: color,
+            color: displayColor,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: color.withValues(alpha: 0.55),
+                color: displayColor.withValues(alpha: 0.55),
                 blurRadius: 10,
                 spreadRadius: 1,
               ),

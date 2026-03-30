@@ -259,18 +259,18 @@ class _AchievementGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
+    // GridView.count (non-lazy) avoids the shrinkWrap+builder extent bug on
+    // Android where items at the end of the list may not be rendered.
+    return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 0.78,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: progresses.length,
-      itemBuilder: (context, i) =>
-          _AchievementCard(progress: progresses[i], onTap: onTap),
+      crossAxisCount: 3,
+      childAspectRatio: 0.78,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      children: progresses
+          .map((p) => _AchievementCard(progress: p, onTap: onTap))
+          .toList(),
     );
   }
 }
@@ -349,11 +349,9 @@ class _AchievementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  locked
-                      ? '0 / ${p.nextThreshold}'
-                      : p.isMaxed
-                          ? 'Maxed!'
-                          : '${p.currentValue} / ${p.nextThreshold}',
+                  p.isMaxed
+                      ? 'Maxed!'
+                      : '${p.currentValue} / ${p.nextThreshold}',
                   style: TextStyle(
                     fontSize: 10,
                     color: locked ? Colors.white30 : Colors.white70,
@@ -417,9 +415,7 @@ class _AchievementDetailDialog extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 2,
-                      color: p.currentStageIndex > i
-                          ? Colors.amber
-                          : Colors.grey.shade700,
+                      color: Colors.grey.shade700,
                     ),
                   ),
               ],

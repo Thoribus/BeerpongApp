@@ -68,6 +68,15 @@ class UserProvider with ChangeNotifier {
     }
   }
 
+  /// Equips or unequips an in-game cosmetic item.
+  /// [field] is 'activeCupSkin' or 'activeTableTheme'; pass null [itemId] to unequip.
+  Future<void> equipItem({required String field, required String? itemId}) async {
+    if (_user == null) return;
+    await FirestoreService.instance
+        .equipItem(userId: _user!.id, field: field, itemId: itemId);
+    await refreshUser();
+  }
+
   /// Claims [newUsername] atomically in Firestore and updates the local user.
   Future<void> claimUsername(String newUsername) async {
     if (_user == null) return;

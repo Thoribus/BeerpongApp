@@ -68,6 +68,14 @@ class FirestoreService {
       UserRepository.instance
           .spendStars(userId: userId, amount: amount, itemId: itemId);
 
+  Future<void> equipItem({
+    required String userId,
+    required String field,
+    required String? itemId,
+  }) =>
+      UserRepository.instance
+          .equipItem(userId: userId, field: field, itemId: itemId);
+
   Future<void> creditStars({
     required String userId,
     required int amount,

@@ -13,13 +13,14 @@ import 'package:beerpongapp/widgets/user_card.dart';
 
 enum UsernameStatus { idle, checking, available, taken, invalid }
 
-/// Regex: 3–20 chars, starts/ends with alphanumeric, may contain underscores,
-/// no consecutive underscores.
-final _usernameRegex = RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_]{1,18}[a-zA-Z0-9]$');
+/// Regex: 3–20 chars, starts/ends with alphanumeric, may contain underscores
+/// or single spaces in the middle. No consecutive underscores or spaces.
+final _usernameRegex = RegExp(r'^[a-zA-Z0-9][a-zA-Z0-9_ ]{1,18}[a-zA-Z0-9]$');
 
 bool _isValidUsername(String value) {
   if (!_usernameRegex.hasMatch(value)) return false;
   if (value.contains('__')) return false;
+  if (value.contains('  ')) return false;
   return true;
 }
 
@@ -433,6 +434,7 @@ class _UsernameField extends StatefulWidget {
 
 class _UsernameFieldState extends State<_UsernameField> {
   late final TextEditingController _controller;
+  late final FocusNode _focusNode;
   UsernameStatus _status = UsernameStatus.idle;
   Timer? _debounce;
 
@@ -440,12 +442,18 @@ class _UsernameFieldState extends State<_UsernameField> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialUsername);
+    _focusNode = FocusNode();
+    // Ensure the field never steals focus on first build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.unfocus();
+    });
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -496,7 +504,7 @@ class _UsernameFieldState extends State<_UsernameField> {
       UsernameStatus.invalid => (
           Colors.orange,
           Icons.warning_amber_outlined,
-          '3–20 chars, letters/numbers/underscores, no consecutive __'
+          '3–20 chars, letters/numbers/underscores/spaces, no consecutive __ or spaces'
         ),
     };
 
@@ -505,6 +513,8 @@ class _UsernameFieldState extends State<_UsernameField> {
       children: [
         TextField(
           controller: _controller,
+          focusNode: _focusNode,
+          autofocus: false,
           maxLength: 20,
           style: TextStyle(color: c.onBackground),
           decoration: InputDecoration(

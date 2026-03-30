@@ -1,4 +1,5 @@
 import 'package:beerpongapp/repositories/user_repository.dart';
+import 'package:beerpongapp/screens/shop/shop_screen.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/shop_catalog.dart';
@@ -380,8 +381,7 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    // Get Stars sheet opened from parent context via a
-                    // separate tap on the header button
+                    GetStarsSheet.show(context);
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.amber,
