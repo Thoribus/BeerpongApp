@@ -434,6 +434,7 @@ class _UsernameField extends StatefulWidget {
 
 class _UsernameFieldState extends State<_UsernameField> {
   late final TextEditingController _controller;
+  late final FocusNode _focusNode;
   UsernameStatus _status = UsernameStatus.idle;
   Timer? _debounce;
 
@@ -441,12 +442,18 @@ class _UsernameFieldState extends State<_UsernameField> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialUsername);
+    _focusNode = FocusNode();
+    // Ensure the field never steals focus on first build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.unfocus();
+    });
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -506,6 +513,8 @@ class _UsernameFieldState extends State<_UsernameField> {
       children: [
         TextField(
           controller: _controller,
+          focusNode: _focusNode,
+          autofocus: false,
           maxLength: 20,
           style: TextStyle(color: c.onBackground),
           decoration: InputDecoration(
