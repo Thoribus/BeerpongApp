@@ -349,11 +349,9 @@ class _AchievementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  locked
-                      ? '0 / ${p.nextThreshold}'
-                      : p.isMaxed
-                          ? 'Maxed!'
-                          : '${p.currentValue} / ${p.nextThreshold}',
+                  p.isMaxed
+                      ? 'Maxed!'
+                      : '${p.currentValue} / ${p.nextThreshold}',
                   style: TextStyle(
                     fontSize: 10,
                     color: locked ? Colors.white30 : Colors.white70,
