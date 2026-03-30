@@ -120,54 +120,162 @@ class GameScreenState extends State<GameScreen> {
   // ----- Island orchestration -----
 
   Future<void> _highlightIslandCups() async {
+    Player? selected;
     await DialogHelpers.showSelectionDialog(
       context,
       'Select Player',
       _ctrl.currentTeam.currentPlayers.where((p) => p.islandAttempts == 0).toList(),
       (player) {
+        selected = player;
         _ctrl.saveCurrentState();
         _ctrl.selectIslandShooter(player);
       },
     );
+    // Auto-trigger when exactly one island cup is highlighted — no need to tap it.
+    if (selected != null && mounted) {
+      final yellowCups = _ctrl.currentTeam.cups
+          .where((c) => c.color == Colors.yellow && c.isVisible)
+          .toList();
+      if (yellowCups.length == 1) {
+        await handleIslandShot(yellowCups.first.index);
+      }
+    }
   }
 
   Future<void> handleIslandShot(int cupIndex) async {
+    Player? selected;
     await DialogHelpers.showSelectionDialog(
       context,
-      'Select Player and Shot Result',
+      'Who made the island shot?',
       _ctrl.currentTeam.currentPlayers,
-      (player) {
-        _ctrl.addEvent('Island Shot', _ctrl.currentTeam, player);
-        _ctrl.saveCurrentState();
-        if (player == _ctrl.currentIslandShooter) {
-          // Island power shot: hit the cup + a random bonus cup
-          _ctrl.toggleIslandCups();
-          _ctrl.currentIslandShooter = null;
-          player.islandMakes++;
-          _ctrl.incrementPlayerScore(player);
-          _ctrl.addCupToPlayer(player, cupIndex);
-          _ctrl.incrementPlayerHitThisRound(player);
-          _ctrl.incrementPlayerThrows(player);
-          _ctrl.handleCupHit(cupIndex, context);
-          try {
-            final extraIndex = _ctrl.getRandomCupIndex(
-                _ctrl.currentTeam.cups, cupIndex, _ctrl.currentTeam.color);
-            _ctrl.handleCupHit(extraIndex, context);
-            _ctrl.addCupToPlayer(player, extraIndex);
-            _ctrl.incrementPlayerScore(player);
-          } catch (_) {
-            debugPrint('No matching cups found for island shot bonus.');
-          }
-        } else {
-          _ctrl.incrementPlayerScore(player);
-          _ctrl.addCupToPlayer(player, cupIndex);
-          _ctrl.incrementPlayerHitThisRound(player);
-          _ctrl.incrementPlayerThrows(player);
-          _ctrl.handleCupHit(cupIndex, context);
-          _ctrl.checkOnFire(player, context);
-        }
-        _checkGameEnd(player, cupIndex);
-      },
+      (player) => selected = player,
+    );
+    if (selected == null || !mounted) return;
+
+    final player = selected!;
+    _ctrl.addEvent('Island Shot', _ctrl.currentTeam, player);
+    _ctrl.saveCurrentState();
+
+    if (player == _ctrl.currentIslandShooter) {
+      // Power shot: hit the island cup and let the shooter choose a bonus cup.
+      _ctrl.toggleIslandCups();
+      _ctrl.currentIslandShooter = null;
+      player.islandMakes++;
+      _ctrl.incrementPlayerScore(player);
+      _ctrl.addCupToPlayer(player, cupIndex);
+      _ctrl.incrementPlayerHitThisRound(player);
+      _ctrl.incrementPlayerThrows(player);
+      _ctrl.handleCupHit(cupIndex, context);
+
+      final bonusIndex = await _showBonusCupPicker(cupIndex);
+      if (bonusIndex != null && mounted) {
+        _ctrl.handleCupHit(bonusIndex, context);
+        _ctrl.addCupToPlayer(player, bonusIndex);
+        _ctrl.incrementPlayerScore(player);
+      }
+    } else {
+      // Someone else hit the island cup — treat as a normal hit.
+      _ctrl.incrementPlayerScore(player);
+      _ctrl.addCupToPlayer(player, cupIndex);
+      _ctrl.incrementPlayerHitThisRound(player);
+      _ctrl.incrementPlayerThrows(player);
+      _ctrl.handleCupHit(cupIndex, context);
+      _ctrl.checkOnFire(player, context);
+    }
+    _checkGameEnd(player, cupIndex);
+  }
+
+  /// Shows a bottom sheet listing remaining cups. Returns the chosen cup index,
+  /// or null if dismissed.
+  Future<int?> _showBonusCupPicker(int excludeIndex) async {
+    final picks = _ctrl.currentTeam.cups
+        .where((c) =>
+            c.index != excludeIndex &&
+            c.isVisible &&
+            c.color != Colors.green)
+        .toList();
+    if (picks.isEmpty) return null;
+
+    return showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Colors.grey.shade900,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Choose your free bonus cup',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Island shot reward — pick any remaining cup',
+                style: TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: picks.map((cup) {
+                  return GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(cup.index),
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _ctrl.currentTeam.color,
+                        border: Border.all(color: Colors.white60, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _ctrl.currentTeam.color.withValues(alpha: 0.5),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${cup.index + 1}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Skip bonus',
+                    style: TextStyle(color: Colors.white54)),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
