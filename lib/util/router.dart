@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/auth/login_screen.dart';
 import 'package:beerpongapp/screens/profile/achievements_screen.dart';
+import 'package:beerpongapp/screens/home/rulebook_screen.dart';
 import 'package:beerpongapp/screens/friends/compare_stats_screen.dart';
 import 'package:beerpongapp/screens/friends/friends_screen.dart';
 import 'package:beerpongapp/screens/game/game_screen.dart';
@@ -163,6 +164,10 @@ class AppRouter {
             if (user == null) return const Scaffold(body: SizedBox.shrink());
             return AchievementsScreen(user: user);
           },
+        ),
+        GoRoute(
+          path: AppRoutes.rulebook,
+          builder: (_, __) => const RulebookScreen(),
         ),
       ],
     );

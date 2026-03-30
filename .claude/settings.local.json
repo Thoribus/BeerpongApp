@@ -125,7 +125,8 @@
       "Bash(printf 'y\\\\nn\\\\n')",
       "Bash(printf 'y\\\\ny\\\\nn\\\\n')",
       "Bash(git reset:*)",
-      "Bash(printf 'y\\\\nn\\\\nn\\\\n')"
+      "Bash(printf 'y\\\\nn\\\\nn\\\\n')",
+      "Bash(~/.fvm/versions/stable/bin/flutter analyze:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -130,19 +130,7 @@ class HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 28),
               _buildPlaySection(context, c),
               const SizedBox(height: 36),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Rulebook',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: c.onBackground,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildRulebookSection(),
+              _buildRulebookBanner(context, c),
               const SizedBox(height: 40),
             ],
           ),
@@ -376,8 +364,69 @@ class HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildRulebookBanner(BuildContext context, AppColors c) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GestureDetector(
+        onTap: () => context.push(AppRoutes.rulebook),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            color: c.card,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.menu_book_rounded,
+                    color: Colors.orange, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rulebook',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: c.onBackground,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Learn how every special rule works',
+                      style: TextStyle(fontSize: 12, color: c.subtle),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: c.subtle),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
+// ignore: unused_element
 Widget _buildRulebookSection() {
   final rules = [
     {
