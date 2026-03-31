@@ -124,9 +124,9 @@ class GameController extends ChangeNotifier {
     if (cup.color == Colors.green) {
       _checkProximity(index);
     } else {
+      cup.color = Colors.green;
       checkBallsBack(ctx);
       checkBitchCup(index, ctx);
-      cup.color = Colors.green;
     }
     notifyListeners();
   }
