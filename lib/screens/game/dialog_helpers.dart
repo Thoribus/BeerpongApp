@@ -18,7 +18,7 @@ class DialogHelpers {
     List<Player> players,
     Function(Player) onSelected,
   ) async {
-    AwesomeDialog(
+    await AwesomeDialog(
       context: context,
       dialogType: DialogType.question,
       animType: AnimType.topSlide,
@@ -57,7 +57,7 @@ class DialogHelpers {
       ),
       btnCancelOnPress: () {},
       btnCancelText: 'Cancel',
-    ).show().ignore();
+    ).show();
   }
 
   /// Dialog to pick a player for the Airball rule.
