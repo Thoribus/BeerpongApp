@@ -33,6 +33,10 @@ class HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _goRouter = GoRouter.of(context);
       _goRouter!.routerDelegate.addListener(_onRouteChanged);
+      // Re-check after the first frame so that if the initState check was
+      // interrupted by a GoRouter redirect rebuild (!mounted early return),
+      // this run happens once the widget tree has settled.
+      _checkSavedGame();
     });
   }
 
