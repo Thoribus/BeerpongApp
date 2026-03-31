@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:flutter/material.dart';
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _errorMessage = _friendlyError(e.code));
     } catch (_) {
       if (mounted) {
-        setState(() => _errorMessage = 'Something went wrong. Please try again.');
+        setState(() => _errorMessage = context.loc.loginErrorGeneric);
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -73,8 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _errorMessage = _friendlyError(e.code));
     } catch (_) {
       if (mounted) {
-        setState(() =>
-            _errorMessage = 'Google sign-in failed. Please try again.');
+        setState(() => _errorMessage = context.loc.loginErrorGoogle);
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -92,8 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _errorMessage = _friendlyError(e.code));
     } catch (_) {
       if (mounted) {
-        setState(
-            () => _errorMessage = 'Apple sign-in failed. Please try again.');
+        setState(() => _errorMessage = context.loc.loginErrorApple);
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -103,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _forgotPassword() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty) {
-      setState(() => _errorMessage = 'Enter your email address first.');
+      setState(() => _errorMessage = context.loc.loginErrorEmailFirst);
       return;
     }
     try {
@@ -111,28 +110,26 @@ class _LoginScreenState extends State<LoginScreen> {
           .resetPassword(email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset email sent!')),
+          SnackBar(content: Text(context.loc.loginResetEmailSent)),
         );
       }
     } catch (_) {
       if (mounted) {
-        setState(() =>
-            _errorMessage = 'Could not send reset email. Check the address.');
+        setState(() => _errorMessage = context.loc.loginErrorResetFailed);
       }
     }
   }
 
   String _friendlyError(String code) => switch (code) {
-        'user-not-found' => 'No account found with this email.',
+        'user-not-found' => context.loc.loginErrUserNotFound,
         'wrong-password' ||
         'invalid-credential' =>
-          'Incorrect email or password.',
-        'email-already-in-use' =>
-          'An account with this email already exists.',
-        'weak-password' => 'Password must be at least 6 characters.',
-        'invalid-email' => 'Please enter a valid email address.',
-        'too-many-requests' => 'Too many attempts. Please try again later.',
-        _ => 'Authentication failed. Please try again.',
+          context.loc.loginErrWrongPassword,
+        'email-already-in-use' => context.loc.loginErrEmailInUse,
+        'weak-password' => context.loc.loginErrWeakPassword,
+        'invalid-email' => context.loc.loginErrInvalidEmail,
+        'too-many-requests' => context.loc.loginErrTooManyRequests,
+        _ => context.loc.loginErrAuthFailed,
       };
 
   // ─── Build ────────────────────────────────────────────────────────────────
@@ -211,9 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Track your game. Rule the table.',
-          style: TextStyle(
+        Text(
+          context.loc.loginTagline,
+          style: const TextStyle(
             color: Color(0xFFBDBDBD),
             fontSize: 14,
             letterSpacing: 0.5,
@@ -246,10 +243,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         _buildField(
                           controller: _usernameCtrl,
-                          label: 'Username',
+                          label: context.loc.loginFieldUsername,
                           icon: Icons.person_outline,
                           validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Enter a username'
+                              ? context.loc.loginValidateUsername
                               : null,
                         ),
                         const SizedBox(height: 16),
@@ -259,16 +256,17 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             _buildField(
               controller: _emailCtrl,
-              label: 'Email',
+              label: context.loc.loginFieldEmail,
               icon: Icons.mail_outline,
               keyboardType: TextInputType.emailAddress,
-              validator: (v) =>
-                  (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+              validator: (v) => (v == null || !v.contains('@'))
+                  ? context.loc.loginValidateEmail
+                  : null,
             ),
             const SizedBox(height: 16),
             _buildField(
               controller: _passwordCtrl,
-              label: 'Password',
+              label: context.loc.loginFieldPassword,
               icon: Icons.lock_outline,
               obscure: _obscurePassword,
               suffixIcon: IconButton(
@@ -282,8 +280,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
               ),
-              validator: (v) =>
-                  (v == null || v.length < 6) ? 'Minimum 6 characters' : null,
+              validator: (v) => (v == null || v.length < 6)
+                  ? context.loc.loginValidatePassword
+                  : null,
             ),
             if (_isSignIn) ...[
               const SizedBox(height: 4),
@@ -296,8 +295,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(0, 36),
                   ),
-                  child: const Text('Forgot password?',
-                      style: TextStyle(fontSize: 13)),
+                  child: Text(context.loc.loginForgotPassword,
+                      style: const TextStyle(fontSize: 13)),
                 ),
               ),
             ] else
@@ -335,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       )
                     : Text(
-                        _isSignIn ? 'Sign In' : 'Create Account',
+                        _isSignIn ? context.loc.loginBtnSignIn : context.loc.loginBtnCreateAccount,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -359,12 +358,12 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Row(
         children: [
-          _toggleOption('Sign In', _isSignIn,
+          _toggleOption(context.loc.loginToggleSignIn, _isSignIn,
               () => setState(() {
                     _isSignIn = true;
                     _errorMessage = null;
                   })),
-          _toggleOption('Register', !_isSignIn,
+          _toggleOption(context.loc.loginToggleRegister, !_isSignIn,
               () => setState(() {
                     _isSignIn = false;
                     _errorMessage = null;
@@ -454,17 +453,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildDivider() {
-    return const Row(
+    return Row(
       children: [
-        Expanded(child: Divider(color: Color(0xFF2C2F36), thickness: 1)),
+        const Expanded(child: Divider(color: Color(0xFF2C2F36), thickness: 1)),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'or continue with',
-            style: TextStyle(color: Color(0xFF757575), fontSize: 12),
+            context.loc.loginOrContinueWith,
+            style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
           ),
         ),
-        Expanded(child: Divider(color: Color(0xFF2C2F36), thickness: 1)),
+        const Expanded(child: Divider(color: Color(0xFF2C2F36), thickness: 1)),
       ],
     );
   }
@@ -507,9 +506,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
-                'Continue with Google',
-                style: TextStyle(
+              Text(
+                context.loc.loginContinueGoogle,
+                style: const TextStyle(
                   color: Color(0xFF1F1F1F),
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -523,14 +522,14 @@ class _LoginScreenState extends State<LoginScreen> {
           _socialButton(
             onTap: _loading ? null : _appleSignIn,
             backgroundColor: Colors.black,
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.apple, color: Colors.white, size: 22),
-                SizedBox(width: 10),
+                const Icon(Icons.apple, color: Colors.white, size: 22),
+                const SizedBox(width: 10),
                 Text(
-                  'Continue with Apple',
-                  style: TextStyle(
+                  context.loc.loginContinueApple,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
