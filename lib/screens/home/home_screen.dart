@@ -315,19 +315,25 @@ class HomeScreenState extends State<HomeScreen> {
                             ),
                             if (_hasSavedGame) ...[
                               const SizedBox(width: 10),
-                              OutlinedButton(
+                              OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.white,
+                                  backgroundColor:
+                                      Colors.white.withValues(alpha: 0.18),
                                   side: const BorderSide(
-                                      color: Colors.white60, width: 1.5),
+                                      color: Colors.white, width: 2),
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 18, vertical: 12),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(14)),
                                 ),
                                 onPressed: _resumeGame,
-                                child: const Text('Resume',
-                                    style: TextStyle(fontSize: 15)),
+                                icon: const Icon(Icons.play_arrow_rounded,
+                                    size: 18),
+                                label: const Text('Resume',
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600)),
                               ),
                             ],
                           ],
