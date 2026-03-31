@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/theme_provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -159,13 +162,54 @@ class BaseScreenState extends State<BaseScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none),
-                    color: c.onBackground,
-                    onPressed: () {
-                      // Push notifications: not yet implemented
-                    },
-                  ),
+                  if (user != null)
+                    StreamBuilder<List<Invitation>>(
+                      stream: FirestoreService.instance
+                          .pendingInvitationsStream(user.id),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data?.length ?? 0;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                count > 0
+                                    ? Icons.notifications
+                                    : Icons.notifications_none,
+                                color: c.onBackground,
+                              ),
+                              onPressed: () =>
+                                  context.push(AppRoutes.invitations),
+                            ),
+                            if (count > 0)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: Container(
+                                  width: 16,
+                                  height: 16,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.orange,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      count > 9 ? '9+' : '$count',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    )
+                  else
+                    Icon(Icons.notifications_none, color: c.onBackground),
                 ],
               ),
             ),
