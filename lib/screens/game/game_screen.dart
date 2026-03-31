@@ -444,7 +444,10 @@ class GameScreenState extends State<GameScreen> {
         ],
       ),
     );
-    if ((leave ?? false) && mounted) context.pop();
+    if ((leave ?? false) && mounted) {
+      await _ctrl.persistIfNotEnded();
+      if (mounted) context.pop();
+    }
   }
 
   @override
