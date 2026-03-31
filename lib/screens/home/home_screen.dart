@@ -145,7 +145,7 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _onReturnFromNextScreen() => _checkSavedGame();
 
-  void _navigate({required bool isTournament}) {
+  Future<void> _navigate({required bool isTournament}) async {
     void go() {
       context
           .push(
@@ -165,11 +165,18 @@ class HomeScreenState extends State<HomeScreen> {
           .then((_) => _onReturnFromNextScreen());
     }
 
-    if (_hasSavedGame && !isTournament) {
-      _showNewGameConfirmationDialog(context, go);
-    } else {
-      go();
+    // Check SharedPreferences directly so the confirmation fires even when
+    // _hasSavedGame hasn't been updated yet (e.g. within the 150 ms window
+    // after returning from the game screen).
+    if (!isTournament) {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      if (prefs.containsKey('currentGameState')) {
+        _showNewGameConfirmationDialog(context, go);
+        return;
+      }
     }
+    go();
   }
 
   void _resumeGame() {
@@ -306,7 +313,7 @@ class HomeScreenState extends State<HomeScreen> {
                                     borderRadius: BorderRadius.circular(14)),
                                 elevation: 0,
                               ),
-                              onPressed: () => _navigate(isTournament: false),
+                              onPressed: () => unawaited(_navigate(isTournament: false)),
                               child: const Text(
                                 'New Game',
                                 style: TextStyle(
@@ -363,7 +370,7 @@ class HomeScreenState extends State<HomeScreen> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
-            onPressed: () => _navigate(isTournament: true),
+            onPressed: () => unawaited(_navigate(isTournament: true)),
             icon: const Icon(Icons.emoji_events_outlined, size: 18),
             label: const Text(
               'Tournament',
