@@ -11,7 +11,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/util/theme_provider.dart';
+import 'package:beerpongapp/util/locale_provider.dart';
 import 'package:beerpongapp/util/router.dart';
+import 'package:beerpongapp/l10n/app_localizations.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -65,6 +67,7 @@ Future<void> main() async {
         providers: [
           ChangeNotifierProvider.value(value: userProvider),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => LocaleProvider()),
           ChangeNotifierProvider.value(value: PurchaseService.instance),
         ],
         child: MyApp(userProvider: userProvider),
@@ -106,11 +109,15 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final localeProvider = context.watch<LocaleProvider>();
     return MaterialApp.router(
       title: 'Beerpong Companion',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeProvider.themeMode,
+      locale: localeProvider.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router,
     );
   }

@@ -1,0 +1,6 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Beerpong Companion",
+  "@appTitle": { "description": "App name shown in title bar" }
+}
