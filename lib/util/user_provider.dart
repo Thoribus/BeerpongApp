@@ -95,7 +95,7 @@ class UserProvider with ChangeNotifier {
       await NotificationService.instance.removeTokenForUser(_user!.id);
     }
     _user = null;
-    await GoogleSignIn().signOut();
+    await GoogleSignIn.instance.signOut();
     await auth.FirebaseAuth.instance.signOut();
     notifyListeners();
   }
@@ -110,11 +110,11 @@ class UserProvider with ChangeNotifier {
 
   Future<auth.User?> _signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null;
-      final googleAuth = await googleUser.authentication;
+      final GoogleSignInAccount googleUser =
+          await GoogleSignIn.instance.authenticate();
+      final googleAuth = googleUser.authentication;
       final credential = auth.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
+        accessToken: null,
         idToken: googleAuth.idToken,
       );
       final result =
