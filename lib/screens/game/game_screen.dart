@@ -420,9 +420,41 @@ class GameScreenState extends State<GameScreen> {
 
   // ----- UI Build Methods -----
 
+  Future<void> _onBackPressed() async {
+    if (_ctrl.gameEnded) {
+      if (mounted) context.pop();
+      return;
+    }
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Leave Game?'),
+        content: const Text(
+            'Your game is saved automatically. '
+            'You can resume it from the home screen.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Stay'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+    if ((leave ?? false) && mounted) context.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBackPressed();
+      },
+      child: Scaffold(
       appBar: _buildAppBar(),
       backgroundColor: Colors.black,
       body: FutureBuilder<void>(
@@ -452,6 +484,7 @@ class GameScreenState extends State<GameScreen> {
         },
       ),
       bottomNavigationBar: _buildBottomBar(),
+      ),
     );
   }
 
