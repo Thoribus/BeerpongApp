@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/team.dart';
@@ -71,24 +72,24 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.amber,
-          title: const Text(
-            'New Game',
-            style: TextStyle(
+          title: Text(
+            context.loc.homeNewGameDialogTitle,
+            style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: const Text(
-            'Starting a new game will delete the current game. Do you want to continue?',
-            style: TextStyle(
+          content: Text(
+            context.loc.homeNewGameDialogContent,
+            style: const TextStyle(
               color: Colors.black,
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
+              child: Text(
+                context.loc.btnCancel,
+                style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
@@ -98,9 +99,9 @@ class HomeScreenState extends State<HomeScreen> {
               },
             ),
             TextButton(
-              child: const Text(
-                'Start New Game',
-                style: TextStyle(
+              child: Text(
+                context.loc.homeNewGameDialogConfirm,
+                style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
@@ -151,9 +152,8 @@ class HomeScreenState extends State<HomeScreen> {
           .push(
             '/game-mode',
             extra: GameModeArgs(
-              title: isTournament ? 'Tournament' : 'Play Beerpong',
-              subtitle:
-                  isTournament ? 'Bracket-style play' : 'Quick, fun rounds',
+              title: isTournament ? context.loc.homeTournamentTitle : context.loc.homeGameModeTitle,
+              subtitle: isTournament ? context.loc.homeTournamentSubtitle : context.loc.homeGameModeSubtitle,
               details: '',
               iconPath: isTournament
                   ? 'assets/racoon_winner.svg'
@@ -229,9 +229,7 @@ class HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    count == 1
-                        ? 'You have 1 pending invitation'
-                        : 'You have $count pending invitations',
+                    context.loc.homePendingInvitations(count),
                     style: TextStyle(
                       color: c.onBackground,
                       fontWeight: FontWeight.w600,
@@ -287,13 +285,13 @@ class HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Let's play!",
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        Text(
+                          context.loc.homeLetsPlay,
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Beer Pong',
+                        Text(
+                          context.loc.homeBeerPong,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 28,
@@ -312,9 +310,9 @@ class HomeScreenState extends State<HomeScreen> {
                             elevation: 0,
                           ),
                           onPressed: () => unawaited(_navigate(isTournament: false)),
-                          child: const Text(
-                            'New Game',
-                            style: TextStyle(
+                          child: Text(
+                            context.loc.homeBtnNewGame,
+                            style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 15),
                           ),
                         ),
@@ -338,32 +336,32 @@ class HomeScreenState extends State<HomeScreen> {
                   color: Colors.green.shade700,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.play_circle_fill_rounded,
+                    const Icon(Icons.play_circle_fill_rounded,
                         color: Colors.white, size: 28),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Resume Game',
-                            style: TextStyle(
+                            context.loc.homeResumeTitle,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                             ),
                           ),
                           Text(
-                            'Continue your last game',
-                            style: TextStyle(
+                            context.loc.homeResumeSubtitle,
+                            style: const TextStyle(
                                 color: Colors.white70, fontSize: 12),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios_rounded,
+                    const Icon(Icons.arrow_forward_ios_rounded,
                         color: Colors.white70, size: 16),
                   ],
                 ),
@@ -389,9 +387,9 @@ class HomeScreenState extends State<HomeScreen> {
             ),
             onPressed: () => unawaited(_navigate(isTournament: true)),
             icon: const Icon(Icons.emoji_events_outlined, size: 18),
-            label: const Text(
-              'Tournament',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            label: Text(
+              context.loc.labelTournament,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
             ),
           ),
         ],
@@ -436,7 +434,7 @@ class HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Rulebook',
+                      context.loc.homeRulebookTitle,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -445,7 +443,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Learn how every special rule works',
+                      context.loc.homeRulebookSubtitle,
                       style: TextStyle(fontSize: 12, color: c.subtle),
                     ),
                   ],

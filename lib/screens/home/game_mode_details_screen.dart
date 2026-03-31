@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/screens/home/game_lobby_controller.dart';
 import 'package:beerpongapp/screens/tournament/tournament_lobby_controller.dart';
 import 'package:beerpongapp/theme.dart';
@@ -62,6 +63,18 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   Color get _activeColor =>
       _isTournament ? Colors.deepPurple : widget.color;
 
+  /// Maps English rule map-key → localized display name.
+  /// The English keys must stay unchanged for game logic lookups.
+  String _ruleDisplayName(String key) => switch (key) {
+        'Airballs' => context.loc.gameModeRuleAirballs,
+        'Bounce' => context.loc.gameModeRuleBounce,
+        'Putback' => context.loc.gameModeRulePutback,
+        'Island' => context.loc.gameModeRuleIsland,
+        'Deathcup' => context.loc.gameModeRuleDeathcup,
+        'Rearrange' => context.loc.gameModeRuleRearrange,
+        _ => key,
+      };
+
   @override
   void initState() {
     super.initState();
@@ -116,7 +129,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   void _onInvitationDeclined() {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invitation declined')),
+        SnackBar(content: Text(context.loc.gameModeInvitationDeclined)),
       );
     }
   }
@@ -133,13 +146,13 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final currentUser = userProvider.user;
     if (currentUser == null) {
-      _showMessage('No user logged in!');
+      _showMessage(context.loc.gameModeNoUser);
       return;
     }
     final friends = await FirestoreService.instance.getFriends(currentUser.id);
     if (!mounted) return;
     if (friends.isEmpty) {
-      _showMessage('No friends found!');
+      _showMessage(context.loc.gameModeNoFriends);
       return;
     }
     final selected = await _showPickPlayerDialog(currentUser, friends);
@@ -155,7 +168,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           selected,
           fromUsername: currentUser.username,
         );
-        if (mounted) _showMessage('Invited ${selected.username}');
+        if (mounted) _showMessage(context.loc.gameModeInvited(selected.username));
       }
     } else {
       if (selected.id == currentUser.id) {
@@ -168,7 +181,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           fromUsername: currentUser.username,
           selected: selected,
         );
-        if (mounted) _showMessage('Invited ${selected.username}');
+        if (mounted) _showMessage(context.loc.gameModeInvited(selected.username));
       }
     }
   }
@@ -192,7 +205,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                 child: Row(
                   children: [
                     Text(
-                      'Select a Player',
+                      context.loc.gameModeDialogSelectPlayer,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -213,10 +226,10 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   children: [
                     _playerOptionTile(currentUser, completer, c,
-                        label: 'Yourself', iconColor: Colors.amber),
+                        label: context.loc.gameModeYourself, iconColor: Colors.amber),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                      child: Text('Friends',
+                      child: Text(context.loc.gameModeFriends,
                           style: TextStyle(color: c.subtle, fontSize: 12)),
                     ),
                     ...friends.map((f) => _playerOptionTile(f, completer, c)),
@@ -332,7 +345,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Who starts?'),
+        title: Text(context.loc.gameModeWhoStarts),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -342,23 +355,23 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                 Expanded(
                   child: Column(
                     children: [
-                      const Text('Team Blue',
-                          style: TextStyle(
+                      Text(context.loc.labelTeamBlue,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.blue)),
                       ...blueNames.map((n) => Text(n)),
                     ],
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child:
-                      Text('VS', style: TextStyle(fontWeight: FontWeight.bold)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text(context.loc.labelVs,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 Expanded(
                   child: Column(
                     children: [
-                      const Text('Team Red',
-                          style: TextStyle(
+                      Text(context.loc.labelTeamRed,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, color: Colors.red)),
                       ...redNames.map((n) => Text(n)),
                     ],
@@ -367,19 +380,19 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            const Text('Which team should start?'),
+            Text(context.loc.gameModeWhichTeamStarts),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop('Team Blue'),
-            child: const Text('Team Blue starts',
-                style: TextStyle(color: Colors.blue)),
+            child: Text(context.loc.gameModeTeamBlueStarts,
+                style: const TextStyle(color: Colors.blue)),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop('Team Red'),
-            child: const Text('Team Red starts',
-                style: TextStyle(color: Colors.red)),
+            child: Text(context.loc.gameModeTeamRedStarts,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -391,7 +404,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final startLabel = _isTournament ? 'Start Tournament' : 'Start Game';
+    final startLabel = _isTournament ? context.loc.gameModeBtnStartTournament : context.loc.gameModeBtnStartGame;
 
     return Scaffold(
       backgroundColor: _activeColor,
@@ -464,7 +477,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _sectionHeader('Rules', c),
+                          _sectionHeader(context.loc.labelRules, c),
                           const SizedBox(height: 12),
                           GridView.count(
                             shrinkWrap: true,
@@ -482,7 +495,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                           Divider(color: c.divider),
                           const SizedBox(height: 16),
                           _sectionHeader(
-                              _isTournament ? 'Players' : 'Teams', c),
+                              _isTournament ? context.loc.labelPlayers : context.loc.labelTeams, c),
                           const SizedBox(height: 12),
                           _isTournament
                               ? _buildTournamentLobbyContent(c)
@@ -537,8 +550,8 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       ),
       child: Row(
         children: [
-          _modeToggleButton('Single Game', !_isTournament, () => _switchMode(false), c),
-          _modeToggleButton('Tournament', _isTournament, () => _switchMode(true), c),
+          _modeToggleButton(context.loc.gameModeToggleSingleGame, !_isTournament, () => _switchMode(false), c),
+          _modeToggleButton(context.loc.labelTournament, _isTournament, () => _switchMode(true), c),
         ],
       ),
     );
@@ -610,7 +623,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
             Icon(icon, color: isSelected ? _activeColor : c.subtle, size: 26),
             const SizedBox(height: 6),
             Text(
-              label,
+              _ruleDisplayName(label),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: isSelected ? _activeColor : c.onBackground,
@@ -635,7 +648,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           child: _buildTeamPanel(
             c: c,
             color: Colors.blue,
-            label: 'BLUE',
+            label: context.loc.gameModeLabelBlue,
             players: ctrl.playersBlue,
             statuses: ctrl.blueInvitationStatuses,
             isBlue: true,
@@ -647,7 +660,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
           child: _buildTeamPanel(
             c: c,
             color: Colors.red,
-            label: 'RED',
+            label: context.loc.gameModeLabelRed,
             players: ctrl.playersRed,
             statuses: ctrl.redInvitationStatuses,
             isBlue: false,
@@ -721,7 +734,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
             OutlinedButton.icon(
               onPressed: () => _gameCtrl!.addPlayer(isBlue),
               icon: Icon(Icons.add, color: color, size: 16),
-              label: Text('Add', style: TextStyle(color: color, fontSize: 13)),
+              label: Text(context.loc.btnAdd, style: TextStyle(color: color, fontSize: 13)),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: color.withValues(alpha: 0.4)),
                 padding: const EdgeInsets.symmetric(vertical: 6),
@@ -765,7 +778,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'PLAYERS',
+                context.loc.gameModeLabelPlayersUpper,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -786,7 +799,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
                 onRemove: () => ctrl.removePlayer(i),
                 onNameChanged: (val) => ctrl.updatePlayerName(i, val),
                 onCancelInvite: () => ctrl.cancelInvitation(i),
-                hintText: 'Player ${i + 1}',
+                hintText: context.loc.gameModePlayerN(i + 1),
               ),
             ),
             if (players.length < 8) ...[
@@ -794,7 +807,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
               OutlinedButton.icon(
                 onPressed: ctrl.addPlayer,
                 icon: Icon(Icons.add, color: _activeColor, size: 16),
-                label: Text('Add Player',
+                label: Text(context.loc.gameModeAddPlayer,
                     style: TextStyle(color: _activeColor, fontSize: 13)),
                 style: OutlinedButton.styleFrom(
                   side:
