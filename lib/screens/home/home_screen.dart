@@ -301,49 +301,22 @@ class HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const Spacer(),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFFE05000),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
-                                elevation: 0,
-                              ),
-                              onPressed: () => unawaited(_navigate(isTournament: false)),
-                              child: const Text(
-                                'New Game',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                            ),
-                            if (_hasSavedGame) ...[
-                              const SizedBox(width: 10),
-                              OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  backgroundColor:
-                                      Colors.white.withValues(alpha: 0.18),
-                                  side: const BorderSide(
-                                      color: Colors.white, width: 2),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 18, vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14)),
-                                ),
-                                onPressed: _resumeGame,
-                                icon: const Icon(Icons.play_arrow_rounded,
-                                    size: 18),
-                                label: const Text('Resume',
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600)),
-                              ),
-                            ],
-                          ],
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFFE05000),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                          onPressed: () => unawaited(_navigate(isTournament: false)),
+                          child: const Text(
+                            'New Game',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
                         ),
                       ],
                     ),
@@ -354,6 +327,50 @@ class HomeScreenState extends State<HomeScreen> {
           ),
 
           const SizedBox(height: 12),
+
+          // ── Resume game card ───────────────────────────────────────────
+          if (_hasSavedGame) ...[
+            GestureDetector(
+              onTap: _resumeGame,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade700,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.play_circle_fill_rounded,
+                        color: Colors.white, size: 28),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Resume Game',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            'Continue your last game',
+                            style: TextStyle(
+                                color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.arrow_forward_ios_rounded,
+                        color: Colors.white70, size: 16),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // ── Pending invitations badge ──────────────────────────────────
           _buildInvitationBadge(c),
