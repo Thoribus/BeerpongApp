@@ -1867,6 +1867,714 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lv {level}'**
   String profileLevelRequired(int level);
+
+  /// Game-over dialog body showing winner names
+  ///
+  /// In en, this message translates to:
+  /// **'{winners} have won the game!'**
+  String dialogGameOverWinners(String winners);
+
+  /// Label in level card when user is at max level
+  ///
+  /// In en, this message translates to:
+  /// **'Max level reached'**
+  String get achievementsMaxLevel;
+
+  /// XP progress line in level card
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP · {toNext} XP to Level {nextLevel}'**
+  String achievementsXpProgress(int xp, int toNext, int nextLevel);
+
+  /// Stat chip label for best win streak in achievements screen
+  ///
+  /// In en, this message translates to:
+  /// **'Best Streak'**
+  String get achievementsBestStreak;
+
+  /// Prompt shown when browsing shop while not signed in
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to browse the shop'**
+  String get shopSignInBrowse;
+
+  /// Section header for profile-picture items in avatar shop
+  ///
+  /// In en, this message translates to:
+  /// **'Profile Pictures'**
+  String get shopSectionProfilePictures;
+
+  /// Section header for border items in avatar shop
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar Borders'**
+  String get shopSectionAvatarBorders;
+
+  /// Section header for emblem items in avatar shop
+  ///
+  /// In en, this message translates to:
+  /// **'Emblems & Medals'**
+  String get shopSectionEmblemsAndMedals;
+
+  /// Section header for cup skin items in in-game shop
+  ///
+  /// In en, this message translates to:
+  /// **'Cup Skins'**
+  String get shopSectionCupSkins;
+
+  /// Section header for table theme items in in-game shop
+  ///
+  /// In en, this message translates to:
+  /// **'Table Themes'**
+  String get shopSectionTableThemes;
+
+  /// Section header for title items in user card shop
+  ///
+  /// In en, this message translates to:
+  /// **'Titles'**
+  String get shopSectionTitles;
+
+  /// Section header for background items in user card shop
+  ///
+  /// In en, this message translates to:
+  /// **'Card Backgrounds'**
+  String get shopSectionCardBackgrounds;
+
+  /// Info note explaining how card backgrounds are unlocked
+  ///
+  /// In en, this message translates to:
+  /// **'Card backgrounds are unlocked for free by levelling up. Manage them in your profile.'**
+  String get shopCardBackgroundsNote;
+
+  /// Button to equip an owned in-game item
+  ///
+  /// In en, this message translates to:
+  /// **'Equip'**
+  String get shopEquip;
+
+  /// Button to unequip an equipped in-game item
+  ///
+  /// In en, this message translates to:
+  /// **'Unequip'**
+  String get shopUnequip;
+
+  /// Label showing user's current star balance in purchase dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance'**
+  String get shopYourBalance;
+
+  /// Label showing item cost in purchase dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Cost'**
+  String get shopCost;
+
+  /// Buy button label in purchase dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Buy for ⭐ {price}'**
+  String shopBuyForStars(int price);
+
+  /// Message when user cannot afford an item
+  ///
+  /// In en, this message translates to:
+  /// **'You need {count} more ⭐ to buy this.'**
+  String shopNeedMoreStars(int count);
+
+  /// Button to open the get-stars sheet from the purchase dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Get More Stars'**
+  String get shopGetMoreStars;
+
+  /// Snackbar shown after successfully buying a shop item
+  ///
+  /// In en, this message translates to:
+  /// **'{name} purchased! ⭐'**
+  String shopItemPurchased(String name);
+
+  /// Snackbar shown when purchase fails due to insufficient stars
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough stars!'**
+  String get shopNotEnoughStars;
+
+  /// Bottom nav label: shop
+  ///
+  /// In en, this message translates to:
+  /// **'Shop'**
+  String get navShop;
+
+  /// Bottom nav label: friends
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get navFriends;
+
+  /// Bottom nav label: home
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// Bottom nav label: games
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get navGames;
+
+  /// Bottom nav label: profile
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get navProfile;
+
+  /// Setting toggle label for dark mode
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get settingsDarkMode;
+
+  /// Setting row label for privacy settings
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Settings'**
+  String get settingsPrivacy;
+
+  /// Title of the feedback bottom sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Send Feedback'**
+  String get feedbackSheetTitle;
+
+  /// Hint text in feedback text field
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the issue or idea…'**
+  String get feedbackHint;
+
+  /// Send button on feedback sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get feedbackSend;
+
+  /// Snackbar after feedback is submitted
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks for your feedback!'**
+  String get feedbackSuccess;
+
+  /// Snackbar when feedback submission fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send feedback. Try again.'**
+  String get feedbackError;
+
+  /// Feedback category: bug report
+  ///
+  /// In en, this message translates to:
+  /// **'Bug'**
+  String get feedbackCategoryBug;
+
+  /// Feedback category: suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestion'**
+  String get feedbackCategorySuggestion;
+
+  /// Feedback category: other
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get feedbackCategoryOther;
+
+  /// AppBar title on the invitation inbox screen
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations'**
+  String get invitationsTitle;
+
+  /// Message shown on invitation screen when not signed in
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get invitationsNotSignedIn;
+
+  /// Empty state on invitation inbox screen
+  ///
+  /// In en, this message translates to:
+  /// **'No pending invitations'**
+  String get invitationsNoPending;
+
+  /// Snackbar after declining an invitation
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation declined'**
+  String get invitationsDeclined;
+
+  /// Button to decline an invitation
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get invitationsDeclineBtn;
+
+  /// Button to accept an invitation
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get invitationsAcceptBtn;
+
+  /// Fallback sender name when username is missing
+  ///
+  /// In en, this message translates to:
+  /// **'A player'**
+  String get invitationsFromPlayer;
+
+  /// Invitation card subtitle for a game invite
+  ///
+  /// In en, this message translates to:
+  /// **'Invited you to a Game'**
+  String get invitationsInvitedToGame;
+
+  /// Invitation card subtitle for a tournament invite
+  ///
+  /// In en, this message translates to:
+  /// **'Invited you to a Tournament'**
+  String get invitationsInvitedToTournament;
+
+  /// AppBar title on the waiting-for-game screen
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting…'**
+  String get waitingTitle;
+
+  /// Message shown while waiting for host to start a game
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {host} to start the game…'**
+  String waitingForGame(String host);
+
+  /// Message shown while waiting for host to start a tournament
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {host} to start the tournament…'**
+  String waitingForTournament(String host);
+
+  /// AppBar title when watching a live in-progress game
+  ///
+  /// In en, this message translates to:
+  /// **'Live Game'**
+  String get liveGameTitle;
+
+  /// AppBar title when the game is over and showing summary
+  ///
+  /// In en, this message translates to:
+  /// **'Game Summary'**
+  String get liveGameSummary;
+
+  /// Live-ticker tab: cup table
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get liveTabTable;
+
+  /// Live-ticker tab: stats
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get liveTabStats;
+
+  /// Live-ticker tab: event timeline
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get liveTabTimeline;
+
+  /// Message shown when a live game cannot be found
+  ///
+  /// In en, this message translates to:
+  /// **'Game not found.'**
+  String get liveGameNotFound;
+
+  /// Generic error message on live game screen
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong'**
+  String get liveGameError;
+
+  /// Badge label shown on an in-progress live game
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE'**
+  String get liveBadgeLive;
+
+  /// Badge label shown when a game is finished
+  ///
+  /// In en, this message translates to:
+  /// **'FINAL'**
+  String get liveBadgeFinal;
+
+  /// Column header for accuracy percentage in live match stats
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy %'**
+  String get liveStatsAccuracy;
+
+  /// Empty state on the timeline tab
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet'**
+  String get liveTimelineNoEvents;
+
+  /// Round header in the timeline tab
+  ///
+  /// In en, this message translates to:
+  /// **'Round {number}'**
+  String liveTimelineRound(int number);
+
+  /// End-of-turn marker in the timeline tab
+  ///
+  /// In en, this message translates to:
+  /// **'End of turn · {time}'**
+  String liveTimelineEndOfTurn(String time);
+
+  /// Timeline event label: normal hit
+  ///
+  /// In en, this message translates to:
+  /// **'Hit'**
+  String get liveEventHit;
+
+  /// Timeline event label: bounce shot
+  ///
+  /// In en, this message translates to:
+  /// **'Bounce'**
+  String get liveEventBounce;
+
+  /// Timeline event label: island shot
+  ///
+  /// In en, this message translates to:
+  /// **'Island'**
+  String get liveEventIsland;
+
+  /// Timeline event label: death cup
+  ///
+  /// In en, this message translates to:
+  /// **'Death Cup'**
+  String get liveEventDeathCup;
+
+  /// Timeline event label: airball
+  ///
+  /// In en, this message translates to:
+  /// **'Airball'**
+  String get liveEventAirball;
+
+  /// Timeline event label: bitch cup
+  ///
+  /// In en, this message translates to:
+  /// **'Bitch Cup'**
+  String get liveEventBitchCup;
+
+  /// Timeline event label: on fire
+  ///
+  /// In en, this message translates to:
+  /// **'On Fire'**
+  String get liveEventOnFire;
+
+  /// AppBar title on spectate lobby screen
+  ///
+  /// In en, this message translates to:
+  /// **'Lobby'**
+  String get spectatelobbyTitle;
+
+  /// AppBar title on spectate lobby screen once game loaded
+  ///
+  /// In en, this message translates to:
+  /// **'Game Lobby'**
+  String get spectateLobbyGameTitle;
+
+  /// Error message when game data can't be loaded in spectate lobby
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading game.'**
+  String get spectateLobbyError;
+
+  /// Empty state when no players have joined yet in spectate lobby
+  ///
+  /// In en, this message translates to:
+  /// **'No players yet'**
+  String get spectateLobbyNoPlayers;
+
+  /// Section header for game settings in spectate lobby
+  ///
+  /// In en, this message translates to:
+  /// **'Game Settings'**
+  String get spectateLobbyGameSettings;
+
+  /// Settings row label for game mode in spectate lobby
+  ///
+  /// In en, this message translates to:
+  /// **'Mode'**
+  String get spectateLobbyMode;
+
+  /// Settings row label for starting team in spectate lobby
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Team'**
+  String get spectateLobbyStartingTeam;
+
+  /// Message shown while waiting for host to start in spectate lobby
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the host to start the game…'**
+  String get spectateLobbyWaiting;
+
+  /// Button to leave / exit a lobby or screen
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get btnLeave;
+
+  /// Cups remaining counter shown under team name in live game header
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cups left'**
+  String liveCupsLeft(int count);
+
+  /// Stat column/row label for score in live match stats
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get liveStatScore;
+
+  /// Stat column/row label for throws in live match stats
+  ///
+  /// In en, this message translates to:
+  /// **'Throws'**
+  String get liveStatThrows;
+
+  /// Stat column/row label for airballs in live match stats
+  ///
+  /// In en, this message translates to:
+  /// **'Airballs'**
+  String get liveStatAirballs;
+
+  /// Stat column/row label for misses in live match stats
+  ///
+  /// In en, this message translates to:
+  /// **'Misses'**
+  String get liveStatMisses;
+
+  /// Stat column/row label for cups hit in live cup layout tab
+  ///
+  /// In en, this message translates to:
+  /// **'Cups Hit'**
+  String get liveStatCupsHit;
+
+  /// Button label indicating which team starts the game
+  ///
+  /// In en, this message translates to:
+  /// **'{team} starts'**
+  String gameModeTeamStarts(String team);
+
+  /// Dialog title when all tournament matches have been played
+  ///
+  /// In en, this message translates to:
+  /// **'Tournament Complete!'**
+  String get tournamentCompleteTitle;
+
+  /// Dialog body when tournament is complete
+  ///
+  /// In en, this message translates to:
+  /// **'All matches have been played.\nCheck out the standings!'**
+  String get tournamentCompleteBody;
+
+  /// Singular label for a player (e.g. column header)
+  ///
+  /// In en, this message translates to:
+  /// **'Player'**
+  String get labelPlayer;
+
+  /// Screen title for friend stat comparison screen
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison'**
+  String get compareTitle;
+
+  /// Section header for the radar overview in compare screen
+  ///
+  /// In en, this message translates to:
+  /// **'OVERVIEW'**
+  String get compareOverview;
+
+  /// Section header for stat comparison bars in compare screen
+  ///
+  /// In en, this message translates to:
+  /// **'STAT COMPARISON'**
+  String get compareStatComparison;
+
+  /// Stat row label: bounce shot percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Bounce %'**
+  String get compareBouncePercent;
+
+  /// Stat row label: island shot percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Island %'**
+  String get compareIslandPercent;
+
+  /// Stat row label: total wins
+  ///
+  /// In en, this message translates to:
+  /// **'Total Wins'**
+  String get compareTotalWins;
+
+  /// Stat row label: on-fire count
+  ///
+  /// In en, this message translates to:
+  /// **'On Fire'**
+  String get compareOnFire;
+
+  /// Section title for shot distribution donut chart
+  ///
+  /// In en, this message translates to:
+  /// **'Shot Distribution'**
+  String get breakdownShotDistribution;
+
+  /// Section title for special shots breakdown
+  ///
+  /// In en, this message translates to:
+  /// **'Special Shots'**
+  String get breakdownSpecialShots;
+
+  /// Section title for win context (win margin, clutch) breakdown
+  ///
+  /// In en, this message translates to:
+  /// **'Win Context'**
+  String get breakdownWinContext;
+
+  /// Section title for head-to-head opponent breakdown
+  ///
+  /// In en, this message translates to:
+  /// **'Head to Head'**
+  String get breakdownHeadToHead;
+
+  /// Lowercase label shown beneath total throws count in donut chart
+  ///
+  /// In en, this message translates to:
+  /// **'throws'**
+  String get breakdownThrowsLabel;
+
+  /// Legend label for hits in shot donut chart
+  ///
+  /// In en, this message translates to:
+  /// **'Hits'**
+  String get breakdownHits;
+
+  /// Label for bounce shot card in special shots section
+  ///
+  /// In en, this message translates to:
+  /// **'Bounce Shot'**
+  String get breakdownBounceShot;
+
+  /// Label for island shot card in special shots section
+  ///
+  /// In en, this message translates to:
+  /// **'Island Shot'**
+  String get breakdownIslandShot;
+
+  /// Card title for win margin distribution bar chart
+  ///
+  /// In en, this message translates to:
+  /// **'Win Margin Distribution'**
+  String get breakdownWinMarginTitle;
+
+  /// Win margin bucket: dominant win with 5+ cups remaining
+  ///
+  /// In en, this message translates to:
+  /// **'Dominant (5+ cups)'**
+  String get breakdownDominant;
+
+  /// Win margin bucket: comfortable win with 3–4 cups remaining
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable (3–4)'**
+  String get breakdownComfortable;
+
+  /// Win margin bucket: close win with 1–2 cups remaining
+  ///
+  /// In en, this message translates to:
+  /// **'Close (1–2)'**
+  String get breakdownClose;
+
+  /// Card label for clutch rate metric
+  ///
+  /// In en, this message translates to:
+  /// **'Clutch Rate'**
+  String get breakdownClutchRate;
+
+  /// Description below clutch rate label
+  ///
+  /// In en, this message translates to:
+  /// **'Hit the last cup to win'**
+  String get breakdownClutchDesc;
+
+  /// Empty state when no games have been recorded
+  ///
+  /// In en, this message translates to:
+  /// **'No games recorded yet.'**
+  String get breakdownNoGames;
+
+  /// Empty state when no head-to-head opponents found
+  ///
+  /// In en, this message translates to:
+  /// **'No opponents found.'**
+  String get breakdownNoOpponents;
+
+  /// Empty state when no throws have been recorded
+  ///
+  /// In en, this message translates to:
+  /// **'No throws recorded yet.'**
+  String get breakdownNoThrows;
+
+  /// Button label to navigate to the achievements screen
+  ///
+  /// In en, this message translates to:
+  /// **'View all achievements'**
+  String get statsViewAllAchievements;
+
+  /// Abbreviated column header for Score in player stats table
+  ///
+  /// In en, this message translates to:
+  /// **'S'**
+  String get statsColAbbrevScore;
+
+  /// Abbreviated column header for Misses in player stats table
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get statsColAbbrevMisses;
+
+  /// Abbreviated column header for Throws in player stats table
+  ///
+  /// In en, this message translates to:
+  /// **'T'**
+  String get statsColAbbrevThrows;
+
+  /// Abbreviated column header for Airballs in player stats table
+  ///
+  /// In en, this message translates to:
+  /// **'A'**
+  String get statsColAbbrevAirballs;
+
+  /// Abbreviated column header for Hit Rate in player stats table
+  ///
+  /// In en, this message translates to:
+  /// **'HR'**
+  String get statsColAbbrevHitRate;
 }
 
 class _AppLocalizationsDelegate

@@ -969,4 +969,382 @@ class AppLocalizationsDe extends AppLocalizations {
   String profileLevelRequired(int level) {
     return 'Lv $level';
   }
+
+  @override
+  String dialogGameOverWinners(String winners) {
+    return '$winners have won the game!';
+  }
+
+  @override
+  String get achievementsMaxLevel => 'Max level reached';
+
+  @override
+  String achievementsXpProgress(int xp, int toNext, int nextLevel) {
+    return '$xp XP · $toNext XP to Level $nextLevel';
+  }
+
+  @override
+  String get achievementsBestStreak => 'Best Streak';
+
+  @override
+  String get shopSignInBrowse => 'Sign in to browse the shop';
+
+  @override
+  String get shopSectionProfilePictures => 'Profile Pictures';
+
+  @override
+  String get shopSectionAvatarBorders => 'Avatar Borders';
+
+  @override
+  String get shopSectionEmblemsAndMedals => 'Emblems & Medals';
+
+  @override
+  String get shopSectionCupSkins => 'Cup Skins';
+
+  @override
+  String get shopSectionTableThemes => 'Table Themes';
+
+  @override
+  String get shopSectionTitles => 'Titles';
+
+  @override
+  String get shopSectionCardBackgrounds => 'Card Backgrounds';
+
+  @override
+  String get shopCardBackgroundsNote =>
+      'Card backgrounds are unlocked for free by levelling up. Manage them in your profile.';
+
+  @override
+  String get shopEquip => 'Equip';
+
+  @override
+  String get shopUnequip => 'Unequip';
+
+  @override
+  String get shopYourBalance => 'Your balance';
+
+  @override
+  String get shopCost => 'Cost';
+
+  @override
+  String shopBuyForStars(int price) {
+    return 'Buy for ⭐ $price';
+  }
+
+  @override
+  String shopNeedMoreStars(int count) {
+    return 'You need $count more ⭐ to buy this.';
+  }
+
+  @override
+  String get shopGetMoreStars => 'Get More Stars';
+
+  @override
+  String shopItemPurchased(String name) {
+    return '$name purchased! ⭐';
+  }
+
+  @override
+  String get shopNotEnoughStars => 'Not enough stars!';
+
+  @override
+  String get navShop => 'Shop';
+
+  @override
+  String get navFriends => 'Friends';
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get navGames => 'Games';
+
+  @override
+  String get navProfile => 'Profile';
+
+  @override
+  String get settingsDarkMode => 'Dark Mode';
+
+  @override
+  String get settingsPrivacy => 'Privacy Settings';
+
+  @override
+  String get feedbackSheetTitle => 'Send Feedback';
+
+  @override
+  String get feedbackHint => 'Describe the issue or idea…';
+
+  @override
+  String get feedbackSend => 'Send';
+
+  @override
+  String get feedbackSuccess => 'Thanks for your feedback!';
+
+  @override
+  String get feedbackError => 'Could not send feedback. Try again.';
+
+  @override
+  String get feedbackCategoryBug => 'Bug';
+
+  @override
+  String get feedbackCategorySuggestion => 'Suggestion';
+
+  @override
+  String get feedbackCategoryOther => 'Other';
+
+  @override
+  String get invitationsTitle => 'Invitations';
+
+  @override
+  String get invitationsNotSignedIn => 'Not signed in';
+
+  @override
+  String get invitationsNoPending => 'No pending invitations';
+
+  @override
+  String get invitationsDeclined => 'Invitation declined';
+
+  @override
+  String get invitationsDeclineBtn => 'Decline';
+
+  @override
+  String get invitationsAcceptBtn => 'Accept';
+
+  @override
+  String get invitationsFromPlayer => 'A player';
+
+  @override
+  String get invitationsInvitedToGame => 'Invited you to a Game';
+
+  @override
+  String get invitationsInvitedToTournament => 'Invited you to a Tournament';
+
+  @override
+  String get waitingTitle => 'Waiting…';
+
+  @override
+  String waitingForGame(String host) {
+    return 'Waiting for $host to start the game…';
+  }
+
+  @override
+  String waitingForTournament(String host) {
+    return 'Waiting for $host to start the tournament…';
+  }
+
+  @override
+  String get liveGameTitle => 'Live Game';
+
+  @override
+  String get liveGameSummary => 'Game Summary';
+
+  @override
+  String get liveTabTable => 'Table';
+
+  @override
+  String get liveTabStats => 'Stats';
+
+  @override
+  String get liveTabTimeline => 'Timeline';
+
+  @override
+  String get liveGameNotFound => 'Game not found.';
+
+  @override
+  String get liveGameError => 'Something went wrong';
+
+  @override
+  String get liveBadgeLive => 'LIVE';
+
+  @override
+  String get liveBadgeFinal => 'FINAL';
+
+  @override
+  String get liveStatsAccuracy => 'Accuracy %';
+
+  @override
+  String get liveTimelineNoEvents => 'No events yet';
+
+  @override
+  String liveTimelineRound(int number) {
+    return 'Round $number';
+  }
+
+  @override
+  String liveTimelineEndOfTurn(String time) {
+    return 'End of turn · $time';
+  }
+
+  @override
+  String get liveEventHit => 'Hit';
+
+  @override
+  String get liveEventBounce => 'Bounce';
+
+  @override
+  String get liveEventIsland => 'Island';
+
+  @override
+  String get liveEventDeathCup => 'Death Cup';
+
+  @override
+  String get liveEventAirball => 'Airball';
+
+  @override
+  String get liveEventBitchCup => 'Bitch Cup';
+
+  @override
+  String get liveEventOnFire => 'On Fire';
+
+  @override
+  String get spectatelobbyTitle => 'Lobby';
+
+  @override
+  String get spectateLobbyGameTitle => 'Game Lobby';
+
+  @override
+  String get spectateLobbyError => 'Error loading game.';
+
+  @override
+  String get spectateLobbyNoPlayers => 'No players yet';
+
+  @override
+  String get spectateLobbyGameSettings => 'Game Settings';
+
+  @override
+  String get spectateLobbyMode => 'Mode';
+
+  @override
+  String get spectateLobbyStartingTeam => 'Starting Team';
+
+  @override
+  String get spectateLobbyWaiting => 'Waiting for the host to start the game…';
+
+  @override
+  String get btnLeave => 'Leave';
+
+  @override
+  String liveCupsLeft(int count) {
+    return '$count cups left';
+  }
+
+  @override
+  String get liveStatScore => 'Score';
+
+  @override
+  String get liveStatThrows => 'Throws';
+
+  @override
+  String get liveStatAirballs => 'Airballs';
+
+  @override
+  String get liveStatMisses => 'Misses';
+
+  @override
+  String get liveStatCupsHit => 'Cups Hit';
+
+  @override
+  String gameModeTeamStarts(String team) {
+    return '$team starts';
+  }
+
+  @override
+  String get tournamentCompleteTitle => 'Tournament Complete!';
+
+  @override
+  String get tournamentCompleteBody =>
+      'All matches have been played.\nCheck out the standings!';
+
+  @override
+  String get labelPlayer => 'Player';
+
+  @override
+  String get compareTitle => 'Comparison';
+
+  @override
+  String get compareOverview => 'OVERVIEW';
+
+  @override
+  String get compareStatComparison => 'STAT COMPARISON';
+
+  @override
+  String get compareBouncePercent => 'Bounce %';
+
+  @override
+  String get compareIslandPercent => 'Island %';
+
+  @override
+  String get compareTotalWins => 'Total Wins';
+
+  @override
+  String get compareOnFire => 'On Fire';
+
+  @override
+  String get breakdownShotDistribution => 'Shot Distribution';
+
+  @override
+  String get breakdownSpecialShots => 'Special Shots';
+
+  @override
+  String get breakdownWinContext => 'Win Context';
+
+  @override
+  String get breakdownHeadToHead => 'Head to Head';
+
+  @override
+  String get breakdownThrowsLabel => 'throws';
+
+  @override
+  String get breakdownHits => 'Hits';
+
+  @override
+  String get breakdownBounceShot => 'Bounce Shot';
+
+  @override
+  String get breakdownIslandShot => 'Island Shot';
+
+  @override
+  String get breakdownWinMarginTitle => 'Win Margin Distribution';
+
+  @override
+  String get breakdownDominant => 'Dominant (5+ cups)';
+
+  @override
+  String get breakdownComfortable => 'Comfortable (3–4)';
+
+  @override
+  String get breakdownClose => 'Close (1–2)';
+
+  @override
+  String get breakdownClutchRate => 'Clutch Rate';
+
+  @override
+  String get breakdownClutchDesc => 'Hit the last cup to win';
+
+  @override
+  String get breakdownNoGames => 'No games recorded yet.';
+
+  @override
+  String get breakdownNoOpponents => 'No opponents found.';
+
+  @override
+  String get breakdownNoThrows => 'No throws recorded yet.';
+
+  @override
+  String get statsViewAllAchievements => 'View all achievements';
+
+  @override
+  String get statsColAbbrevScore => 'S';
+
+  @override
+  String get statsColAbbrevMisses => 'M';
+
+  @override
+  String get statsColAbbrevThrows => 'T';
+
+  @override
+  String get statsColAbbrevAirballs => 'A';
+
+  @override
+  String get statsColAbbrevHitRate => 'HR';
 }
