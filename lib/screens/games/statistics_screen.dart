@@ -611,7 +611,7 @@ class _ProgressTab extends StatelessWidget {
         // ── View all achievements button ───────────────────────────────────
         OutlinedButton.icon(
           icon: const Icon(Icons.emoji_events_outlined, size: 16),
-          label: const Text('View all achievements'),
+          label: Text(context.loc.statsViewAllAchievements),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.amber,
             side: const BorderSide(color: Colors.amber),
@@ -1228,20 +1228,20 @@ class GameDetailsPageState extends State<GameDetailsPage> {
           DataColumn(
             label: Text(context.loc.statsColumnPlayer, style: const TextStyle(color: Colors.white)),
           ),
-          const DataColumn(
-            label: Text('S', style: TextStyle(color: Colors.white)),
+          DataColumn(
+            label: Text(context.loc.statsColAbbrevScore, style: const TextStyle(color: Colors.white)),
           ),
-          const DataColumn(
-            label: Text('M', style: TextStyle(color: Colors.white)),
+          DataColumn(
+            label: Text(context.loc.statsColAbbrevMisses, style: const TextStyle(color: Colors.white)),
           ),
-          const DataColumn(
-            label: Text('T', style: TextStyle(color: Colors.white)),
+          DataColumn(
+            label: Text(context.loc.statsColAbbrevThrows, style: const TextStyle(color: Colors.white)),
           ),
-          const DataColumn(
-            label: Text('A', style: TextStyle(color: Colors.white)),
+          DataColumn(
+            label: Text(context.loc.statsColAbbrevAirballs, style: const TextStyle(color: Colors.white)),
           ),
-          const DataColumn(
-            label: Text('HR', style: TextStyle(color: Colors.white)),
+          DataColumn(
+            label: Text(context.loc.statsColAbbrevHitRate, style: const TextStyle(color: Colors.white)),
           ),
         ],
         rows: players.map((player) {

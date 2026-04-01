@@ -1365,5 +1365,23 @@
   "@breakdownNoOpponents": { "description": "Empty state when no head-to-head opponents found" },
 
   "breakdownNoThrows": "No throws recorded yet.",
-  "@breakdownNoThrows": { "description": "Empty state when no throws have been recorded" }
+  "@breakdownNoThrows": { "description": "Empty state when no throws have been recorded" },
+
+  "statsViewAllAchievements": "View all achievements",
+  "@statsViewAllAchievements": { "description": "Button label to navigate to the achievements screen" },
+
+  "statsColAbbrevScore": "S",
+  "@statsColAbbrevScore": { "description": "Abbreviated column header for Score in player stats table" },
+
+  "statsColAbbrevMisses": "M",
+  "@statsColAbbrevMisses": { "description": "Abbreviated column header for Misses in player stats table" },
+
+  "statsColAbbrevThrows": "T",
+  "@statsColAbbrevThrows": { "description": "Abbreviated column header for Throws in player stats table" },
+
+  "statsColAbbrevAirballs": "A",
+  "@statsColAbbrevAirballs": { "description": "Abbreviated column header for Airballs in player stats table" },
+
+  "statsColAbbrevHitRate": "HR",
+  "@statsColAbbrevHitRate": { "description": "Abbreviated column header for Hit Rate in player stats table" }
 }

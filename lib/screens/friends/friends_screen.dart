@@ -329,7 +329,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         }
         if (snapshot.hasError) {
           return Center(
-            child: Text('Error: ${snapshot.error}',
+            child: Text(context.loc.liveGameError,
                 style: TextStyle(color: c.onBackground)),
           );
         }
@@ -537,7 +537,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         }
         if (snapshot.hasError) {
           return Center(
-              child: Text('Error: ${snapshot.error}',
+              child: Text(context.loc.liveGameError,
                   style: TextStyle(color: c.onBackground)));
         }
 
@@ -747,7 +747,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text(context.loc.liveGameError));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(child: Text(context.loc.friendsNoFriendsFound));
@@ -1106,7 +1106,7 @@ class FriendTile extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, false),
-                child: const Text('Cancel'),
+                child: Text(context.loc.btnCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, true),
@@ -1482,7 +1482,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child:
-                        Text('Close', style: TextStyle(color: c.onBackground)),
+                        Text(context.loc.btnClose, style: TextStyle(color: c.onBackground)),
                   ),
                 ),
               ],
