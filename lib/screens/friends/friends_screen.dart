@@ -40,16 +40,17 @@ class _FeedEvent {
   final bool? userWon; // for sharedGame
 }
 
-enum _SortKey {
-  totalScore('Total Score'),
-  winRate('Win Rate'),
-  hitRate('Hit Rate'),
-  onFire('On Fire'),
-  bounceRate('Bounce %'),
-  gamesPlayed('Games');
+enum _SortKey { totalScore, winRate, hitRate, onFire, bounceRate, gamesPlayed }
 
-  const _SortKey(this.label);
-  final String label;
+extension _SortKeyLabel on _SortKey {
+  String label(AppLocalizations l) => switch (this) {
+        _SortKey.totalScore => l.leaderboardTotalScore,
+        _SortKey.winRate => l.statsWinRate,
+        _SortKey.hitRate => l.statsHitRate,
+        _SortKey.onFire => l.statsOnFire,
+        _SortKey.bounceRate => l.compareBouncePercent,
+        _SortKey.gamesPlayed => l.leaderboardGames,
+      };
 }
 
 /// Returns a human-readable relative time string, e.g. "just now", "3d ago".
@@ -416,6 +417,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     List<User> friends,
     List<GameStatistics> myGames,
     String currentUserId,
+    AppLocalizations l,
   ) {
     final events = <_FeedEvent>[];
     final friendById = {for (final f in friends) f.id: f};
@@ -447,9 +449,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           type: _FeedEventType.sharedGame,
           date: game.date,
           title: userWon
-              ? 'Beat ${friend.username}'
-              : 'Lost to ${friend.username}',
-          subtitle: '$myScore–$oppScore · $hitPct% hit rate',
+              ? l.socialBeatFriend(friend.username)
+              : l.socialLostToFriend(friend.username),
+          subtitle: l.socialSharedGameResult(myScore, oppScore, hitPct),
           friend: friend,
           game: game,
           userWon: userWon,
@@ -473,8 +475,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       events.add(_FeedEvent(
         type: _FeedEventType.winStreak,
         date: sorted.isNotEmpty ? sorted.first.date : DateTime.now(),
-        title: '🔥 $streak-game win streak!',
-        subtitle: "You're on fire — keep the momentum going.",
+        title: l.socialWinStreak(streak),
+        subtitle: l.socialWinStreakSubtitle,
       ));
     }
 
@@ -487,8 +489,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           events.add(_FeedEvent(
             type: _FeedEventType.achievement,
             date: friend.lastGameAt ?? DateTime.now(),
-            title: '🏆 ${friend.username} reached $m wins',
-            subtitle: 'A true beer pong legend.',
+            title: l.socialFriendReachedWins(friend.username, m),
+            subtitle: l.socialFriendLegendSubtitle,
             friend: friend,
           ));
           break;
@@ -499,8 +501,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           events.add(_FeedEvent(
             type: _FeedEventType.achievement,
             date: friend.lastGameAt ?? DateTime.now(),
-            title: '🔥 ${friend.username} went on fire $m+ times',
-            subtitle: 'Serious heat.',
+            title: l.socialFriendOnFire(friend.username, m),
+            subtitle: l.socialSeriousHeatSubtitle,
             friend: friend,
           ));
           break;
@@ -515,9 +517,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         events.add(_FeedEvent(
           type: _FeedEventType.friendActive,
           date: friend.lastGameAt!,
-          title: '${friend.username} is active',
-          subtitle:
-              'Played ${_timeAgo(friend.lastGameAt!)} · ${friend.wins + friend.losses} total games',
+          title: l.socialFriendIsActive(friend.username),
+          subtitle: l.socialFriendActiveSubtitle(
+              _timeAgo(friend.lastGameAt!), friend.wins + friend.losses),
           friend: friend,
         ));
       }
@@ -546,7 +548,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         final currentUserId =
             Provider.of<UserProvider>(context, listen: false).user?.id ?? '';
 
-        final events = _buildFeedEvents(friends, myGames, currentUserId);
+        final events = _buildFeedEvents(friends, myGames, currentUserId, context.loc);
 
         if (events.isEmpty && friends.isEmpty) {
           return Center(
@@ -889,7 +891,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                label: Text(key.label),
+                label: Text(key.label(context.loc)),
                 selected: selected,
                 onSelected: (_) => setState(() => _sortKey = key),
                 selectedColor: Colors.amber,

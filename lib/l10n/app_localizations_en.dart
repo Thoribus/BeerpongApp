@@ -1347,4 +1347,173 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statsColAbbrevHitRate => 'HR';
+
+  @override
+  String get statsCareerHighlights => 'CAREER HIGHLIGHTS';
+
+  @override
+  String get statsBestStreak => 'Best Streak';
+
+  @override
+  String get statsBestHitRate => 'Best Hit Rate';
+
+  @override
+  String get statsMostCups => 'Most Cups';
+
+  @override
+  String get statsRecentForm => 'Recent Form';
+
+  @override
+  String get statsWins => 'Wins';
+
+  @override
+  String get statsLosses => 'Losses';
+
+  @override
+  String get statsWinRate => 'Win Rate';
+
+  @override
+  String get statsHitRate => 'Hit Rate';
+
+  @override
+  String get statsOnFire => 'On Fire';
+
+  @override
+  String get statsBouncePercent => 'Bounce%';
+
+  @override
+  String get statsIslands => 'Islands';
+
+  @override
+  String get statsDefended => 'Defended';
+
+  @override
+  String get statsHeatingUp => 'Heating Up';
+
+  @override
+  String get statsLastCup => 'Last Cup';
+
+  @override
+  String get statsAvgPerGame => 'Avg/Game';
+
+  @override
+  String get statsNightGames => 'Night Games';
+
+  @override
+  String get statsCupsPerGame => 'cups/game';
+
+  @override
+  String get statsThrowsPerGame => 'throws/game';
+
+  @override
+  String statsStreakChip(int count, String type) {
+    return '$count-game $type streak';
+  }
+
+  @override
+  String statsCurrentStreak(String label) {
+    return 'Current streak: $label';
+  }
+
+  @override
+  String statsLast10Record(int count, int wins, int losses) {
+    return 'Last $count:  ${wins}W  ${losses}L';
+  }
+
+  @override
+  String statsXpProgress(int xp, int toNext, int level) {
+    return '$xp XP · $toNext XP to Level $level';
+  }
+
+  @override
+  String get compareWinRate => 'Win Rate';
+
+  @override
+  String get compareHitRate => 'Hit Rate';
+
+  @override
+  String get shopStarterPackTitle => 'Starter Pack  ·  €1.99';
+
+  @override
+  String get shopStarterPackSubtitle => '200 ⭐';
+
+  @override
+  String get shopPopularPackTitle => 'Popular Pack  ·  €4.99';
+
+  @override
+  String get shopPopularPackSubtitle => '600 ⭐  ·  Best value';
+
+  @override
+  String get shopMegaPackTitle => 'Mega Pack  ·  €9.99';
+
+  @override
+  String get shopMegaPackSubtitle => '1 500 ⭐';
+
+  @override
+  String get shopSupporterPackFull => 'Supporter Pack  ·  €2.99';
+
+  @override
+  String get shopSupporterPackFullSubtitle =>
+      '300 ⭐  ·  Supporter badge on your profile';
+
+  @override
+  String shopWatchesRemaining(int remaining, int total) {
+    return '+50 ⭐  ·  $remaining of $total watches remaining today';
+  }
+
+  @override
+  String socialBeatFriend(String username) {
+    return 'Beat $username';
+  }
+
+  @override
+  String socialLostToFriend(String username) {
+    return 'Lost to $username';
+  }
+
+  @override
+  String socialSharedGameResult(int myScore, int oppScore, int hitPct) {
+    return '$myScore–$oppScore · $hitPct% hit rate';
+  }
+
+  @override
+  String socialWinStreak(int count) {
+    return '🔥 $count-game win streak!';
+  }
+
+  @override
+  String get socialWinStreakSubtitle =>
+      'You\'re on fire — keep the momentum going.';
+
+  @override
+  String socialFriendReachedWins(String username, int count) {
+    return '🏆 $username reached $count wins';
+  }
+
+  @override
+  String get socialFriendLegendSubtitle => 'A true beer pong legend.';
+
+  @override
+  String socialFriendOnFire(String username, int count) {
+    return '🔥 $username went on fire $count+ times';
+  }
+
+  @override
+  String get socialSeriousHeatSubtitle => 'Serious heat.';
+
+  @override
+  String socialFriendIsActive(String username) {
+    return '$username is active';
+  }
+
+  @override
+  String socialFriendActiveSubtitle(String timeAgo, int totalGames) {
+    return 'Played $timeAgo · $totalGames total games';
+  }
+
+  @override
+  String get leaderboardTotalScore => 'Total Score';
+
+  @override
+  String get leaderboardGames => 'Games';
 }

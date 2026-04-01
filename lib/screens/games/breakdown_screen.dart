@@ -186,7 +186,7 @@ class BreakdownScreen extends StatelessWidget {
         const SizedBox(height: 8),
         _shotCard(
           context,
-          label: 'Defended',
+          label: context.loc.statsDefended,
           accent: Colors.indigo,
           makes: user.defended,
           attempts: null, // no attempt tracking — show total only

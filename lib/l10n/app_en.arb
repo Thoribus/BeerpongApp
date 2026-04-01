@@ -1383,5 +1383,222 @@
   "@statsColAbbrevAirballs": { "description": "Abbreviated column header for Airballs in player stats table" },
 
   "statsColAbbrevHitRate": "HR",
-  "@statsColAbbrevHitRate": { "description": "Abbreviated column header for Hit Rate in player stats table" }
+  "@statsColAbbrevHitRate": { "description": "Abbreviated column header for Hit Rate in player stats table" },
+
+  "statsCareerHighlights": "CAREER HIGHLIGHTS",
+  "@statsCareerHighlights": { "description": "Section header for career highlights in personal stats" },
+
+  "statsBestStreak": "Best Streak",
+  "@statsBestStreak": { "description": "Career highlight card label for longest win streak" },
+
+  "statsBestHitRate": "Best Hit Rate",
+  "@statsBestHitRate": { "description": "Career highlight card label for best single-game hit rate" },
+
+  "statsMostCups": "Most Cups",
+  "@statsMostCups": { "description": "Career highlight card label for most cups in a single game" },
+
+  "statsRecentForm": "Recent Form",
+  "@statsRecentForm": { "description": "Section header for the recent form W/L strip" },
+
+  "statsWins": "Wins",
+  "@statsWins": { "description": "Stat tile label for total wins" },
+
+  "statsLosses": "Losses",
+  "@statsLosses": { "description": "Stat tile label for total losses" },
+
+  "statsWinRate": "Win Rate",
+  "@statsWinRate": { "description": "Stat tile / chip label for win rate percentage" },
+
+  "statsHitRate": "Hit Rate",
+  "@statsHitRate": { "description": "Stat tile / chip label for hit rate percentage" },
+
+  "statsOnFire": "On Fire",
+  "@statsOnFire": { "description": "Stat tile label for on-fire count" },
+
+  "statsBouncePercent": "Bounce%",
+  "@statsBouncePercent": { "description": "Stat tile label for bounce shot conversion percentage" },
+
+  "statsIslands": "Islands",
+  "@statsIslands": { "description": "Stat tile label for island shot makes" },
+
+  "statsDefended": "Defended",
+  "@statsDefended": { "description": "Stat tile / shot card label for defended shots" },
+
+  "statsHeatingUp": "Heating Up",
+  "@statsHeatingUp": { "description": "Stat tile label for heating-up count" },
+
+  "statsLastCup": "Last Cup",
+  "@statsLastCup": { "description": "Stat tile label for last-cup (clutch) hits" },
+
+  "statsAvgPerGame": "Avg/Game",
+  "@statsAvgPerGame": { "description": "Stat tile label for average cups per game" },
+
+  "statsNightGames": "Night Games",
+  "@statsNightGames": { "description": "Stat tile label for night games played" },
+
+  "statsCupsPerGame": "cups/game",
+  "@statsCupsPerGame": { "description": "Label on the cups-per-game derived chip" },
+
+  "statsThrowsPerGame": "throws/game",
+  "@statsThrowsPerGame": { "description": "Label on the throws-per-game derived chip" },
+
+  "statsStreakChip": "{count}-game {type} streak",
+  "@statsStreakChip": {
+    "description": "Streak chip text, e.g. '3-game W streak'",
+    "placeholders": {
+      "count": { "type": "int", "example": "3" },
+      "type": { "type": "String", "example": "W" }
+    }
+  },
+
+  "statsCurrentStreak": "Current streak: {label}",
+  "@statsCurrentStreak": {
+    "description": "Current streak label in the stats screen, e.g. 'Current streak: 3W'",
+    "placeholders": {
+      "label": { "type": "String", "example": "3W" }
+    }
+  },
+
+  "statsLast10Record": "Last {count}:  {wins}W  {losses}L",
+  "@statsLast10Record": {
+    "description": "Recent record summary, e.g. 'Last 10:  7W  3L'",
+    "placeholders": {
+      "count": { "type": "int", "example": "10" },
+      "wins": { "type": "int", "example": "7" },
+      "losses": { "type": "int", "example": "3" }
+    }
+  },
+
+  "statsXpProgress": "{xp} XP · {toNext} XP to Level {level}",
+  "@statsXpProgress": {
+    "description": "XP progress line below the level bar",
+    "placeholders": {
+      "xp": { "type": "int", "example": "340" },
+      "toNext": { "type": "int", "example": "160" },
+      "level": { "type": "int", "example": "6" }
+    }
+  },
+
+  "compareWinRate": "Win Rate",
+  "@compareWinRate": { "description": "Radar chart axis label for win rate" },
+
+  "compareHitRate": "Hit Rate",
+  "@compareHitRate": { "description": "Radar chart axis label for hit rate" },
+
+  "shopStarterPackTitle": "Starter Pack  ·  €1.99",
+  "@shopStarterPackTitle": { "description": "Fallback IAP row title for the starter star pack" },
+
+  "shopStarterPackSubtitle": "200 ⭐",
+  "@shopStarterPackSubtitle": { "description": "Fallback IAP row subtitle for the starter star pack" },
+
+  "shopPopularPackTitle": "Popular Pack  ·  €4.99",
+  "@shopPopularPackTitle": { "description": "Fallback IAP row title for the popular star pack" },
+
+  "shopPopularPackSubtitle": "600 ⭐  ·  Best value",
+  "@shopPopularPackSubtitle": { "description": "Fallback IAP row subtitle for the popular star pack" },
+
+  "shopMegaPackTitle": "Mega Pack  ·  €9.99",
+  "@shopMegaPackTitle": { "description": "Fallback IAP row title for the mega star pack" },
+
+  "shopMegaPackSubtitle": "1 500 ⭐",
+  "@shopMegaPackSubtitle": { "description": "Fallback IAP row subtitle for the mega star pack" },
+
+  "shopSupporterPackFull": "Supporter Pack  ·  €2.99",
+  "@shopSupporterPackFull": { "description": "Fallback IAP row title for the supporter pack" },
+
+  "shopSupporterPackFullSubtitle": "300 ⭐  ·  Supporter badge on your profile",
+  "@shopSupporterPackFullSubtitle": { "description": "Fallback IAP row subtitle for the supporter pack" },
+
+  "shopWatchesRemaining": "+50 ⭐  ·  {remaining} of {total} watches remaining today",
+  "@shopWatchesRemaining": {
+    "description": "Subtitle on the watch-a-video row showing daily ad quota",
+    "placeholders": {
+      "remaining": { "type": "int", "example": "4" },
+      "total": { "type": "int", "example": "5" }
+    }
+  },
+
+  "socialBeatFriend": "Beat {username}",
+  "@socialBeatFriend": {
+    "description": "Social feed event title when current user won against a friend",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" }
+    }
+  },
+
+  "socialLostToFriend": "Lost to {username}",
+  "@socialLostToFriend": {
+    "description": "Social feed event title when current user lost to a friend",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" }
+    }
+  },
+
+  "socialSharedGameResult": "{myScore}–{oppScore} · {hitPct}% hit rate",
+  "@socialSharedGameResult": {
+    "description": "Social feed shared game subtitle showing scores and hit rate",
+    "placeholders": {
+      "myScore": { "type": "int", "example": "10" },
+      "oppScore": { "type": "int", "example": "6" },
+      "hitPct": { "type": "int", "example": "50" }
+    }
+  },
+
+  "socialWinStreak": "🔥 {count}-game win streak!",
+  "@socialWinStreak": {
+    "description": "Social feed title for a current win streak",
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+
+  "socialWinStreakSubtitle": "You're on fire — keep the momentum going.",
+  "@socialWinStreakSubtitle": { "description": "Social feed subtitle below the win streak card" },
+
+  "socialFriendReachedWins": "🏆 {username} reached {count} wins",
+  "@socialFriendReachedWins": {
+    "description": "Social feed achievement title when a friend hits a win milestone",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" },
+      "count": { "type": "int", "example": "50" }
+    }
+  },
+
+  "socialFriendLegendSubtitle": "A true beer pong legend.",
+  "@socialFriendLegendSubtitle": { "description": "Social feed subtitle below a friend's win milestone card" },
+
+  "socialFriendOnFire": "🔥 {username} went on fire {count}+ times",
+  "@socialFriendOnFire": {
+    "description": "Social feed achievement title when a friend hits an on-fire milestone",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" },
+      "count": { "type": "int", "example": "50" }
+    }
+  },
+
+  "socialSeriousHeatSubtitle": "Serious heat.",
+  "@socialSeriousHeatSubtitle": { "description": "Social feed subtitle below a friend's on-fire milestone card" },
+
+  "socialFriendIsActive": "{username} is active",
+  "@socialFriendIsActive": {
+    "description": "Social feed title for a recently active friend",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" }
+    }
+  },
+
+  "socialFriendActiveSubtitle": "Played {timeAgo} · {totalGames} total games",
+  "@socialFriendActiveSubtitle": {
+    "description": "Social feed subtitle for a recently active friend",
+    "placeholders": {
+      "timeAgo": { "type": "String", "example": "3h ago" },
+      "totalGames": { "type": "int", "example": "42" }
+    }
+  },
+
+  "leaderboardTotalScore": "Total Score",
+  "@leaderboardTotalScore": { "description": "Leaderboard sort chip label for total score" },
+
+  "leaderboardGames": "Games",
+  "@leaderboardGames": { "description": "Leaderboard sort chip label for games played" }
 }

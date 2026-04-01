@@ -227,12 +227,12 @@ class ComparisonScreen extends StatelessWidget {
         titleTextStyle:
             const TextStyle(color: Colors.white70, fontSize: 11),
         getTitle: (index, angle) {
-          const titles = [
-            'Win Rate',
-            'Hit Rate',
-            'Bounce %',
-            'Island %',
-            'On Fire',
+          final titles = [
+            context.loc.compareWinRate,
+            context.loc.compareHitRate,
+            context.loc.compareBouncePercent,
+            context.loc.compareIslandPercent,
+            context.loc.compareOnFire,
           ];
           return RadarChartTitle(text: titles[index], angle: angle);
         },

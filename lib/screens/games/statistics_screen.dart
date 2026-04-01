@@ -365,7 +365,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               Row(children: [
                 cell(Text(context.loc.statsColumnPlayer, style: headerStyle), col0),
                 headerCell(context.loc.statsColumnScore, col1),
-                headerCell('Throws', col2),
+                headerCell(context.loc.liveStatThrows, col2),
                 headerCell(context.loc.statsColumnMiss, col3),
                 headerCell(context.loc.statsColumnHitRate, col4),
                 headerCell(context.loc.statsColumnBounce, col5),
@@ -514,7 +514,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Current streak: $streakLabel',
+              context.loc.statsCurrentStreak(streakLabel),
               style: TextStyle(
                 color: c.onBackground,
                 fontWeight: FontWeight.w600,
@@ -526,7 +526,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Last ${last10.length}:  ${wins10}W  ${losses10}L',
+                context.loc.statsLast10Record(last10.length, wins10, losses10),
                 style: TextStyle(color: c.onBackground, fontSize: 12),
               ),
               Text(
@@ -688,7 +688,7 @@ class _ProgressTab extends StatelessWidget {
                       Text(
                         isMax
                             ? context.loc.statsMaxLevelReached(user.xp)
-                            : '${user.xp} XP · $toNext XP to Level ${level + 1}',
+                            : context.loc.statsXpProgress(user.xp, toNext, level + 1),
                         style: TextStyle(fontSize: 11, color: c.subtle),
                       ),
                     ],

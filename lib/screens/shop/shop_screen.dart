@@ -322,32 +322,32 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
                   _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.amber,
-                    title: 'Starter Pack  ·  €1.99',
-                    subtitle: '200 ⭐',
+                    title: context.loc.shopStarterPackTitle,
+                    subtitle: context.loc.shopStarterPackSubtitle,
                     badgeLabel: context.loc.shopComingSoon,
                   ),
                   const SizedBox(height: 12),
                   _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.orange,
-                    title: 'Popular Pack  ·  €4.99',
-                    subtitle: '600 ⭐  ·  Best value',
+                    title: context.loc.shopPopularPackTitle,
+                    subtitle: context.loc.shopPopularPackSubtitle,
                     badgeLabel: context.loc.shopComingSoon,
                   ),
                   const SizedBox(height: 12),
                   _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.deepOrange,
-                    title: 'Mega Pack  ·  €9.99',
-                    subtitle: '1 500 ⭐',
+                    title: context.loc.shopMegaPackTitle,
+                    subtitle: context.loc.shopMegaPackSubtitle,
                     badgeLabel: context.loc.shopComingSoon,
                   ),
                   const SizedBox(height: 12),
                   _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.amber,
-                    title: 'Supporter Pack  ·  €2.99',
-                    subtitle: '300 ⭐  ·  Supporter badge on your profile',
+                    title: context.loc.shopSupporterPackFull,
+                    subtitle: context.loc.shopSupporterPackFullSubtitle,
                     badgeLabel: isSupporter ? context.loc.shopSupporterBadge : context.loc.shopComingSoon,
                   ),
                 ],
@@ -419,7 +419,7 @@ class _WatchVideoRow extends StatelessWidget {
                   ),
                   Text(
                     remaining > 0
-                        ? '+50 ⭐  ·  $remaining of ${AdRateLimiter.dailyLimit} watches remaining today'
+                        ? context.loc.shopWatchesRemaining(remaining, AdRateLimiter.dailyLimit)
                         : context.loc.shopDailyLimitReached,
                     style: TextStyle(color: c.subtle, fontSize: 12),
                   ),

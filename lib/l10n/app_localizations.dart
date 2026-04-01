@@ -2575,6 +2575,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'HR'**
   String get statsColAbbrevHitRate;
+
+  /// Section header for career highlights in personal stats
+  ///
+  /// In en, this message translates to:
+  /// **'CAREER HIGHLIGHTS'**
+  String get statsCareerHighlights;
+
+  /// Career highlight card label for longest win streak
+  ///
+  /// In en, this message translates to:
+  /// **'Best Streak'**
+  String get statsBestStreak;
+
+  /// Career highlight card label for best single-game hit rate
+  ///
+  /// In en, this message translates to:
+  /// **'Best Hit Rate'**
+  String get statsBestHitRate;
+
+  /// Career highlight card label for most cups in a single game
+  ///
+  /// In en, this message translates to:
+  /// **'Most Cups'**
+  String get statsMostCups;
+
+  /// Section header for the recent form W/L strip
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Form'**
+  String get statsRecentForm;
+
+  /// Stat tile label for total wins
+  ///
+  /// In en, this message translates to:
+  /// **'Wins'**
+  String get statsWins;
+
+  /// Stat tile label for total losses
+  ///
+  /// In en, this message translates to:
+  /// **'Losses'**
+  String get statsLosses;
+
+  /// Stat tile / chip label for win rate percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Win Rate'**
+  String get statsWinRate;
+
+  /// Stat tile / chip label for hit rate percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Hit Rate'**
+  String get statsHitRate;
+
+  /// Stat tile label for on-fire count
+  ///
+  /// In en, this message translates to:
+  /// **'On Fire'**
+  String get statsOnFire;
+
+  /// Stat tile label for bounce shot conversion percentage
+  ///
+  /// In en, this message translates to:
+  /// **'Bounce%'**
+  String get statsBouncePercent;
+
+  /// Stat tile label for island shot makes
+  ///
+  /// In en, this message translates to:
+  /// **'Islands'**
+  String get statsIslands;
+
+  /// Stat tile / shot card label for defended shots
+  ///
+  /// In en, this message translates to:
+  /// **'Defended'**
+  String get statsDefended;
+
+  /// Stat tile label for heating-up count
+  ///
+  /// In en, this message translates to:
+  /// **'Heating Up'**
+  String get statsHeatingUp;
+
+  /// Stat tile label for last-cup (clutch) hits
+  ///
+  /// In en, this message translates to:
+  /// **'Last Cup'**
+  String get statsLastCup;
+
+  /// Stat tile label for average cups per game
+  ///
+  /// In en, this message translates to:
+  /// **'Avg/Game'**
+  String get statsAvgPerGame;
+
+  /// Stat tile label for night games played
+  ///
+  /// In en, this message translates to:
+  /// **'Night Games'**
+  String get statsNightGames;
+
+  /// Label on the cups-per-game derived chip
+  ///
+  /// In en, this message translates to:
+  /// **'cups/game'**
+  String get statsCupsPerGame;
+
+  /// Label on the throws-per-game derived chip
+  ///
+  /// In en, this message translates to:
+  /// **'throws/game'**
+  String get statsThrowsPerGame;
+
+  /// Streak chip text, e.g. '3-game W streak'
+  ///
+  /// In en, this message translates to:
+  /// **'{count}-game {type} streak'**
+  String statsStreakChip(int count, String type);
+
+  /// Current streak label in the stats screen, e.g. 'Current streak: 3W'
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak: {label}'**
+  String statsCurrentStreak(String label);
+
+  /// Recent record summary, e.g. 'Last 10:  7W  3L'
+  ///
+  /// In en, this message translates to:
+  /// **'Last {count}:  {wins}W  {losses}L'**
+  String statsLast10Record(int count, int wins, int losses);
+
+  /// XP progress line below the level bar
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP · {toNext} XP to Level {level}'**
+  String statsXpProgress(int xp, int toNext, int level);
+
+  /// Radar chart axis label for win rate
+  ///
+  /// In en, this message translates to:
+  /// **'Win Rate'**
+  String get compareWinRate;
+
+  /// Radar chart axis label for hit rate
+  ///
+  /// In en, this message translates to:
+  /// **'Hit Rate'**
+  String get compareHitRate;
+
+  /// Fallback IAP row title for the starter star pack
+  ///
+  /// In en, this message translates to:
+  /// **'Starter Pack  ·  €1.99'**
+  String get shopStarterPackTitle;
+
+  /// Fallback IAP row subtitle for the starter star pack
+  ///
+  /// In en, this message translates to:
+  /// **'200 ⭐'**
+  String get shopStarterPackSubtitle;
+
+  /// Fallback IAP row title for the popular star pack
+  ///
+  /// In en, this message translates to:
+  /// **'Popular Pack  ·  €4.99'**
+  String get shopPopularPackTitle;
+
+  /// Fallback IAP row subtitle for the popular star pack
+  ///
+  /// In en, this message translates to:
+  /// **'600 ⭐  ·  Best value'**
+  String get shopPopularPackSubtitle;
+
+  /// Fallback IAP row title for the mega star pack
+  ///
+  /// In en, this message translates to:
+  /// **'Mega Pack  ·  €9.99'**
+  String get shopMegaPackTitle;
+
+  /// Fallback IAP row subtitle for the mega star pack
+  ///
+  /// In en, this message translates to:
+  /// **'1 500 ⭐'**
+  String get shopMegaPackSubtitle;
+
+  /// Fallback IAP row title for the supporter pack
+  ///
+  /// In en, this message translates to:
+  /// **'Supporter Pack  ·  €2.99'**
+  String get shopSupporterPackFull;
+
+  /// Fallback IAP row subtitle for the supporter pack
+  ///
+  /// In en, this message translates to:
+  /// **'300 ⭐  ·  Supporter badge on your profile'**
+  String get shopSupporterPackFullSubtitle;
+
+  /// Subtitle on the watch-a-video row showing daily ad quota
+  ///
+  /// In en, this message translates to:
+  /// **'+50 ⭐  ·  {remaining} of {total} watches remaining today'**
+  String shopWatchesRemaining(int remaining, int total);
+
+  /// Social feed event title when current user won against a friend
+  ///
+  /// In en, this message translates to:
+  /// **'Beat {username}'**
+  String socialBeatFriend(String username);
+
+  /// Social feed event title when current user lost to a friend
+  ///
+  /// In en, this message translates to:
+  /// **'Lost to {username}'**
+  String socialLostToFriend(String username);
+
+  /// Social feed shared game subtitle showing scores and hit rate
+  ///
+  /// In en, this message translates to:
+  /// **'{myScore}–{oppScore} · {hitPct}% hit rate'**
+  String socialSharedGameResult(int myScore, int oppScore, int hitPct);
+
+  /// Social feed title for a current win streak
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 {count}-game win streak!'**
+  String socialWinStreak(int count);
+
+  /// Social feed subtitle below the win streak card
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on fire — keep the momentum going.'**
+  String get socialWinStreakSubtitle;
+
+  /// Social feed achievement title when a friend hits a win milestone
+  ///
+  /// In en, this message translates to:
+  /// **'🏆 {username} reached {count} wins'**
+  String socialFriendReachedWins(String username, int count);
+
+  /// Social feed subtitle below a friend's win milestone card
+  ///
+  /// In en, this message translates to:
+  /// **'A true beer pong legend.'**
+  String get socialFriendLegendSubtitle;
+
+  /// Social feed achievement title when a friend hits an on-fire milestone
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 {username} went on fire {count}+ times'**
+  String socialFriendOnFire(String username, int count);
+
+  /// Social feed subtitle below a friend's on-fire milestone card
+  ///
+  /// In en, this message translates to:
+  /// **'Serious heat.'**
+  String get socialSeriousHeatSubtitle;
+
+  /// Social feed title for a recently active friend
+  ///
+  /// In en, this message translates to:
+  /// **'{username} is active'**
+  String socialFriendIsActive(String username);
+
+  /// Social feed subtitle for a recently active friend
+  ///
+  /// In en, this message translates to:
+  /// **'Played {timeAgo} · {totalGames} total games'**
+  String socialFriendActiveSubtitle(String timeAgo, int totalGames);
+
+  /// Leaderboard sort chip label for total score
+  ///
+  /// In en, this message translates to:
+  /// **'Total Score'**
+  String get leaderboardTotalScore;
+
+  /// Leaderboard sort chip label for games played
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get leaderboardGames;
 }
 
 class _AppLocalizationsDelegate
