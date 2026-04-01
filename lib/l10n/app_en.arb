@@ -976,5 +976,307 @@
     "placeholders": {
       "level": { "type": "int", "example": "5" }
     }
-  }
+  },
+
+  "dialogGameOverWinners": "{winners} have won the game!",
+  "@dialogGameOverWinners": {
+    "description": "Game-over dialog body showing winner names",
+    "placeholders": {
+      "winners": { "type": "String", "example": "Alice, Bob" }
+    }
+  },
+
+  "achievementsMaxLevel": "Max level reached",
+  "@achievementsMaxLevel": { "description": "Label in level card when user is at max level" },
+
+  "achievementsXpProgress": "{xp} XP · {toNext} XP to Level {nextLevel}",
+  "@achievementsXpProgress": {
+    "description": "XP progress line in level card",
+    "placeholders": {
+      "xp": { "type": "int", "example": "850" },
+      "toNext": { "type": "int", "example": "150" },
+      "nextLevel": { "type": "int", "example": "6" }
+    }
+  },
+
+  "achievementsBestStreak": "Best Streak",
+  "@achievementsBestStreak": { "description": "Stat chip label for best win streak in achievements screen" },
+
+  "shopSignInBrowse": "Sign in to browse the shop",
+  "@shopSignInBrowse": { "description": "Prompt shown when browsing shop while not signed in" },
+
+  "shopSectionProfilePictures": "Profile Pictures",
+  "@shopSectionProfilePictures": { "description": "Section header for profile-picture items in avatar shop" },
+
+  "shopSectionAvatarBorders": "Avatar Borders",
+  "@shopSectionAvatarBorders": { "description": "Section header for border items in avatar shop" },
+
+  "shopSectionEmblemsAndMedals": "Emblems & Medals",
+  "@shopSectionEmblemsAndMedals": { "description": "Section header for emblem items in avatar shop" },
+
+  "shopSectionCupSkins": "Cup Skins",
+  "@shopSectionCupSkins": { "description": "Section header for cup skin items in in-game shop" },
+
+  "shopSectionTableThemes": "Table Themes",
+  "@shopSectionTableThemes": { "description": "Section header for table theme items in in-game shop" },
+
+  "shopSectionTitles": "Titles",
+  "@shopSectionTitles": { "description": "Section header for title items in user card shop" },
+
+  "shopSectionCardBackgrounds": "Card Backgrounds",
+  "@shopSectionCardBackgrounds": { "description": "Section header for background items in user card shop" },
+
+  "shopCardBackgroundsNote": "Card backgrounds are unlocked for free by levelling up. Manage them in your profile.",
+  "@shopCardBackgroundsNote": { "description": "Info note explaining how card backgrounds are unlocked" },
+
+  "shopEquip": "Equip",
+  "@shopEquip": { "description": "Button to equip an owned in-game item" },
+
+  "shopUnequip": "Unequip",
+  "@shopUnequip": { "description": "Button to unequip an equipped in-game item" },
+
+  "shopYourBalance": "Your balance",
+  "@shopYourBalance": { "description": "Label showing user's current star balance in purchase dialog" },
+
+  "shopCost": "Cost",
+  "@shopCost": { "description": "Label showing item cost in purchase dialog" },
+
+  "shopBuyForStars": "Buy for ⭐ {price}",
+  "@shopBuyForStars": {
+    "description": "Buy button label in purchase dialog",
+    "placeholders": {
+      "price": { "type": "int", "example": "200" }
+    }
+  },
+
+  "shopNeedMoreStars": "You need {count} more ⭐ to buy this.",
+  "@shopNeedMoreStars": {
+    "description": "Message when user cannot afford an item",
+    "placeholders": {
+      "count": { "type": "int", "example": "50" }
+    }
+  },
+
+  "shopGetMoreStars": "Get More Stars",
+  "@shopGetMoreStars": { "description": "Button to open the get-stars sheet from the purchase dialog" },
+
+  "shopItemPurchased": "{name} purchased! ⭐",
+  "@shopItemPurchased": {
+    "description": "Snackbar shown after successfully buying a shop item",
+    "placeholders": {
+      "name": { "type": "String", "example": "Gold Cups" }
+    }
+  },
+
+  "shopNotEnoughStars": "Not enough stars!",
+  "@shopNotEnoughStars": { "description": "Snackbar shown when purchase fails due to insufficient stars" },
+
+  "navShop": "Shop",
+  "@navShop": { "description": "Bottom nav label: shop" },
+
+  "navFriends": "Friends",
+  "@navFriends": { "description": "Bottom nav label: friends" },
+
+  "navHome": "Home",
+  "@navHome": { "description": "Bottom nav label: home" },
+
+  "navGames": "Games",
+  "@navGames": { "description": "Bottom nav label: games" },
+
+  "navProfile": "Profile",
+  "@navProfile": { "description": "Bottom nav label: profile" },
+
+  "settingsDarkMode": "Dark Mode",
+  "@settingsDarkMode": { "description": "Setting toggle label for dark mode" },
+
+  "settingsPrivacy": "Privacy Settings",
+  "@settingsPrivacy": { "description": "Setting row label for privacy settings" },
+
+  "feedbackSheetTitle": "Send Feedback",
+  "@feedbackSheetTitle": { "description": "Title of the feedback bottom sheet" },
+
+  "feedbackHint": "Describe the issue or idea…",
+  "@feedbackHint": { "description": "Hint text in feedback text field" },
+
+  "feedbackSend": "Send",
+  "@feedbackSend": { "description": "Send button on feedback sheet" },
+
+  "feedbackSuccess": "Thanks for your feedback!",
+  "@feedbackSuccess": { "description": "Snackbar after feedback is submitted" },
+
+  "feedbackError": "Could not send feedback. Try again.",
+  "@feedbackError": { "description": "Snackbar when feedback submission fails" },
+
+  "feedbackCategoryBug": "Bug",
+  "@feedbackCategoryBug": { "description": "Feedback category: bug report" },
+
+  "feedbackCategorySuggestion": "Suggestion",
+  "@feedbackCategorySuggestion": { "description": "Feedback category: suggestion" },
+
+  "feedbackCategoryOther": "Other",
+  "@feedbackCategoryOther": { "description": "Feedback category: other" },
+
+  "invitationsTitle": "Invitations",
+  "@invitationsTitle": { "description": "AppBar title on the invitation inbox screen" },
+
+  "invitationsNotSignedIn": "Not signed in",
+  "@invitationsNotSignedIn": { "description": "Message shown on invitation screen when not signed in" },
+
+  "invitationsNoPending": "No pending invitations",
+  "@invitationsNoPending": { "description": "Empty state on invitation inbox screen" },
+
+  "invitationsDeclined": "Invitation declined",
+  "@invitationsDeclined": { "description": "Snackbar after declining an invitation" },
+
+  "invitationsDeclineBtn": "Decline",
+  "@invitationsDeclineBtn": { "description": "Button to decline an invitation" },
+
+  "invitationsAcceptBtn": "Accept",
+  "@invitationsAcceptBtn": { "description": "Button to accept an invitation" },
+
+  "invitationsFromPlayer": "A player",
+  "@invitationsFromPlayer": { "description": "Fallback sender name when username is missing" },
+
+  "invitationsInvitedToGame": "Invited you to a Game",
+  "@invitationsInvitedToGame": { "description": "Invitation card subtitle for a game invite" },
+
+  "invitationsInvitedToTournament": "Invited you to a Tournament",
+  "@invitationsInvitedToTournament": { "description": "Invitation card subtitle for a tournament invite" },
+
+  "waitingTitle": "Waiting…",
+  "@waitingTitle": { "description": "AppBar title on the waiting-for-game screen" },
+
+  "waitingForGame": "Waiting for {host} to start the game…",
+  "@waitingForGame": {
+    "description": "Message shown while waiting for host to start a game",
+    "placeholders": {
+      "host": { "type": "String", "example": "Alice" }
+    }
+  },
+
+  "waitingForTournament": "Waiting for {host} to start the tournament…",
+  "@waitingForTournament": {
+    "description": "Message shown while waiting for host to start a tournament",
+    "placeholders": {
+      "host": { "type": "String", "example": "Alice" }
+    }
+  },
+
+  "liveGameTitle": "Live Game",
+  "@liveGameTitle": { "description": "AppBar title when watching a live in-progress game" },
+
+  "liveGameSummary": "Game Summary",
+  "@liveGameSummary": { "description": "AppBar title when the game is over and showing summary" },
+
+  "liveTabTable": "Table",
+  "@liveTabTable": { "description": "Live-ticker tab: cup table" },
+
+  "liveTabStats": "Stats",
+  "@liveTabStats": { "description": "Live-ticker tab: stats" },
+
+  "liveTabTimeline": "Timeline",
+  "@liveTabTimeline": { "description": "Live-ticker tab: event timeline" },
+
+  "liveGameNotFound": "Game not found.",
+  "@liveGameNotFound": { "description": "Message shown when a live game cannot be found" },
+
+  "liveGameError": "Something went wrong",
+  "@liveGameError": { "description": "Generic error message on live game screen" },
+
+  "liveBadgeLive": "LIVE",
+  "@liveBadgeLive": { "description": "Badge label shown on an in-progress live game" },
+
+  "liveBadgeFinal": "FINAL",
+  "@liveBadgeFinal": { "description": "Badge label shown when a game is finished" },
+
+  "liveStatsAccuracy": "Accuracy %",
+  "@liveStatsAccuracy": { "description": "Column header for accuracy percentage in live match stats" },
+
+  "liveTimelineNoEvents": "No events yet",
+  "@liveTimelineNoEvents": { "description": "Empty state on the timeline tab" },
+
+  "liveTimelineRound": "Round {number}",
+  "@liveTimelineRound": {
+    "description": "Round header in the timeline tab",
+    "placeholders": {
+      "number": { "type": "int", "example": "3" }
+    }
+  },
+
+  "liveTimelineEndOfTurn": "End of turn · {time}",
+  "@liveTimelineEndOfTurn": {
+    "description": "End-of-turn marker in the timeline tab",
+    "placeholders": {
+      "time": { "type": "String", "example": "01:23" }
+    }
+  },
+
+  "liveEventHit": "Hit",
+  "@liveEventHit": { "description": "Timeline event label: normal hit" },
+
+  "liveEventBounce": "Bounce",
+  "@liveEventBounce": { "description": "Timeline event label: bounce shot" },
+
+  "liveEventIsland": "Island",
+  "@liveEventIsland": { "description": "Timeline event label: island shot" },
+
+  "liveEventDeathCup": "Death Cup",
+  "@liveEventDeathCup": { "description": "Timeline event label: death cup" },
+
+  "liveEventAirball": "Airball",
+  "@liveEventAirball": { "description": "Timeline event label: airball" },
+
+  "liveEventBitchCup": "Bitch Cup",
+  "@liveEventBitchCup": { "description": "Timeline event label: bitch cup" },
+
+  "liveEventOnFire": "On Fire",
+  "@liveEventOnFire": { "description": "Timeline event label: on fire" },
+
+  "spectatelobbyTitle": "Lobby",
+  "@spectatelobbyTitle": { "description": "AppBar title on spectate lobby screen" },
+
+  "spectateLobbyGameTitle": "Game Lobby",
+  "@spectateLobbyGameTitle": { "description": "AppBar title on spectate lobby screen once game loaded" },
+
+  "spectateLobbyError": "Error loading game.",
+  "@spectateLobbyError": { "description": "Error message when game data can't be loaded in spectate lobby" },
+
+  "spectateLobbyNoPlayers": "No players yet",
+  "@spectateLobbyNoPlayers": { "description": "Empty state when no players have joined yet in spectate lobby" },
+
+  "spectateLobbyGameSettings": "Game Settings",
+  "@spectateLobbyGameSettings": { "description": "Section header for game settings in spectate lobby" },
+
+  "spectateLobbyMode": "Mode",
+  "@spectateLobbyMode": { "description": "Settings row label for game mode in spectate lobby" },
+
+  "spectateLobbyStartingTeam": "Starting Team",
+  "@spectateLobbyStartingTeam": { "description": "Settings row label for starting team in spectate lobby" },
+
+  "spectateLobbyWaiting": "Waiting for the host to start the game…",
+  "@spectateLobbyWaiting": { "description": "Message shown while waiting for host to start in spectate lobby" },
+
+  "btnLeave": "Leave",
+  "@btnLeave": { "description": "Button to leave / exit a lobby or screen" },
+
+  "liveCupsLeft": "{count} cups left",
+  "@liveCupsLeft": {
+    "description": "Cups remaining counter shown under team name in live game header",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "liveStatScore": "Score",
+  "@liveStatScore": { "description": "Stat column/row label for score in live match stats" },
+
+  "liveStatThrows": "Throws",
+  "@liveStatThrows": { "description": "Stat column/row label for throws in live match stats" },
+
+  "liveStatAirballs": "Airballs",
+  "@liveStatAirballs": { "description": "Stat column/row label for airballs in live match stats" },
+
+  "liveStatMisses": "Misses",
+  "@liveStatMisses": { "description": "Stat column/row label for misses in live match stats" },
+
+  "liveStatCupsHit": "Cups Hit",
+  "@liveStatCupsHit": { "description": "Stat column/row label for cups hit in live cup layout tab" }
 }

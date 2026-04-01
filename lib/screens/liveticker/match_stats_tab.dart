@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 
 class MatchStatsTab extends StatelessWidget {
   final LiveGameData gameData;
@@ -27,11 +28,11 @@ class MatchStatsTab extends StatelessWidget {
     final t2Accuracy = t2Throws > 0 ? (t2Score / t2Throws * 100).clamp(0.0, 100.0) : 0.0;
 
     final stats = [
-      {'title': 'Score', 'team1': t1Score, 'team2': t2Score},
-      {'title': 'Throws', 'team1': t1Throws, 'team2': t2Throws},
-      {'title': 'Airballs', 'team1': t1Airballs, 'team2': t2Airballs},
-      {'title': 'Misses', 'team1': t1Misses, 'team2': t2Misses},
-      {'title': 'Accuracy %', 'team1': t1Accuracy, 'team2': t2Accuracy},
+      {'title': context.loc.liveStatScore, 'team1': t1Score, 'team2': t2Score},
+      {'title': context.loc.liveStatThrows, 'team1': t1Throws, 'team2': t2Throws},
+      {'title': context.loc.liveStatAirballs, 'team1': t1Airballs, 'team2': t2Airballs},
+      {'title': context.loc.liveStatMisses, 'team1': t1Misses, 'team2': t2Misses},
+      {'title': context.loc.liveStatsAccuracy, 'team1': t1Accuracy, 'team2': t2Accuracy},
     ];
 
     return SingleChildScrollView(

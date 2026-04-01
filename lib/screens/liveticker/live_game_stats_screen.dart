@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/widgets/app_tab_bar.dart';
@@ -82,7 +83,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         backgroundColor: c.surface,
         elevation: 0,
         title: Text(
-          _cachedGameData?.winner != null ? 'Game Summary' : 'Live Game',
+          _cachedGameData?.winner != null ? context.loc.liveGameSummary : context.loc.liveGameTitle,
           style: TextStyle(
             color: c.onBackground,
             fontWeight: FontWeight.bold,
@@ -94,7 +95,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
       body: Column(
         children: [
           AppTabBar(
-            tabs: const ['Table', 'Stats', 'Timeline'],
+            tabs: [context.loc.liveTabTable, context.loc.liveTabStats, context.loc.liveTabTimeline],
             selectedIndex: _currentTabPage,
             onTabSelected: (index) {
               setState(() {
@@ -108,11 +109,11 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
               stream: _firestoreService.getGameDocStream(widget.gameId),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return const Center(child: Text('Something went wrong'));
+                  return Center(child: Text(context.loc.liveGameError));
                 }
 
                 if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Center(child: Text('Game not found.'));
+                  return Center(child: Text(context.loc.liveGameNotFound));
                 }
 
                 final gameDataRaw =
@@ -320,7 +321,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         ),
         const SizedBox(height: 2),
         Text(
-          '$cupsLeft cups left',
+          context.loc.liveCupsLeft(cupsLeft),
           style: TextStyle(
             color: c.subtle,
             fontSize: 12,
@@ -357,9 +358,9 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
               ),
             ),
             const SizedBox(width: 5),
-            const Text(
-              'LIVE',
-              style: TextStyle(
+            Text(
+              context.loc.liveBadgeLive,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -380,7 +381,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        'FINAL',
+        context.loc.liveBadgeFinal,
         style: TextStyle(
           color: c.subtle,
           fontSize: 12,

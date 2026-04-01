@@ -4,6 +4,7 @@ import 'package:beerpongapp/models/event.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/beerpong_icons_icons.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 
 class TimelineTab extends StatefulWidget {
   final LiveGameData gameData;
@@ -75,7 +76,7 @@ class _TimelineTabState extends State<TimelineTab> {
           Icon(Icons.sports_bar_outlined, size: 48, color: c.muted),
           const SizedBox(height: 12),
           Text(
-            'No events yet',
+            context.loc.liveTimelineNoEvents,
             style: TextStyle(color: c.subtle, fontSize: 15),
           ),
         ],
@@ -133,7 +134,7 @@ class _TimelineTabState extends State<TimelineTab> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
-              'Round $round',
+              context.loc.liveTimelineRound(round),
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -167,7 +168,7 @@ class _TimelineTabState extends State<TimelineTab> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
-              'End of turn · $mm:$ss',
+              context.loc.liveTimelineEndOfTurn('$mm:$ss'),
               style: TextStyle(
                 fontSize: 10,
                 color: c.subtle,
@@ -249,7 +250,7 @@ class _TimelineTabState extends State<TimelineTab> {
             children: isTeam1
                 ? [
                     Text(
-                      _eventLabel(event.eventType),
+                      _eventLabel(context, event.eventType),
                       style: TextStyle(
                         fontSize: 11,
                         color: color,
@@ -269,7 +270,7 @@ class _TimelineTabState extends State<TimelineTab> {
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      _eventLabel(event.eventType),
+                      _eventLabel(context, event.eventType),
                       style: TextStyle(
                         fontSize: 11,
                         color: color,
@@ -318,14 +319,14 @@ class _TimelineTabState extends State<TimelineTab> {
         _ => Icons.sports,
       };
 
-  String _eventLabel(String type) => switch (type) {
-        'Normal Hit' => 'Hit',
-        'Bounce Shot' => 'Bounce',
-        'Island Shot' => 'Island',
-        'Death Cup' => 'Death Cup',
-        'Airball' => 'Airball',
-        'Bitchcup' || 'Bitch Cup' => 'Bitch Cup',
-        'On Fire' => 'On Fire',
+  String _eventLabel(BuildContext context, String type) => switch (type) {
+        'Normal Hit' => context.loc.liveEventHit,
+        'Bounce Shot' => context.loc.liveEventBounce,
+        'Island Shot' => context.loc.liveEventIsland,
+        'Death Cup' => context.loc.liveEventDeathCup,
+        'Airball' => context.loc.liveEventAirball,
+        'Bitchcup' || 'Bitch Cup' => context.loc.liveEventBitchCup,
+        'On Fire' => context.loc.liveEventOnFire,
         _ => type,
       };
 }
