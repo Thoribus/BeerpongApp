@@ -21,10 +21,10 @@ Widget _buildAccountApp(User user) {
   final provider = UserProvider()..setUserForTesting(user);
   return ChangeNotifierProvider<UserProvider>.value(
     value: provider,
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const AccountScreen(),
+      home: AccountScreen(),
     ),
   );
 }

@@ -172,7 +172,7 @@ class HomeScreenState extends State<HomeScreen> {
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
       if (prefs.containsKey('currentGameState')) {
-        _showNewGameConfirmationDialog(context, go);
+        unawaited(_showNewGameConfirmationDialog(context, go));
         return;
       }
     }
@@ -292,7 +292,7 @@ class HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 4),
                         Text(
                           context.loc.homeBeerPong,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 28,
                             fontWeight: FontWeight.bold,

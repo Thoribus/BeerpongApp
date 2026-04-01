@@ -141,7 +141,7 @@ class _ShopHeader extends StatelessWidget {
 
 /// Bottom sheet — rewarded video ads + IAP packs (packs wired in Phase 12).
 class GetStarsSheet extends StatefulWidget {
-  const GetStarsSheet();
+  const GetStarsSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
         context: context,

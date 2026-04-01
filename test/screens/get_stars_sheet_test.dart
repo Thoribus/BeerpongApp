@@ -26,10 +26,10 @@ Widget _buildShopApp(UserProvider provider) {
       ChangeNotifierProvider<UserProvider>.value(value: provider),
       ChangeNotifierProvider<PurchaseService>(create: (_) => _FakePurchaseService()),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const ShopScreen(),
+      home: ShopScreen(),
     ),
   );
 }

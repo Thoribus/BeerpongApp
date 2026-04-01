@@ -10,10 +10,10 @@ import 'package:provider/provider.dart';
 Widget _buildApp(UserProvider provider) {
   return ChangeNotifierProvider<UserProvider>.value(
     value: provider,
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const ShopScreen(),
+      home: ShopScreen(),
     ),
   );
 }

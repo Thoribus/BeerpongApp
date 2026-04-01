@@ -48,10 +48,10 @@ Widget _buildApp({PurchaseService? purchaseService}) {
         value: purchaseService ?? _FakePurchaseService(),
       ),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const ShopScreen(),
+      home: ShopScreen(),
     ),
   );
 }

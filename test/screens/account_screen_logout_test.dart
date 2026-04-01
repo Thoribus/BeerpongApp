@@ -11,10 +11,10 @@ User makeTestUser() => User(id: 'test-id', username: 'Tester');
 Widget _buildTestApp(UserProvider userProvider) {
   return ChangeNotifierProvider<UserProvider>.value(
     value: userProvider,
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const AccountScreen(),
+      home: AccountScreen(),
     ),
   );
 }

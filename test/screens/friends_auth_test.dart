@@ -8,10 +8,10 @@ import 'package:beerpongapp/screens/friends/friends_screen.dart';
 Widget _buildTestApp(UserProvider userProvider) {
   return ChangeNotifierProvider<UserProvider>.value(
     value: userProvider,
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const FriendsListScreen(),
+      home: FriendsListScreen(),
     ),
   );
 }

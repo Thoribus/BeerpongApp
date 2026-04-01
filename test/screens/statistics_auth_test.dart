@@ -9,10 +9,10 @@ import 'package:beerpongapp/screens/games/statistics_screen.dart';
 Widget _buildTestApp(UserProvider userProvider) {
   return ChangeNotifierProvider<UserProvider>.value(
     value: userProvider,
-    child: MaterialApp(
+    child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const StatisticsScreen(),
+      home: StatisticsScreen(),
     ),
   );
 }

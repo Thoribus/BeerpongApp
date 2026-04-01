@@ -59,7 +59,7 @@ class _TournamentPageViewState extends State<TournamentPageView> {
       appBar: AppBar(
         title: Text(context.loc.labelTournament,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.grey.shade700,
         bottom: PreferredSize(

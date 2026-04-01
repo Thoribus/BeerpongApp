@@ -36,7 +36,7 @@ class DialogHelpers {
           const SizedBox(height: 10.0),
           Text(
             context.loc.dialogSelectPlayerBody,
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20.0),
@@ -99,7 +99,7 @@ class DialogHelpers {
           const SizedBox(height: 10.0),
           Text(
             context.loc.dialogSelectPlayerBody,
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20.0),
