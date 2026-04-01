@@ -2,6 +2,7 @@ import 'package:beerpongapp/repositories/user_repository.dart';
 import 'package:beerpongapp/screens/shop/shop_screen.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/shop_catalog.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -295,7 +296,7 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Your balance',
+                  Text(context.loc.shopYourBalance,
                       style: TextStyle(color: c.subtle, fontSize: 13)),
                   Row(children: [
                     const Icon(Icons.star_rounded,
@@ -312,7 +313,7 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Cost',
+                  Text(context.loc.shopCost,
                       style: TextStyle(color: c.subtle, fontSize: 13)),
                   Row(children: [
                     const Icon(Icons.star_rounded,
@@ -345,7 +346,7 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : Text('Buy for ⭐ ${widget.item.starPrice}',
+                      : Text(context.loc.shopBuyForStars(widget.item.starPrice),
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
@@ -367,7 +368,7 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'You need $needed more ⭐ to buy this.',
+                        context.loc.shopNeedMoreStars(needed),
                         style:
                             const TextStyle(color: Colors.white70, fontSize: 13),
                       ),
@@ -389,8 +390,8 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Get More Stars',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(context.loc.shopGetMoreStars,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -398,7 +399,7 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
             const SizedBox(height: 8),
             TextButton(
               onPressed: _loading ? null : () => Navigator.of(context).pop(),
-              child: Text('Cancel',
+              child: Text(context.loc.btnCancel,
                   style: TextStyle(color: c.subtle)),
             ),
           ],
@@ -432,7 +433,7 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${widget.item.name} purchased! ⭐'),
+            content: Text(context.loc.shopItemPurchased(widget.item.name)),
             backgroundColor: Colors.green.shade700,
             duration: const Duration(seconds: 2),
           ),
@@ -442,8 +443,8 @@ class _PurchaseDialogState extends State<_PurchaseDialog> {
       if (mounted) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Not enough stars!'),
+          SnackBar(
+            content: Text(context.loc.shopNotEnoughStars),
             backgroundColor: Colors.red,
           ),
         );

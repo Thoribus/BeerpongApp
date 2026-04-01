@@ -1,5 +1,6 @@
 import 'package:beerpongapp/screens/shop/shop_item_card.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/shop_catalog.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -27,9 +28,9 @@ class AvatarShopScreen extends StatelessWidget {
     return ListView(
       children: [
         if (avatars.isNotEmpty)
-          ShopItemGrid(sectionTitle: 'Profile Pictures', items: avatars),
-        ShopItemGrid(sectionTitle: 'Avatar Borders', items: borders),
-        ShopItemGrid(sectionTitle: 'Emblems & Medals', items: emblems),
+          ShopItemGrid(sectionTitle: context.loc.shopSectionProfilePictures, items: avatars),
+        ShopItemGrid(sectionTitle: context.loc.shopSectionAvatarBorders, items: borders),
+        ShopItemGrid(sectionTitle: context.loc.shopSectionEmblemsAndMedals, items: emblems),
         const SizedBox(height: 24),
       ],
     );
@@ -48,7 +49,7 @@ class _SignInPrompt extends StatelessWidget {
         children: [
           Icon(Icons.lock_outline, color: c.subtle, size: 48),
           const SizedBox(height: 12),
-          Text('Sign in to browse the shop',
+          Text(context.loc.shopSignInBrowse,
               style: TextStyle(color: c.subtle, fontSize: 15)),
         ],
       ),
