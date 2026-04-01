@@ -966,7 +966,7 @@
   "@profileSaveFailed": {
     "description": "Snackbar when profile save fails",
     "placeholders": {
-      "error": { "type": "Object", "example": "network error" }
+      "error": { "type": "String", "example": "network error" }
     }
   },
 
@@ -1091,6 +1091,9 @@
 
   "settingsPrivacy": "Privacy Settings",
   "@settingsPrivacy": { "description": "Setting row label for privacy settings" },
+
+  "settingsLanguage": "Language",
+  "@settingsLanguage": { "description": "Setting row label for language selection" },
 
   "feedbackSheetTitle": "Send Feedback",
   "@feedbackSheetTitle": { "description": "Title of the feedback bottom sheet" },
