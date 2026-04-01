@@ -16,6 +16,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:beerpongapp/util/route_args.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_tab_bar.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 
 enum _FeedEventType { sharedGame, winStreak, achievement, friendActive }
 
@@ -158,7 +159,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   Future<void> _showAddFriendDialog(BuildContext context) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.user == null) {
-      _showErrorSnackBar('You must be signed in to add friends.');
+      _showErrorSnackBar(context.loc.friendsMustSignIn);
       return;
     }
     await showDialog<void>(
@@ -267,13 +268,13 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               const Icon(Icons.people_outline, color: Colors.grey, size: 48),
               const SizedBox(height: 16),
               Text(
-                'Sign in to view your friends',
+                context.loc.friendsSignInPrompt,
                 style: TextStyle(color: c.onBackground, fontSize: 16),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () async => userProvider.signIn(),
-                child: const Text('Sign in with Google'),
+                child: Text(context.loc.btnSignInGoogle),
               ),
             ],
           ),
@@ -307,7 +308,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
   Widget _buildPageSelector() {
     return AppTabBar(
-      tabs: const ['Friendlist', 'Leaderboard', 'Socials'],
+      tabs: [context.loc.friendsTabFriendlist, context.loc.friendsTabLeaderboard, context.loc.friendsTabSocials],
       selectedIndex: _currentPage,
       onTabSelected: (index) {
         if (_currentPage != index) {
@@ -376,7 +377,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Text(
-                    'No friends yet. Add one using the + button above.',
+                    context.loc.friendsNoFriends,
                     style: TextStyle(color: c.subtle, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
@@ -549,7 +550,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
         if (events.isEmpty && friends.isEmpty) {
           return Center(
-            child: Text('Add friends to see activity here.',
+            child: Text(context.loc.friendsNoActivity,
                 style: TextStyle(color: c.subtle)),
           );
         }
@@ -561,7 +562,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 32),
-                  child: Text('No recent activity yet.',
+                  child: Text(context.loc.friendsNoRecentActivity,
                       style: TextStyle(color: c.subtle)),
                 ),
               )
@@ -749,7 +750,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No friends found.'));
+          return Center(child: Text(context.loc.friendsNoFriendsFound));
         }
 
         final friends = snapshot.data!;
@@ -1100,8 +1101,8 @@ class FriendTile extends StatelessWidget {
         return await showDialog<bool>(
           context: context,
           builder: (dialogCtx) => AlertDialog(
-            title: const Text('Remove Friend'),
-            content: Text('Remove ${friend.username} from your friends?'),
+            title: Text(context.loc.friendsRemoveTitle),
+            content: Text(context.loc.friendsRemoveBody(friend.username)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, false),
@@ -1109,8 +1110,8 @@ class FriendTile extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, true),
-                child:
-                    const Text('Remove', style: TextStyle(color: Colors.red)),
+                child: Text(context.loc.friendsRemoveConfirm,
+                    style: const TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -1210,8 +1211,8 @@ class FriendTile extends StatelessWidget {
                         ),
                         icon:
                             const Icon(Icons.remove_red_eye_outlined, size: 14),
-                        label: const Text('Watch',
-                            style: TextStyle(fontSize: 12)),
+                        label: Text(context.loc.friendsWatchBtn,
+                            style: const TextStyle(fontSize: 12)),
                         onPressed: () => context.push(
                             AppRoutes.spectateLobbyPath(
                                 friend.activeGameId!)),
@@ -1308,7 +1309,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
               children: [
                 // ── Title ──────────────────────────────────────────────
                 Text(
-                  'Add a Friend',
+                  context.loc.friendsAddTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1323,7 +1324,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   autofocus: true,
                   onChanged: _onSearchChanged,
                   decoration: InputDecoration(
-                    hintText: 'Search by username…',
+                    hintText: context.loc.friendsSearchHint,
                     hintStyle: TextStyle(fontSize: 14, color: c.subtle),
                     prefixIcon: Icon(Icons.search, color: c.subtle, size: 20),
                     filled: true,
@@ -1365,7 +1366,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                       if (users.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text('No users found.',
+                          child: Text(context.loc.friendsNoUsersFound,
                               style: TextStyle(color: c.subtle, fontSize: 13)),
                         );
                       }
@@ -1398,7 +1399,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                                     },
                                     style: TextButton.styleFrom(
                                         foregroundColor: Colors.orange),
-                                    child: const Text('Add'),
+                                    child: Text(context.loc.friendsAddBtn),
                                   ),
                           );
                         },
@@ -1418,7 +1419,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                         size: 18,
                       ),
                       const SizedBox(width: 6),
-                      Text('Share / Scan QR',
+                      Text(context.loc.friendsShareQr,
                           style: TextStyle(fontSize: 13, color: c.subtle)),
                     ],
                   ),
@@ -1429,11 +1430,11 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                     child: GestureDetector(
                       onTap: () {
                         final messenger = ScaffoldMessenger.of(context);
+                        final copiedMsg = context.loc.friendsIdCopied;
                         Clipboard.setData(
                                 ClipboardData(text: widget.currentUser.id))
                             .then((_) => messenger.showSnackBar(
-                                  const SnackBar(
-                                      content: Text('ID copied to clipboard')),
+                                  SnackBar(content: Text(copiedMsg)),
                                 ));
                       },
                       child: Text(
@@ -1463,7 +1464,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                     child: ElevatedButton.icon(
                       onPressed: widget.onScanQr,
                       icon: const Icon(Icons.qr_code_scanner, size: 16),
-                      label: const Text('Scan QR Code'),
+                      label: Text(context.loc.friendsScanQrBtn),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.black,
