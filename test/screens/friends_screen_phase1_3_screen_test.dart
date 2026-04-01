@@ -1,3 +1,4 @@
+import 'package:beerpongapp/l10n/app_localizations.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/user.dart';
@@ -77,6 +78,8 @@ Widget _buildScreen({
   return ChangeNotifierProvider<UserProvider>.value(
     value: provider,
     child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: FriendsListScreen(
         friendsLoader: (_) {
           incrementFriendLoads();

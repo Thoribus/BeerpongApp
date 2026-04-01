@@ -1,3 +1,4 @@
+import 'package:beerpongapp/l10n/app_localizations.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/profile/account_screen.dart';
 import 'package:beerpongapp/services/purchase_service.dart';
@@ -20,12 +21,18 @@ Widget _buildAccountApp(User user) {
   final provider = UserProvider()..setUserForTesting(user);
   return ChangeNotifierProvider<UserProvider>.value(
     value: provider,
-    child: const MaterialApp(home: AccountScreen()),
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const AccountScreen(),
+    ),
   );
 }
 
 Widget _buildCardApp(User user) {
   return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: UserCard(
         user: user,

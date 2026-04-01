@@ -1,3 +1,4 @@
+import 'package:beerpongapp/l10n/app_localizations.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/profile/account_screen.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -10,7 +11,11 @@ User makeTestUser() => User(id: 'test-id', username: 'Tester');
 Widget _buildTestApp(UserProvider userProvider) {
   return ChangeNotifierProvider<UserProvider>.value(
     value: userProvider,
-    child: const MaterialApp(home: AccountScreen()),
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const AccountScreen(),
+    ),
   );
 }
 

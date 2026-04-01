@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../helpers/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/player.dart';
@@ -9,7 +10,7 @@ import 'package:beerpongapp/screens/friends/friends_screen.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => wrapWithL10n(child);
 
 User _user(String id, {DateTime? lastGameAt}) =>
     User(id: id, username: id, lastGameAt: lastGameAt);

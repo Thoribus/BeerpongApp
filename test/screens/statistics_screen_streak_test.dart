@@ -2,6 +2,7 @@
 // which accepts user + games directly and shares the same streak logic.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../helpers/l10n.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/user.dart';
@@ -34,7 +35,7 @@ GameStatistics _makeGame(bool aliceWins, {DateTime? date}) {
   );
 }
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => wrapWithL10n(child);
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
