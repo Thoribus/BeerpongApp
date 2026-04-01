@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
@@ -103,7 +104,7 @@ class BaseScreenState extends State<BaseScreen> {
                 Divider(color: c.divider),
                 SwitchListTile(
                   title: Text(
-                    'Dark Mode',
+                    context.loc.settingsDarkMode,
                     style: TextStyle(color: c.onBackground),
                   ),
                   value: isDarkMode,
@@ -117,7 +118,7 @@ class BaseScreenState extends State<BaseScreen> {
                   leading: Icon(Icons.privacy_tip_outlined,
                       color: c.onBackground),
                   title: Text(
-                    'Privacy Settings',
+                    context.loc.settingsPrivacy,
                     style: TextStyle(color: c.onBackground),
                   ),
                   onTap: () {
@@ -152,7 +153,7 @@ class BaseScreenState extends State<BaseScreen> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        _getAppBarTitle(selectedIndex),
+                        _getAppBarTitle(selectedIndex, context),
                         style: TextStyle(
                           color: c.onBackground,
                           fontSize: 20,
@@ -253,11 +254,11 @@ class BaseScreenState extends State<BaseScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildNavItem(Icons.shopping_bag_outlined, 'Shop', 0, selectedIndex),
-                    _buildNavItem(Icons.favorite_outline, 'Friends', 1, selectedIndex),
-                    _buildNavItem(Icons.sports_bar_outlined, 'Home', 2, selectedIndex),
-                    _buildNavItem(Icons.workspaces_outlined, 'Games', 3, selectedIndex),
-                    _buildNavItem(Icons.account_circle_outlined, 'Profile', 4, selectedIndex),
+                    _buildNavItem(Icons.shopping_bag_outlined, context.loc.navShop, 0, selectedIndex),
+                    _buildNavItem(Icons.favorite_outline, context.loc.navFriends, 1, selectedIndex),
+                    _buildNavItem(Icons.sports_bar_outlined, context.loc.navHome, 2, selectedIndex),
+                    _buildNavItem(Icons.workspaces_outlined, context.loc.navGames, 3, selectedIndex),
+                    _buildNavItem(Icons.account_circle_outlined, context.loc.navProfile, 4, selectedIndex),
                   ],
                 ),
               ],
@@ -295,11 +296,11 @@ class BaseScreenState extends State<BaseScreen> {
     );
   }
 
-  String _getAppBarTitle(int index) => [
-        'Shop',
-        'Friends',
-        'Beerpong Companion',
-        'Games',
-        'Profile',
+  String _getAppBarTitle(int index, BuildContext context) => [
+        context.loc.navShop,
+        context.loc.navFriends,
+        context.loc.appTitle,
+        context.loc.navGames,
+        context.loc.navProfile,
       ][index];
 }

@@ -5,6 +5,7 @@ import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/route_args.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -97,8 +98,8 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
         ? widget.args.hostName
         : 'the host';
     final bodyText = widget.args.gameId.isEmpty
-        ? 'Waiting for $hostName to start the tournament…'
-        : 'Waiting for $hostName to start the game…';
+        ? context.loc.waitingForTournament(hostName)
+        : context.loc.waitingForGame(hostName);
 
     return Scaffold(
       backgroundColor: c.background,
@@ -106,7 +107,7 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
         backgroundColor: c.surface,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text('Waiting…', style: TextStyle(color: c.onBackground)),
+        title: Text(context.loc.waitingTitle, style: TextStyle(color: c.onBackground)),
       ),
       body: Center(
         child: Padding(
@@ -130,7 +131,7 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('Cancel'),
+                child: Text(context.loc.btnCancel),
               ),
             ],
           ),
