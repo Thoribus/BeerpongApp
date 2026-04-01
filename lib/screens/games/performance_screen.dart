@@ -1,6 +1,7 @@
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:beerpongapp/models/user.dart';
@@ -64,7 +65,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSectionTitle('Performance Summary'),
+                    _buildSectionTitle(context.loc.perfSummaryTitle),
                     _buildCard(
                       child: StatisticsTable(
                         user: widget.user,
@@ -72,10 +73,10 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildSectionTitle('Cups Hit Heat Map'),
+                    _buildSectionTitle(context.loc.perfHeatMapTitle),
                     _buildCard(child: _buildPyramidHeatMap()),
                     const SizedBox(height: 16),
-                    _buildSectionTitle('Row Accuracy'),
+                    _buildSectionTitle(context.loc.perfRowAccuracyTitle),
                     _buildCard(child: _buildRowAccuracyChart()),
                   ],
                 );
@@ -90,13 +91,13 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
   Widget _buildFilterChips() {
     return Row(
       children: [
-        _filterChip('All', _TimeFilter.all),
+        _filterChip(context.loc.perfFilterAll, _TimeFilter.all),
         const SizedBox(width: 8),
-        _filterChip('Last 10', _TimeFilter.last10),
+        _filterChip(context.loc.perfFilterLast10, _TimeFilter.last10),
         const SizedBox(width: 8),
-        _filterChip('Last 5', _TimeFilter.last5),
+        _filterChip(context.loc.perfFilterLast5, _TimeFilter.last5),
         const SizedBox(width: 8),
-        _filterChip('Last 3', _TimeFilter.last3),
+        _filterChip(context.loc.perfFilterLast3, _TimeFilter.last3),
       ],
     );
   }
@@ -201,12 +202,12 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       counts[7] + counts[8],
       counts[9],
     ];
-    final rowLabels = ['Front', 'Mid', 'Back', 'Apex'];
+    final rowLabels = [context.loc.perfRowFront, context.loc.perfRowMid, context.loc.perfRowBack, context.loc.perfRowApex];
 
     if (total == 0) {
       return Padding(
         padding: const EdgeInsets.all(8),
-        child: Text('No data yet.',
+        child: Text(context.loc.perfNoData,
             style: TextStyle(color: c.subtle, fontSize: 13)),
       );
     }
@@ -347,48 +348,50 @@ class StatisticsTable extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildStatRow(
-          context, 'Total Score', user.totalScore.toInt(),
+          context, context.loc.statTotalScore, user.totalScore.toInt(),
           Icons.score, scoreChange, scoreSpots, dates,
         ),
         _buildStatRow(
-          context, 'Total Misses', user.totalMisses,
+          context, context.loc.statTotalMisses, user.totalMisses,
           Icons.close, missesChange, missesSpots, dates,
+          lessIsBetter: true,
         ),
         _buildStatRow(
-          context, 'Total Airballs', user.totalAirballs,
+          context, context.loc.statTotalAirballs, user.totalAirballs,
           Icons.air, airballsChange, airballsSpots, dates,
+          lessIsBetter: true,
         ),
         _buildStatRow(
-          context, 'Cups Hit', user.cupsHit.length,
+          context, context.loc.statCupsHit, user.cupsHit.length,
           Icons.sports_bar, cupsHitChange, cupsHitSpots, dates,
         ),
         _buildStatRow(
-          context, 'Hit Rate', _hitRateUserLevel(user).round(),
+          context, context.loc.statHitRate, _hitRateUserLevel(user).round(),
           Icons.auto_fix_high, hitRateChange, hitRateSpots, dates,
         ),
         _buildStatRow(
-          context, 'Win Rate', _winRateUserLevel(user).round(),
+          context, context.loc.statWinRate, _winRateUserLevel(user).round(),
           Icons.emoji_events, winRateChange, winRateSpots, dates,
         ),
         _buildStatRow(
-          context, 'Bounce Rate', bounceRateLifetime,
+          context, context.loc.statBounceRate, bounceRateLifetime,
           Icons.sports_tennis_rounded, bounceRateChange, bounceRateSpots, dates,
         ),
         _buildStatRow(
-          context, 'Island Conv.', islandConversionLifetime,
+          context, context.loc.statIslandConv, islandConversionLifetime,
           Icons.workspaces_outlined, islandConversionChange,
           islandConversionSpots, dates,
         ),
         _buildStatRow(
-          context, 'Defended', user.defended,
+          context, context.loc.statDefended, user.defended,
           Icons.shield_outlined, defendedChange, defendedSpots, dates,
         ),
         _buildStatRow(
-          context, 'On Fire', user.onFire,
+          context, context.loc.statOnFire, user.onFire,
           Icons.local_fire_department, onFireChange, onFireSpots, dates,
         ),
         _buildStatRow(
-          context, 'Heating Up', user.totalHeatingUp,
+          context, context.loc.statHeatingUp, user.totalHeatingUp,
           Icons.thermostat, heatingUpChange, heatingUpSpots, dates,
         ),
       ],
@@ -404,10 +407,11 @@ class StatisticsTable extends StatelessWidget {
     IconData icon,
     double changePercent,
     List<FlSpot> rawData,
-    List<DateTime> dates,
-  ) {
+    List<DateTime> dates, {
+    bool lessIsBetter = false,
+  }) {
     final isPositive =
-        _lessIsBetter(attribute) ? changePercent < 0 : changePercent >= 0;
+        lessIsBetter ? changePercent < 0 : changePercent >= 0;
     final trendColor = isPositive ? Colors.green : Colors.red;
 
     final c = AppColors.of(context);
@@ -468,12 +472,6 @@ class StatisticsTable extends StatelessWidget {
       ),
       onTap: () => _showDetailChart(context, attribute, rawData, dates),
     );
-  }
-
-  bool _lessIsBetter(String attribute) {
-    // If the attribute name is "Total Misses" or "Total Airballs", returning true
-    // means we'll invert the color logic (negative slope => green).
-    return attribute == 'Total Misses' || attribute == 'Total Airballs';
   }
 
   /// On tap, show a bigger chart with BOTH raw data and the regression line
