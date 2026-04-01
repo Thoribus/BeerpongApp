@@ -1278,5 +1278,92 @@
   "@liveStatMisses": { "description": "Stat column/row label for misses in live match stats" },
 
   "liveStatCupsHit": "Cups Hit",
-  "@liveStatCupsHit": { "description": "Stat column/row label for cups hit in live cup layout tab" }
+  "@liveStatCupsHit": { "description": "Stat column/row label for cups hit in live cup layout tab" },
+
+  "gameModeTeamStarts": "{team} starts",
+  "@gameModeTeamStarts": {
+    "description": "Button label indicating which team starts the game",
+    "placeholders": { "team": { "type": "String" } }
+  },
+
+  "tournamentCompleteTitle": "Tournament Complete!",
+  "@tournamentCompleteTitle": { "description": "Dialog title when all tournament matches have been played" },
+
+  "tournamentCompleteBody": "All matches have been played.\nCheck out the standings!",
+  "@tournamentCompleteBody": { "description": "Dialog body when tournament is complete" },
+
+  "labelPlayer": "Player",
+  "@labelPlayer": { "description": "Singular label for a player (e.g. column header)" },
+
+  "compareTitle": "Comparison",
+  "@compareTitle": { "description": "Screen title for friend stat comparison screen" },
+
+  "compareOverview": "OVERVIEW",
+  "@compareOverview": { "description": "Section header for the radar overview in compare screen" },
+
+  "compareStatComparison": "STAT COMPARISON",
+  "@compareStatComparison": { "description": "Section header for stat comparison bars in compare screen" },
+
+  "compareBouncePercent": "Bounce %",
+  "@compareBouncePercent": { "description": "Stat row label: bounce shot percentage" },
+
+  "compareIslandPercent": "Island %",
+  "@compareIslandPercent": { "description": "Stat row label: island shot percentage" },
+
+  "compareTotalWins": "Total Wins",
+  "@compareTotalWins": { "description": "Stat row label: total wins" },
+
+  "compareOnFire": "On Fire",
+  "@compareOnFire": { "description": "Stat row label: on-fire count" },
+
+  "breakdownShotDistribution": "Shot Distribution",
+  "@breakdownShotDistribution": { "description": "Section title for shot distribution donut chart" },
+
+  "breakdownSpecialShots": "Special Shots",
+  "@breakdownSpecialShots": { "description": "Section title for special shots breakdown" },
+
+  "breakdownWinContext": "Win Context",
+  "@breakdownWinContext": { "description": "Section title for win context (win margin, clutch) breakdown" },
+
+  "breakdownHeadToHead": "Head to Head",
+  "@breakdownHeadToHead": { "description": "Section title for head-to-head opponent breakdown" },
+
+  "breakdownThrowsLabel": "throws",
+  "@breakdownThrowsLabel": { "description": "Lowercase label shown beneath total throws count in donut chart" },
+
+  "breakdownHits": "Hits",
+  "@breakdownHits": { "description": "Legend label for hits in shot donut chart" },
+
+  "breakdownBounceShot": "Bounce Shot",
+  "@breakdownBounceShot": { "description": "Label for bounce shot card in special shots section" },
+
+  "breakdownIslandShot": "Island Shot",
+  "@breakdownIslandShot": { "description": "Label for island shot card in special shots section" },
+
+  "breakdownWinMarginTitle": "Win Margin Distribution",
+  "@breakdownWinMarginTitle": { "description": "Card title for win margin distribution bar chart" },
+
+  "breakdownDominant": "Dominant (5+ cups)",
+  "@breakdownDominant": { "description": "Win margin bucket: dominant win with 5+ cups remaining" },
+
+  "breakdownComfortable": "Comfortable (3–4)",
+  "@breakdownComfortable": { "description": "Win margin bucket: comfortable win with 3–4 cups remaining" },
+
+  "breakdownClose": "Close (1–2)",
+  "@breakdownClose": { "description": "Win margin bucket: close win with 1–2 cups remaining" },
+
+  "breakdownClutchRate": "Clutch Rate",
+  "@breakdownClutchRate": { "description": "Card label for clutch rate metric" },
+
+  "breakdownClutchDesc": "Hit the last cup to win",
+  "@breakdownClutchDesc": { "description": "Description below clutch rate label" },
+
+  "breakdownNoGames": "No games recorded yet.",
+  "@breakdownNoGames": { "description": "Empty state when no games have been recorded" },
+
+  "breakdownNoOpponents": "No opponents found.",
+  "@breakdownNoOpponents": { "description": "Empty state when no head-to-head opponents found" },
+
+  "breakdownNoThrows": "No throws recorded yet.",
+  "@breakdownNoThrows": { "description": "Empty state when no throws have been recorded" }
 }

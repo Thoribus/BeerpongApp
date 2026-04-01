@@ -1,5 +1,6 @@
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 
 class TournamentStandingsScreen extends StatelessWidget {
@@ -59,14 +60,14 @@ class TournamentStandingsScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            _buildTeamPlayersStats(team),
+            _buildTeamPlayersStats(context, team),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTeamPlayersStats(Team team) {
+  Widget _buildTeamPlayersStats(BuildContext context, Team team) {
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2), // Name
@@ -75,16 +76,19 @@ class TournamentStandingsScreen extends StatelessWidget {
         3: FlexColumnWidth(1), // Airballs
       },
       children: [
-        const TableRow(
+        TableRow(
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 2),
-              child:
-                  Text('Player', style: TextStyle(fontWeight: FontWeight.bold)),
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(context.loc.labelPlayer,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
-            Text('Score', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('Throws', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text('Airballs', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(context.loc.liveStatScore,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(context.loc.liveStatThrows,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(context.loc.liveStatAirballs,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         ...team.players.map(

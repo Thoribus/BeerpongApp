@@ -2,6 +2,7 @@ import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/route_args.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -64,7 +65,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Who starts?'),
+          title: Text(context.loc.gameModeWhoStarts),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -72,28 +73,28 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTeamDialogColumn(team1Name, team1Players, Colors.blue),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Text('VS',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Text(context.loc.labelVs,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                   _buildTeamDialogColumn(team2Name, team2Players, Colors.red),
                 ],
               ),
               const SizedBox(height: 24),
-              const Text('Which team should start?'),
+              Text(context.loc.gameModeWhichTeamStarts),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(team1Name),
-              child: const Text('$team1Name starts',
-                  style: TextStyle(color: Colors.blue)),
+              child: Text(context.loc.gameModeTeamStarts(team1Name),
+                  style: const TextStyle(color: Colors.blue)),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(team2Name),
-              child: const Text('$team2Name starts',
-                  style: TextStyle(color: Colors.red)),
+              child: Text(context.loc.gameModeTeamStarts(team2Name),
+                  style: const TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -140,9 +141,9 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Teams',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        Text(
+          context.loc.labelTeams,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -526,13 +527,12 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Tournament Complete!'),
-            content: const Text(
-                'All matches have been played.\nCheck out the standings!'),
+            title: Text(context.loc.tournamentCompleteTitle),
+            content: Text(context.loc.tournamentCompleteBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('OK'),
+                child: Text(context.loc.btnOk),
               ),
             ],
           ),
