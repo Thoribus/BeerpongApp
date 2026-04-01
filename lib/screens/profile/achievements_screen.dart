@@ -3,6 +3,7 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/achievement_engine.dart';
 import 'package:beerpongapp/util/level_system.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 
 class AchievementsScreen extends StatelessWidget {
@@ -108,7 +109,7 @@ class _LevelCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      'Lv $level',
+                      context.loc.labelLevelShort(level),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -149,8 +150,8 @@ class _LevelCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         isMax
-                            ? 'Max level reached'
-                            : '${user.xp} XP · $toNext XP to Level ${level + 1}',
+                            ? context.loc.achievementsMaxLevel
+                            : context.loc.achievementsXpProgress(user.xp, toNext, level + 1),
                         style: TextStyle(fontSize: 11, color: c.subtle),
                       ),
                     ],
@@ -167,15 +168,15 @@ class _LevelCard extends StatelessWidget {
                 _StatChip(
                     icon: Icons.emoji_events,
                     label: '$unlocked / $total',
-                    sub: 'Achievements'),
+                    sub: context.loc.statsAchievements),
                 _StatChip(
                     icon: Icons.trending_up,
                     label: '${user.bestWinStreak}',
-                    sub: 'Best Streak'),
+                    sub: context.loc.achievementsBestStreak),
                 _StatChip(
                     icon: Icons.gps_fixed,
                     label: '${(user.hitRate * 100).toStringAsFixed(0)}%',
-                    sub: 'Hit Rate'),
+                    sub: context.loc.statHitRate),
               ],
             ),
           ],
@@ -350,7 +351,7 @@ class _AchievementCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   p.isMaxed
-                      ? 'Maxed!'
+                      ? context.loc.achievementMaxed
                       : '${p.currentValue} / ${p.nextThreshold}',
                   style: TextStyle(
                     fontSize: 10,
@@ -376,7 +377,7 @@ class _AchievementDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = progress;
     final c = AppColors.of(context);
-    final stageLabels = ['Bronze', 'Silver', 'Gold', 'Diamond'];
+    final stageLabels = [context.loc.achievementStagesBronze, context.loc.achievementStagesSilver, context.loc.achievementStagesGold, context.loc.achievementStagesDiamond];
 
     return AlertDialog(
       backgroundColor: c.card,
@@ -424,8 +425,8 @@ class _AchievementDetailDialog extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             p.isMaxed
-                ? 'Fully mastered!'
-                : 'Progress: ${p.currentValue} / ${p.nextThreshold}',
+                ? context.loc.achievementFullyMastered
+                : context.loc.achievementProgress(p.currentValue, p.nextThreshold),
             style:
                 TextStyle(color: c.onBackground, fontWeight: FontWeight.w600),
           ),
@@ -445,7 +446,7 @@ class _AchievementDetailDialog extends StatelessWidget {
           if (p.def.titleToGrant != null) ...[
             const SizedBox(height: 12),
             Text(
-              'Unlocks title: "${p.def.titleToGrant}"',
+              context.loc.achievementUnlocksTitle(p.def.titleToGrant!),
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.amber,
@@ -458,7 +459,7 @@ class _AchievementDetailDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Close', style: TextStyle(color: c.onBackground)),
+          child: Text(context.loc.btnClose, style: TextStyle(color: c.onBackground)),
         ),
       ],
     );
