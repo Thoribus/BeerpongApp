@@ -1,27 +1,23 @@
 # BeerpongApp — Task Tracker
 
-- Bitchcup kommt nicht
-- Achievements Progress Bar funktioniert nicht
-- Achievements yellow lines
-- Account Screen performance issues
-- add friends username not found (wenn username nicht vorhanden)
-- lobby screen kommt nicht ins spectate wenn das game startet
-- add friends performance issues (firendlist allgemein)
-- friendlist wird nicht geupdated, wenn mich jemand als freund hinzufügt
-- spectate bug (muss spezifiziert werden)
-- push notifications gehen nicht
-- lobby screen selected rules anzeigen (zeigt nur an, wenn rules bereits vorher ausgewählt wurden, kein update)
-- lobby spieler werden nicht aus lobby screen geworfen, wenn sie aus der lobby vom host gekickt werden
-- lobby screen eingeladene Spieler können Lobby nicht verlassen
-- game start exception: (default)/documents/invitations/OQCoyKEJKBJwdD8im7gU, cause=null}.
-E/flutter (24208): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: [cloud_firestore/not-found] Some requested document was not found.
-E/flutter (24208): #0      FirebaseFirestoreHostApi.documentReferenceUpdate (package:cloud_firestore_platform_interface/src/pigeon/messages.pigeon.dart:1059:7)
-E/flutter (24208): <asynchronous suspension>
-E/flutter (24208): #1      MethodChannelDocumentReference.update (package:cloud_firestore_platform_interface/src/method_channel/method_channel_document_reference.dart:55:7)     
-E/flutter (24208): <asynchronous suspension>
-E/flutter (24208): #2      InvitationRepository.updateInvitationGameId (package:beerpongapp/repositories/invitation_repository.dart:55:5)
-E/flutter (24208): <asynchronous suspension>
-E/flutter (24208): #3      _GameModeDetailsScreenState._onStartGame (package:beerpongapp/screens/home/game_mode_details_screen.dart:294:7)
-E/flutter (24208): <asynchronous suspension>
-E/flutter (24208): #4      _GameModeDetailsScreenState._onStart (package:beerpongapp/screens/home/game_mode_details_screen.dart:283:7)
-E/flutter (24208): <asynchronous suspension>
+## 1. Game & Lobby Logic
+- [ ] **Fix Game Start Exception:** Handle `[cloud_firestore/not-found]` exception in `InvitationRepository.updateInvitationGameId` triggered from `_GameModeDetailsScreenState._onStartGame`.
+- [ ] **Bitchcup Event:** Investigate and fix the issue where the "Bitchcup" dialog/event does not trigger during gameplay.
+- [ ] **Lobby Spectate Transition:** Ensure users in the lobby screen correctly navigate to the Spectate view when the host starts the game.
+- [ ] **Lobby Rules Live Sync:** Update the lobby screen to dynamically listen to and display changes in selected rules, rather than only showing the initial selection.
+- [ ] **Lobby Kick Handling:** Listen for changes to the lobby state so that players are forcibly navigated away when the host kicks them from the lobby.
+- [ ] **Lobby Leave Action:** Implement/fix the feature allowing invited players to manually leave the lobby screen.
+- [ ] **Specify Spectate Bug:** Investigate and provide specifics for the unknown "spectate bug" to make it actionable.
+
+## 2. Social & Friends
+- [ ] **Friend List Real-time Sync:** Fix the friend list stream/listener so it updates automatically when the current user is added by someone else.
+- [ ] **Add Friend 'Not Found' State:** Improve error handling and UI state when searching for a username that does not exist.
+- [ ] **Friend List Performance:** Investigate and optimize the performance issues related to rendering the friend list and adding new friends.
+
+## 3. Profile & Achievements
+- [ ] **Achievements Progress Bar:** Fix the logic/UI for the achievement progress bar so it displays progress correctly.
+- [ ] **Achievements RenderFlex Overflow:** Fix the "yellow lines" (RenderFlex overflow) UI bug on the Achievements screen.
+- [ ] **Account Screen Performance:** Profile and resolve jank/performance issues on the Account screen.
+
+## 4. System & Infrastructure
+- [ ] **Push Notifications:** Debug and fix the push notification configuration to ensure reliable message delivery.
