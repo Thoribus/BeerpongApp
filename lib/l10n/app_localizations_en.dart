@@ -961,7 +961,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileUpdated => 'Profile updated!';
 
   @override
-  String profileSaveFailed(Object error) {
+  String profileSaveFailed(String error) {
     return 'Failed to save: $error';
   }
 
@@ -1067,6 +1067,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPrivacy => 'Privacy Settings';
+
+  @override
+  String get settingsLanguage => 'Language';
 
   @override
   String get feedbackSheetTitle => 'Send Feedback';

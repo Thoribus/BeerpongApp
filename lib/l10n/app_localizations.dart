@@ -1860,7 +1860,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Failed to save: {error}'**
-  String profileSaveFailed(Object error);
+  String profileSaveFailed(String error);
 
   /// Lock label showing required level for locked avatar/background
   ///
@@ -2041,6 +2041,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy Settings'**
   String get settingsPrivacy;
+
+  /// Setting row label for language selection
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
 
   /// Title of the feedback bottom sheet
   ///

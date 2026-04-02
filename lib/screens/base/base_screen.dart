@@ -4,6 +4,7 @@ import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/locale_provider.dart';
 import 'package:beerpongapp/util/theme_provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -27,8 +28,10 @@ class BaseScreenState extends State<BaseScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
     final user = userProvider.user;
     final isDarkMode = themeProvider.isDarkMode;
+    final currentLang = localeProvider.locale.languageCode;
     final selectedIndex = widget.shell.currentIndex;
     final c = AppColors.of(context);
 
@@ -112,6 +115,23 @@ class BaseScreenState extends State<BaseScreen> {
                   secondary: Icon(
                     Icons.dark_mode,
                     color: c.onBackground,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.language, color: c.onBackground),
+                  title: Text(
+                    context.loc.settingsLanguage,
+                    style: TextStyle(color: c.onBackground),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _langChip(context, 'EN', currentLang == 'en', c,
+                          () => localeProvider.setLocale(const Locale('en'))),
+                      const SizedBox(width: 6),
+                      _langChip(context, 'DE', currentLang == 'de', c,
+                          () => localeProvider.setLocale(const Locale('de'))),
+                    ],
                   ),
                 ),
                 ListTile(
@@ -291,6 +311,32 @@ class BaseScreenState extends State<BaseScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _langChip(BuildContext context, String label, bool selected,
+      AppColors c, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected ? Colors.orange : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: selected ? Colors.orange : c.subtle,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : c.subtle,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
         ),
       ),
     );

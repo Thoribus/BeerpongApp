@@ -104,7 +104,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.loc.profileSaveFailed(e)),
+          content: Text(context.loc.profileSaveFailed(e.toString())),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),

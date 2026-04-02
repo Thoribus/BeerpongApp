@@ -12,46 +12,46 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appTitle => 'Beerpong Companion';
 
   @override
-  String get btnCancel => 'Cancel';
+  String get btnCancel => 'Abbrechen';
 
   @override
-  String get btnSave => 'Save';
+  String get btnSave => 'Speichern';
 
   @override
-  String get btnSaving => 'Saving…';
+  String get btnSaving => 'Speichern…';
 
   @override
-  String get btnAdd => 'Add';
+  String get btnAdd => 'Hinzufügen';
 
   @override
-  String get btnClose => 'Close';
+  String get btnClose => 'Schließen';
 
   @override
   String get btnOk => 'OK';
 
   @override
-  String get btnSignInGoogle => 'Sign in with Google';
+  String get btnSignInGoogle => 'Mit Google anmelden';
 
   @override
-  String get labelTeamBlue => 'Team Blue';
+  String get labelTeamBlue => 'Team Blau';
 
   @override
-  String get labelTeamRed => 'Team Red';
+  String get labelTeamRed => 'Team Rot';
 
   @override
   String get labelVs => 'VS';
 
   @override
-  String get labelRules => 'Rules';
+  String get labelRules => 'Regeln';
 
   @override
-  String get labelPlayers => 'Players';
+  String get labelPlayers => 'Spieler';
 
   @override
   String get labelTeams => 'Teams';
 
   @override
-  String get labelTournament => 'Tournament';
+  String get labelTournament => 'Turnier';
 
   @override
   String labelLevelShort(int level) {
@@ -59,144 +59,153 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get loginTagline => 'Track your game. Rule the table.';
+  String get loginTagline => 'Tracke dein Spiel. Beherrsche den Tisch.';
 
   @override
-  String get loginToggleSignIn => 'Sign In';
+  String get loginToggleSignIn => 'Anmelden';
 
   @override
-  String get loginToggleRegister => 'Register';
+  String get loginToggleRegister => 'Registrieren';
 
   @override
-  String get loginFieldUsername => 'Username';
+  String get loginFieldUsername => 'Benutzername';
 
   @override
-  String get loginFieldEmail => 'Email';
+  String get loginFieldEmail => 'E-Mail';
 
   @override
-  String get loginFieldPassword => 'Password';
+  String get loginFieldPassword => 'Passwort';
 
   @override
-  String get loginValidateUsername => 'Enter a username';
+  String get loginValidateUsername => 'Benutzernamen eingeben';
 
   @override
-  String get loginValidateEmail => 'Enter a valid email';
+  String get loginValidateEmail => 'Gültige E-Mail eingeben';
 
   @override
-  String get loginValidatePassword => 'Minimum 6 characters';
+  String get loginValidatePassword => 'Mindestens 6 Zeichen';
 
   @override
-  String get loginForgotPassword => 'Forgot password?';
+  String get loginForgotPassword => 'Passwort vergessen?';
 
   @override
-  String get loginBtnSignIn => 'Sign In';
+  String get loginBtnSignIn => 'Anmelden';
 
   @override
-  String get loginBtnCreateAccount => 'Create Account';
+  String get loginBtnCreateAccount => 'Konto erstellen';
 
   @override
-  String get loginOrContinueWith => 'or continue with';
+  String get loginOrContinueWith => 'oder weiter mit';
 
   @override
-  String get loginContinueGoogle => 'Continue with Google';
+  String get loginContinueGoogle => 'Weiter mit Google';
 
   @override
-  String get loginContinueApple => 'Continue with Apple';
+  String get loginContinueApple => 'Weiter mit Apple';
 
   @override
-  String get loginErrorGeneric => 'Something went wrong. Please try again.';
+  String get loginErrorGeneric =>
+      'Etwas ist schiefgelaufen. Bitte versuche es erneut.';
 
   @override
-  String get loginErrorGoogle => 'Google sign-in failed. Please try again.';
+  String get loginErrorGoogle =>
+      'Google-Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
 
   @override
-  String get loginErrorApple => 'Apple sign-in failed. Please try again.';
+  String get loginErrorApple =>
+      'Apple-Anmeldung fehlgeschlagen. Bitte versuche es erneut.';
 
   @override
-  String get loginErrorEmailFirst => 'Enter your email address first.';
+  String get loginErrorEmailFirst => 'Gib zuerst deine E-Mail-Adresse ein.';
 
   @override
-  String get loginResetEmailSent => 'Password reset email sent!';
+  String get loginResetEmailSent =>
+      'E-Mail zum Zurücksetzen des Passworts gesendet!';
 
   @override
   String get loginErrorResetFailed =>
-      'Could not send reset email. Check the address.';
+      'E-Mail konnte nicht gesendet werden. Überprüfe die Adresse.';
 
   @override
-  String get loginErrUserNotFound => 'No account found with this email.';
+  String get loginErrUserNotFound => 'Kein Konto mit dieser E-Mail gefunden.';
 
   @override
-  String get loginErrWrongPassword => 'Incorrect email or password.';
+  String get loginErrWrongPassword => 'Falsche E-Mail oder falsches Passwort.';
 
   @override
-  String get loginErrEmailInUse => 'An account with this email already exists.';
+  String get loginErrEmailInUse =>
+      'Ein Konto mit dieser E-Mail existiert bereits.';
 
   @override
-  String get loginErrWeakPassword => 'Password must be at least 6 characters.';
+  String get loginErrWeakPassword =>
+      'Das Passwort muss mindestens 6 Zeichen lang sein.';
 
   @override
-  String get loginErrInvalidEmail => 'Please enter a valid email address.';
+  String get loginErrInvalidEmail =>
+      'Bitte gib eine gültige E-Mail-Adresse ein.';
 
   @override
   String get loginErrTooManyRequests =>
-      'Too many attempts. Please try again later.';
+      'Zu viele Versuche. Bitte versuche es später erneut.';
 
   @override
-  String get loginErrAuthFailed => 'Authentication failed. Please try again.';
+  String get loginErrAuthFailed =>
+      'Authentifizierung fehlgeschlagen. Bitte versuche es erneut.';
 
   @override
-  String get homeLetsPlay => 'Let\'s play!';
+  String get homeLetsPlay => 'Los geht\'s!';
 
   @override
   String get homeBeerPong => 'Beer Pong';
 
   @override
-  String get homeBtnNewGame => 'New Game';
+  String get homeBtnNewGame => 'Neues Spiel';
 
   @override
-  String get homeResumeTitle => 'Resume Game';
+  String get homeResumeTitle => 'Spiel fortsetzen';
 
   @override
-  String get homeResumeSubtitle => 'Continue your last game';
+  String get homeResumeSubtitle => 'Setze dein letztes Spiel fort';
 
   @override
   String homePendingInvitations(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'You have $count pending invitations',
-      one: 'You have 1 pending invitation',
+      other: 'Du hast $count ausstehende Einladungen',
+      one: 'Du hast 1 ausstehende Einladung',
     );
     return '$_temp0';
   }
 
   @override
-  String get homeRulebookTitle => 'Rulebook';
+  String get homeRulebookTitle => 'Regelbuch';
 
   @override
-  String get homeRulebookSubtitle => 'Learn how every special rule works';
+  String get homeRulebookSubtitle =>
+      'Erfahre, wie jede Sonderregel funktioniert';
 
   @override
-  String get homeNewGameDialogTitle => 'New Game';
+  String get homeNewGameDialogTitle => 'Neues Spiel';
 
   @override
   String get homeNewGameDialogContent =>
-      'Starting a new game will delete the current game. Do you want to continue?';
+      'Ein neues Spiel zu starten löscht das aktuelle Spiel. Möchtest du fortfahren?';
 
   @override
-  String get homeNewGameDialogConfirm => 'Start New Game';
+  String get homeNewGameDialogConfirm => 'Neues Spiel starten';
 
   @override
-  String get homeGameModeTitle => 'Play Beerpong';
+  String get homeGameModeTitle => 'Beerpong spielen';
 
   @override
-  String get homeGameModeSubtitle => 'Quick, fun rounds';
+  String get homeGameModeSubtitle => 'Schnelle, spaßige Runden';
 
   @override
-  String get homeTournamentTitle => 'Tournament';
+  String get homeTournamentTitle => 'Turnier';
 
   @override
-  String get homeTournamentSubtitle => 'Bracket-style play';
+  String get homeTournamentSubtitle => 'Turniermodus mit Bracket';
 
   @override
   String get gameModeRuleAirballs => 'Airballs';
@@ -205,7 +214,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gameModeRuleBounce => 'Bounce';
 
   @override
-  String get gameModeRulePutback => 'Putback';
+  String get gameModeRulePutback => 'Nachwurf';
 
   @override
   String get gameModeRuleIsland => 'Island';
@@ -214,124 +223,124 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gameModeRuleDeathcup => 'Deathcup';
 
   @override
-  String get gameModeRuleRearrange => 'Rearrange';
+  String get gameModeRuleRearrange => 'Umstellen';
 
   @override
-  String get gameModeNoUser => 'No user logged in!';
+  String get gameModeNoUser => 'Kein Benutzer angemeldet!';
 
   @override
-  String get gameModeNoFriends => 'No friends found!';
+  String get gameModeNoFriends => 'Keine Freunde gefunden!';
 
   @override
   String gameModeInvited(String username) {
-    return 'Invited $username';
+    return '$username eingeladen';
   }
 
   @override
-  String get gameModeInvitationDeclined => 'Invitation declined';
+  String get gameModeInvitationDeclined => 'Einladung abgelehnt';
 
   @override
-  String get gameModeBtnStartGame => 'Start Game';
+  String get gameModeBtnStartGame => 'Spiel starten';
 
   @override
-  String get gameModeBtnStartTournament => 'Start Tournament';
+  String get gameModeBtnStartTournament => 'Turnier starten';
 
   @override
-  String get gameModeDialogSelectPlayer => 'Select a Player';
+  String get gameModeDialogSelectPlayer => 'Spieler auswählen';
 
   @override
-  String get gameModeYourself => 'Yourself';
+  String get gameModeYourself => 'Du selbst';
 
   @override
-  String get gameModeFriends => 'Friends';
+  String get gameModeFriends => 'Freunde';
 
   @override
-  String get gameModeWhoStarts => 'Who starts?';
+  String get gameModeWhoStarts => 'Wer fängt an?';
 
   @override
-  String get gameModeWhichTeamStarts => 'Which team should start?';
+  String get gameModeWhichTeamStarts => 'Welches Team soll anfangen?';
 
   @override
-  String get gameModeTeamBlueStarts => 'Team Blue starts';
+  String get gameModeTeamBlueStarts => 'Team Blau fängt an';
 
   @override
-  String get gameModeTeamRedStarts => 'Team Red starts';
+  String get gameModeTeamRedStarts => 'Team Rot fängt an';
 
   @override
-  String get gameModeToggleSingleGame => 'Single Game';
+  String get gameModeToggleSingleGame => 'Einzelspiel';
 
   @override
-  String get gameModeLabelBlue => 'BLUE';
+  String get gameModeLabelBlue => 'BLAU';
 
   @override
-  String get gameModeLabelRed => 'RED';
+  String get gameModeLabelRed => 'ROT';
 
   @override
-  String get gameModeLabelPlayersUpper => 'PLAYERS';
+  String get gameModeLabelPlayersUpper => 'SPIELER';
 
   @override
-  String get gameModeAddPlayer => 'Add Player';
+  String get gameModeAddPlayer => 'Spieler hinzufügen';
 
   @override
   String gameModePlayerN(int number) {
-    return 'Player $number';
+    return 'Spieler $number';
   }
 
   @override
-  String get gameLoadingTitle => 'Game';
+  String get gameLoadingTitle => 'Spiel';
 
   @override
-  String get gameTapCupSank => 'Tap the cup you sank';
+  String get gameTapCupSank => 'Tippe auf den getroffenen Becher';
 
   @override
   String gameTeamTurn(String teamName) {
-    return '$teamName\'s Turn';
+    return '$teamName ist dran';
   }
 
   @override
-  String get gameNavTable => 'Table';
+  String get gameNavTable => 'Tisch';
 
   @override
-  String get gameNavStats => 'Stats';
+  String get gameNavStats => 'Statistik';
 
   @override
   String get gameVs => 'vs';
 
   @override
-  String get gameMissZone => 'Miss Zone — tap to log airball';
+  String get gameMissZone => 'Fehlzone — tippen für Airball';
 
   @override
-  String get gameTeamStatistics => 'Team Statistics';
+  String get gameTeamStatistics => 'Teamstatistiken';
 
   @override
-  String get gameStatsPlayer => 'Player';
+  String get gameStatsPlayer => 'Spieler';
 
   @override
-  String get gameStatsScore => 'Score';
+  String get gameStatsScore => 'Punkte';
 
   @override
-  String get gameStatsThrows => 'Throws';
+  String get gameStatsThrows => 'Würfe';
 
   @override
-  String get gameStatsMisses => 'Misses';
+  String get gameStatsMisses => 'Fehlwürfe';
 
   @override
   String get gameStatsAirballs => 'Airballs';
 
   @override
-  String get gameUndoLabel => 'Undo';
+  String get gameUndoLabel => 'Rückgängig';
 
   @override
-  String get gameCupsLabel => 'Cups';
+  String get gameCupsLabel => 'Becher';
 
   @override
-  String get gameMoreLabel => 'More';
+  String get gameMoreLabel => 'Mehr';
 
   @override
-  String get gameEndTurnLabel => 'End Turn';
+  String get gameEndTurnLabel => 'Zug beenden';
 
   @override
-  String get gameDeathCupLabel => 'Death Cup';
+  String get gameDeathCupLabel => 'Deathcup';
 
   @override
   String get gameIslandShotLabel => 'Island Shot';
@@ -340,312 +349,322 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gameBounceShotLabel => 'Bounce Shot';
 
   @override
-  String get gameRearrangeCupsLabel => 'Rearrange Cups';
+  String get gameRearrangeCupsLabel => 'Becher umstellen';
 
   @override
-  String get gameSelectPlayer => 'Select Player';
+  String get gameSelectPlayer => 'Spieler auswählen';
 
   @override
-  String get gameWhoMadeIslandShot => 'Who made the island shot?';
+  String get gameWhoMadeIslandShot => 'Wer hat den Island Shot gemacht?';
 
   @override
-  String get gameBounceSelectThrower => 'Bounce Shot — Select Thrower';
+  String get gameBounceSelectThrower => 'Bounce Shot — Werfer auswählen';
 
   @override
-  String get gameEnemyLastTurn => 'Enemy Team\'s Last Turn';
+  String get gameEnemyLastTurn => 'Letzter Zug des Gegnerteams';
 
   @override
-  String get gameBonusCupTitle => 'Choose your free bonus cup';
+  String get gameBonusCupTitle => 'Wähle deinen Gratisbecher';
 
   @override
   String get gameBonusCupSubtitle =>
-      'Island shot reward — pick any remaining cup';
+      'Island-Shot-Belohnung — wähle einen beliebigen Becher';
 
   @override
-  String get gameBonusCupSkip => 'Skip bonus';
+  String get gameBonusCupSkip => 'Bonus überspringen';
 
   @override
-  String get gameLeaveTitle => 'Leave Game?';
+  String get gameLeaveTitle => 'Spiel verlassen?';
 
   @override
   String get gameLeaveContent =>
-      'Your game is saved automatically. You can resume it from the home screen.';
+      'Dein Spiel wird automatisch gespeichert. Du kannst es vom Startbildschirm aus fortsetzen.';
 
   @override
-  String get gameLeaveStay => 'Stay';
+  String get gameLeaveStay => 'Bleiben';
 
   @override
-  String get gameLeaveLeave => 'Leave';
+  String get gameLeaveLeave => 'Verlassen';
 
   @override
-  String get dialogSelectPlayerBody => 'Select the player for the cup action:';
+  String get dialogSelectPlayerBody =>
+      'Wähle den Spieler für die Becheraktion:';
 
   @override
-  String get dialogRearrangeErrorTitle => 'Rearrange Error!';
+  String get dialogRearrangeErrorTitle => 'Umstellungsfehler!';
 
   @override
   String get dialogRearrangeErrorBody =>
-      'You can only rearrange if you have 6 or fewer cups!';
+      'Du kannst nur umstellen, wenn du 6 oder weniger Becher hast!';
 
   @override
-  String get dialogEndTurnTitle => 'End your turn!';
+  String get dialogEndTurnTitle => 'Zug beenden!';
 
   @override
-  String get dialogEndTurnBody => 'Confirm that all cup actions were selected!';
+  String get dialogEndTurnBody =>
+      'Bestätige, dass alle Becheraktionen ausgewählt wurden!';
 
   @override
-  String get dialogEndTurnConfirm => 'End Turn';
+  String get dialogEndTurnConfirm => 'Zug beenden';
 
   @override
-  String get dialogAirballTitle => 'Airball Milestone';
+  String get dialogAirballTitle => 'Airball-Meilenstein';
 
   @override
-  String get dialogAirballBody => 'All players need to drink a shot!';
+  String get dialogAirballBody => 'Alle Spieler müssen einen Shot trinken!';
 
   @override
   String dialogAirballCount(int count) {
-    return 'Total airballs: $count';
+    return 'Airballs insgesamt: $count';
   }
 
   @override
   String get dialogBallsBackTitle => 'Balls Back!';
 
   @override
-  String get dialogBallsBackBody => 'All players hit this round!';
+  String get dialogBallsBackBody => 'Alle Spieler haben getroffen!';
 
   @override
   String get dialogOnFireTitle => 'On Fire!';
 
   @override
-  String get dialogOnFireBody => 'Three consecutive hits!';
+  String get dialogOnFireBody => 'Drei Treffer in Folge!';
 
   @override
   String get dialogBitchCupTitle => 'Bitch Cup!';
 
   @override
-  String get dialogBitchCupBody => 'Drop your pants!';
+  String get dialogBitchCupBody => 'Hose runter!';
 
   @override
-  String get dialogGameOverTitle => 'Game Over';
+  String get dialogGameOverTitle => 'Spiel vorbei';
 
   @override
-  String get dialogGameOverGoStats => 'Go to Stats';
+  String get dialogGameOverGoStats => 'Zu den Statistiken';
 
   @override
-  String get dialogGameOverGoHome => 'Go to Home';
+  String get dialogGameOverGoHome => 'Zum Startbildschirm';
 
   @override
-  String get rulebookSpecialBadge => 'SPECIAL';
+  String get rulebookSpecialBadge => 'SPEZIAL';
 
   @override
-  String get rulebookHowToActivate => 'How to activate';
+  String get rulebookHowToActivate => 'So aktivierst du es';
 
   @override
   String get rulebookAirballsTagline =>
-      'Miss out loud — your team pays the price.';
+      'Komplett daneben — dein Team zahlt den Preis.';
 
   @override
   String get rulebookAirballsDescription =>
-      'An airball is a throw that misses every cup without touching anything. When a team accumulates 3 airballs in total, all players must take a penalty sip. The counter resets and keeps climbing.';
+      'Ein Airball ist ein Wurf, der keinen Becher berührt. Wenn ein Team insgesamt 3 Airballs ansammelt, müssen alle Spieler einen Strafschluck trinken. Der Zähler wird zurückgesetzt und zählt weiter.';
 
   @override
-  String get rulebookAirballsStep1 => 'Enable \"Airballs\" in game setup.';
+  String get rulebookAirballsStep1 =>
+      'Aktiviere \"Airballs\" in den Spieleinstellungen.';
 
   @override
   String get rulebookAirballsStep2 =>
-      'When a shot misses completely, tap the orange miss zone below the cups.';
+      'Wenn ein Wurf komplett daneben geht, tippe auf die orangene Fehlzone unter den Bechern.';
 
   @override
   String get rulebookAirballsStep3 =>
-      'At every 3rd airball, a dialog prompts the penalty.';
+      'Bei jedem 3. Airball erscheint ein Dialog für die Strafe.';
 
   @override
   String get rulebookAirballsTip =>
-      'The miss zone only appears when the Airballs rule is active — remember to tap it on every complete miss.';
+      'Die Fehlzone erscheint nur, wenn die Airball-Regel aktiv ist — denk daran, bei jedem kompletten Fehlwurf darauf zu tippen.';
 
   @override
   String get rulebookBounceTagline =>
-      'One ball, two cups — but the defense can swat it.';
+      'Ein Ball, zwei Becher — aber die Verteidigung kann abwehren.';
 
   @override
   String get rulebookBounceDescription =>
-      'A bounce shot is a throw where the ball bounces off the table before landing in a cup. It rewards risk: a successful bounce removes the hit cup plus one additional random cup. However, the defending team is allowed to swat the ball away after the first bounce, so it can be blocked.';
+      'Ein Bounce Shot ist ein Wurf, bei dem der Ball vom Tisch abprallt, bevor er in einem Becher landet. Es belohnt Risiko: Ein erfolgreicher Bounce entfernt den getroffenen Becher plus einen zusätzlichen zufälligen Becher. Allerdings darf das verteidigende Team den Ball nach dem ersten Aufprall wegschlagen.';
 
   @override
-  String get rulebookBounceStep1 => 'Enable \"Bounce\" in game setup.';
+  String get rulebookBounceStep1 =>
+      'Aktiviere \"Bounce\" in den Spieleinstellungen.';
 
   @override
   String get rulebookBounceStep2 =>
-      'During your turn, open the action menu (⋯) and tap \"Bounce Shot\".';
+      'Öffne während deines Zuges das Aktionsmenü (⋯) und tippe auf \"Bounce Shot\".';
 
   @override
   String get rulebookBounceStep3 =>
-      'Select who made the bounce, then tap the cup they sank.';
+      'Wähle, wer den Bounce gemacht hat, und tippe dann auf den getroffenen Becher.';
 
   @override
   String get rulebookBounceTip =>
-      'Bounce shots are high-risk, high-reward. Save them for when you need to close a gap quickly.';
+      'Bounce Shots sind risikoreich, aber lohnenswert. Hebe sie für Situationen auf, in denen du schnell aufholen musst.';
 
   @override
   String get rulebookPutbackTagline =>
-      'The game isn\'t over until the last redemption throw lands.';
+      'Das Spiel ist nicht vorbei, bis der letzte Nachwurf gelandet ist.';
 
   @override
   String get rulebookPutbackDescription =>
-      'When a team sinks the opponent\'s final cup, the losing side earns one redemption throw per player. If any throw lands, the last cup is restored and the game continues into overtime. Every player must attempt their throw before the result is decided.';
+      'Wenn ein Team den letzten Becher des Gegners trifft, bekommt das verlierende Team einen Nachwurf pro Spieler. Wenn ein Wurf trifft, wird der letzte Becher wiederhergestellt und das Spiel geht in die Verlängerung. Jeder Spieler muss seinen Wurf versuchen, bevor das Ergebnis feststeht.';
 
   @override
-  String get rulebookPutbackStep1 => 'Enable \"Putback\" in game setup.';
+  String get rulebookPutbackStep1 =>
+      'Aktiviere \"Nachwurf\" in den Spieleinstellungen.';
 
   @override
   String get rulebookPutbackStep2 =>
-      'When the last cup is sunk, the redemption dialog appears automatically.';
+      'Wenn der letzte Becher getroffen wird, erscheint der Nachwurf-Dialog automatisch.';
 
   @override
   String get rulebookPutbackStep3 =>
-      'Each losing-team player takes one shot. A hit keeps the game alive.';
+      'Jeder Spieler des verlierenden Teams wirft einmal. Ein Treffer hält das Spiel am Leben.';
 
   @override
   String get rulebookPutbackTip =>
-      'If multiple redemption throws land, only one cup is restored — aim carefully.';
+      'Wenn mehrere Nachwürfe treffen, wird trotzdem nur ein Becher wiederhergestellt — ziele sorgfältig.';
 
   @override
-  String get rulebookIslandTagline => 'An isolated cup means a free bonus cup.';
+  String get rulebookIslandTagline =>
+      'Ein isolierter Becher bedeutet einen Gratisbecher.';
 
   @override
   String get rulebookIslandDescription =>
-      'An island cup is one with no neighbours — completely surrounded by empty space. A designated shooter can call an island shot on it. If they sink it, they win that cup plus a bonus cup of their choice. A miss scores nothing and the attempt is used up.';
+      'Ein Island-Becher ist einer ohne Nachbarn — komplett von leeren Plätzen umgeben. Ein bestimmter Werfer kann einen Island Shot darauf ansagen. Trifft er, gewinnt er diesen Becher plus einen Bonusbecher seiner Wahl. Ein Fehlwurf bringt nichts und der Versuch ist verbraucht.';
 
   @override
-  String get rulebookIslandStep1 => 'Enable \"Island\" in game setup.';
+  String get rulebookIslandStep1 =>
+      'Aktiviere \"Island\" in den Spieleinstellungen.';
 
   @override
   String get rulebookIslandStep2 =>
-      'Tap \"Island Shot\" in the action menu and select the shooter.';
+      'Tippe im Aktionsmenü auf \"Island Shot\" und wähle den Werfer.';
 
   @override
   String get rulebookIslandStep3 =>
-      'Island cups glow yellow. Tap one to take the shot.';
+      'Island-Becher leuchten gelb. Tippe auf einen, um den Wurf zu machen.';
 
   @override
   String get rulebookIslandStep4 =>
-      'On success, pick your free bonus cup from the bottom sheet.';
+      'Bei Erfolg wähle deinen Gratisbecher im Auswahlmenü.';
 
   @override
   String get rulebookIslandTip =>
-      'If only one island cup exists, the shot triggers automatically after selecting the shooter — no extra tap needed.';
+      'Wenn nur ein Island-Becher existiert, wird der Wurf automatisch ausgelöst, nachdem der Werfer ausgewählt wurde — kein extra Tippen nötig.';
 
   @override
   String get rulebookDeathcupTagline =>
-      'Sink the cup being drunk and the game ends instantly.';
+      'Triff den Becher, der gerade getrunken wird, und das Spiel endet sofort.';
 
   @override
   String get rulebookDeathcupDescription =>
-      'When the Deathcup rule is active, each cup that has been sunk but not yet fully drunk is a live deathcup. If a player lands a ball in it while an opponent is still drinking, that team immediately loses — all remaining cups are cleared.';
+      'Wenn die Deathcup-Regel aktiv ist, ist jeder getroffene, aber noch nicht ausgetrunkene Becher ein aktiver Deathcup. Wenn ein Spieler den Ball hineinwirft, während ein Gegner noch trinkt, verliert dieses Team sofort — alle verbleibenden Becher werden abgeräumt.';
 
   @override
-  String get rulebookDeathcupStep1 => 'Enable \"Deathcup\" in game setup.';
+  String get rulebookDeathcupStep1 =>
+      'Aktiviere \"Deathcup\" in den Spieleinstellungen.';
 
   @override
   String get rulebookDeathcupStep2 =>
-      'When a deathcup is sunk, open the action menu (⋯) and tap \"Deathcup\".';
+      'Wenn ein Deathcup getroffen wird, öffne das Aktionsmenü (⋯) und tippe auf \"Deathcup\".';
 
   @override
   String get rulebookDeathcupStep3 =>
-      'Select the player who made the shot to trigger the instant win.';
+      'Wähle den Spieler, der den Wurf gemacht hat, um den Sofortsieg auszulösen.';
 
   @override
   String get rulebookDeathcupTip =>
-      'Keep track of which cups opponents are currently drinking — they\'re your highest-value targets.';
+      'Behalte im Auge, welche Becher die Gegner gerade trinken — das sind deine wertvollsten Ziele.';
 
   @override
   String get rulebookRearrangeTagline =>
-      'Regroup scattered cups into a tighter formation.';
+      'Verstreute Becher in eine engere Formation bringen.';
 
   @override
   String get rulebookRearrangeDescription =>
-      'Once per game, when 6 or fewer cups remain on your side, you can call a re-rack. Cups are rearranged into a standard triangle formation, closing the gaps that make individual cups harder to hit. The re-rack can only be used once and only within the 6-cup limit.';
+      'Einmal pro Spiel, wenn 6 oder weniger Becher auf deiner Seite übrig sind, kannst du ein Re-Rack ansagen. Die Becher werden in eine Standard-Dreiecksformation umgestellt, die Lücken schließt. Das Re-Rack kann nur einmal und nur innerhalb des 6-Becher-Limits verwendet werden.';
 
   @override
-  String get rulebookRearrangeStep1 => 'Enable \"Rearrange\" in game setup.';
+  String get rulebookRearrangeStep1 =>
+      'Aktiviere \"Umstellen\" in den Spieleinstellungen.';
 
   @override
   String get rulebookRearrangeStep2 =>
-      'When 6 or fewer cups remain, tap the re-rack button in the bottom dock bar.';
+      'Wenn 6 oder weniger Becher übrig sind, tippe auf den Umstell-Button in der unteren Leiste.';
 
   @override
   String get rulebookRearrangeStep3 =>
-      'Cups immediately shift into a compact triangle.';
+      'Die Becher werden sofort in ein kompaktes Dreieck verschoben.';
 
   @override
   String get rulebookRearrangeTip =>
-      'Save your re-rack for when cups are most scattered — a tight triangle is significantly easier to aim at.';
+      'Spare dein Re-Rack für den Moment, wenn die Becher am meisten verstreut sind — ein enges Dreieck ist deutlich leichter zu treffen.';
 
   @override
-  String get statsTabStats => 'Stats';
+  String get statsTabStats => 'Statistik';
 
   @override
-  String get statsTabPerformance => 'Performance';
+  String get statsTabPerformance => 'Leistung';
 
   @override
-  String get statsTabProgress => 'Progress';
+  String get statsTabProgress => 'Fortschritt';
 
   @override
-  String get statsTabBreakdown => 'Breakdown';
+  String get statsTabBreakdown => 'Aufschlüsselung';
 
   @override
-  String get statsTabHistory => 'History';
+  String get statsTabHistory => 'Verlauf';
 
   @override
-  String get statsSignInPrompt => 'Sign in to view your statistics';
+  String get statsSignInPrompt =>
+      'Melde dich an, um deine Statistiken zu sehen';
 
   @override
-  String get statsFailedToLoad => 'Failed to load games';
+  String get statsFailedToLoad => 'Spiele konnten nicht geladen werden';
 
   @override
-  String get statsNoGamesYet => 'No games recorded yet.';
+  String get statsNoGamesYet => 'Noch keine Spiele aufgezeichnet.';
 
   @override
-  String get statsLiveView => 'Live view';
+  String get statsLiveView => 'Live-Ansicht';
 
   @override
-  String get statsGameStatistics => 'Game Statistics';
+  String get statsGameStatistics => 'Spielstatistiken';
 
   @override
-  String get statsViewTeam => 'View Team';
+  String get statsViewTeam => 'Team anzeigen';
 
   @override
-  String get statsViewGameStats => 'View Game Stats';
+  String get statsViewGameStats => 'Spielstatistiken anzeigen';
 
   @override
-  String get statsViewTable => 'View Table';
+  String get statsViewTable => 'Tisch anzeigen';
 
   @override
-  String get statsColumnPlayer => 'Player';
+  String get statsColumnPlayer => 'Spieler';
 
   @override
-  String get statsColumnScore => 'Score';
+  String get statsColumnScore => 'Punkte';
 
   @override
-  String get statsColumnThrows => 'Throws';
+  String get statsColumnThrows => 'Würfe';
 
   @override
-  String get statsColumnMiss => 'Miss';
+  String get statsColumnMiss => 'Fehl';
 
   @override
-  String get statsColumnHitRate => 'Hit%';
+  String get statsColumnHitRate => 'Treff%';
 
   @override
   String get statsColumnBounce => 'Bounce';
 
   @override
-  String get statsColumnDef => 'Def';
+  String get statsColumnDef => 'Vert.';
 
   @override
-  String get statsAchievements => 'Achievements';
+  String get statsAchievements => 'Erfolge';
 
   @override
-  String get statsTeamStatistics => 'Team Statistics';
+  String get statsTeamStatistics => 'Teamstatistiken';
 
   @override
   String get statsMvp => 'MVP';
@@ -654,95 +673,95 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statsAirballer => 'Airballer';
 
   @override
-  String get statsMissManiac => 'Miss Maniac';
+  String get statsMissManiac => 'Fehlwurf-Maniac';
 
   @override
-  String get statsSniper => 'Sniper';
+  String get statsSniper => 'Scharfschütze';
 
   @override
-  String get statsTierRoadmap => 'Tier Roadmap';
+  String get statsTierRoadmap => 'Stufen-Roadmap';
 
   @override
-  String get statsAchievementProgress => 'Achievement Progress';
+  String get statsAchievementProgress => 'Erfolgsfortschritt';
 
   @override
-  String get statsUnlockedTitles => 'Unlocked Titles';
+  String get statsUnlockedTitles => 'Freigeschaltete Titel';
 
   @override
-  String get statsAlmostThere => 'Almost There';
+  String get statsAlmostThere => 'Fast geschafft';
 
   @override
   String statsMaxLevelReached(int xp) {
-    return 'Max level reached — $xp XP total';
+    return 'Maximallevel erreicht — $xp XP insgesamt';
   }
 
   @override
   String statsReachLevelUnlock(int level, String title) {
-    return 'Reach Level $level to unlock $title';
+    return 'Erreiche Level $level, um $title freizuschalten';
   }
 
   @override
-  String get perfSummaryTitle => 'Performance Summary';
+  String get perfSummaryTitle => 'Leistungsübersicht';
 
   @override
-  String get perfHeatMapTitle => 'Cups Hit Heat Map';
+  String get perfHeatMapTitle => 'Becher-Treffer-Heatmap';
 
   @override
-  String get perfRowAccuracyTitle => 'Row Accuracy';
+  String get perfRowAccuracyTitle => 'Reihen-Genauigkeit';
 
   @override
-  String get perfFilterAll => 'All';
+  String get perfFilterAll => 'Alle';
 
   @override
-  String get perfFilterLast10 => 'Last 10';
+  String get perfFilterLast10 => 'Letzte 10';
 
   @override
-  String get perfFilterLast5 => 'Last 5';
+  String get perfFilterLast5 => 'Letzte 5';
 
   @override
-  String get perfFilterLast3 => 'Last 3';
+  String get perfFilterLast3 => 'Letzte 3';
 
   @override
-  String get perfNoData => 'No data yet.';
+  String get perfNoData => 'Noch keine Daten.';
 
   @override
-  String get perfRowFront => 'Front';
+  String get perfRowFront => 'Vorne';
 
   @override
-  String get perfRowMid => 'Mid';
+  String get perfRowMid => 'Mitte';
 
   @override
-  String get perfRowBack => 'Back';
+  String get perfRowBack => 'Hinten';
 
   @override
-  String get perfRowApex => 'Apex';
+  String get perfRowApex => 'Spitze';
 
   @override
-  String get statTotalScore => 'Total Score';
+  String get statTotalScore => 'Gesamtpunktzahl';
 
   @override
-  String get statTotalMisses => 'Total Misses';
+  String get statTotalMisses => 'Fehlwürfe gesamt';
 
   @override
-  String get statTotalAirballs => 'Total Airballs';
+  String get statTotalAirballs => 'Airballs gesamt';
 
   @override
-  String get statCupsHit => 'Cups Hit';
+  String get statCupsHit => 'Becher getroffen';
 
   @override
-  String get statHitRate => 'Hit Rate';
+  String get statHitRate => 'Trefferquote';
 
   @override
-  String get statWinRate => 'Win Rate';
+  String get statWinRate => 'Siegquote';
 
   @override
-  String get statBounceRate => 'Bounce Rate';
+  String get statBounceRate => 'Bounce-Quote';
 
   @override
-  String get statIslandConv => 'Island Conv.';
+  String get statIslandConv => 'Island-Konv.';
 
   @override
-  String get statDefended => 'Defended';
+  String get statDefended => 'Verteidigt';
 
   @override
   String get statOnFire => 'On Fire';
@@ -751,218 +770,221 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statHeatingUp => 'Heating Up';
 
   @override
-  String get friendsTabFriendlist => 'Friendlist';
+  String get friendsTabFriendlist => 'Freundesliste';
 
   @override
-  String get friendsTabLeaderboard => 'Leaderboard';
+  String get friendsTabLeaderboard => 'Rangliste';
 
   @override
-  String get friendsTabSocials => 'Socials';
+  String get friendsTabSocials => 'Soziales';
 
   @override
-  String get friendsSignInPrompt => 'Sign in to view your friends';
+  String get friendsSignInPrompt => 'Melde dich an, um deine Freunde zu sehen';
 
   @override
-  String get friendsMustSignIn => 'You must be signed in to add friends.';
+  String get friendsMustSignIn =>
+      'Du musst angemeldet sein, um Freunde hinzuzufügen.';
 
   @override
   String get friendsNoFriends =>
-      'No friends yet. Add one using the + button above.';
+      'Noch keine Freunde. Füge einen über den + Button oben hinzu.';
 
   @override
-  String get friendsNoActivity => 'Add friends to see activity here.';
+  String get friendsNoActivity =>
+      'Füge Freunde hinzu, um hier Aktivitäten zu sehen.';
 
   @override
-  String get friendsNoRecentActivity => 'No recent activity yet.';
+  String get friendsNoRecentActivity => 'Noch keine Aktivitäten.';
 
   @override
-  String get friendsNoFriendsFound => 'No friends found.';
+  String get friendsNoFriendsFound => 'Keine Freunde gefunden.';
 
   @override
-  String get friendsRemoveTitle => 'Remove Friend';
+  String get friendsRemoveTitle => 'Freund entfernen';
 
   @override
   String friendsRemoveBody(String username) {
-    return 'Remove $username from your friends?';
+    return '$username aus deiner Freundesliste entfernen?';
   }
 
   @override
-  String get friendsRemoveConfirm => 'Remove';
+  String get friendsRemoveConfirm => 'Entfernen';
 
   @override
-  String get friendsAddTitle => 'Add a Friend';
+  String get friendsAddTitle => 'Freund hinzufügen';
 
   @override
-  String get friendsSearchHint => 'Search by username…';
+  String get friendsSearchHint => 'Nach Benutzernamen suchen…';
 
   @override
-  String get friendsNoUsersFound => 'No users found.';
+  String get friendsNoUsersFound => 'Keine Benutzer gefunden.';
 
   @override
-  String get friendsAddBtn => 'Add';
+  String get friendsAddBtn => 'Hinzufügen';
 
   @override
-  String get friendsShareQr => 'Share / Scan QR';
+  String get friendsShareQr => 'Teilen / QR scannen';
 
   @override
-  String get friendsIdCopied => 'ID copied to clipboard';
+  String get friendsIdCopied => 'ID in Zwischenablage kopiert';
 
   @override
-  String get friendsScanQrBtn => 'Scan QR Code';
+  String get friendsScanQrBtn => 'QR-Code scannen';
 
   @override
-  String get friendsWatchBtn => 'Watch';
+  String get friendsWatchBtn => 'Zuschauen';
 
   @override
   String get shopTabAvatar => 'Avatar';
 
   @override
-  String get shopTabUserCard => 'User Card';
+  String get shopTabUserCard => 'Benutzerkarte';
 
   @override
-  String get shopTabInGame => 'In Game';
+  String get shopTabInGame => 'Im Spiel';
 
   @override
-  String get shopSignInEarnStars => 'Sign in to earn Stars';
+  String get shopSignInEarnStars => 'Melde dich an, um Sterne zu verdienen';
 
   @override
-  String get shopGetStars => 'Get Stars';
+  String get shopGetStars => 'Sterne holen';
 
   @override
-  String get shopEarnStarsHint => 'Earn ⭐ stars to spend in the shop.';
+  String get shopEarnStarsHint => 'Verdiene ⭐ Sterne zum Ausgeben im Shop.';
 
   @override
-  String get shopSupporterTitle => 'Thank you! ⭐';
+  String get shopSupporterTitle => 'Danke! ⭐';
 
   @override
   String get shopSupporterBody =>
-      'You\'re now a Supporter! Your Supporter badge is live on your profile, and you\'re helping keep the app running. Thank you!';
+      'Du bist jetzt Supporter! Dein Supporter-Abzeichen ist auf deinem Profil aktiv und du hilfst, die App am Laufen zu halten. Danke!';
 
   @override
-  String get shopSupporterBtn => 'Awesome!';
+  String get shopSupporterBtn => 'Super!';
 
   @override
   String shopStarsAwarded(int count) {
-    return 'You got $count ⭐!';
+    return 'Du hast $count ⭐ erhalten!';
   }
 
   @override
   String shopPurchaseFailed(String message) {
-    return 'Purchase failed: $message';
+    return 'Kauf fehlgeschlagen: $message';
   }
 
   @override
-  String get shopNoAdAvailable => 'No ad available right now. Try again later.';
+  String get shopNoAdAvailable =>
+      'Gerade keine Werbung verfügbar. Versuche es später erneut.';
 
   @override
-  String get shopEarned50Stars => 'You earned 50 ⭐!';
+  String get shopEarned50Stars => 'Du hast 50 ⭐ verdient!';
 
   @override
-  String get shopEarnFreeStars => 'Earn stars for free by playing games!';
+  String get shopEarnFreeStars => 'Verdiene Sterne kostenlos durch Spielen!';
 
   @override
-  String get shopRestorePurchases => 'Restore Purchases';
+  String get shopRestorePurchases => 'Käufe wiederherstellen';
 
   @override
-  String get shopWatchVideo => 'Watch a short video';
+  String get shopWatchVideo => 'Ein kurzes Video schauen';
 
   @override
   String get shopDailyLimitReached =>
-      'Daily limit reached — come back tomorrow';
+      'Tageslimit erreicht — komm morgen wieder';
 
   @override
-  String get shopSupporterBadge => 'You\'re a Supporter ✓';
+  String get shopSupporterBadge => 'Du bist Supporter ✓';
 
   @override
-  String get shopBuyBtn => 'Buy';
+  String get shopBuyBtn => 'Kaufen';
 
   @override
-  String get shopComingSoon => 'Coming soon';
+  String get shopComingSoon => 'Kommt bald';
 
   @override
-  String get accountProfile => 'Profile';
+  String get accountProfile => 'Profil';
 
   @override
   String get accountSupporter => 'Supporter';
 
   @override
-  String get accountFeedbackTooltip => 'Send feedback';
+  String get accountFeedbackTooltip => 'Feedback senden';
 
   @override
-  String get accountSignOutTooltip => 'Sign out';
+  String get accountSignOutTooltip => 'Abmelden';
 
   @override
-  String get accountSignOutTitle => 'Sign out?';
+  String get accountSignOutTitle => 'Abmelden?';
 
   @override
   String get accountSignOutBody =>
-      'You will be returned to the sign-in screen.';
+      'Du wirst zum Anmeldebildschirm zurückgeleitet.';
 
   @override
-  String get accountSignOutConfirm => 'Sign out';
+  String get accountSignOutConfirm => 'Abmelden';
 
   @override
   String get achievementStagesBronze => 'Bronze';
 
   @override
-  String get achievementStagesSilver => 'Silver';
+  String get achievementStagesSilver => 'Silber';
 
   @override
   String get achievementStagesGold => 'Gold';
 
   @override
-  String get achievementStagesDiamond => 'Diamond';
+  String get achievementStagesDiamond => 'Diamant';
 
   @override
-  String get achievementMaxed => 'Maxed!';
+  String get achievementMaxed => 'Maximal!';
 
   @override
-  String get achievementFullyMastered => 'Fully mastered!';
+  String get achievementFullyMastered => 'Vollständig gemeistert!';
 
   @override
   String achievementProgress(int current, int next) {
-    return 'Progress: $current / $next';
+    return 'Fortschritt: $current / $next';
   }
 
   @override
   String achievementUnlocksTitle(String title) {
-    return 'Unlocks title: \"$title\"';
+    return 'Schaltet Titel frei: \"$title\"';
   }
 
   @override
-  String get profileSectionUsername => 'Username';
+  String get profileSectionUsername => 'Benutzername';
 
   @override
   String get profileSectionAvatar => 'Avatar';
 
   @override
-  String get profileSectionBackground => 'Background';
+  String get profileSectionBackground => 'Hintergrund';
 
   @override
-  String get profileSectionTitle => 'Title';
+  String get profileSectionTitle => 'Titel';
 
   @override
-  String get profileUsernamePlaceholder => 'Choose a username';
+  String get profileUsernamePlaceholder => 'Wähle einen Benutzernamen';
 
   @override
-  String get profileUsernameChecking => 'Checking…';
+  String get profileUsernameChecking => 'Prüfe…';
 
   @override
-  String get profileUsernameAvailable => 'Available';
+  String get profileUsernameAvailable => 'Verfügbar';
 
   @override
-  String get profileUsernameTaken => 'Already taken';
+  String get profileUsernameTaken => 'Bereits vergeben';
 
   @override
   String get profileUsernameInvalid =>
-      '3–20 chars, letters/numbers/underscores/spaces, no consecutive __ or spaces';
+      '3–20 Zeichen, Buchstaben/Zahlen/Unterstriche/Leerzeichen, keine aufeinanderfolgenden __ oder Leerzeichen';
 
   @override
-  String get profileUpdated => 'Profile updated!';
+  String get profileUpdated => 'Profil aktualisiert!';
 
   @override
-  String profileSaveFailed(Object error) {
-    return 'Failed to save: $error';
+  String profileSaveFailed(String error) {
+    return 'Speichern fehlgeschlagen: $error';
   }
 
   @override
@@ -972,211 +994,216 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String dialogGameOverWinners(String winners) {
-    return '$winners have won the game!';
+    return '$winners haben das Spiel gewonnen!';
   }
 
   @override
-  String get achievementsMaxLevel => 'Max level reached';
+  String get achievementsMaxLevel => 'Maximallevel erreicht';
 
   @override
   String achievementsXpProgress(int xp, int toNext, int nextLevel) {
-    return '$xp XP · $toNext XP to Level $nextLevel';
+    return '$xp XP · $toNext XP bis Level $nextLevel';
   }
 
   @override
-  String get achievementsBestStreak => 'Best Streak';
+  String get achievementsBestStreak => 'Beste Serie';
 
   @override
-  String get shopSignInBrowse => 'Sign in to browse the shop';
+  String get shopSignInBrowse => 'Melde dich an, um den Shop zu durchstöbern';
 
   @override
-  String get shopSectionProfilePictures => 'Profile Pictures';
+  String get shopSectionProfilePictures => 'Profilbilder';
 
   @override
-  String get shopSectionAvatarBorders => 'Avatar Borders';
+  String get shopSectionAvatarBorders => 'Avatar-Rahmen';
 
   @override
-  String get shopSectionEmblemsAndMedals => 'Emblems & Medals';
+  String get shopSectionEmblemsAndMedals => 'Embleme & Medaillen';
 
   @override
-  String get shopSectionCupSkins => 'Cup Skins';
+  String get shopSectionCupSkins => 'Becher-Skins';
 
   @override
-  String get shopSectionTableThemes => 'Table Themes';
+  String get shopSectionTableThemes => 'Tisch-Designs';
 
   @override
-  String get shopSectionTitles => 'Titles';
+  String get shopSectionTitles => 'Titel';
 
   @override
-  String get shopSectionCardBackgrounds => 'Card Backgrounds';
+  String get shopSectionCardBackgrounds => 'Karten-Hintergründe';
 
   @override
   String get shopCardBackgroundsNote =>
-      'Card backgrounds are unlocked for free by levelling up. Manage them in your profile.';
+      'Karten-Hintergründe werden kostenlos durch Levelaufstiege freigeschaltet. Verwalte sie in deinem Profil.';
 
   @override
-  String get shopEquip => 'Equip';
+  String get shopEquip => 'Ausrüsten';
 
   @override
-  String get shopUnequip => 'Unequip';
+  String get shopUnequip => 'Ablegen';
 
   @override
-  String get shopYourBalance => 'Your balance';
+  String get shopYourBalance => 'Dein Guthaben';
 
   @override
-  String get shopCost => 'Cost';
+  String get shopCost => 'Kosten';
 
   @override
   String shopBuyForStars(int price) {
-    return 'Buy for ⭐ $price';
+    return 'Kaufen für ⭐ $price';
   }
 
   @override
   String shopNeedMoreStars(int count) {
-    return 'You need $count more ⭐ to buy this.';
+    return 'Du brauchst noch $count ⭐ um das zu kaufen.';
   }
 
   @override
-  String get shopGetMoreStars => 'Get More Stars';
+  String get shopGetMoreStars => 'Mehr Sterne holen';
 
   @override
   String shopItemPurchased(String name) {
-    return '$name purchased! ⭐';
+    return '$name gekauft! ⭐';
   }
 
   @override
-  String get shopNotEnoughStars => 'Not enough stars!';
+  String get shopNotEnoughStars => 'Nicht genug Sterne!';
 
   @override
   String get navShop => 'Shop';
 
   @override
-  String get navFriends => 'Friends';
+  String get navFriends => 'Freunde';
 
   @override
   String get navHome => 'Home';
 
   @override
-  String get navGames => 'Games';
+  String get navGames => 'Spiele';
 
   @override
-  String get navProfile => 'Profile';
+  String get navProfile => 'Profil';
 
   @override
-  String get settingsDarkMode => 'Dark Mode';
+  String get settingsDarkMode => 'Dunkelmodus';
 
   @override
-  String get settingsPrivacy => 'Privacy Settings';
+  String get settingsPrivacy => 'Datenschutzeinstellungen';
 
   @override
-  String get feedbackSheetTitle => 'Send Feedback';
+  String get settingsLanguage => 'Sprache';
 
   @override
-  String get feedbackHint => 'Describe the issue or idea…';
+  String get feedbackSheetTitle => 'Feedback senden';
 
   @override
-  String get feedbackSend => 'Send';
+  String get feedbackHint => 'Beschreibe das Problem oder die Idee…';
 
   @override
-  String get feedbackSuccess => 'Thanks for your feedback!';
+  String get feedbackSend => 'Senden';
 
   @override
-  String get feedbackError => 'Could not send feedback. Try again.';
+  String get feedbackSuccess => 'Danke für dein Feedback!';
 
   @override
-  String get feedbackCategoryBug => 'Bug';
+  String get feedbackError =>
+      'Feedback konnte nicht gesendet werden. Versuche es erneut.';
 
   @override
-  String get feedbackCategorySuggestion => 'Suggestion';
+  String get feedbackCategoryBug => 'Fehler';
 
   @override
-  String get feedbackCategoryOther => 'Other';
+  String get feedbackCategorySuggestion => 'Vorschlag';
 
   @override
-  String get invitationsTitle => 'Invitations';
+  String get feedbackCategoryOther => 'Sonstiges';
 
   @override
-  String get invitationsNotSignedIn => 'Not signed in';
+  String get invitationsTitle => 'Einladungen';
 
   @override
-  String get invitationsNoPending => 'No pending invitations';
+  String get invitationsNotSignedIn => 'Nicht angemeldet';
 
   @override
-  String get invitationsDeclined => 'Invitation declined';
+  String get invitationsNoPending => 'Keine ausstehenden Einladungen';
 
   @override
-  String get invitationsDeclineBtn => 'Decline';
+  String get invitationsDeclined => 'Einladung abgelehnt';
 
   @override
-  String get invitationsAcceptBtn => 'Accept';
+  String get invitationsDeclineBtn => 'Ablehnen';
 
   @override
-  String get invitationsFromPlayer => 'A player';
+  String get invitationsAcceptBtn => 'Annehmen';
 
   @override
-  String get invitationsInvitedToGame => 'Invited you to a Game';
+  String get invitationsFromPlayer => 'Ein Spieler';
 
   @override
-  String get invitationsInvitedToTournament => 'Invited you to a Tournament';
+  String get invitationsInvitedToGame => 'Hat dich zu einem Spiel eingeladen';
 
   @override
-  String get waitingTitle => 'Waiting…';
+  String get invitationsInvitedToTournament =>
+      'Hat dich zu einem Turnier eingeladen';
+
+  @override
+  String get waitingTitle => 'Warte…';
 
   @override
   String waitingForGame(String host) {
-    return 'Waiting for $host to start the game…';
+    return 'Warte darauf, dass $host das Spiel startet…';
   }
 
   @override
   String waitingForTournament(String host) {
-    return 'Waiting for $host to start the tournament…';
+    return 'Warte darauf, dass $host das Turnier startet…';
   }
 
   @override
-  String get liveGameTitle => 'Live Game';
+  String get liveGameTitle => 'Live-Spiel';
 
   @override
-  String get liveGameSummary => 'Game Summary';
+  String get liveGameSummary => 'Spielzusammenfassung';
 
   @override
-  String get liveTabTable => 'Table';
+  String get liveTabTable => 'Tisch';
 
   @override
-  String get liveTabStats => 'Stats';
+  String get liveTabStats => 'Statistik';
 
   @override
-  String get liveTabTimeline => 'Timeline';
+  String get liveTabTimeline => 'Zeitverlauf';
 
   @override
-  String get liveGameNotFound => 'Game not found.';
+  String get liveGameNotFound => 'Spiel nicht gefunden.';
 
   @override
-  String get liveGameError => 'Something went wrong';
+  String get liveGameError => 'Etwas ist schiefgelaufen';
 
   @override
   String get liveBadgeLive => 'LIVE';
 
   @override
-  String get liveBadgeFinal => 'FINAL';
+  String get liveBadgeFinal => 'ENDE';
 
   @override
-  String get liveStatsAccuracy => 'Accuracy %';
+  String get liveStatsAccuracy => 'Genauigkeit %';
 
   @override
-  String get liveTimelineNoEvents => 'No events yet';
+  String get liveTimelineNoEvents => 'Noch keine Ereignisse';
 
   @override
   String liveTimelineRound(int number) {
-    return 'Round $number';
+    return 'Runde $number';
   }
 
   @override
   String liveTimelineEndOfTurn(String time) {
-    return 'End of turn · $time';
+    return 'Zugende · $time';
   }
 
   @override
-  String get liveEventHit => 'Hit';
+  String get liveEventHit => 'Treffer';
 
   @override
   String get liveEventBounce => 'Bounce';
@@ -1185,7 +1212,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get liveEventIsland => 'Island';
 
   @override
-  String get liveEventDeathCup => 'Death Cup';
+  String get liveEventDeathCup => 'Deathcup';
 
   @override
   String get liveEventAirball => 'Airball';
@@ -1200,72 +1227,73 @@ class AppLocalizationsDe extends AppLocalizations {
   String get spectatelobbyTitle => 'Lobby';
 
   @override
-  String get spectateLobbyGameTitle => 'Game Lobby';
+  String get spectateLobbyGameTitle => 'Spiel-Lobby';
 
   @override
-  String get spectateLobbyError => 'Error loading game.';
+  String get spectateLobbyError => 'Fehler beim Laden des Spiels.';
 
   @override
-  String get spectateLobbyNoPlayers => 'No players yet';
+  String get spectateLobbyNoPlayers => 'Noch keine Spieler';
 
   @override
-  String get spectateLobbyGameSettings => 'Game Settings';
+  String get spectateLobbyGameSettings => 'Spieleinstellungen';
 
   @override
-  String get spectateLobbyMode => 'Mode';
+  String get spectateLobbyMode => 'Modus';
 
   @override
-  String get spectateLobbyStartingTeam => 'Starting Team';
+  String get spectateLobbyStartingTeam => 'Startteam';
 
   @override
-  String get spectateLobbyWaiting => 'Waiting for the host to start the game…';
+  String get spectateLobbyWaiting =>
+      'Warte darauf, dass der Host das Spiel startet…';
 
   @override
-  String get btnLeave => 'Leave';
+  String get btnLeave => 'Verlassen';
 
   @override
   String liveCupsLeft(int count) {
-    return '$count cups left';
+    return '$count Becher übrig';
   }
 
   @override
-  String get liveStatScore => 'Score';
+  String get liveStatScore => 'Punkte';
 
   @override
-  String get liveStatThrows => 'Throws';
+  String get liveStatThrows => 'Würfe';
 
   @override
   String get liveStatAirballs => 'Airballs';
 
   @override
-  String get liveStatMisses => 'Misses';
+  String get liveStatMisses => 'Fehlwürfe';
 
   @override
-  String get liveStatCupsHit => 'Cups Hit';
+  String get liveStatCupsHit => 'Becher getroffen';
 
   @override
   String gameModeTeamStarts(String team) {
-    return '$team starts';
+    return '$team fängt an';
   }
 
   @override
-  String get tournamentCompleteTitle => 'Tournament Complete!';
+  String get tournamentCompleteTitle => 'Turnier abgeschlossen!';
 
   @override
   String get tournamentCompleteBody =>
-      'All matches have been played.\nCheck out the standings!';
+      'Alle Spiele wurden gespielt.\nSchau dir die Platzierungen an!';
 
   @override
-  String get labelPlayer => 'Player';
+  String get labelPlayer => 'Spieler';
 
   @override
-  String get compareTitle => 'Comparison';
+  String get compareTitle => 'Vergleich';
 
   @override
-  String get compareOverview => 'OVERVIEW';
+  String get compareOverview => 'ÜBERSICHT';
 
   @override
-  String get compareStatComparison => 'STAT COMPARISON';
+  String get compareStatComparison => 'STATISTIKVERGLEICH';
 
   @override
   String get compareBouncePercent => 'Bounce %';
@@ -1274,28 +1302,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get compareIslandPercent => 'Island %';
 
   @override
-  String get compareTotalWins => 'Total Wins';
+  String get compareTotalWins => 'Siege gesamt';
 
   @override
   String get compareOnFire => 'On Fire';
 
   @override
-  String get breakdownShotDistribution => 'Shot Distribution';
+  String get breakdownShotDistribution => 'Wurfverteilung';
 
   @override
-  String get breakdownSpecialShots => 'Special Shots';
+  String get breakdownSpecialShots => 'Spezialwürfe';
 
   @override
-  String get breakdownWinContext => 'Win Context';
+  String get breakdownWinContext => 'Sieg-Kontext';
 
   @override
-  String get breakdownHeadToHead => 'Head to Head';
+  String get breakdownHeadToHead => 'Direktvergleich';
 
   @override
-  String get breakdownThrowsLabel => 'throws';
+  String get breakdownThrowsLabel => 'Würfe';
 
   @override
-  String get breakdownHits => 'Hits';
+  String get breakdownHits => 'Treffer';
 
   @override
   String get breakdownBounceShot => 'Bounce Shot';
@@ -1304,76 +1332,76 @@ class AppLocalizationsDe extends AppLocalizations {
   String get breakdownIslandShot => 'Island Shot';
 
   @override
-  String get breakdownWinMarginTitle => 'Win Margin Distribution';
+  String get breakdownWinMarginTitle => 'Siegabstand-Verteilung';
 
   @override
-  String get breakdownDominant => 'Dominant (5+ cups)';
+  String get breakdownDominant => 'Dominant (5+ Becher)';
 
   @override
-  String get breakdownComfortable => 'Comfortable (3–4)';
+  String get breakdownComfortable => 'Komfortabel (3–4)';
 
   @override
-  String get breakdownClose => 'Close (1–2)';
+  String get breakdownClose => 'Knapp (1–2)';
 
   @override
-  String get breakdownClutchRate => 'Clutch Rate';
+  String get breakdownClutchRate => 'Clutch-Rate';
 
   @override
-  String get breakdownClutchDesc => 'Hit the last cup to win';
+  String get breakdownClutchDesc => 'Letzten Becher zum Sieg getroffen';
 
   @override
-  String get breakdownNoGames => 'No games recorded yet.';
+  String get breakdownNoGames => 'Noch keine Spiele aufgezeichnet.';
 
   @override
-  String get breakdownNoOpponents => 'No opponents found.';
+  String get breakdownNoOpponents => 'Keine Gegner gefunden.';
 
   @override
-  String get breakdownNoThrows => 'No throws recorded yet.';
+  String get breakdownNoThrows => 'Noch keine Würfe aufgezeichnet.';
 
   @override
-  String get statsViewAllAchievements => 'View all achievements';
+  String get statsViewAllAchievements => 'Alle Erfolge anzeigen';
 
   @override
-  String get statsColAbbrevScore => 'S';
+  String get statsColAbbrevScore => 'P';
 
   @override
-  String get statsColAbbrevMisses => 'M';
+  String get statsColAbbrevMisses => 'F';
 
   @override
-  String get statsColAbbrevThrows => 'T';
+  String get statsColAbbrevThrows => 'W';
 
   @override
   String get statsColAbbrevAirballs => 'A';
 
   @override
-  String get statsColAbbrevHitRate => 'HR';
+  String get statsColAbbrevHitRate => 'TQ';
 
   @override
-  String get statsCareerHighlights => 'CAREER HIGHLIGHTS';
+  String get statsCareerHighlights => 'KARRIERE-HIGHLIGHTS';
 
   @override
-  String get statsBestStreak => 'Best Streak';
+  String get statsBestStreak => 'Beste Serie';
 
   @override
-  String get statsBestHitRate => 'Best Hit Rate';
+  String get statsBestHitRate => 'Beste Trefferquote';
 
   @override
-  String get statsMostCups => 'Most Cups';
+  String get statsMostCups => 'Meiste Becher';
 
   @override
-  String get statsRecentForm => 'Recent Form';
+  String get statsRecentForm => 'Aktuelle Form';
 
   @override
-  String get statsWins => 'Wins';
+  String get statsWins => 'Siege';
 
   @override
-  String get statsLosses => 'Losses';
+  String get statsLosses => 'Niederlagen';
 
   @override
-  String get statsWinRate => 'Win Rate';
+  String get statsWinRate => 'Siegquote';
 
   @override
-  String get statsHitRate => 'Hit Rate';
+  String get statsHitRate => 'Trefferquote';
 
   @override
   String get statsOnFire => 'On Fire';
@@ -1385,135 +1413,134 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statsIslands => 'Islands';
 
   @override
-  String get statsDefended => 'Defended';
+  String get statsDefended => 'Verteidigt';
 
   @override
   String get statsHeatingUp => 'Heating Up';
 
   @override
-  String get statsLastCup => 'Last Cup';
+  String get statsLastCup => 'Letzter Becher';
 
   @override
-  String get statsAvgPerGame => 'Avg/Game';
+  String get statsAvgPerGame => 'Ø/Spiel';
 
   @override
-  String get statsNightGames => 'Night Games';
+  String get statsNightGames => 'Nachtspiele';
 
   @override
-  String get statsCupsPerGame => 'cups/game';
+  String get statsCupsPerGame => 'Becher/Spiel';
 
   @override
-  String get statsThrowsPerGame => 'throws/game';
+  String get statsThrowsPerGame => 'Würfe/Spiel';
 
   @override
   String statsStreakChip(int count, String type) {
-    return '$count-game $type streak';
+    return '$count-Spiele $type-Serie';
   }
 
   @override
   String statsCurrentStreak(String label) {
-    return 'Current streak: $label';
+    return 'Aktuelle Serie: $label';
   }
 
   @override
   String statsLast10Record(int count, int wins, int losses) {
-    return 'Last $count:  ${wins}W  ${losses}L';
+    return 'Letzte $count:  ${wins}S  ${losses}N';
   }
 
   @override
   String statsXpProgress(int xp, int toNext, int level) {
-    return '$xp XP · $toNext XP to Level $level';
+    return '$xp XP · $toNext XP bis Level $level';
   }
 
   @override
-  String get compareWinRate => 'Win Rate';
+  String get compareWinRate => 'Siegquote';
 
   @override
-  String get compareHitRate => 'Hit Rate';
+  String get compareHitRate => 'Trefferquote';
 
   @override
-  String get shopStarterPackTitle => 'Starter Pack  ·  €1.99';
+  String get shopStarterPackTitle => 'Starterpaket  ·  1,99 €';
 
   @override
   String get shopStarterPackSubtitle => '200 ⭐';
 
   @override
-  String get shopPopularPackTitle => 'Popular Pack  ·  €4.99';
+  String get shopPopularPackTitle => 'Beliebtes Paket  ·  4,99 €';
 
   @override
-  String get shopPopularPackSubtitle => '600 ⭐  ·  Best value';
+  String get shopPopularPackSubtitle => '600 ⭐  ·  Bestes Angebot';
 
   @override
-  String get shopMegaPackTitle => 'Mega Pack  ·  €9.99';
+  String get shopMegaPackTitle => 'Mega-Paket  ·  9,99 €';
 
   @override
   String get shopMegaPackSubtitle => '1 500 ⭐';
 
   @override
-  String get shopSupporterPackFull => 'Supporter Pack  ·  €2.99';
+  String get shopSupporterPackFull => 'Supporter-Paket  ·  2,99 €';
 
   @override
   String get shopSupporterPackFullSubtitle =>
-      '300 ⭐  ·  Supporter badge on your profile';
+      '300 ⭐  ·  Supporter-Abzeichen auf deinem Profil';
 
   @override
   String shopWatchesRemaining(int remaining, int total) {
-    return '+50 ⭐  ·  $remaining of $total watches remaining today';
+    return '+50 ⭐  ·  $remaining von $total Videos heute übrig';
   }
 
   @override
   String socialBeatFriend(String username) {
-    return 'Beat $username';
+    return '$username besiegt';
   }
 
   @override
   String socialLostToFriend(String username) {
-    return 'Lost to $username';
+    return 'Gegen $username verloren';
   }
 
   @override
   String socialSharedGameResult(int myScore, int oppScore, int hitPct) {
-    return '$myScore–$oppScore · $hitPct% hit rate';
+    return '$myScore–$oppScore · $hitPct% Trefferquote';
   }
 
   @override
   String socialWinStreak(int count) {
-    return '🔥 $count-game win streak!';
+    return '🔥 $count-Spiele Siegesserie!';
   }
 
   @override
-  String get socialWinStreakSubtitle =>
-      'You\'re on fire — keep the momentum going.';
+  String get socialWinStreakSubtitle => 'Du bist on fire — bleib dran.';
 
   @override
   String socialFriendReachedWins(String username, int count) {
-    return '🏆 $username reached $count wins';
+    return '🏆 $username hat $count Siege erreicht';
   }
 
   @override
-  String get socialFriendLegendSubtitle => 'A true beer pong legend.';
+  String get socialFriendLegendSubtitle => 'Eine wahre Beer-Pong-Legende.';
 
   @override
   String socialFriendOnFire(String username, int count) {
-    return '🔥 $username went on fire $count+ times';
+    return '🔥 $username war $count+ Mal on fire';
   }
 
   @override
-  String get socialSeriousHeatSubtitle => 'Serious heat.';
+  String get socialSeriousHeatSubtitle => 'Ernsthaft heiß.';
 
   @override
   String socialFriendIsActive(String username) {
-    return '$username is active';
+    return '$username ist aktiv';
   }
 
   @override
   String socialFriendActiveSubtitle(String timeAgo, int totalGames) {
-    return 'Played $timeAgo · $totalGames total games';
+    return 'Gespielt $timeAgo · $totalGames Spiele insgesamt';
   }
 
   @override
-  String get leaderboardTotalScore => 'Total Score';
+  String get leaderboardTotalScore => 'Gesamtpunktzahl';
 
   @override
-  String get leaderboardGames => 'Games';
+  String get leaderboardGames => 'Spiele';
 }
