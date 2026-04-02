@@ -324,15 +324,17 @@ class _AchievementCard extends StatelessWidget {
                   const Icon(Icons.lock, size: 16, color: Colors.white38),
               ],
             ),
-            Text(
-              p.def.title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: locked ? Colors.white38 : Colors.white,
+            Flexible(
+              child: Text(
+                p.def.title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: locked ? Colors.white38 : Colors.white,
+                ),
               ),
             ),
             Column(
@@ -340,7 +342,9 @@ class _AchievementCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: p.progressToNextStage,
+                    value: p.isMaxed
+                        ? 1.0
+                        : (p.currentValue / p.nextThreshold).clamp(0.0, 1.0),
                     minHeight: 4,
                     backgroundColor: Colors.black26,
                     valueColor: AlwaysStoppedAnimation<Color>(
@@ -403,6 +407,7 @@ class _AchievementDetailDialog extends StatelessWidget {
           // Stage progress dots
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (int i = 0; i < p.def.thresholds.length; i++) ...[
                 _StageDot(
@@ -413,10 +418,15 @@ class _AchievementDetailDialog extends StatelessWidget {
                   stageIndex: i + 1,
                 ),
                 if (i < p.def.thresholds.length - 1)
+                  // Padding(top: 13) centres the 2px line on the 28px dot
+                  // circle: (28 / 2) - (2 / 2) = 13.
                   Expanded(
-                    child: Container(
-                      height: 2,
-                      color: Colors.grey.shade700,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 13),
+                      child: Container(
+                        height: 2,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                   ),
               ],
@@ -435,7 +445,9 @@ class _AchievementDetailDialog extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: LinearProgressIndicator(
-                value: p.progressToNextStage,
+                value: p.isMaxed
+                    ? 1.0
+                    : (p.currentValue / p.nextThreshold).clamp(0.0, 1.0),
                 minHeight: 8,
                 backgroundColor: c.border,
                 valueColor:
