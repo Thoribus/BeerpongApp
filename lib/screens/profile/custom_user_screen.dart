@@ -40,6 +40,8 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
   late String _selectedAvatarKey;
   late String _selectedBackgroundKey;
   late String _selectedTitle;
+  late int _userLevel;
+  late List<String> _availableTitles;
   bool _isSaving = false;
   UsernameStatus _usernameStatus = UsernameStatus.idle;
   String _currentUsername = '';
@@ -56,15 +58,14 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
             : _backgroundKeys.first;
     _selectedTitle = widget.user.title;
     _currentUsername = widget.user.username;
-  }
-
-  List<String> get _availableTitles {
+    _userLevel = LevelSystem.levelFromXp(widget.user.xp);
     final unlocked = widget.user.unlockedTitles;
-    final base = unlocked.isNotEmpty ? unlocked : ['Beginner', 'Pro Player', 'Champion'];
-    if (widget.user.isSupporter && !base.contains('Supporter')) {
-      return [...base, 'Supporter'];
-    }
-    return base;
+    final base = unlocked.isNotEmpty
+        ? unlocked
+        : ['Beginner', 'Pro Player', 'Champion'];
+    _availableTitles = (widget.user.isSupporter && !base.contains('Supporter'))
+        ? [...base, 'Supporter']
+        : base;
   }
 
   bool get _canSave =>
@@ -187,7 +188,6 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
   Widget _buildAvatarGrid() {
     final c = AppColors.of(context);
-    final userLevel = LevelSystem.levelFromXp(widget.user.xp);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -202,7 +202,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
         final key = _avatarKeys[index];
         final isSelected = _selectedAvatarKey == key;
         final requiredLevel = AppConstants.avatarLevelRequirements[key] ?? 1;
-        final isLocked = userLevel < requiredLevel;
+        final isLocked = _userLevel < requiredLevel;
 
         return GestureDetector(
           onTap: isLocked ? null : () => setState(() => _selectedAvatarKey = key),
@@ -278,7 +278,6 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
   Widget _buildBackgroundGrid() {
     final c = AppColors.of(context);
-    final userLevel = LevelSystem.levelFromXp(widget.user.xp);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -294,7 +293,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
         final isSelected = _selectedBackgroundKey == key;
         final requiredLevel =
             AppConstants.backgroundLevelRequirements[key] ?? 1;
-        final isLocked = userLevel < requiredLevel;
+        final isLocked = _userLevel < requiredLevel;
         final gradient = AppBackgrounds.gradientFor(key);
 
         return GestureDetector(
