@@ -129,6 +129,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  StreamSubscription<List<String>>? _friendIdsSub;
+  List<String>? _lastKnownFriendIds;
+
   @override
   void initState() {
     super.initState();
@@ -137,7 +140,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
     if (user != null && _friends == null) {
       final loadFriends =
           widget.friendsLoader ?? FirestoreService.instance.getFriends;
@@ -147,11 +151,28 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       _friends = loadFriends(user.id);
       _friendsWithUser = _friends!.then((friends) => [user, ...friends]);
       _myGames = loadGames(user);
+
+      // Watch the current user's friends array for remote changes (e.g. when
+      // someone else adds this user). Skip the first emission — it duplicates
+      // the initial load above.
+      _friendIdsSub ??= FirestoreService.instance
+          .streamFriendIds(user.id)
+          .skip(1)
+          .listen((ids) {
+        if (!mounted) return;
+        // Only refresh when the set of IDs actually changed.
+        final changed = _lastKnownFriendIds == null ||
+            ids.length != _lastKnownFriendIds!.length ||
+            ids.toSet().difference(_lastKnownFriendIds!.toSet()).isNotEmpty;
+        _lastKnownFriendIds = ids;
+        if (changed) _refreshFriendsOnly(userProvider);
+      });
     }
   }
 
   @override
   void dispose() {
+    _friendIdsSub?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -220,15 +241,17 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   void _refreshFriends(UserProvider userProvider) {
+    // Games are unaffected by friend add/remove — only reload the friend list.
+    _refreshFriendsOnly(userProvider);
+  }
+
+  void _refreshFriendsOnly(UserProvider userProvider) {
     setState(() {
       final loadFriends =
           widget.friendsLoader ?? FirestoreService.instance.getFriends;
-      final loadGames =
-          widget.gamesLoader ?? FirestoreService.instance.retrieveGames;
       _friends = loadFriends(userProvider.user!.id);
       _friendsWithUser =
           _friends!.then((friends) => [userProvider.user!, ...friends]);
-      _myGames = loadGames(userProvider.user!);
     });
   }
 
@@ -339,6 +362,19 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         final userProvider = Provider.of<UserProvider>(context);
         final currentUserId = userProvider.user?.id ?? '';
 
+        // Pre-compute H2H map once — avoids O(friends × games) linear scan
+        // inside itemBuilder on every frame.
+        final h2hByFriend = <String, List<GameStatistics>>{};
+        for (final g in myGames) {
+          for (final pid in g.participants) {
+            if (pid == currentUserId) continue;
+            (h2hByFriend[pid] ??= []).add(g);
+          }
+        }
+        for (final list in h2hByFriend.values) {
+          list.sort((a, b) => b.date.compareTo(a.date));
+        }
+
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           children: [
@@ -390,10 +426,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               itemCount: friends.length,
               itemBuilder: (ctx, index) {
                 final friend = friends[index];
-                final h2hGames = myGames
-                    .where((g) => g.participants.contains(friend.id))
-                    .toList()
-                  ..sort((a, b) => b.date.compareTo(a.date));
+                final h2hGames = h2hByFriend[friend.id] ?? [];
                 return FriendTile(
                   friend: friend,
                   currentUserId: currentUserId,
@@ -1367,9 +1400,17 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                       final users = snap.data ?? [];
                       if (users.isEmpty) {
                         return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(context.loc.friendsNoUsersFound,
-                              style: TextStyle(color: c.subtle, fontSize: 13)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              Icon(Icons.person_search,
+                                  color: c.subtle, size: 18),
+                              const SizedBox(width: 8),
+                              Text(context.loc.friendsNoUsersFound,
+                                  style:
+                                      TextStyle(color: c.subtle, fontSize: 13)),
+                            ],
+                          ),
                         );
                       }
                       return ListView.builder(

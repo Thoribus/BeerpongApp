@@ -8,6 +8,16 @@ class FriendRepository {
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  /// Emits the friend-ID list whenever the current user's document changes.
+  /// Used to detect when another user adds this user as a friend.
+  Stream<List<String>> streamFriendIds(String userId) {
+    return _db.collection('users').doc(userId).snapshots().map((doc) {
+      if (!doc.exists) return [];
+      final data = doc.data() as Map<String, dynamic>;
+      return List<String>.from(data['friends'] ?? []);
+    });
+  }
+
   Future<List<User>> getFriends(String userId) async {
     try {
       final userDoc = await _db.collection('users').doc(userId).get();

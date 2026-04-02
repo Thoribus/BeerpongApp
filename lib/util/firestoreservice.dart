@@ -155,6 +155,9 @@ class FirestoreService {
 
   // ----- Friends -----
 
+  Stream<List<String>> streamFriendIds(String userId) =>
+      FriendRepository.instance.streamFriendIds(userId);
+
   Future<List<User>> getFriends(String userId) =>
       FriendRepository.instance.getFriends(userId);
 
