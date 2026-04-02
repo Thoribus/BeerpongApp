@@ -163,20 +163,19 @@ class _LevelCard extends StatelessWidget {
             Divider(color: c.divider, height: 1),
             const SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _StatChip(
+                Expanded(child: _StatChip(
                     icon: Icons.emoji_events,
                     label: '$unlocked / $total',
-                    sub: context.loc.statsAchievements),
-                _StatChip(
+                    sub: context.loc.statsAchievements)),
+                Expanded(child: _StatChip(
                     icon: Icons.trending_up,
                     label: '${user.bestWinStreak}',
-                    sub: context.loc.achievementsBestStreak),
-                _StatChip(
+                    sub: context.loc.achievementsBestStreak)),
+                Expanded(child: _StatChip(
                     icon: Icons.gps_fixed,
                     label: '${(user.hitRate * 100).toStringAsFixed(0)}%',
-                    sub: context.loc.statHitRate),
+                    sub: context.loc.statHitRate)),
               ],
             ),
           ],
@@ -205,7 +204,13 @@ class _StatChip extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: c.onBackground,
                 fontSize: 14)),
-        Text(sub, style: TextStyle(fontSize: 10, color: c.subtle)),
+        Text(
+          sub,
+          style: TextStyle(fontSize: 10, color: c.subtle),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
