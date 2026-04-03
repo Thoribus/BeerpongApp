@@ -169,9 +169,8 @@ class GameLobbyController extends ChangeNotifier {
         .doc(docId)
         .snapshots()
         .listen((snapshot) {
-      if (!snapshot.exists) return;
-      final data = snapshot.data()!;
-      final status = data['status'] as String? ?? 'pending';
+      final data = snapshot.exists ? snapshot.data()! : null;
+      final status = data?['status'] as String? ?? 'pending';
 
       if (status == 'accepted') {
         if (!acceptedInvites.contains(docId)) acceptedInvites.add(docId);
@@ -192,16 +191,21 @@ class GameLobbyController extends ChangeNotifier {
         }
         notifyListeners();
         unawaited(updateGameDoc());
-      } else if (status == 'declined') {
-        unawaited(FirestoreService.instance.deleteGameInvitation(docId));
+      } else if (status == 'declined' || status == 'cancelled' || !snapshot.exists) {
+        if (snapshot.exists) {
+          unawaited(FirestoreService.instance.deleteGameInvitation(docId));
+        }
+        acceptedInvites.remove(docId);
         if (isBlue) {
           blueInvitationDocIds.remove(rowIndex);
           blueInvitationStatuses.remove(rowIndex);
+          blueFriendMap.remove(rowIndex);
           playersBlue[rowIndex] = playersBlue[rowIndex].copyWithName('');
           playersBlue[rowIndex] = playersBlue[rowIndex].copyWithUser(null);
         } else {
           redInvitationDocIds.remove(rowIndex);
           redInvitationStatuses.remove(rowIndex);
+          redFriendMap.remove(rowIndex);
           playersRed[rowIndex] = playersRed[rowIndex].copyWithName('');
           playersRed[rowIndex] = playersRed[rowIndex].copyWithUser(null);
         }
@@ -247,6 +251,7 @@ class GameLobbyController extends ChangeNotifier {
   void toggleRule(String ruleName, bool value) {
     selectedRules[ruleName] = value;
     notifyListeners();
+    unawaited(updateGameDoc());
   }
 
   // ----- Game start -----

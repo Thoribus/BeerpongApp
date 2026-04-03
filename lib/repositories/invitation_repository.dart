@@ -68,6 +68,12 @@ class InvitationRepository {
     await _db.collection('invitations').doc(invitationId).delete();
   }
 
+  /// Stream that emits the raw doc snapshot for [invitationId].
+  /// Completes one update whenever the doc changes or is deleted.
+  Stream<DocumentSnapshot<Map<String, dynamic>>> streamInvitation(
+          String invitationId) =>
+      _db.collection('invitations').doc(invitationId).snapshots();
+
   Invitation _invitationFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     return Invitation.fromDoc(doc);
   }

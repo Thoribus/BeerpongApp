@@ -33,6 +33,34 @@ class ReadOnlyLobbyScreen extends StatefulWidget {
 class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
   bool _navigated = false;
   bool _cancelling = false;
+  StreamSubscription<dynamic>? _inviteSub;
+
+  @override
+  void initState() {
+    super.initState();
+    final invId = widget.invitationId;
+    if (invId != null) {
+      _inviteSub = FirestoreService.instance
+          .streamInvitation(invId)
+          .skip(1) // ignore the initial snapshot — we're already here
+          .listen((snap) {
+        if (_cancelling || _navigated || !mounted) return;
+        // Invitation was deleted (kicked) or status changed away from accepted.
+        final deleted = !snap.exists;
+        final status = snap.data()?['status'] as String?;
+        final kicked = deleted || (status != null && status != InvitationStatus.accepted.name);
+        if (kicked) {
+          context.go(AppRoutes.home);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _inviteSub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _cancel() async {
     if (_cancelling) return;

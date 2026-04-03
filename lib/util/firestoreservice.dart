@@ -203,6 +203,10 @@ class FirestoreService {
       InvitationRepository.instance
           .updateInvitationGameId(invitationId, gameId);
 
+  Stream<DocumentSnapshot<Map<String, dynamic>>> streamInvitation(
+          String invitationId) =>
+      InvitationRepository.instance.streamInvitation(invitationId);
+
   Future<void> deleteGameInvitation(String invitationId) =>
       InvitationRepository.instance.deleteGameInvitation(invitationId);
 
