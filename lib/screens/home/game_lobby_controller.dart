@@ -103,6 +103,7 @@ class GameLobbyController extends ChangeNotifier {
       FirestoreService.instance.deleteGameInvitation(docId);
       docIds.remove(rowIndex);
       statuses.remove(rowIndex);
+      acceptedInvites.remove(docId);
     }
     players.removeAt(rowIndex);
     notifyListeners();

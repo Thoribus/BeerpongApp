@@ -52,10 +52,16 @@ class InvitationRepository {
 
   Future<void> updateInvitationGameId(
       String invitationId, String gameId) async {
-    await _db
-        .collection('invitations')
-        .doc(invitationId)
-        .update({'gameId': gameId});
+    try {
+      await _db
+          .collection('invitations')
+          .doc(invitationId)
+          .update({'gameId': gameId});
+    } on FirebaseException catch (e) {
+      // Invitation was deleted (player kicked then re-invited) — safe to ignore.
+      if (e.code == 'not-found') return;
+      rethrow;
+    }
   }
 
   Future<void> deleteGameInvitation(String invitationId) async {
