@@ -356,10 +356,12 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.3)),
         const SizedBox(height: 4),
-        SingleChildScrollView(
+        IntrinsicHeight(
+        child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Header row
               Row(children: [
@@ -434,6 +436,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               }),
             ],
           ),
+        ),
         ),
       ],
     );
