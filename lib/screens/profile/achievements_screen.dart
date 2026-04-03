@@ -27,26 +27,36 @@ class AchievementsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     final grouped = AchievementEngine.evaluateGrouped(user);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      children: [
-        _LevelCard(user: user),
-        const SizedBox(height: 20),
-        for (final category in AchievementCategory.values) ...[
-          _CategoryHeader(
-            category: category,
-            progresses: grouped[category] ?? [],
-          ),
-          const SizedBox(height: 10),
-          _AchievementGrid(
-            progresses: grouped[category] ?? [],
-            onTap: (p) => _showDetail(context, p),
-          ),
+    return Scaffold(
+      backgroundColor: c.background,
+      appBar: AppBar(
+        backgroundColor: c.background,
+        foregroundColor: c.onBackground,
+        title: Text(context.loc.statsAchievements),
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          _LevelCard(user: user),
           const SizedBox(height: 20),
+          for (final category in AchievementCategory.values) ...[
+            _CategoryHeader(
+              category: category,
+              progresses: grouped[category] ?? [],
+            ),
+            const SizedBox(height: 10),
+            _AchievementGrid(
+              progresses: grouped[category] ?? [],
+              onTap: (p) => _showDetail(context, p),
+            ),
+            const SizedBox(height: 20),
+          ],
         ],
-      ],
+      ),
     );
   }
 
