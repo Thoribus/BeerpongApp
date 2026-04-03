@@ -52,6 +52,8 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   GameLobbyController? _gameCtrl;
   TournamentLobbyController? _tournCtrl;
 
+  bool _isStarting = false;
+
   Map<String, bool> get _selectedRules =>
       _isTournament ? _tournCtrl!.selectedRules : _gameCtrl!.selectedRules;
 
@@ -285,38 +287,43 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
   }
 
   Future<void> _onStartGame() async {
-    if (_gameCtrl!.gameId == null) return;
-    final hostId = Provider.of<UserProvider>(context, listen: false).user?.id;
-    final chosenTeam = await _showStartingTeamDialog();
-    if (chosenTeam == null) return;
+    if (_isStarting || _gameCtrl!.gameId == null) return;
+    setState(() => _isStarting = true);
+    try {
+      final hostId = Provider.of<UserProvider>(context, listen: false).user?.id;
+      final chosenTeam = await _showStartingTeamDialog();
+      if (chosenTeam == null) return;
 
-    for (final inviteId in _gameCtrl!.acceptedInvites) {
-      await FirestoreService.instance
-          .updateInvitationGameId(inviteId, _gameCtrl!.gameId!);
+      for (final inviteId in _gameCtrl!.acceptedInvites) {
+        await FirestoreService.instance
+            .updateInvitationGameId(inviteId, _gameCtrl!.gameId!);
+      }
+      await _gameCtrl!.startGame(chosenTeam, hostUserId: hostId);
+      if (!mounted) return;
+
+      context.pushReplacement(
+        '/game',
+        extra: GameArgs(
+          id: _gameCtrl!.gameId!,
+          team1: Team(
+            color: Colors.blue,
+            players: _gameCtrl!.playersBlue,
+            cups: List.generate(10, (i) => Cup(index: i, color: Colors.blue)),
+          ),
+          team2: Team(
+            color: Colors.red,
+            players: _gameCtrl!.playersRed,
+            cups: List.generate(10, (i) => Cup(index: i, color: Colors.red)),
+          ),
+          selectedRules: _gameCtrl!.selectedRules,
+          invitations: _gameCtrl!.acceptedInvites,
+          startingTeam: _gameCtrl!.startingTeam == 'Team Blue',
+          tournamentId: '',
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isStarting = false);
     }
-    await _gameCtrl!.startGame(chosenTeam, hostUserId: hostId);
-    if (!mounted) return;
-
-    context.pushReplacement(
-      '/game',
-      extra: GameArgs(
-        id: _gameCtrl!.gameId!,
-        team1: Team(
-          color: Colors.blue,
-          players: _gameCtrl!.playersBlue,
-          cups: List.generate(10, (i) => Cup(index: i, color: Colors.blue)),
-        ),
-        team2: Team(
-          color: Colors.red,
-          players: _gameCtrl!.playersRed,
-          cups: List.generate(10, (i) => Cup(index: i, color: Colors.red)),
-        ),
-        selectedRules: _gameCtrl!.selectedRules,
-        invitations: _gameCtrl!.acceptedInvites,
-        startingTeam: _gameCtrl!.startingTeam == 'Team Blue',
-        tournamentId: '',
-      ),
-    );
   }
 
   Future<void> _onStartTournament() async {
