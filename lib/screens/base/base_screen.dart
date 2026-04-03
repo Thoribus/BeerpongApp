@@ -62,26 +62,30 @@ class BaseScreenState extends State<BaseScreen> {
                                 size: 28, color: c.onBackground),
                           ),
                           const SizedBox(width: 12),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user?.username ?? 'Peppa Wutz',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: c.onBackground,
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user?.username ?? 'Peppa Wutz',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: c.onBackground,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '@${user?.username ?? 'guest'}',
-                                style: TextStyle(
-                                  color: c.subtle,
+                                const SizedBox(height: 4),
+                                Text(
+                                  '@${user?.username ?? 'guest'}',
+                                  style: TextStyle(
+                                    color: c.subtle,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
