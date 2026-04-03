@@ -120,7 +120,10 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                     snapshot.data!.data() as Map<String, dynamic>? ?? {};
                 final team1 = Team.fromJson(gameDataRaw['team1']);
                 final team2 = Team.fromJson(gameDataRaw['team2']);
-                final gameStart = gameDataRaw['timestamp'].toDate();
+                final rawTs = gameDataRaw['timestamp'];
+                final gameStart = rawTs != null
+                    ? (rawTs as Timestamp).toDate()
+                    : DateTime.now();
                 final winner = gameDataRaw['winner'];
                 final gameId = widget.gameId;
                 final gameMode = gameDataRaw['gameMode'] as String? ?? '';
@@ -142,30 +145,25 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
 
-                  final shouldUpdateCache = _cachedGameData == null ||
-                      _cachedGameData!.team1 != team1 ||
-                      _cachedGameData!.team2 != team2 ||
-                      _cachedGameData!.winner != winner;
+                  final isFirstLoad = _cachedGameData == null;
+                  final hasWinner = winner != null && winner.toString().isNotEmpty;
 
-                  if (shouldUpdateCache) {
-                    setState(() {
-                      _cachedGameData = updatedGameData;
-                    });
+                  // If this is the first emission and the game already has a winner,
+                  // suppress the dialog — the spectator opened an already-finished game.
+                  if (isFirstLoad && hasWinner) {
+                    _gameAlreadyOver = true;
                   }
 
-                  if (winner != null &&
-                      winner.toString().isNotEmpty &&
-                      !_dialogShown) {
-                    if (_cachedGameData == null) {
-                      // First data load — game was already over when screen opened
-                      _gameAlreadyOver = true;
-                    } else if (!_gameAlreadyOver) {
-                      _dialogShown = true;
-                      final winningPlayers = (winner == 'Team Blue')
-                          ? team1.players
-                          : team2.players;
-                      DialogHelpers.showGameEndDialog(context, winningPlayers);
-                    }
+                  setState(() {
+                    _cachedGameData = updatedGameData;
+                  });
+
+                  if (hasWinner && !_dialogShown && !_gameAlreadyOver) {
+                    _dialogShown = true;
+                    final winningPlayers = (winner == 'Team Blue')
+                        ? team1.players
+                        : team2.players;
+                    DialogHelpers.showGameEndDialog(context, winningPlayers);
                   }
                 });
 
