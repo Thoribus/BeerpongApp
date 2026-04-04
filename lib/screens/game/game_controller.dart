@@ -215,11 +215,12 @@ class GameController extends ChangeNotifier {
 
   void checkBitchCup(int index, BuildContext ctx) {
     if (index != 4 || currentTeam.cups.length != 10) return;
-    // Bitch cup fires when cup 4 (middle) was the last cup standing.
-    // All other cups must be invisible (removed in prior turns).
-    final anyOtherVisible = currentTeam.cups
-        .any((cup) => cup.index != 4 && cup.isVisible);
-    if (!anyOtherVisible) {
+    // Bitch cup fires when cup 4 (middle) is the FIRST cup hit.
+    // All other 9 cups must still be untouched (visible + original team color).
+    final allOthersUntouched = currentTeam.cups
+        .where((cup) => cup.index != 4)
+        .every((cup) => cup.isVisible && cup.color == currentTeam.color);
+    if (allOthersUntouched) {
       addEvent('Bitchcup', currentTeam, null);
       DialogHelpers.showBitchCupDialog(ctx);
     }
