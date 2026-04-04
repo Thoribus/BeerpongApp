@@ -90,7 +90,7 @@ class _LevelCard extends StatelessWidget {
     return Card(
       color: c.card,
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -148,7 +148,7 @@ class _LevelCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(8),
                         child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 8,
@@ -310,7 +310,7 @@ class _AchievementCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: cardColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: locked
               ? null
               : [
@@ -355,7 +355,7 @@ class _AchievementCard extends StatelessWidget {
             Column(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
                     value: p.isMaxed
                         ? 1.0

@@ -158,7 +158,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
                 foregroundColor: Colors.black,
                 disabledBackgroundColor: Colors.amber.withValues(alpha: 0.4),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
               child: _loading

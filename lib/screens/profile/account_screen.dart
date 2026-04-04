@@ -34,7 +34,7 @@ class AccountScreen extends StatelessWidget {
       BuildContext context, UserProvider userProvider, AppColors c) {
     final isSupporter = userProvider.user?.isSupporter ?? false;
     return ColoredBox(
-      color: Colors.grey.shade800,
+      color: c.appBar,
       child: Row(
         children: [
           Expanded(
@@ -44,8 +44,8 @@ class AccountScreen extends StatelessWidget {
                 children: [
                   Text(
                     context.loc.accountProfile,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: c.onBackground,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -54,10 +54,10 @@ class AccountScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                             color: Colors.amber.withValues(alpha: 0.7)),
                       ),
@@ -84,8 +84,8 @@ class AccountScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.feedback_outlined,
-                color: Colors.white70, size: 20),
+            icon: Icon(Icons.feedback_outlined,
+                color: c.onBackground, size: 20),
             tooltip: context.loc.accountFeedbackTooltip,
             onPressed: () {
               final user = userProvider.user;
@@ -93,7 +93,7 @@ class AccountScreen extends StatelessWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
+            icon: Icon(Icons.logout, color: c.onBackground, size: 20),
             tooltip: context.loc.accountSignOutTooltip,
             onPressed: () => _confirmSignOut(context, userProvider),
           ),

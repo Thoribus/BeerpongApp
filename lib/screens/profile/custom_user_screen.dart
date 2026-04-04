@@ -536,13 +536,13 @@ class _UsernameFieldState extends State<_UsernameField> {
               borderSide: BorderSide(color: color, width: 2),
             ),
             suffixIcon: _status == UsernameStatus.checking
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
+                ? Padding(
+                    padding: const EdgeInsets.all(12),
                     child: SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white54),
+                          strokeWidth: 2, color: c.muted),
                     ),
                   )
                 : icon != null
