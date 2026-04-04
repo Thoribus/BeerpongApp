@@ -154,19 +154,22 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
       // Watch the current user's friends array for remote changes (e.g. when
       // someone else adds this user). Skip the first emission — it duplicates
-      // the initial load above.
-      _friendIdsSub ??= FirestoreService.instance
-          .streamFriendIds(user.id)
-          .skip(1)
-          .listen((ids) {
-        if (!mounted) return;
-        // Only refresh when the set of IDs actually changed.
-        final changed = _lastKnownFriendIds == null ||
-            ids.length != _lastKnownFriendIds!.length ||
-            ids.toSet().difference(_lastKnownFriendIds!.toSet()).isNotEmpty;
-        _lastKnownFriendIds = ids;
-        if (changed) _refreshFriendsOnly(userProvider);
-      });
+      // the initial load above. Skip entirely when a loader override is
+      // provided (test mode) to avoid live Firebase calls.
+      if (widget.friendsLoader == null) {
+        _friendIdsSub ??= FirestoreService.instance
+            .streamFriendIds(user.id)
+            .skip(1)
+            .listen((ids) {
+          if (!mounted) return;
+          // Only refresh when the set of IDs actually changed.
+          final changed = _lastKnownFriendIds == null ||
+              ids.length != _lastKnownFriendIds!.length ||
+              ids.toSet().difference(_lastKnownFriendIds!.toSet()).isNotEmpty;
+          _lastKnownFriendIds = ids;
+          if (changed) _refreshFriendsOnly(userProvider);
+        });
+      }
     }
   }
 
