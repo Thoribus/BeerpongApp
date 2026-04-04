@@ -80,7 +80,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
         setState(() => _currentTabPage = index);
       },
       pageController: _tabPageController,
-      backgroundColor: Colors.grey.shade800,
+      backgroundColor: AppTheme.tabBarBackground,
     );
   }
 
@@ -95,7 +95,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.lock_outline, color: Colors.grey, size: 48),
+              Icon(Icons.lock_outline, color: c.subtle, size: 48),
               const SizedBox(height: 16),
               Text(
                 context.loc.statsSignInPrompt,
@@ -184,11 +184,11 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
+            color: AppColors.of(context).onBackground.withValues(alpha: 0.25),
             blurRadius: 8,
             offset: const Offset(0, 3),
           )
@@ -291,8 +291,8 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           ),
           trailing: IconButton(
             tooltip: context.loc.statsLiveView,
-            icon: const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: Colors.white54),
+            icon: Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: AppColors.of(context).muted),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () => context.push(AppRoutes.spectateLivePath(game.id)),
@@ -630,9 +630,9 @@ class _ProgressTab extends StatelessWidget {
           color: c.card,
           elevation: 4,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24),
             child: Row(
               children: [
                 Container(
@@ -679,7 +679,7 @@ class _ProgressTab extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(8),
                         child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 10,
@@ -1143,7 +1143,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
         title: Text(
           context.loc.statsGameStatistics,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.amber,
@@ -1162,13 +1162,13 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                 child: Text(
                   context.loc.statsViewTeam,
                   style: TextStyle(
-                    color: _currentPage == 0 ? Colors.amber : Colors.white,
-                    backgroundColor: Colors.black,
+                    color: _currentPage == 0 ? Colors.amber : AppColors.of(context).onBackground,
+                    backgroundColor: AppColors.of(context).surface,
                   ),
                 ),
               ),
-              const VerticalDivider(
-                color: Colors.white,
+              VerticalDivider(
+                color: AppColors.of(context).divider,
                 width: 20,
                 thickness: 2,
                 indent: 5,
@@ -1183,8 +1183,8 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                 child: Text(
                   context.loc.statsViewGameStats,
                   style: TextStyle(
-                    color: _currentPage == 1 ? Colors.amber : Colors.white,
-                    backgroundColor: Colors.black,
+                    color: _currentPage == 1 ? Colors.amber : AppColors.of(context).onBackground,
+                    backgroundColor: AppColors.of(context).surface,
                   ),
                 ),
               ),
@@ -1230,22 +1230,22 @@ class GameDetailsPageState extends State<GameDetailsPage> {
         columnSpacing: 10,
         columns: [
           DataColumn(
-            label: Text(context.loc.statsColumnPlayer, style: const TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColumnPlayer, style: TextStyle(color: AppColors.of(context).onBackground)),
           ),
           DataColumn(
-            label: Text(context.loc.statsColAbbrevScore, style: const TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevScore, style: TextStyle(color: AppColors.of(context).onBackground)),
           ),
           DataColumn(
-            label: Text(context.loc.statsColAbbrevMisses, style: const TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevMisses, style: TextStyle(color: AppColors.of(context).onBackground)),
           ),
           DataColumn(
-            label: Text(context.loc.statsColAbbrevThrows, style: const TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevThrows, style: TextStyle(color: AppColors.of(context).onBackground)),
           ),
           DataColumn(
-            label: Text(context.loc.statsColAbbrevAirballs, style: const TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevAirballs, style: TextStyle(color: AppColors.of(context).onBackground)),
           ),
           DataColumn(
-            label: Text(context.loc.statsColAbbrevHitRate, style: const TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevHitRate, style: TextStyle(color: AppColors.of(context).onBackground)),
           ),
         ],
         rows: players.map((player) {
@@ -1263,8 +1263,8 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                         player.name.length > 10
                             ? '${player.name.substring(0, 10)}...'
                             : player.name,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: AppColors.of(context).onBackground,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1276,8 +1276,8 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                 width: 30,
                 child: Text(
                   '${player.score}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.of(context).onBackground,
                   ),
                 ),
               )),
@@ -1285,8 +1285,8 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                 width: 30,
                 child: Text(
                   '${player.misses}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.of(context).onBackground,
                   ),
                 ),
               )),
@@ -1294,8 +1294,8 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                 width: 30,
                 child: Text(
                   '${player.throws}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.of(context).onBackground,
                   ),
                 ),
               )),
@@ -1303,8 +1303,8 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                 width: 30,
                 child: Text(
                   '${player.airballs}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.of(context).onBackground,
                   ),
                 ),
               )),
@@ -1312,8 +1312,8 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                 width: 30,
                 child: Text(
                   hitRate.toStringAsFixed(2),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.of(context).onBackground,
                   ),
                 ),
               )),
@@ -1424,7 +1424,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
       children: [
         CircleAvatar(
           radius: 25,
-          backgroundColor: Colors.grey[800],
+          backgroundColor: AppTheme.surfaceDark2,
           child: Icon(
             icon,
             color: Colors.amber,
@@ -1441,7 +1441,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
           player.name.length > 10
               ? '${player.name.substring(0, 10)}...'
               : player.name,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: AppColors.of(context).onBackground),
           overflow: TextOverflow.ellipsis,
         ),
       ],

@@ -292,7 +292,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.people_outline, color: Colors.grey, size: 48),
+              Icon(Icons.people_outline, color: AppColors.of(context).subtle, size: 48),
               const SizedBox(height: 16),
               Text(
                 context.loc.friendsSignInPrompt,
@@ -342,7 +342,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           _pageController.jumpToPage(index);
         }
       },
-      backgroundColor: Colors.grey.shade800,
+      backgroundColor: AppTheme.tabBarBackground,
     );
   }
 
@@ -384,7 +384,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
             if (userProvider.user != null)
               Card(
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 color: c.card,
                 elevation: 1,
@@ -815,7 +815,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           height: 270,
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Colors.grey[800], // Fallback background color
+            color: AppTheme.surfaceDark2, // Fallback background color
           ),
           child: Stack(
             alignment: Alignment.bottomCenter,
@@ -874,7 +874,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               backgroundColor: borderColor,
               child: CircleAvatar(
                 radius: 38,
-                backgroundColor: Colors.black,
+                backgroundColor: AppTheme.backgroundDark,
                 child: ClipOval(
                   child: user.mapAvatarKeyToAsset().isEmpty
                       ? const Icon(Icons.person,
@@ -964,7 +964,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           decoration: isMe
               ? BoxDecoration(
                   border: Border.all(color: Colors.amber, width: 1.5),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 )
               : null,
           child: ListTile(
@@ -1076,7 +1076,7 @@ class _FriendAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.green,
-                border: Border.all(color: Colors.black, width: 1.5),
+                border: Border.all(color: AppColors.of(context).surface, width: 1.5),
               ),
             ),
           ),
@@ -1162,17 +1162,17 @@ class FriendTile extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 5),
         decoration: BoxDecoration(
           color: Colors.red.shade800,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(Icons.person_remove, color: Colors.white),
       ),
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: c.card,
         elevation: 1,
         margin: const EdgeInsets.symmetric(vertical: 5),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

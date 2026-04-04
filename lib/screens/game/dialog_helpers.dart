@@ -41,8 +41,8 @@ class DialogHelpers {
           ),
           const SizedBox(height: 20.0),
           Wrap(
-            spacing: 10.0,
-            runSpacing: 10.0,
+            spacing: 8.0,
+            runSpacing: 8.0,
             alignment: WrapAlignment.center,
             children: players.map((player) {
               return GestureDetector(
@@ -104,8 +104,8 @@ class DialogHelpers {
           ),
           const SizedBox(height: 20.0),
           Wrap(
-            spacing: 10.0,
-            runSpacing: 10.0,
+            spacing: 8.0,
+            runSpacing: 8.0,
             alignment: WrapAlignment.center,
             children: players.map((player) {
               return GestureDetector(

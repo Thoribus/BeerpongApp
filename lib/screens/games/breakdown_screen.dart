@@ -140,11 +140,11 @@ class BreakdownScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _legend(context.loc.breakdownHits, Colors.green),
+              _legend(context, context.loc.breakdownHits, Colors.green),
               const SizedBox(width: 16),
-              _legend(context.loc.liveStatMisses, Colors.redAccent),
+              _legend(context, context.loc.liveStatMisses, Colors.redAccent),
               const SizedBox(width: 16),
-              _legend(context.loc.liveStatAirballs, Colors.blue),
+              _legend(context, context.loc.liveStatAirballs, Colors.blue),
             ],
           ),
         ],
@@ -152,16 +152,19 @@ class BreakdownScreen extends StatelessWidget {
     );
   }
 
-  Widget _legend(String label, Color color) => Row(
-        children: [
-          Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 4),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
-        ],
-      );
+  Widget _legend(BuildContext context, String label, Color color) {
+    final c = AppColors.of(context);
+    return Row(
+      children: [
+        Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(color: c.subtle, fontSize: 11)),
+      ],
+    );
+  }
 
   // ── Special shots breakdown ───────────────────────────────────────────────
 
@@ -513,7 +516,7 @@ class BreakdownScreen extends StatelessWidget {
   Widget _card(BuildContext context, {required Widget child}) {
     final c = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: c.surface2,
         borderRadius: BorderRadius.circular(12),

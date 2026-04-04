@@ -181,9 +181,9 @@ class ComparisonScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _legendDot(Colors.orange, currentUser.username),
+                  _legendDot(context, Colors.orange, currentUser.username),
                   const SizedBox(width: 16),
-                  _legendDot(Colors.blueAccent, friend.username),
+                  _legendDot(context, Colors.blueAccent, friend.username),
                 ],
               ),
             ],
@@ -193,7 +193,8 @@ class ComparisonScreen extends StatelessWidget {
     );
   }
 
-  Widget _legendDot(Color color, String label) {
+  Widget _legendDot(BuildContext context, Color color, String label) {
+    final c = AppColors.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -202,8 +203,7 @@ class ComparisonScreen extends StatelessWidget {
             height: 10,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(label, style: TextStyle(color: c.subtle, fontSize: 11)),
       ],
     );
   }
@@ -339,7 +339,7 @@ class ComparisonScreen extends StatelessWidget {
             children: [
               for (int i = 0; i < stats.length; i++) ...[
                 if (i > 0)
-                  const Divider(color: Colors.white10, height: 20),
+                  Divider(color: AppColors.of(context).divider, height: 20),
                 _buildStatRow(context, stats[i]),
               ],
             ],
@@ -498,7 +498,7 @@ class ComparisonScreen extends StatelessWidget {
   Widget _card(BuildContext context, {required Widget child}) {
     final c = AppColors.of(context);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: c.surface2,
         borderRadius: BorderRadius.circular(12),
