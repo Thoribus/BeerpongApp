@@ -84,7 +84,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/launcher_icon.png"
+  image_path: "assets/launcher_icon_with_background.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -98,7 +98,6 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section, like this:
   assets:
     #---------------- avatars ------------------------------------------
     - assets/avatars/avatar_catbeer.svg
@@ -109,73 +108,19 @@ flutter:
     - assets/avatars/avatar_cupbeer.svg
     - assets/avatars/blue_team.svg
     - assets/avatars/red_team.svg
-
-    - assets/avatars/avatar_catbeer.png
-    - assets/avatars/avatar_catpants.png
-    - assets/avatars/avatar_cheering.png
-    - assets/avatars/avatar_frogisland.png
-    - assets/avatars/avatar_aggroracoon.png
-    - assets/avatars/avatar_cupbeer.png
     #-------------------------------------------------------------------
 
-    #---------------- achievements -------------------------------------
-    - assets/ach_wins.png
-    - assets/ach_loses.png
-    - assets/ach_friends.png
-    - assets/ach_lost.png
-    - assets/ach_airball.png
-    - assets/ach_champion.png
-
-    - assets/achievements/ach_holyknight.png
-    - assets/achievements/ach_animalparty.png
-    - assets/achievements/ach_catblock.png
-    - assets/achievements/ach_catsniper.png
-    - assets/achievements/ach_moletable.png
-    - assets/achievements/ach_racoontrophy.png
-    - assets/achievements/ach_cheersshot.png
-    - assets/achievements/ach_sadlooser.png
-    - assets/achievements/ach_twerkfrog.png
-    - assets/achievements/ach_header.png
-
-    #-------------------------------------------------------------------
-
-    #---------------- ruledesign ---------------------------------------
+    #---------------- illustrations ------------------------------------
     - assets/two_cats.svg
-    - assets/home_animals.svg
-    - assets/cat_boxing.svg
-    - assets/frog_island.svg
     - assets/racoon_winner.svg
-    - assets/otter_canvas.svg
-
-    #-------------------------------------------------------------------
-
-    #---------------- logos --------------------------------------------
-    - assets/hamilton-bulldogs.svg
-    - assets/brevard-county-manatees-1.svg
-
-    #-------------------------------------------------------------------
-    - assets/beerpong.jpg
-    - assets/animals_beerpong.jpg
-    - assets/friends-playing-beerpong-together.jpg
-    - assets/amber_fullscreen_home.svg
-    - assets/emblems/podium.svg
-    - assets/avatars/bunny.png
-    - assets/avatars/cat.png
-    - assets/avatars/dog.png
-    - assets/avatars/raccoon.png
-    - assets/avatars/eagle.png
-    - assets/avatars/frog.png
-    - assets/borders/avatar_border.svg
     - assets/slanted-gradient.svg
     - assets/podium_background.svg
-    - assets/podium_nobackground.svg
-    - assets/cat_avatar_profile.svg
-    - assets/sun-tornado.svg
-    - assets/sun-tornado.png
-    - assets/liquid-cheese.svg
-    - assets/liquid-cheese.png
-    - assets/background_achievement.png
-    - assets/Meteor.svg
+    #-------------------------------------------------------------------
+
+    #---------------- shop / ui ----------------------------------------
+    - assets/emblems/podium.svg
+    - assets/borders/avatar_border.svg
+    #-------------------------------------------------------------------
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
