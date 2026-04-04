@@ -196,7 +196,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       barrierDismissible: true,
       builder: (context) => Dialog(
         backgroundColor: c.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
         child: SizedBox(
           height: 420,
@@ -553,7 +553,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
       height: 40,
       decoration: BoxDecoration(
         color: c.chip,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
@@ -622,7 +622,7 @@ class _GameModeDetailsScreenState extends State<GameModeDetailsScreen> {
             color: isSelected ? _activeColor : c.border,
             width: isSelected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

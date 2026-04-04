@@ -128,7 +128,7 @@ class _RuleCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: c.card,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: rule.accent.withValues(alpha: 0.25),
           width: 1.5,
@@ -150,7 +150,7 @@ class _RuleCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: rule.accent.withValues(alpha: 0.12),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
+                top: Radius.circular(16),
               ),
             ),
             child: Row(
@@ -286,7 +286,7 @@ class _RuleCard extends StatelessWidget {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                           color: Colors.amber.withValues(alpha: 0.25)),
                     ),

@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auth;
@@ -140,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final userProvider = context.watch<UserProvider>();
     if (userProvider.isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0E0F11),
+        backgroundColor: AppTheme.backgroundDark,
         body: Center(
           child: CircularProgressIndicator(color: Colors.amber),
         ),
@@ -148,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0E0F11),
+      backgroundColor: AppTheme.backgroundDark,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -223,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildFormCard() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: AppTheme.surfaceDark,
         borderRadius: BorderRadius.circular(24),
       ),
       padding: const EdgeInsets.all(24),
@@ -353,7 +354,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: const Color(0xFF2C2F36),
+        color: AppTheme.surfaceDark2,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -382,7 +383,7 @@ class _LoginScreenState extends State<LoginScreen> {
           margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: selected ? Colors.amber : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
             child: Text(
@@ -421,7 +422,7 @@ class _LoginScreenState extends State<LoginScreen> {
         prefixIcon: Icon(icon, color: Colors.grey, size: 20),
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFF2C2F36),
+        fillColor: AppTheme.surfaceDark2,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -455,15 +456,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildDivider() {
     return Row(
       children: [
-        const Expanded(child: Divider(color: Color(0xFF2C2F36), thickness: 1)),
+        const Expanded(child: Divider(color: AppTheme.surfaceDark2, thickness: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             context.loc.loginOrContinueWith,
-            style: const TextStyle(color: Color(0xFF757575), fontSize: 12),
+            style: const TextStyle(color: AppTheme.tabBarInactive, fontSize: 12),
           ),
         ),
-        const Expanded(child: Divider(color: Color(0xFF2C2F36), thickness: 1)),
+        const Expanded(child: Divider(color: AppTheme.surfaceDark2, thickness: 1)),
       ],
     );
   }
