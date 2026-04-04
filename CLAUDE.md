@@ -65,6 +65,24 @@ Each bug fix, suggestion, or feature gets its **own separate commit** immediatel
 - Commit **as soon as** the change works — do not batch multiple changes into one commit
 - This enables a clean per-item changelog when cutting a release
 
+## Issue Queue Workflow
+
+When asked to work through the issue queue (or when `tasks/issues.md` exists with open items):
+
+1. **Sync first**: `node scripts/sync-issues.js` — fetches fresh Sentry errors + Firebase feedback
+2. **Pick the top item** from `tasks/issues.md` — Sentry errors before user feedback, severity order
+3. **Fix it** — treat it as a bug report, find root cause, implement the fix
+4. **Close it**: `node scripts/close-issue.js --source <sentry|firebase> --id <id>`
+5. **Commit** with `fix: <short description of what was fixed>`
+6. **Repeat** — pick the next item until the queue is empty or the user stops you
+
+Rules:
+- One issue per commit — never batch
+- If a Sentry error has no reproducible code path, resolve it in Sentry with a note and move on
+- If user feedback is a feature request (Suggestion category), acknowledge it but skip the close step — those go to the backlog, not a code fix
+
+**Trigger**: The user can say "work through the issue queue" or "fix the next issue" to start this loop.
+
 ## Core Principles
 
 - Simplicity First: Make every change as simple as possible. Impact minimal code.
