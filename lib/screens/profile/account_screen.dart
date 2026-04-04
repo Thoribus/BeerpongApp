@@ -1,4 +1,5 @@
 import 'package:beerpongapp/models/user.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/screens/profile/feedback_sheet.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/user_provider.dart';
@@ -41,9 +42,9 @@ class AccountScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  const Text(
-                    'Profile',
-                    style: TextStyle(
+                  Text(
+                    context.loc.accountProfile,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -60,15 +61,15 @@ class AccountScreen extends StatelessWidget {
                         border: Border.all(
                             color: Colors.amber.withValues(alpha: 0.7)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.star_rounded,
+                          const Icon(Icons.star_rounded,
                               color: Colors.amber, size: 11),
-                          SizedBox(width: 3),
+                          const SizedBox(width: 3),
                           Text(
-                            'Supporter',
-                            style: TextStyle(
+                            context.loc.accountSupporter,
+                            style: const TextStyle(
                               color: Colors.amber,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -85,7 +86,7 @@ class AccountScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.feedback_outlined,
                 color: Colors.white70, size: 20),
-            tooltip: 'Send feedback',
+            tooltip: context.loc.accountFeedbackTooltip,
             onPressed: () {
               final user = userProvider.user;
               if (user != null) FeedbackSheet.show(context, user);
@@ -93,7 +94,7 @@ class AccountScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
-            tooltip: 'Sign out',
+            tooltip: context.loc.accountSignOutTooltip,
             onPressed: () => _confirmSignOut(context, userProvider),
           ),
         ],
@@ -106,16 +107,17 @@ class AccountScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sign out?'),
-        content: const Text('You will be returned to the sign-in screen.'),
+        title: Text(context.loc.accountSignOutTitle),
+        content: Text(context.loc.accountSignOutBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.loc.btnCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Sign out', style: TextStyle(color: Colors.red)),
+            child: Text(context.loc.accountSignOutConfirm,
+                style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

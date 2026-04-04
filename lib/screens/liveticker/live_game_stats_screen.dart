@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/widgets/app_tab_bar.dart';
@@ -82,7 +83,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         backgroundColor: c.surface,
         elevation: 0,
         title: Text(
-          _cachedGameData?.winner != null ? 'Game Summary' : 'Live Game',
+          _cachedGameData?.winner != null ? context.loc.liveGameSummary : context.loc.liveGameTitle,
           style: TextStyle(
             color: c.onBackground,
             fontWeight: FontWeight.bold,
@@ -94,7 +95,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
       body: Column(
         children: [
           AppTabBar(
-            tabs: const ['Table', 'Stats', 'Timeline'],
+            tabs: [context.loc.liveTabTable, context.loc.liveTabStats, context.loc.liveTabTimeline],
             selectedIndex: _currentTabPage,
             onTabSelected: (index) {
               setState(() {
@@ -108,18 +109,21 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
               stream: _firestoreService.getGameDocStream(widget.gameId),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return const Center(child: Text('Something went wrong'));
+                  return Center(child: Text(context.loc.liveGameError));
                 }
 
                 if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Center(child: Text('Game not found.'));
+                  return Center(child: Text(context.loc.liveGameNotFound));
                 }
 
                 final gameDataRaw =
                     snapshot.data!.data() as Map<String, dynamic>? ?? {};
                 final team1 = Team.fromJson(gameDataRaw['team1']);
                 final team2 = Team.fromJson(gameDataRaw['team2']);
-                final gameStart = gameDataRaw['timestamp'].toDate();
+                final rawTs = gameDataRaw['timestamp'];
+                final gameStart = rawTs != null
+                    ? (rawTs as Timestamp).toDate()
+                    : DateTime.now();
                 final winner = gameDataRaw['winner'];
                 final gameId = widget.gameId;
                 final gameMode = gameDataRaw['gameMode'] as String? ?? '';
@@ -141,30 +145,25 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!mounted) return;
 
-                  final shouldUpdateCache = _cachedGameData == null ||
-                      _cachedGameData!.team1 != team1 ||
-                      _cachedGameData!.team2 != team2 ||
-                      _cachedGameData!.winner != winner;
+                  final isFirstLoad = _cachedGameData == null;
+                  final hasWinner = winner != null && winner.toString().isNotEmpty;
 
-                  if (shouldUpdateCache) {
-                    setState(() {
-                      _cachedGameData = updatedGameData;
-                    });
+                  // If this is the first emission and the game already has a winner,
+                  // suppress the dialog — the spectator opened an already-finished game.
+                  if (isFirstLoad && hasWinner) {
+                    _gameAlreadyOver = true;
                   }
 
-                  if (winner != null &&
-                      winner.toString().isNotEmpty &&
-                      !_dialogShown) {
-                    if (_cachedGameData == null) {
-                      // First data load — game was already over when screen opened
-                      _gameAlreadyOver = true;
-                    } else if (!_gameAlreadyOver) {
-                      _dialogShown = true;
-                      final winningPlayers = (winner == 'Team Blue')
-                          ? team1.players
-                          : team2.players;
-                      DialogHelpers.showGameEndDialog(context, winningPlayers);
-                    }
+                  setState(() {
+                    _cachedGameData = updatedGameData;
+                  });
+
+                  if (hasWinner && !_dialogShown && !_gameAlreadyOver) {
+                    _dialogShown = true;
+                    final winningPlayers = (winner == 'Team Blue')
+                        ? team1.players
+                        : team2.players;
+                    DialogHelpers.showGameEndDialog(context, winningPlayers);
                   }
                 });
 
@@ -320,7 +319,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         ),
         const SizedBox(height: 2),
         Text(
-          '$cupsLeft cups left',
+          context.loc.liveCupsLeft(cupsLeft),
           style: TextStyle(
             color: c.subtle,
             fontSize: 12,
@@ -357,9 +356,9 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
               ),
             ),
             const SizedBox(width: 5),
-            const Text(
-              'LIVE',
-              style: TextStyle(
+            Text(
+              context.loc.liveBadgeLive,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -380,7 +379,7 @@ class LiveGameStatsScreenState extends State<LiveGameStatsScreen>
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        'FINAL',
+        context.loc.liveBadgeFinal,
         style: TextStyle(
           color: c.subtle,
           fontSize: 12,

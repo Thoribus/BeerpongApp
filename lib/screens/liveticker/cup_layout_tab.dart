@@ -5,6 +5,7 @@ import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/screens/game/cup_layout.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 
 class CupLayoutTab extends StatelessWidget {
   final LiveGameData gameData;
@@ -46,7 +47,7 @@ class CupLayoutTab extends StatelessWidget {
   Widget _buildTeamBracket(BuildContext context, Team team,
       {required bool isLeftSide}) {
     final bool isLeft = isLeftSide;
-    final badgeTitles = ['Cups Hit', 'Airballs', 'Throws', 'Misses'];
+    final badgeTitles = [context.loc.liveStatCupsHit, context.loc.liveStatAirballs, context.loc.liveStatThrows, context.loc.liveStatMisses];
     final c = AppColors.of(context);
 
     return Container(

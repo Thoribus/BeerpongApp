@@ -1,0 +1,1607 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "Beerpong Companion",
+  "@appTitle": { "description": "App name shown in title bar" },
+
+
+  "btnCancel": "Cancel",
+  "@btnCancel": { "description": "Generic cancel button" },
+
+  "btnSave": "Save",
+  "@btnSave": { "description": "Generic save button" },
+
+  "btnSaving": "Saving…",
+  "@btnSaving": { "description": "Save button label while in progress" },
+
+  "btnAdd": "Add",
+  "@btnAdd": { "description": "Generic add button" },
+
+  "btnClose": "Close",
+  "@btnClose": { "description": "Generic close button" },
+
+  "btnOk": "OK",
+  "@btnOk": { "description": "Generic OK button" },
+
+  "btnSignInGoogle": "Sign in with Google",
+  "@btnSignInGoogle": { "description": "Generic sign-in with Google button" },
+
+
+  "labelTeamBlue": "Team Blue",
+  "@labelTeamBlue": { "description": "Blue team display name" },
+
+  "labelTeamRed": "Team Red",
+  "@labelTeamRed": { "description": "Red team display name" },
+
+  "labelVs": "VS",
+  "@labelVs": { "description": "Versus divider between two teams" },
+
+  "labelRules": "Rules",
+  "@labelRules": { "description": "Section header for game rules" },
+
+  "labelPlayers": "Players",
+  "@labelPlayers": { "description": "Section header or label for players" },
+
+  "labelTeams": "Teams",
+  "@labelTeams": { "description": "Section header for teams" },
+
+  "labelTournament": "Tournament",
+  "@labelTournament": { "description": "Tournament mode label" },
+
+  "labelLevelShort": "Lv {level}",
+  "@labelLevelShort": {
+    "description": "Short level badge, e.g. Lv 5",
+    "placeholders": {
+      "level": { "type": "int", "example": "5" }
+    }
+  },
+
+
+  "loginTagline": "Track your game. Rule the table.",
+  "@loginTagline": { "description": "App tagline shown on login screen" },
+
+  "loginToggleSignIn": "Sign In",
+  "@loginToggleSignIn": { "description": "Sign-in tab label on login toggle" },
+
+  "loginToggleRegister": "Register",
+  "@loginToggleRegister": { "description": "Register tab label on login toggle" },
+
+  "loginFieldUsername": "Username",
+  "@loginFieldUsername": { "description": "Username input field label" },
+
+  "loginFieldEmail": "Email",
+  "@loginFieldEmail": { "description": "Email input field label" },
+
+  "loginFieldPassword": "Password",
+  "@loginFieldPassword": { "description": "Password input field label" },
+
+  "loginValidateUsername": "Enter a username",
+  "@loginValidateUsername": { "description": "Validation error when username is empty" },
+
+  "loginValidateEmail": "Enter a valid email",
+  "@loginValidateEmail": { "description": "Validation error for invalid email" },
+
+  "loginValidatePassword": "Minimum 6 characters",
+  "@loginValidatePassword": { "description": "Validation error when password is too short" },
+
+  "loginForgotPassword": "Forgot password?",
+  "@loginForgotPassword": { "description": "Forgot password link text" },
+
+  "loginBtnSignIn": "Sign In",
+  "@loginBtnSignIn": { "description": "Sign-in submit button label" },
+
+  "loginBtnCreateAccount": "Create Account",
+  "@loginBtnCreateAccount": { "description": "Register submit button label" },
+
+  "loginOrContinueWith": "or continue with",
+  "@loginOrContinueWith": { "description": "Divider text between email form and social logins" },
+
+  "loginContinueGoogle": "Continue with Google",
+  "@loginContinueGoogle": { "description": "Google sign-in button label" },
+
+  "loginContinueApple": "Continue with Apple",
+  "@loginContinueApple": { "description": "Apple sign-in button label" },
+
+  "loginErrorGeneric": "Something went wrong. Please try again.",
+  "@loginErrorGeneric": { "description": "Generic error during email sign-in" },
+
+  "loginErrorGoogle": "Google sign-in failed. Please try again.",
+  "@loginErrorGoogle": { "description": "Error during Google sign-in" },
+
+  "loginErrorApple": "Apple sign-in failed. Please try again.",
+  "@loginErrorApple": { "description": "Error during Apple sign-in" },
+
+  "loginErrorEmailFirst": "Enter your email address first.",
+  "@loginErrorEmailFirst": { "description": "Error shown when forgot-password tapped without email" },
+
+  "loginResetEmailSent": "Password reset email sent!",
+  "@loginResetEmailSent": { "description": "Snackbar after password reset email sent" },
+
+  "loginErrorResetFailed": "Could not send reset email. Check the address.",
+  "@loginErrorResetFailed": { "description": "Error when reset email fails to send" },
+
+  "loginErrUserNotFound": "No account found with this email.",
+  "@loginErrUserNotFound": { "description": "Firebase: user-not-found" },
+
+  "loginErrWrongPassword": "Incorrect email or password.",
+  "@loginErrWrongPassword": { "description": "Firebase: wrong-password / invalid-credential" },
+
+  "loginErrEmailInUse": "An account with this email already exists.",
+  "@loginErrEmailInUse": { "description": "Firebase: email-already-in-use" },
+
+  "loginErrWeakPassword": "Password must be at least 6 characters.",
+  "@loginErrWeakPassword": { "description": "Firebase: weak-password" },
+
+  "loginErrInvalidEmail": "Please enter a valid email address.",
+  "@loginErrInvalidEmail": { "description": "Firebase: invalid-email" },
+
+  "loginErrTooManyRequests": "Too many attempts. Please try again later.",
+  "@loginErrTooManyRequests": { "description": "Firebase: too-many-requests" },
+
+  "loginErrAuthFailed": "Authentication failed. Please try again.",
+  "@loginErrAuthFailed": { "description": "Firebase: catch-all auth error" },
+
+
+  "homeLetsPlay": "Let's play!",
+  "@homeLetsPlay": { "description": "Subtitle on hero card" },
+
+  "homeBeerPong": "Beer Pong",
+  "@homeBeerPong": { "description": "Title on hero card" },
+
+  "homeBtnNewGame": "New Game",
+  "@homeBtnNewGame": { "description": "New Game button on hero card" },
+
+  "homeResumeTitle": "Resume Game",
+  "@homeResumeTitle": { "description": "Resume game card title" },
+
+  "homeResumeSubtitle": "Continue your last game",
+  "@homeResumeSubtitle": { "description": "Resume game card subtitle" },
+
+  "homePendingInvitations": "{count, plural, =1{You have 1 pending invitation} other{You have {count} pending invitations}}",
+  "@homePendingInvitations": {
+    "description": "Badge showing number of pending game invitations",
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+
+  "homeRulebookTitle": "Rulebook",
+  "@homeRulebookTitle": { "description": "Rulebook banner title" },
+
+  "homeRulebookSubtitle": "Learn how every special rule works",
+  "@homeRulebookSubtitle": { "description": "Rulebook banner subtitle" },
+
+  "homeNewGameDialogTitle": "New Game",
+  "@homeNewGameDialogTitle": { "description": "Title of confirmation dialog when starting a new game" },
+
+  "homeNewGameDialogContent": "Starting a new game will delete the current game. Do you want to continue?",
+  "@homeNewGameDialogContent": { "description": "Body of new-game confirmation dialog" },
+
+  "homeNewGameDialogConfirm": "Start New Game",
+  "@homeNewGameDialogConfirm": { "description": "Confirm button in new-game dialog" },
+
+  "homeGameModeTitle": "Play Beerpong",
+  "@homeGameModeTitle": { "description": "Game mode screen title for single game" },
+
+  "homeGameModeSubtitle": "Quick, fun rounds",
+  "@homeGameModeSubtitle": { "description": "Game mode screen subtitle for single game" },
+
+  "homeTournamentTitle": "Tournament",
+  "@homeTournamentTitle": { "description": "Game mode screen title for tournament" },
+
+  "homeTournamentSubtitle": "Bracket-style play",
+  "@homeTournamentSubtitle": { "description": "Game mode screen subtitle for tournament" },
+
+
+  "gameModeRuleAirballs": "Airballs",
+  "@gameModeRuleAirballs": { "description": "Airballs rule name on game setup screen" },
+
+  "gameModeRuleBounce": "Bounce",
+  "@gameModeRuleBounce": { "description": "Bounce rule name on game setup screen" },
+
+  "gameModeRulePutback": "Putback",
+  "@gameModeRulePutback": { "description": "Putback rule name on game setup screen" },
+
+  "gameModeRuleIsland": "Island",
+  "@gameModeRuleIsland": { "description": "Island rule name on game setup screen" },
+
+  "gameModeRuleDeathcup": "Deathcup",
+  "@gameModeRuleDeathcup": { "description": "Deathcup rule name on game setup screen" },
+
+  "gameModeRuleRearrange": "Rearrange",
+  "@gameModeRuleRearrange": { "description": "Rearrange rule name on game setup screen" },
+
+  "gameModeNoUser": "No user logged in!",
+  "@gameModeNoUser": { "description": "Error when no user is logged in during player pick" },
+
+  "gameModeNoFriends": "No friends found!",
+  "@gameModeNoFriends": { "description": "Error when friend list is empty" },
+
+  "gameModeInvited": "Invited {username}",
+  "@gameModeInvited": {
+    "description": "Snackbar confirmation after sending a game invitation",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alice" }
+    }
+  },
+
+  "gameModeInvitationDeclined": "Invitation declined",
+  "@gameModeInvitationDeclined": { "description": "Snackbar when an invitation is declined" },
+
+  "gameModeBtnStartGame": "Start Game",
+  "@gameModeBtnStartGame": { "description": "Start game button label" },
+
+  "gameModeBtnStartTournament": "Start Tournament",
+  "@gameModeBtnStartTournament": { "description": "Start tournament button label" },
+
+  "gameModeDialogSelectPlayer": "Select a Player",
+  "@gameModeDialogSelectPlayer": { "description": "Title of player-picker dialog on game setup" },
+
+  "gameModeYourself": "Yourself",
+  "@gameModeYourself": { "description": "Option to add yourself as a player" },
+
+  "gameModeFriends": "Friends",
+  "@gameModeFriends": { "description": "Section header in player-picker for friends" },
+
+  "gameModeWhoStarts": "Who starts?",
+  "@gameModeWhoStarts": { "description": "Title of starting-team dialog" },
+
+  "gameModeWhichTeamStarts": "Which team should start?",
+  "@gameModeWhichTeamStarts": { "description": "Body of starting-team dialog" },
+
+  "gameModeTeamBlueStarts": "Team Blue starts",
+  "@gameModeTeamBlueStarts": { "description": "Button to choose blue team as starting team" },
+
+  "gameModeTeamRedStarts": "Team Red starts",
+  "@gameModeTeamRedStarts": { "description": "Button to choose red team as starting team" },
+
+  "gameModeToggleSingleGame": "Single Game",
+  "@gameModeToggleSingleGame": { "description": "Mode toggle option for single game" },
+
+  "gameModeLabelBlue": "BLUE",
+  "@gameModeLabelBlue": { "description": "Blue team panel header label" },
+
+  "gameModeLabelRed": "RED",
+  "@gameModeLabelRed": { "description": "Red team panel header label" },
+
+  "gameModeLabelPlayersUpper": "PLAYERS",
+  "@gameModeLabelPlayersUpper": { "description": "Tournament players panel header label" },
+
+  "gameModeAddPlayer": "Add Player",
+  "@gameModeAddPlayer": { "description": "Add player button in tournament lobby" },
+
+  "gameModePlayerN": "Player {number}",
+  "@gameModePlayerN": {
+    "description": "Placeholder text for an unnamed player slot",
+    "placeholders": {
+      "number": { "type": "int", "example": "1" }
+    }
+  },
+
+
+  "gameLoadingTitle": "Game",
+  "@gameLoadingTitle": { "description": "AppBar title while game is loading" },
+
+  "gameTapCupSank": "Tap the cup you sank",
+  "@gameTapCupSank": { "description": "AppBar instruction during active bounce shot" },
+
+  "gameTeamTurn": "{teamName}'s Turn",
+  "@gameTeamTurn": {
+    "description": "AppBar title showing whose turn it is",
+    "placeholders": {
+      "teamName": { "type": "String", "example": "Team 1" }
+    }
+  },
+
+  "gameNavTable": "Table",
+  "@gameNavTable": { "description": "Nav pill label for the game table page" },
+
+  "gameNavStats": "Stats",
+  "@gameNavStats": { "description": "Nav pill label for the in-game stats page" },
+
+  "gameVs": "vs",
+  "@gameVs": { "description": "Versus separator in score strip" },
+
+  "gameMissZone": "Miss Zone — tap to log airball",
+  "@gameMissZone": { "description": "Label on the airball miss zone tap area" },
+
+  "gameTeamStatistics": "Team Statistics",
+  "@gameTeamStatistics": { "description": "Header on the in-game stats page" },
+
+  "gameStatsPlayer": "Player",
+  "@gameStatsPlayer": { "description": "Column header: player name" },
+
+  "gameStatsScore": "Score",
+  "@gameStatsScore": { "description": "Column header: score" },
+
+  "gameStatsThrows": "Throws",
+  "@gameStatsThrows": { "description": "Column header: throw count" },
+
+  "gameStatsMisses": "Misses",
+  "@gameStatsMisses": { "description": "Column header: miss count" },
+
+  "gameStatsAirballs": "Airballs",
+  "@gameStatsAirballs": { "description": "Column header: airball count" },
+
+  "gameUndoLabel": "Undo",
+  "@gameUndoLabel": { "description": "Bottom bar: undo last action" },
+
+  "gameCupsLabel": "Cups",
+  "@gameCupsLabel": { "description": "Bottom bar: toggle re-rack" },
+
+  "gameMoreLabel": "More",
+  "@gameMoreLabel": { "description": "Bottom bar: open actions sheet" },
+
+  "gameEndTurnLabel": "End Turn",
+  "@gameEndTurnLabel": { "description": "Bottom bar: end current turn" },
+
+  "gameDeathCupLabel": "Death Cup",
+  "@gameDeathCupLabel": { "description": "Actions sheet: death cup entry" },
+
+  "gameIslandShotLabel": "Island Shot",
+  "@gameIslandShotLabel": { "description": "Actions sheet: island shot entry" },
+
+  "gameBounceShotLabel": "Bounce Shot",
+  "@gameBounceShotLabel": { "description": "Actions sheet: bounce shot entry" },
+
+  "gameRearrangeCupsLabel": "Rearrange Cups",
+  "@gameRearrangeCupsLabel": { "description": "Actions sheet: rearrange cups entry" },
+
+  "gameSelectPlayer": "Select Player",
+  "@gameSelectPlayer": { "description": "Dialog title for in-game player selection" },
+
+  "gameWhoMadeIslandShot": "Who made the island shot?",
+  "@gameWhoMadeIslandShot": { "description": "Dialog title for island shot player selection" },
+
+  "gameBounceSelectThrower": "Bounce Shot — Select Thrower",
+  "@gameBounceSelectThrower": { "description": "Dialog title for bounce shot player selection" },
+
+  "gameEnemyLastTurn": "Enemy Team's Last Turn",
+  "@gameEnemyLastTurn": { "description": "Dialog title for putback (nachwurf) player selection" },
+
+  "gameBonusCupTitle": "Choose your free bonus cup",
+  "@gameBonusCupTitle": { "description": "Bottom sheet title for island shot bonus cup picker" },
+
+  "gameBonusCupSubtitle": "Island shot reward — pick any remaining cup",
+  "@gameBonusCupSubtitle": { "description": "Bottom sheet subtitle for bonus cup picker" },
+
+  "gameBonusCupSkip": "Skip bonus",
+  "@gameBonusCupSkip": { "description": "Button to skip the island shot bonus cup" },
+
+  "gameLeaveTitle": "Leave Game?",
+  "@gameLeaveTitle": { "description": "Dialog title when trying to leave mid-game" },
+
+  "gameLeaveContent": "Your game is saved automatically. You can resume it from the home screen.",
+  "@gameLeaveContent": { "description": "Dialog body explaining auto-save before leaving" },
+
+  "gameLeaveStay": "Stay",
+  "@gameLeaveStay": { "description": "Cancel button in leave-game dialog" },
+
+  "gameLeaveLeave": "Leave",
+  "@gameLeaveLeave": { "description": "Confirm button in leave-game dialog" },
+
+
+  "dialogSelectPlayerBody": "Select the player for the cup action:",
+  "@dialogSelectPlayerBody": { "description": "Body text in the generic player selection dialog" },
+
+  "dialogRearrangeErrorTitle": "Rearrange Error!",
+  "@dialogRearrangeErrorTitle": { "description": "Title of rearrange rule error dialog" },
+
+  "dialogRearrangeErrorBody": "You can only rearrange if you have 6 or fewer cups!",
+  "@dialogRearrangeErrorBody": { "description": "Body of rearrange rule error dialog" },
+
+  "dialogEndTurnTitle": "End your turn!",
+  "@dialogEndTurnTitle": { "description": "Title of end-turn confirmation dialog" },
+
+  "dialogEndTurnBody": "Confirm that all cup actions were selected!",
+  "@dialogEndTurnBody": { "description": "Body of end-turn confirmation dialog" },
+
+  "dialogEndTurnConfirm": "End Turn",
+  "@dialogEndTurnConfirm": { "description": "Confirm button in end-turn dialog" },
+
+  "dialogAirballTitle": "Airball Milestone",
+  "@dialogAirballTitle": { "description": "Title of airball milestone dialog" },
+
+  "dialogAirballBody": "All players need to drink a shot!",
+  "@dialogAirballBody": { "description": "Body of airball milestone dialog" },
+
+  "dialogAirballCount": "Total airballs: {count}",
+  "@dialogAirballCount": {
+    "description": "Running airball counter shown in milestone dialog",
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+
+  "dialogBallsBackTitle": "Balls Back!",
+  "@dialogBallsBackTitle": { "description": "Title of balls-back notification dialog" },
+
+  "dialogBallsBackBody": "All players hit this round!",
+  "@dialogBallsBackBody": { "description": "Body of balls-back notification dialog" },
+
+  "dialogOnFireTitle": "On Fire!",
+  "@dialogOnFireTitle": { "description": "Title of on-fire streak notification dialog" },
+
+  "dialogOnFireBody": "Three consecutive hits!",
+  "@dialogOnFireBody": { "description": "Body of on-fire streak notification dialog" },
+
+  "dialogBitchCupTitle": "Bitch Cup!",
+  "@dialogBitchCupTitle": { "description": "Title of bitch-cup notification dialog" },
+
+  "dialogBitchCupBody": "Drop your pants!",
+  "@dialogBitchCupBody": { "description": "Body of bitch-cup notification dialog" },
+
+  "dialogGameOverTitle": "Game Over",
+  "@dialogGameOverTitle": { "description": "Title of game-over dialog" },
+
+  "dialogGameOverGoStats": "Go to Stats",
+  "@dialogGameOverGoStats": { "description": "Game-over dialog button to navigate to stats" },
+
+  "dialogGameOverGoHome": "Go to Home",
+  "@dialogGameOverGoHome": { "description": "Game-over dialog button to navigate home" },
+
+
+  "rulebookSpecialBadge": "SPECIAL",
+  "@rulebookSpecialBadge": { "description": "Badge label on each rule card in the rulebook" },
+
+  "rulebookHowToActivate": "How to activate",
+  "@rulebookHowToActivate": { "description": "Section label above activation steps in a rule card" },
+
+  "rulebookAirballsTagline": "Miss out loud — your team pays the price.",
+  "@rulebookAirballsTagline": { "description": "Tagline for the Airballs rule card" },
+
+  "rulebookAirballsDescription": "An airball is a throw that misses every cup without touching anything. When a team accumulates 3 airballs in total, all players must take a penalty sip. The counter resets and keeps climbing.",
+  "@rulebookAirballsDescription": { "description": "Full description for the Airballs rule" },
+
+  "rulebookAirballsStep1": "Enable \"Airballs\" in game setup.",
+  "@rulebookAirballsStep1": { "description": "Airballs activation step 1" },
+
+  "rulebookAirballsStep2": "When a shot misses completely, tap the orange miss zone below the cups.",
+  "@rulebookAirballsStep2": { "description": "Airballs activation step 2" },
+
+  "rulebookAirballsStep3": "At every 3rd airball, a dialog prompts the penalty.",
+  "@rulebookAirballsStep3": { "description": "Airballs activation step 3" },
+
+  "rulebookAirballsTip": "The miss zone only appears when the Airballs rule is active — remember to tap it on every complete miss.",
+  "@rulebookAirballsTip": { "description": "Tip for the Airballs rule" },
+
+  "rulebookBounceTagline": "One ball, two cups — but the defense can swat it.",
+  "@rulebookBounceTagline": { "description": "Tagline for the Bounce rule card" },
+
+  "rulebookBounceDescription": "A bounce shot is a throw where the ball bounces off the table before landing in a cup. It rewards risk: a successful bounce removes the hit cup plus one additional random cup. However, the defending team is allowed to swat the ball away after the first bounce, so it can be blocked.",
+  "@rulebookBounceDescription": { "description": "Full description for the Bounce rule" },
+
+  "rulebookBounceStep1": "Enable \"Bounce\" in game setup.",
+  "@rulebookBounceStep1": { "description": "Bounce activation step 1" },
+
+  "rulebookBounceStep2": "During your turn, open the action menu (⋯) and tap \"Bounce Shot\".",
+  "@rulebookBounceStep2": { "description": "Bounce activation step 2" },
+
+  "rulebookBounceStep3": "Select who made the bounce, then tap the cup they sank.",
+  "@rulebookBounceStep3": { "description": "Bounce activation step 3" },
+
+  "rulebookBounceTip": "Bounce shots are high-risk, high-reward. Save them for when you need to close a gap quickly.",
+  "@rulebookBounceTip": { "description": "Tip for the Bounce rule" },
+
+  "rulebookPutbackTagline": "The game isn't over until the last redemption throw lands.",
+  "@rulebookPutbackTagline": { "description": "Tagline for the Putback rule card" },
+
+  "rulebookPutbackDescription": "When a team sinks the opponent's final cup, the losing side earns one redemption throw per player. If any throw lands, the last cup is restored and the game continues into overtime. Every player must attempt their throw before the result is decided.",
+  "@rulebookPutbackDescription": { "description": "Full description for the Putback rule" },
+
+  "rulebookPutbackStep1": "Enable \"Putback\" in game setup.",
+  "@rulebookPutbackStep1": { "description": "Putback activation step 1" },
+
+  "rulebookPutbackStep2": "When the last cup is sunk, the redemption dialog appears automatically.",
+  "@rulebookPutbackStep2": { "description": "Putback activation step 2" },
+
+  "rulebookPutbackStep3": "Each losing-team player takes one shot. A hit keeps the game alive.",
+  "@rulebookPutbackStep3": { "description": "Putback activation step 3" },
+
+  "rulebookPutbackTip": "If multiple redemption throws land, only one cup is restored — aim carefully.",
+  "@rulebookPutbackTip": { "description": "Tip for the Putback rule" },
+
+  "rulebookIslandTagline": "An isolated cup means a free bonus cup.",
+  "@rulebookIslandTagline": { "description": "Tagline for the Island rule card" },
+
+  "rulebookIslandDescription": "An island cup is one with no neighbours — completely surrounded by empty space. A designated shooter can call an island shot on it. If they sink it, they win that cup plus a bonus cup of their choice. A miss scores nothing and the attempt is used up.",
+  "@rulebookIslandDescription": { "description": "Full description for the Island rule" },
+
+  "rulebookIslandStep1": "Enable \"Island\" in game setup.",
+  "@rulebookIslandStep1": { "description": "Island activation step 1" },
+
+  "rulebookIslandStep2": "Tap \"Island Shot\" in the action menu and select the shooter.",
+  "@rulebookIslandStep2": { "description": "Island activation step 2" },
+
+  "rulebookIslandStep3": "Island cups glow yellow. Tap one to take the shot.",
+  "@rulebookIslandStep3": { "description": "Island activation step 3" },
+
+  "rulebookIslandStep4": "On success, pick your free bonus cup from the bottom sheet.",
+  "@rulebookIslandStep4": { "description": "Island activation step 4" },
+
+  "rulebookIslandTip": "If only one island cup exists, the shot triggers automatically after selecting the shooter — no extra tap needed.",
+  "@rulebookIslandTip": { "description": "Tip for the Island rule" },
+
+  "rulebookDeathcupTagline": "Sink the cup being drunk and the game ends instantly.",
+  "@rulebookDeathcupTagline": { "description": "Tagline for the Deathcup rule card" },
+
+  "rulebookDeathcupDescription": "When the Deathcup rule is active, each cup that has been sunk but not yet fully drunk is a live deathcup. If a player lands a ball in it while an opponent is still drinking, that team immediately loses — all remaining cups are cleared.",
+  "@rulebookDeathcupDescription": { "description": "Full description for the Deathcup rule" },
+
+  "rulebookDeathcupStep1": "Enable \"Deathcup\" in game setup.",
+  "@rulebookDeathcupStep1": { "description": "Deathcup activation step 1" },
+
+  "rulebookDeathcupStep2": "When a deathcup is sunk, open the action menu (⋯) and tap \"Deathcup\".",
+  "@rulebookDeathcupStep2": { "description": "Deathcup activation step 2" },
+
+  "rulebookDeathcupStep3": "Select the player who made the shot to trigger the instant win.",
+  "@rulebookDeathcupStep3": { "description": "Deathcup activation step 3" },
+
+  "rulebookDeathcupTip": "Keep track of which cups opponents are currently drinking — they're your highest-value targets.",
+  "@rulebookDeathcupTip": { "description": "Tip for the Deathcup rule" },
+
+  "rulebookRearrangeTagline": "Regroup scattered cups into a tighter formation.",
+  "@rulebookRearrangeTagline": { "description": "Tagline for the Rearrange rule card" },
+
+  "rulebookRearrangeDescription": "Once per game, when 6 or fewer cups remain on your side, you can call a re-rack. Cups are rearranged into a standard triangle formation, closing the gaps that make individual cups harder to hit. The re-rack can only be used once and only within the 6-cup limit.",
+  "@rulebookRearrangeDescription": { "description": "Full description for the Rearrange rule" },
+
+  "rulebookRearrangeStep1": "Enable \"Rearrange\" in game setup.",
+  "@rulebookRearrangeStep1": { "description": "Rearrange activation step 1" },
+
+  "rulebookRearrangeStep2": "When 6 or fewer cups remain, tap the re-rack button in the bottom dock bar.",
+  "@rulebookRearrangeStep2": { "description": "Rearrange activation step 2" },
+
+  "rulebookRearrangeStep3": "Cups immediately shift into a compact triangle.",
+  "@rulebookRearrangeStep3": { "description": "Rearrange activation step 3" },
+
+  "rulebookRearrangeTip": "Save your re-rack for when cups are most scattered — a tight triangle is significantly easier to aim at.",
+  "@rulebookRearrangeTip": { "description": "Tip for the Rearrange rule" },
+
+
+  "statsTabStats": "Stats",
+  "@statsTabStats": { "description": "Statistics screen tab: stats overview" },
+
+  "statsTabPerformance": "Performance",
+  "@statsTabPerformance": { "description": "Statistics screen tab: performance charts" },
+
+  "statsTabProgress": "Progress",
+  "@statsTabProgress": { "description": "Statistics screen tab: level and achievement progress" },
+
+  "statsTabBreakdown": "Breakdown",
+  "@statsTabBreakdown": { "description": "Statistics screen tab: game breakdown" },
+
+  "statsTabHistory": "History",
+  "@statsTabHistory": { "description": "Statistics screen tab: game history" },
+
+  "statsSignInPrompt": "Sign in to view your statistics",
+  "@statsSignInPrompt": { "description": "Prompt shown when user is not signed in on stats screen" },
+
+  "statsFailedToLoad": "Failed to load games",
+  "@statsFailedToLoad": { "description": "Error message when game history fails to load" },
+
+  "statsNoGamesYet": "No games recorded yet.",
+  "@statsNoGamesYet": { "description": "Empty state when no game history exists" },
+
+  "statsLiveView": "Live view",
+  "@statsLiveView": { "description": "Tooltip for live game view button in history" },
+
+  "statsGameStatistics": "Game Statistics",
+  "@statsGameStatistics": { "description": "Title of game statistics detail view" },
+
+  "statsViewTeam": "View Team",
+  "@statsViewTeam": { "description": "Button to view team details in a game" },
+
+  "statsViewGameStats": "View Game Stats",
+  "@statsViewGameStats": { "description": "Button to view full game statistics" },
+
+  "statsViewTable": "View Table",
+  "@statsViewTable": { "description": "Button to view cup table layout for a game" },
+
+  "statsColumnPlayer": "Player",
+  "@statsColumnPlayer": { "description": "Table column header: player name" },
+
+  "statsColumnScore": "Score",
+  "@statsColumnScore": { "description": "Table column header: score" },
+
+  "statsColumnThrows": "Throws",
+  "@statsColumnThrows": { "description": "Table column header: throw count" },
+
+  "statsColumnMiss": "Miss",
+  "@statsColumnMiss": { "description": "Table column header: miss count (short)" },
+
+  "statsColumnHitRate": "Hit%",
+  "@statsColumnHitRate": { "description": "Table column header: hit rate percentage" },
+
+  "statsColumnBounce": "Bounce",
+  "@statsColumnBounce": { "description": "Table column header: bounce rate" },
+
+  "statsColumnDef": "Def",
+  "@statsColumnDef": { "description": "Table column header: defended (putback)" },
+
+  "statsAchievements": "Achievements",
+  "@statsAchievements": { "description": "Section header for achievements in game breakdown" },
+
+  "statsTeamStatistics": "Team Statistics",
+  "@statsTeamStatistics": { "description": "Section header for team stats in game breakdown" },
+
+  "statsMvp": "MVP",
+  "@statsMvp": { "description": "Achievement badge: most valuable player" },
+
+  "statsAirballer": "Airballer",
+  "@statsAirballer": { "description": "Achievement badge: most airballs" },
+
+  "statsMissManiac": "Miss Maniac",
+  "@statsMissManiac": { "description": "Achievement badge: most misses" },
+
+  "statsSniper": "Sniper",
+  "@statsSniper": { "description": "Achievement badge: best accuracy" },
+
+  "statsTierRoadmap": "Tier Roadmap",
+  "@statsTierRoadmap": { "description": "Section header for tier roadmap on progress tab" },
+
+  "statsAchievementProgress": "Achievement Progress",
+  "@statsAchievementProgress": { "description": "Section header for achievement progress on progress tab" },
+
+  "statsUnlockedTitles": "Unlocked Titles",
+  "@statsUnlockedTitles": { "description": "Section header for unlocked titles on progress tab" },
+
+  "statsAlmostThere": "Almost There",
+  "@statsAlmostThere": { "description": "Section header for near-completion achievements" },
+
+  "statsMaxLevelReached": "Max level reached — {xp} XP total",
+  "@statsMaxLevelReached": {
+    "description": "Label shown when user has reached max level",
+    "placeholders": {
+      "xp": { "type": "int", "example": "12500" }
+    }
+  },
+
+  "statsReachLevelUnlock": "Reach Level {level} to unlock {title}",
+  "@statsReachLevelUnlock": {
+    "description": "Hint to reach a level to unlock a tier title",
+    "placeholders": {
+      "level": { "type": "int", "example": "10" },
+      "title": { "type": "String", "example": "Legend" }
+    }
+  },
+
+
+  "perfSummaryTitle": "Performance Summary",
+  "@perfSummaryTitle": { "description": "Section title on performance tab" },
+
+  "perfHeatMapTitle": "Cups Hit Heat Map",
+  "@perfHeatMapTitle": { "description": "Section title for cup heat map on performance tab" },
+
+  "perfRowAccuracyTitle": "Row Accuracy",
+  "@perfRowAccuracyTitle": { "description": "Section title for row accuracy chart on performance tab" },
+
+  "perfFilterAll": "All",
+  "@perfFilterAll": { "description": "Filter chip: all games" },
+
+  "perfFilterLast10": "Last 10",
+  "@perfFilterLast10": { "description": "Filter chip: last 10 games" },
+
+  "perfFilterLast5": "Last 5",
+  "@perfFilterLast5": { "description": "Filter chip: last 5 games" },
+
+  "perfFilterLast3": "Last 3",
+  "@perfFilterLast3": { "description": "Filter chip: last 3 games" },
+
+  "perfNoData": "No data yet.",
+  "@perfNoData": { "description": "Empty state on performance tab" },
+
+  "perfRowFront": "Front",
+  "@perfRowFront": { "description": "Row accuracy label: front row" },
+
+  "perfRowMid": "Mid",
+  "@perfRowMid": { "description": "Row accuracy label: middle row" },
+
+  "perfRowBack": "Back",
+  "@perfRowBack": { "description": "Row accuracy label: back row" },
+
+  "perfRowApex": "Apex",
+  "@perfRowApex": { "description": "Row accuracy label: apex (back-most cup)" },
+
+  "statTotalScore": "Total Score",
+  "@statTotalScore": { "description": "Stat row label: total score" },
+
+  "statTotalMisses": "Total Misses",
+  "@statTotalMisses": { "description": "Stat row label: total misses" },
+
+  "statTotalAirballs": "Total Airballs",
+  "@statTotalAirballs": { "description": "Stat row label: total airballs" },
+
+  "statCupsHit": "Cups Hit",
+  "@statCupsHit": { "description": "Stat row label: cups hit" },
+
+  "statHitRate": "Hit Rate",
+  "@statHitRate": { "description": "Stat row label: hit rate" },
+
+  "statWinRate": "Win Rate",
+  "@statWinRate": { "description": "Stat row label: win rate" },
+
+  "statBounceRate": "Bounce Rate",
+  "@statBounceRate": { "description": "Stat row label: bounce rate" },
+
+  "statIslandConv": "Island Conv.",
+  "@statIslandConv": { "description": "Stat row label: island conversion rate" },
+
+  "statDefended": "Defended",
+  "@statDefended": { "description": "Stat row label: putback defends" },
+
+  "statOnFire": "On Fire",
+  "@statOnFire": { "description": "Stat row label: on-fire count" },
+
+  "statHeatingUp": "Heating Up",
+  "@statHeatingUp": { "description": "Stat row label: heating up count" },
+
+
+  "friendsTabFriendlist": "Friendlist",
+  "@friendsTabFriendlist": { "description": "Friends screen tab: friend list" },
+
+  "friendsTabLeaderboard": "Leaderboard",
+  "@friendsTabLeaderboard": { "description": "Friends screen tab: leaderboard" },
+
+  "friendsTabSocials": "Socials",
+  "@friendsTabSocials": { "description": "Friends screen tab: social feed" },
+
+  "friendsSignInPrompt": "Sign in to view your friends",
+  "@friendsSignInPrompt": { "description": "Prompt shown when user is not signed in on friends screen" },
+
+  "friendsMustSignIn": "You must be signed in to add friends.",
+  "@friendsMustSignIn": { "description": "Error snackbar when trying to add a friend while signed out" },
+
+  "friendsNoFriends": "No friends yet. Add one using the + button above.",
+  "@friendsNoFriends": { "description": "Empty state on friend list tab" },
+
+  "friendsNoActivity": "Add friends to see activity here.",
+  "@friendsNoActivity": { "description": "Empty state on socials tab when no friends" },
+
+  "friendsNoRecentActivity": "No recent activity yet.",
+  "@friendsNoRecentActivity": { "description": "Empty state on socials tab when friends have no activity" },
+
+  "friendsNoFriendsFound": "No friends found.",
+  "@friendsNoFriendsFound": { "description": "Empty state when friend search yields no results" },
+
+  "friendsRemoveTitle": "Remove Friend",
+  "@friendsRemoveTitle": { "description": "Title of remove-friend confirmation dialog" },
+
+  "friendsRemoveBody": "Remove {username} from your friends?",
+  "@friendsRemoveBody": {
+    "description": "Body of remove-friend confirmation dialog",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alice" }
+    }
+  },
+
+  "friendsRemoveConfirm": "Remove",
+  "@friendsRemoveConfirm": { "description": "Confirm button in remove-friend dialog" },
+
+  "friendsAddTitle": "Add a Friend",
+  "@friendsAddTitle": { "description": "Title of add-friend sheet" },
+
+  "friendsSearchHint": "Search by username…",
+  "@friendsSearchHint": { "description": "Hint text in username search field" },
+
+  "friendsNoUsersFound": "No users found.",
+  "@friendsNoUsersFound": { "description": "Empty state in user search" },
+
+  "friendsAddBtn": "Add",
+  "@friendsAddBtn": { "description": "Button to add a found user as friend" },
+
+  "friendsShareQr": "Share / Scan QR",
+  "@friendsShareQr": { "description": "Section title for QR code sharing in add-friend sheet" },
+
+  "friendsIdCopied": "ID copied to clipboard",
+  "@friendsIdCopied": { "description": "Snackbar after copying user ID to clipboard" },
+
+  "friendsScanQrBtn": "Scan QR Code",
+  "@friendsScanQrBtn": { "description": "Button to scan a QR code to add a friend" },
+
+  "friendsWatchBtn": "Watch",
+  "@friendsWatchBtn": { "description": "Button to spectate a friend's live game" },
+
+
+  "shopTabAvatar": "Avatar",
+  "@shopTabAvatar": { "description": "Shop screen tab: avatar items" },
+
+  "shopTabUserCard": "User Card",
+  "@shopTabUserCard": { "description": "Shop screen tab: user card backgrounds" },
+
+  "shopTabInGame": "In Game",
+  "@shopTabInGame": { "description": "Shop screen tab: in-game cosmetics" },
+
+  "shopSignInEarnStars": "Sign in to earn Stars",
+  "@shopSignInEarnStars": { "description": "Prompt shown when user is not signed in on shop screen" },
+
+  "shopGetStars": "Get Stars",
+  "@shopGetStars": { "description": "Button / sheet title to acquire stars" },
+
+  "shopEarnStarsHint": "Earn ⭐ stars to spend in the shop.",
+  "@shopEarnStarsHint": { "description": "Subtitle on the get-stars sheet" },
+
+  "shopSupporterTitle": "Thank you! ⭐",
+  "@shopSupporterTitle": { "description": "Dialog title after supporter purchase" },
+
+  "shopSupporterBody": "You're now a Supporter! Your Supporter badge is live on your profile, and you're helping keep the app running. Thank you!",
+  "@shopSupporterBody": { "description": "Dialog body after supporter purchase" },
+
+  "shopSupporterBtn": "Awesome!",
+  "@shopSupporterBtn": { "description": "Dismiss button on supporter thank-you dialog" },
+
+  "shopStarsAwarded": "You got {count} ⭐!",
+  "@shopStarsAwarded": {
+    "description": "Snackbar shown when stars are awarded after purchase",
+    "placeholders": {
+      "count": { "type": "int", "example": "100" }
+    }
+  },
+
+  "shopPurchaseFailed": "Purchase failed: {message}",
+  "@shopPurchaseFailed": {
+    "description": "Snackbar when an in-app purchase fails",
+    "placeholders": {
+      "message": { "type": "String", "example": "Payment declined" }
+    }
+  },
+
+  "shopNoAdAvailable": "No ad available right now. Try again later.",
+  "@shopNoAdAvailable": { "description": "Snackbar when no rewarded ad is available" },
+
+  "shopEarned50Stars": "You earned 50 ⭐!",
+  "@shopEarned50Stars": { "description": "Snackbar after watching a rewarded ad" },
+
+  "shopEarnFreeStars": "Earn stars for free by playing games!",
+  "@shopEarnFreeStars": { "description": "Hint text at bottom of get-stars sheet" },
+
+  "shopRestorePurchases": "Restore Purchases",
+  "@shopRestorePurchases": { "description": "Button to restore previous in-app purchases" },
+
+  "shopWatchVideo": "Watch a short video",
+  "@shopWatchVideo": { "description": "Label on rewarded ad button" },
+
+  "shopDailyLimitReached": "Daily limit reached — come back tomorrow",
+  "@shopDailyLimitReached": { "description": "Label on rewarded ad button when daily limit hit" },
+
+  "shopSupporterBadge": "You're a Supporter ✓",
+  "@shopSupporterBadge": { "description": "Badge label shown when user is already a supporter" },
+
+  "shopBuyBtn": "Buy",
+  "@shopBuyBtn": { "description": "Generic buy button in the shop" },
+
+  "shopComingSoon": "Coming soon",
+  "@shopComingSoon": { "description": "Badge label on shop items not yet available" },
+
+
+  "accountProfile": "Profile",
+  "@accountProfile": { "description": "Account screen title / section header" },
+
+  "accountSupporter": "Supporter",
+  "@accountSupporter": { "description": "Badge label shown next to username for supporters" },
+
+  "accountFeedbackTooltip": "Send feedback",
+  "@accountFeedbackTooltip": { "description": "Tooltip on feedback icon button" },
+
+  "accountSignOutTooltip": "Sign out",
+  "@accountSignOutTooltip": { "description": "Tooltip on sign-out icon button" },
+
+  "accountSignOutTitle": "Sign out?",
+  "@accountSignOutTitle": { "description": "Title of sign-out confirmation dialog" },
+
+  "accountSignOutBody": "You will be returned to the sign-in screen.",
+  "@accountSignOutBody": { "description": "Body of sign-out confirmation dialog" },
+
+  "accountSignOutConfirm": "Sign out",
+  "@accountSignOutConfirm": { "description": "Confirm button in sign-out dialog" },
+
+
+  "achievementStagesBronze": "Bronze",
+  "@achievementStagesBronze": { "description": "Achievement tier: Bronze" },
+
+  "achievementStagesSilver": "Silver",
+  "@achievementStagesSilver": { "description": "Achievement tier: Silver" },
+
+  "achievementStagesGold": "Gold",
+  "@achievementStagesGold": { "description": "Achievement tier: Gold" },
+
+  "achievementStagesDiamond": "Diamond",
+  "@achievementStagesDiamond": { "description": "Achievement tier: Diamond" },
+
+  "achievementMaxed": "Maxed!",
+  "@achievementMaxed": { "description": "Label when all achievement stages are completed" },
+
+  "achievementFullyMastered": "Fully mastered!",
+  "@achievementFullyMastered": { "description": "Label in achievement detail when fully mastered" },
+
+  "achievementProgress": "Progress: {current} / {next}",
+  "@achievementProgress": {
+    "description": "Progress indicator in achievement detail dialog",
+    "placeholders": {
+      "current": { "type": "int", "example": "42" },
+      "next": { "type": "int", "example": "100" }
+    }
+  },
+
+  "achievementUnlocksTitle": "Unlocks title: \"{title}\"",
+  "@achievementUnlocksTitle": {
+    "description": "Label showing which title an achievement stage unlocks",
+    "placeholders": {
+      "title": { "type": "String", "example": "Sniper" }
+    }
+  },
+
+
+  "profileSectionUsername": "Username",
+  "@profileSectionUsername": { "description": "Section header for username on profile edit screen" },
+
+  "profileSectionAvatar": "Avatar",
+  "@profileSectionAvatar": { "description": "Section header for avatar selection" },
+
+  "profileSectionBackground": "Background",
+  "@profileSectionBackground": { "description": "Section header for background selection" },
+
+  "profileSectionTitle": "Title",
+  "@profileSectionTitle": { "description": "Section header for title selection" },
+
+  "profileUsernamePlaceholder": "Choose a username",
+  "@profileUsernamePlaceholder": { "description": "Hint text for username input field" },
+
+  "profileUsernameChecking": "Checking…",
+  "@profileUsernameChecking": { "description": "Username availability status: checking" },
+
+  "profileUsernameAvailable": "Available",
+  "@profileUsernameAvailable": { "description": "Username availability status: available" },
+
+  "profileUsernameTaken": "Already taken",
+  "@profileUsernameTaken": { "description": "Username availability status: taken" },
+
+  "profileUsernameInvalid": "3–20 chars, letters/numbers/underscores/spaces, no consecutive __ or spaces",
+  "@profileUsernameInvalid": { "description": "Username validation hint when format is invalid" },
+
+  "profileUpdated": "Profile updated!",
+  "@profileUpdated": { "description": "Snackbar after successfully saving profile" },
+
+  "profileSaveFailed": "Failed to save: {error}",
+  "@profileSaveFailed": {
+    "description": "Snackbar when profile save fails",
+    "placeholders": {
+      "error": { "type": "String", "example": "network error" }
+    }
+  },
+
+  "profileLevelRequired": "Lv {level}",
+  "@profileLevelRequired": {
+    "description": "Lock label showing required level for locked avatar/background",
+    "placeholders": {
+      "level": { "type": "int", "example": "5" }
+    }
+  },
+
+  "dialogGameOverWinners": "{winners} have won the game!",
+  "@dialogGameOverWinners": {
+    "description": "Game-over dialog body showing winner names",
+    "placeholders": {
+      "winners": { "type": "String", "example": "Alice, Bob" }
+    }
+  },
+
+  "achievementsMaxLevel": "Max level reached",
+  "@achievementsMaxLevel": { "description": "Label in level card when user is at max level" },
+
+  "achievementsXpProgress": "{xp} XP · {toNext} XP to Level {nextLevel}",
+  "@achievementsXpProgress": {
+    "description": "XP progress line in level card",
+    "placeholders": {
+      "xp": { "type": "int", "example": "850" },
+      "toNext": { "type": "int", "example": "150" },
+      "nextLevel": { "type": "int", "example": "6" }
+    }
+  },
+
+  "achievementsBestStreak": "Best Streak",
+  "@achievementsBestStreak": { "description": "Stat chip label for best win streak in achievements screen" },
+
+  "shopSignInBrowse": "Sign in to browse the shop",
+  "@shopSignInBrowse": { "description": "Prompt shown when browsing shop while not signed in" },
+
+  "shopSectionProfilePictures": "Profile Pictures",
+  "@shopSectionProfilePictures": { "description": "Section header for profile-picture items in avatar shop" },
+
+  "shopSectionAvatarBorders": "Avatar Borders",
+  "@shopSectionAvatarBorders": { "description": "Section header for border items in avatar shop" },
+
+  "shopSectionEmblemsAndMedals": "Emblems & Medals",
+  "@shopSectionEmblemsAndMedals": { "description": "Section header for emblem items in avatar shop" },
+
+  "shopSectionCupSkins": "Cup Skins",
+  "@shopSectionCupSkins": { "description": "Section header for cup skin items in in-game shop" },
+
+  "shopSectionTableThemes": "Table Themes",
+  "@shopSectionTableThemes": { "description": "Section header for table theme items in in-game shop" },
+
+  "shopSectionTitles": "Titles",
+  "@shopSectionTitles": { "description": "Section header for title items in user card shop" },
+
+  "shopSectionCardBackgrounds": "Card Backgrounds",
+  "@shopSectionCardBackgrounds": { "description": "Section header for background items in user card shop" },
+
+  "shopCardBackgroundsNote": "Card backgrounds are unlocked for free by levelling up. Manage them in your profile.",
+  "@shopCardBackgroundsNote": { "description": "Info note explaining how card backgrounds are unlocked" },
+
+  "shopEquip": "Equip",
+  "@shopEquip": { "description": "Button to equip an owned in-game item" },
+
+  "shopUnequip": "Unequip",
+  "@shopUnequip": { "description": "Button to unequip an equipped in-game item" },
+
+  "shopYourBalance": "Your balance",
+  "@shopYourBalance": { "description": "Label showing user's current star balance in purchase dialog" },
+
+  "shopCost": "Cost",
+  "@shopCost": { "description": "Label showing item cost in purchase dialog" },
+
+  "shopBuyForStars": "Buy for ⭐ {price}",
+  "@shopBuyForStars": {
+    "description": "Buy button label in purchase dialog",
+    "placeholders": {
+      "price": { "type": "int", "example": "200" }
+    }
+  },
+
+  "shopNeedMoreStars": "You need {count} more ⭐ to buy this.",
+  "@shopNeedMoreStars": {
+    "description": "Message when user cannot afford an item",
+    "placeholders": {
+      "count": { "type": "int", "example": "50" }
+    }
+  },
+
+  "shopGetMoreStars": "Get More Stars",
+  "@shopGetMoreStars": { "description": "Button to open the get-stars sheet from the purchase dialog" },
+
+  "shopItemPurchased": "{name} purchased! ⭐",
+  "@shopItemPurchased": {
+    "description": "Snackbar shown after successfully buying a shop item",
+    "placeholders": {
+      "name": { "type": "String", "example": "Gold Cups" }
+    }
+  },
+
+  "shopNotEnoughStars": "Not enough stars!",
+  "@shopNotEnoughStars": { "description": "Snackbar shown when purchase fails due to insufficient stars" },
+
+  "navShop": "Shop",
+  "@navShop": { "description": "Bottom nav label: shop" },
+
+  "navFriends": "Friends",
+  "@navFriends": { "description": "Bottom nav label: friends" },
+
+  "navHome": "Home",
+  "@navHome": { "description": "Bottom nav label: home" },
+
+  "navGames": "Games",
+  "@navGames": { "description": "Bottom nav label: games" },
+
+  "navProfile": "Profile",
+  "@navProfile": { "description": "Bottom nav label: profile" },
+
+  "settingsDarkMode": "Dark Mode",
+  "@settingsDarkMode": { "description": "Setting toggle label for dark mode" },
+
+  "settingsPrivacy": "Privacy Settings",
+  "@settingsPrivacy": { "description": "Setting row label for privacy settings" },
+
+  "settingsLanguage": "Language",
+  "@settingsLanguage": { "description": "Setting row label for language selection" },
+
+  "feedbackSheetTitle": "Send Feedback",
+  "@feedbackSheetTitle": { "description": "Title of the feedback bottom sheet" },
+
+  "feedbackHint": "Describe the issue or idea…",
+  "@feedbackHint": { "description": "Hint text in feedback text field" },
+
+  "feedbackSend": "Send",
+  "@feedbackSend": { "description": "Send button on feedback sheet" },
+
+  "feedbackSuccess": "Thanks for your feedback!",
+  "@feedbackSuccess": { "description": "Snackbar after feedback is submitted" },
+
+  "feedbackError": "Could not send feedback. Try again.",
+  "@feedbackError": { "description": "Snackbar when feedback submission fails" },
+
+  "feedbackCategoryBug": "Bug",
+  "@feedbackCategoryBug": { "description": "Feedback category: bug report" },
+
+  "feedbackCategorySuggestion": "Suggestion",
+  "@feedbackCategorySuggestion": { "description": "Feedback category: suggestion" },
+
+  "feedbackCategoryOther": "Other",
+  "@feedbackCategoryOther": { "description": "Feedback category: other" },
+
+  "invitationsTitle": "Invitations",
+  "@invitationsTitle": { "description": "AppBar title on the invitation inbox screen" },
+
+  "invitationsNotSignedIn": "Not signed in",
+  "@invitationsNotSignedIn": { "description": "Message shown on invitation screen when not signed in" },
+
+  "invitationsNoPending": "No pending invitations",
+  "@invitationsNoPending": { "description": "Empty state on invitation inbox screen" },
+
+  "invitationsDeclined": "Invitation declined",
+  "@invitationsDeclined": { "description": "Snackbar after declining an invitation" },
+
+  "invitationsDeclineBtn": "Decline",
+  "@invitationsDeclineBtn": { "description": "Button to decline an invitation" },
+
+  "invitationsAcceptBtn": "Accept",
+  "@invitationsAcceptBtn": { "description": "Button to accept an invitation" },
+
+  "invitationsFromPlayer": "A player",
+  "@invitationsFromPlayer": { "description": "Fallback sender name when username is missing" },
+
+  "invitationsInvitedToGame": "Invited you to a Game",
+  "@invitationsInvitedToGame": { "description": "Invitation card subtitle for a game invite" },
+
+  "invitationsInvitedToTournament": "Invited you to a Tournament",
+  "@invitationsInvitedToTournament": { "description": "Invitation card subtitle for a tournament invite" },
+
+  "waitingTitle": "Waiting…",
+  "@waitingTitle": { "description": "AppBar title on the waiting-for-game screen" },
+
+  "waitingForGame": "Waiting for {host} to start the game…",
+  "@waitingForGame": {
+    "description": "Message shown while waiting for host to start a game",
+    "placeholders": {
+      "host": { "type": "String", "example": "Alice" }
+    }
+  },
+
+  "waitingForTournament": "Waiting for {host} to start the tournament…",
+  "@waitingForTournament": {
+    "description": "Message shown while waiting for host to start a tournament",
+    "placeholders": {
+      "host": { "type": "String", "example": "Alice" }
+    }
+  },
+
+  "liveGameTitle": "Live Game",
+  "@liveGameTitle": { "description": "AppBar title when watching a live in-progress game" },
+
+  "liveGameSummary": "Game Summary",
+  "@liveGameSummary": { "description": "AppBar title when the game is over and showing summary" },
+
+  "liveTabTable": "Table",
+  "@liveTabTable": { "description": "Live-ticker tab: cup table" },
+
+  "liveTabStats": "Stats",
+  "@liveTabStats": { "description": "Live-ticker tab: stats" },
+
+  "liveTabTimeline": "Timeline",
+  "@liveTabTimeline": { "description": "Live-ticker tab: event timeline" },
+
+  "liveGameNotFound": "Game not found.",
+  "@liveGameNotFound": { "description": "Message shown when a live game cannot be found" },
+
+  "liveGameError": "Something went wrong",
+  "@liveGameError": { "description": "Generic error message on live game screen" },
+
+  "liveBadgeLive": "LIVE",
+  "@liveBadgeLive": { "description": "Badge label shown on an in-progress live game" },
+
+  "liveBadgeFinal": "FINAL",
+  "@liveBadgeFinal": { "description": "Badge label shown when a game is finished" },
+
+  "liveStatsAccuracy": "Accuracy %",
+  "@liveStatsAccuracy": { "description": "Column header for accuracy percentage in live match stats" },
+
+  "liveTimelineNoEvents": "No events yet",
+  "@liveTimelineNoEvents": { "description": "Empty state on the timeline tab" },
+
+  "liveTimelineRound": "Round {number}",
+  "@liveTimelineRound": {
+    "description": "Round header in the timeline tab",
+    "placeholders": {
+      "number": { "type": "int", "example": "3" }
+    }
+  },
+
+  "liveTimelineEndOfTurn": "End of turn · {time}",
+  "@liveTimelineEndOfTurn": {
+    "description": "End-of-turn marker in the timeline tab",
+    "placeholders": {
+      "time": { "type": "String", "example": "01:23" }
+    }
+  },
+
+  "liveEventHit": "Hit",
+  "@liveEventHit": { "description": "Timeline event label: normal hit" },
+
+  "liveEventBounce": "Bounce",
+  "@liveEventBounce": { "description": "Timeline event label: bounce shot" },
+
+  "liveEventIsland": "Island",
+  "@liveEventIsland": { "description": "Timeline event label: island shot" },
+
+  "liveEventDeathCup": "Death Cup",
+  "@liveEventDeathCup": { "description": "Timeline event label: death cup" },
+
+  "liveEventAirball": "Airball",
+  "@liveEventAirball": { "description": "Timeline event label: airball" },
+
+  "liveEventBitchCup": "Bitch Cup",
+  "@liveEventBitchCup": { "description": "Timeline event label: bitch cup" },
+
+  "liveEventOnFire": "On Fire",
+  "@liveEventOnFire": { "description": "Timeline event label: on fire" },
+
+  "spectatelobbyTitle": "Lobby",
+  "@spectatelobbyTitle": { "description": "AppBar title on spectate lobby screen" },
+
+  "spectateLobbyGameTitle": "Game Lobby",
+  "@spectateLobbyGameTitle": { "description": "AppBar title on spectate lobby screen once game loaded" },
+
+  "spectateLobbyError": "Error loading game.",
+  "@spectateLobbyError": { "description": "Error message when game data can't be loaded in spectate lobby" },
+
+  "spectateLobbyNoPlayers": "No players yet",
+  "@spectateLobbyNoPlayers": { "description": "Empty state when no players have joined yet in spectate lobby" },
+
+  "spectateLobbyGameSettings": "Game Settings",
+  "@spectateLobbyGameSettings": { "description": "Section header for game settings in spectate lobby" },
+
+  "spectateLobbyMode": "Mode",
+  "@spectateLobbyMode": { "description": "Settings row label for game mode in spectate lobby" },
+
+  "spectateLobbyStartingTeam": "Starting Team",
+  "@spectateLobbyStartingTeam": { "description": "Settings row label for starting team in spectate lobby" },
+
+  "spectateLobbyWaiting": "Waiting for the host to start the game…",
+  "@spectateLobbyWaiting": { "description": "Message shown while waiting for host to start in spectate lobby" },
+
+  "btnLeave": "Leave",
+  "@btnLeave": { "description": "Button to leave / exit a lobby or screen" },
+
+  "liveCupsLeft": "{count} cups left",
+  "@liveCupsLeft": {
+    "description": "Cups remaining counter shown under team name in live game header",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "liveStatScore": "Score",
+  "@liveStatScore": { "description": "Stat column/row label for score in live match stats" },
+
+  "liveStatThrows": "Throws",
+  "@liveStatThrows": { "description": "Stat column/row label for throws in live match stats" },
+
+  "liveStatAirballs": "Airballs",
+  "@liveStatAirballs": { "description": "Stat column/row label for airballs in live match stats" },
+
+  "liveStatMisses": "Misses",
+  "@liveStatMisses": { "description": "Stat column/row label for misses in live match stats" },
+
+  "liveStatCupsHit": "Cups Hit",
+  "@liveStatCupsHit": { "description": "Stat column/row label for cups hit in live cup layout tab" },
+
+  "gameModeTeamStarts": "{team} starts",
+  "@gameModeTeamStarts": {
+    "description": "Button label indicating which team starts the game",
+    "placeholders": { "team": { "type": "String" } }
+  },
+
+  "tournamentCompleteTitle": "Tournament Complete!",
+  "@tournamentCompleteTitle": { "description": "Dialog title when all tournament matches have been played" },
+
+  "tournamentCompleteBody": "All matches have been played.\nCheck out the standings!",
+  "@tournamentCompleteBody": { "description": "Dialog body when tournament is complete" },
+
+  "labelPlayer": "Player",
+  "@labelPlayer": { "description": "Singular label for a player (e.g. column header)" },
+
+  "compareTitle": "Comparison",
+  "@compareTitle": { "description": "Screen title for friend stat comparison screen" },
+
+  "compareOverview": "OVERVIEW",
+  "@compareOverview": { "description": "Section header for the radar overview in compare screen" },
+
+  "compareStatComparison": "STAT COMPARISON",
+  "@compareStatComparison": { "description": "Section header for stat comparison bars in compare screen" },
+
+  "compareBouncePercent": "Bounce %",
+  "@compareBouncePercent": { "description": "Stat row label: bounce shot percentage" },
+
+  "compareIslandPercent": "Island %",
+  "@compareIslandPercent": { "description": "Stat row label: island shot percentage" },
+
+  "compareTotalWins": "Total Wins",
+  "@compareTotalWins": { "description": "Stat row label: total wins" },
+
+  "compareOnFire": "On Fire",
+  "@compareOnFire": { "description": "Stat row label: on-fire count" },
+
+  "breakdownShotDistribution": "Shot Distribution",
+  "@breakdownShotDistribution": { "description": "Section title for shot distribution donut chart" },
+
+  "breakdownSpecialShots": "Special Shots",
+  "@breakdownSpecialShots": { "description": "Section title for special shots breakdown" },
+
+  "breakdownWinContext": "Win Context",
+  "@breakdownWinContext": { "description": "Section title for win context (win margin, clutch) breakdown" },
+
+  "breakdownHeadToHead": "Head to Head",
+  "@breakdownHeadToHead": { "description": "Section title for head-to-head opponent breakdown" },
+
+  "breakdownThrowsLabel": "throws",
+  "@breakdownThrowsLabel": { "description": "Lowercase label shown beneath total throws count in donut chart" },
+
+  "breakdownHits": "Hits",
+  "@breakdownHits": { "description": "Legend label for hits in shot donut chart" },
+
+  "breakdownBounceShot": "Bounce Shot",
+  "@breakdownBounceShot": { "description": "Label for bounce shot card in special shots section" },
+
+  "breakdownIslandShot": "Island Shot",
+  "@breakdownIslandShot": { "description": "Label for island shot card in special shots section" },
+
+  "breakdownWinMarginTitle": "Win Margin Distribution",
+  "@breakdownWinMarginTitle": { "description": "Card title for win margin distribution bar chart" },
+
+  "breakdownDominant": "Dominant (5+ cups)",
+  "@breakdownDominant": { "description": "Win margin bucket: dominant win with 5+ cups remaining" },
+
+  "breakdownComfortable": "Comfortable (3–4)",
+  "@breakdownComfortable": { "description": "Win margin bucket: comfortable win with 3–4 cups remaining" },
+
+  "breakdownClose": "Close (1–2)",
+  "@breakdownClose": { "description": "Win margin bucket: close win with 1–2 cups remaining" },
+
+  "breakdownClutchRate": "Clutch Rate",
+  "@breakdownClutchRate": { "description": "Card label for clutch rate metric" },
+
+  "breakdownClutchDesc": "Hit the last cup to win",
+  "@breakdownClutchDesc": { "description": "Description below clutch rate label" },
+
+  "breakdownNoGames": "No games recorded yet.",
+  "@breakdownNoGames": { "description": "Empty state when no games have been recorded" },
+
+  "breakdownNoOpponents": "No opponents found.",
+  "@breakdownNoOpponents": { "description": "Empty state when no head-to-head opponents found" },
+
+  "breakdownNoThrows": "No throws recorded yet.",
+  "@breakdownNoThrows": { "description": "Empty state when no throws have been recorded" },
+
+  "statsViewAllAchievements": "View all achievements",
+  "@statsViewAllAchievements": { "description": "Button label to navigate to the achievements screen" },
+
+  "statsColAbbrevScore": "S",
+  "@statsColAbbrevScore": { "description": "Abbreviated column header for Score in player stats table" },
+
+  "statsColAbbrevMisses": "M",
+  "@statsColAbbrevMisses": { "description": "Abbreviated column header for Misses in player stats table" },
+
+  "statsColAbbrevThrows": "T",
+  "@statsColAbbrevThrows": { "description": "Abbreviated column header for Throws in player stats table" },
+
+  "statsColAbbrevAirballs": "A",
+  "@statsColAbbrevAirballs": { "description": "Abbreviated column header for Airballs in player stats table" },
+
+  "statsColAbbrevHitRate": "HR",
+  "@statsColAbbrevHitRate": { "description": "Abbreviated column header for Hit Rate in player stats table" },
+
+  "statsCareerHighlights": "CAREER HIGHLIGHTS",
+  "@statsCareerHighlights": { "description": "Section header for career highlights in personal stats" },
+
+  "statsBestStreak": "Best Streak",
+  "@statsBestStreak": { "description": "Career highlight card label for longest win streak" },
+
+  "statsBestHitRate": "Best Hit Rate",
+  "@statsBestHitRate": { "description": "Career highlight card label for best single-game hit rate" },
+
+  "statsMostCups": "Most Cups",
+  "@statsMostCups": { "description": "Career highlight card label for most cups in a single game" },
+
+  "statsRecentForm": "Recent Form",
+  "@statsRecentForm": { "description": "Section header for the recent form W/L strip" },
+
+  "statsWins": "Wins",
+  "@statsWins": { "description": "Stat tile label for total wins" },
+
+  "statsLosses": "Losses",
+  "@statsLosses": { "description": "Stat tile label for total losses" },
+
+  "statsWinRate": "Win Rate",
+  "@statsWinRate": { "description": "Stat tile / chip label for win rate percentage" },
+
+  "statsHitRate": "Hit Rate",
+  "@statsHitRate": { "description": "Stat tile / chip label for hit rate percentage" },
+
+  "statsOnFire": "On Fire",
+  "@statsOnFire": { "description": "Stat tile label for on-fire count" },
+
+  "statsBouncePercent": "Bounce%",
+  "@statsBouncePercent": { "description": "Stat tile label for bounce shot conversion percentage" },
+
+  "statsIslands": "Islands",
+  "@statsIslands": { "description": "Stat tile label for island shot makes" },
+
+  "statsDefended": "Defended",
+  "@statsDefended": { "description": "Stat tile / shot card label for defended shots" },
+
+  "statsHeatingUp": "Heating Up",
+  "@statsHeatingUp": { "description": "Stat tile label for heating-up count" },
+
+  "statsLastCup": "Last Cup",
+  "@statsLastCup": { "description": "Stat tile label for last-cup (clutch) hits" },
+
+  "statsAvgPerGame": "Avg/Game",
+  "@statsAvgPerGame": { "description": "Stat tile label for average cups per game" },
+
+  "statsNightGames": "Night Games",
+  "@statsNightGames": { "description": "Stat tile label for night games played" },
+
+  "statsCupsPerGame": "cups/game",
+  "@statsCupsPerGame": { "description": "Label on the cups-per-game derived chip" },
+
+  "statsThrowsPerGame": "throws/game",
+  "@statsThrowsPerGame": { "description": "Label on the throws-per-game derived chip" },
+
+  "statsStreakChip": "{count}-game {type} streak",
+  "@statsStreakChip": {
+    "description": "Streak chip text, e.g. '3-game W streak'",
+    "placeholders": {
+      "count": { "type": "int", "example": "3" },
+      "type": { "type": "String", "example": "W" }
+    }
+  },
+
+  "statsCurrentStreak": "Current streak: {label}",
+  "@statsCurrentStreak": {
+    "description": "Current streak label in the stats screen, e.g. 'Current streak: 3W'",
+    "placeholders": {
+      "label": { "type": "String", "example": "3W" }
+    }
+  },
+
+  "statsLast10Record": "Last {count}:  {wins}W  {losses}L",
+  "@statsLast10Record": {
+    "description": "Recent record summary, e.g. 'Last 10:  7W  3L'",
+    "placeholders": {
+      "count": { "type": "int", "example": "10" },
+      "wins": { "type": "int", "example": "7" },
+      "losses": { "type": "int", "example": "3" }
+    }
+  },
+
+  "statsXpProgress": "{xp} XP · {toNext} XP to Level {level}",
+  "@statsXpProgress": {
+    "description": "XP progress line below the level bar",
+    "placeholders": {
+      "xp": { "type": "int", "example": "340" },
+      "toNext": { "type": "int", "example": "160" },
+      "level": { "type": "int", "example": "6" }
+    }
+  },
+
+  "compareWinRate": "Win Rate",
+  "@compareWinRate": { "description": "Radar chart axis label for win rate" },
+
+  "compareHitRate": "Hit Rate",
+  "@compareHitRate": { "description": "Radar chart axis label for hit rate" },
+
+  "shopStarterPackTitle": "Starter Pack  ·  €1.99",
+  "@shopStarterPackTitle": { "description": "Fallback IAP row title for the starter star pack" },
+
+  "shopStarterPackSubtitle": "200 ⭐",
+  "@shopStarterPackSubtitle": { "description": "Fallback IAP row subtitle for the starter star pack" },
+
+  "shopPopularPackTitle": "Popular Pack  ·  €4.99",
+  "@shopPopularPackTitle": { "description": "Fallback IAP row title for the popular star pack" },
+
+  "shopPopularPackSubtitle": "600 ⭐  ·  Best value",
+  "@shopPopularPackSubtitle": { "description": "Fallback IAP row subtitle for the popular star pack" },
+
+  "shopMegaPackTitle": "Mega Pack  ·  €9.99",
+  "@shopMegaPackTitle": { "description": "Fallback IAP row title for the mega star pack" },
+
+  "shopMegaPackSubtitle": "1 500 ⭐",
+  "@shopMegaPackSubtitle": { "description": "Fallback IAP row subtitle for the mega star pack" },
+
+  "shopSupporterPackFull": "Supporter Pack  ·  €2.99",
+  "@shopSupporterPackFull": { "description": "Fallback IAP row title for the supporter pack" },
+
+  "shopSupporterPackFullSubtitle": "300 ⭐  ·  Supporter badge on your profile",
+  "@shopSupporterPackFullSubtitle": { "description": "Fallback IAP row subtitle for the supporter pack" },
+
+  "shopWatchesRemaining": "+50 ⭐  ·  {remaining} of {total} watches remaining today",
+  "@shopWatchesRemaining": {
+    "description": "Subtitle on the watch-a-video row showing daily ad quota",
+    "placeholders": {
+      "remaining": { "type": "int", "example": "4" },
+      "total": { "type": "int", "example": "5" }
+    }
+  },
+
+  "socialBeatFriend": "Beat {username}",
+  "@socialBeatFriend": {
+    "description": "Social feed event title when current user won against a friend",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" }
+    }
+  },
+
+  "socialLostToFriend": "Lost to {username}",
+  "@socialLostToFriend": {
+    "description": "Social feed event title when current user lost to a friend",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" }
+    }
+  },
+
+  "socialSharedGameResult": "{myScore}–{oppScore} · {hitPct}% hit rate",
+  "@socialSharedGameResult": {
+    "description": "Social feed shared game subtitle showing scores and hit rate",
+    "placeholders": {
+      "myScore": { "type": "int", "example": "10" },
+      "oppScore": { "type": "int", "example": "6" },
+      "hitPct": { "type": "int", "example": "50" }
+    }
+  },
+
+  "socialWinStreak": "🔥 {count}-game win streak!",
+  "@socialWinStreak": {
+    "description": "Social feed title for a current win streak",
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+
+  "socialWinStreakSubtitle": "You're on fire — keep the momentum going.",
+  "@socialWinStreakSubtitle": { "description": "Social feed subtitle below the win streak card" },
+
+  "socialFriendReachedWins": "🏆 {username} reached {count} wins",
+  "@socialFriendReachedWins": {
+    "description": "Social feed achievement title when a friend hits a win milestone",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" },
+      "count": { "type": "int", "example": "50" }
+    }
+  },
+
+  "socialFriendLegendSubtitle": "A true beer pong legend.",
+  "@socialFriendLegendSubtitle": { "description": "Social feed subtitle below a friend's win milestone card" },
+
+  "socialFriendOnFire": "🔥 {username} went on fire {count}+ times",
+  "@socialFriendOnFire": {
+    "description": "Social feed achievement title when a friend hits an on-fire milestone",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" },
+      "count": { "type": "int", "example": "50" }
+    }
+  },
+
+  "socialSeriousHeatSubtitle": "Serious heat.",
+  "@socialSeriousHeatSubtitle": { "description": "Social feed subtitle below a friend's on-fire milestone card" },
+
+  "socialFriendIsActive": "{username} is active",
+  "@socialFriendIsActive": {
+    "description": "Social feed title for a recently active friend",
+    "placeholders": {
+      "username": { "type": "String", "example": "Alex" }
+    }
+  },
+
+  "socialFriendActiveSubtitle": "Played {timeAgo} · {totalGames} total games",
+  "@socialFriendActiveSubtitle": {
+    "description": "Social feed subtitle for a recently active friend",
+    "placeholders": {
+      "timeAgo": { "type": "String", "example": "3h ago" },
+      "totalGames": { "type": "int", "example": "42" }
+    }
+  },
+
+  "leaderboardTotalScore": "Total Score",
+  "@leaderboardTotalScore": { "description": "Leaderboard sort chip label for total score" },
+
+  "leaderboardGames": "Games",
+  "@leaderboardGames": { "description": "Leaderboard sort chip label for games played" }
+}

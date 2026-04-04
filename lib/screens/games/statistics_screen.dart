@@ -31,6 +31,8 @@ import '../profile/achievements_screen.dart';
 import '../../widgets/app_tab_bar.dart';
 //----------------------------------------------
 
+import 'package:beerpongapp/util/localization_extensions.dart';
+
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
@@ -72,7 +74,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildTabPageSelector() {
     return AppTabBar(
-      tabs: const ['Stats', 'Performance', 'Progress', 'Breakdown', 'History'],
+      tabs: [context.loc.statsTabStats, context.loc.statsTabPerformance, context.loc.statsTabProgress, context.loc.statsTabBreakdown, context.loc.statsTabHistory],
       selectedIndex: _currentTabPage,
       onTabSelected: (index) {
         setState(() => _currentTabPage = index);
@@ -96,13 +98,13 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               const Icon(Icons.lock_outline, color: Colors.grey, size: 48),
               const SizedBox(height: 16),
               Text(
-                'Sign in to view your statistics',
+                context.loc.statsSignInPrompt,
                 style: TextStyle(color: c.onBackground, fontSize: 16),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () async => userProvider.signIn(),
-                child: const Text('Sign in with Google'),
+                child: Text(context.loc.btnSignInGoogle),
               ),
             ],
           ),
@@ -123,10 +125,10 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     if (hasError) {
       return Scaffold(
         backgroundColor: c.background,
-        body: const Center(
+        body: Center(
           child: Text(
-            'Failed to load games',
-            style: TextStyle(color: Colors.red),
+            context.loc.statsFailedToLoad,
+            style: const TextStyle(color: Colors.red),
           ),
         ),
       );
@@ -288,7 +290,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
             ],
           ),
           trailing: IconButton(
-            tooltip: 'Live view',
+            tooltip: context.loc.statsLiveView,
             icon: const Icon(Icons.arrow_forward_ios_rounded,
                 size: 14, color: Colors.white54),
             padding: EdgeInsets.zero,
@@ -354,21 +356,23 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.3)),
         const SizedBox(height: 4),
-        SingleChildScrollView(
+        IntrinsicHeight(
+        child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Header row
               Row(children: [
-                cell(Text('Player', style: headerStyle), col0),
-                headerCell('Score', col1),
-                headerCell('Throws', col2),
-                headerCell('Miss', col3),
-                headerCell('Hit%', col4),
-                headerCell('Bounce', col5),
+                cell(Text(context.loc.statsColumnPlayer, style: headerStyle), col0),
+                headerCell(context.loc.statsColumnScore, col1),
+                headerCell(context.loc.liveStatThrows, col2),
+                headerCell(context.loc.statsColumnMiss, col3),
+                headerCell(context.loc.statsColumnHitRate, col4),
+                headerCell(context.loc.statsColumnBounce, col5),
                 headerCell('🔥', col6),
-                headerCell('Def', col7),
+                headerCell(context.loc.statsColumnDef, col7),
               ]),
               const SizedBox(height: 2),
               // Data rows
@@ -432,6 +436,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
               }),
             ],
           ),
+        ),
         ),
       ],
     );
@@ -512,7 +517,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Current streak: $streakLabel',
+              context.loc.statsCurrentStreak(streakLabel),
               style: TextStyle(
                 color: c.onBackground,
                 fontWeight: FontWeight.w600,
@@ -524,7 +529,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                'Last ${last10.length}:  ${wins10}W  ${losses10}L',
+                context.loc.statsLast10Record(last10.length, wins10, losses10),
                 style: TextStyle(color: c.onBackground, fontSize: 12),
               ),
               Text(
@@ -547,7 +552,7 @@ class StatisticsScreenState extends State<StatisticsScreen> {
     if (games.isEmpty) {
       return Center(
         child: Text(
-          'No games recorded yet.',
+          context.loc.statsNoGamesYet,
           style: TextStyle(color: c.subtle),
         ),
       );
@@ -609,7 +614,7 @@ class _ProgressTab extends StatelessWidget {
         // ── View all achievements button ───────────────────────────────────
         OutlinedButton.icon(
           icon: const Icon(Icons.emoji_events_outlined, size: 16),
-          label: const Text('View all achievements'),
+          label: Text(context.loc.statsViewAllAchievements),
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.amber,
             side: const BorderSide(color: Colors.amber),
@@ -649,7 +654,7 @@ class _ProgressTab extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      'Lv $level',
+                      context.loc.labelLevelShort(level),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -685,8 +690,8 @@ class _ProgressTab extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         isMax
-                            ? 'Max level reached — ${user.xp} XP total'
-                            : '${user.xp} XP · $toNext XP to Level ${level + 1}',
+                            ? context.loc.statsMaxLevelReached(user.xp)
+                            : context.loc.statsXpProgress(user.xp, toNext, level + 1),
                         style: TextStyle(fontSize: 11, color: c.subtle),
                       ),
                     ],
@@ -717,7 +722,7 @@ class _ProgressTab extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Reach Level $nextTierLevel to unlock ${nextTier.displayName}',
+                    context.loc.statsReachLevelUnlock(nextTierLevel, nextTier.displayName),
                     style: TextStyle(
                         color: nextTier.color,
                         fontSize: 13,
@@ -737,7 +742,7 @@ class _ProgressTab extends StatelessWidget {
         const SizedBox(height: 20),
 
         // ── Tier roadmap ──────────────────────────────────────────────────
-        Text('Tier Roadmap',
+        Text(context.loc.statsTierRoadmap,
             style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -793,7 +798,7 @@ class _ProgressTab extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Lv $minLv+',
+                      '${context.loc.labelLevelShort(minLv)}+',
                       style: TextStyle(
                         color: isUnlocked
                             ? t.color.withValues(alpha: 0.7)
@@ -822,7 +827,7 @@ class _ProgressTab extends StatelessWidget {
         const SizedBox(height: 24),
 
         // ── Achievement category overview ─────────────────────────────────
-        Text('Achievement Progress',
+        Text(context.loc.statsAchievementProgress,
             style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
@@ -836,7 +841,7 @@ class _ProgressTab extends StatelessWidget {
 
         // ── Unlocked titles ───────────────────────────────────────────────
         if (user.unlockedTitles.isNotEmpty) ...[
-          Text('Unlocked Titles',
+          Text(context.loc.statsUnlockedTitles,
               style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -886,7 +891,7 @@ class _ProgressTab extends StatelessWidget {
 
         // ── Upcoming unlocks ──────────────────────────────────────────────
         if (upcoming.isNotEmpty) ...[
-          Text('Almost There',
+          Text(context.loc.statsAlmostThere,
               style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -1134,10 +1139,10 @@ class GameDetailsPageState extends State<GameDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Game Statistics',
+        title: Text(
+          context.loc.statsGameStatistics,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.amber,
@@ -1154,7 +1159,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                         _pageController.jumpToPage(0);
                       },
                 child: Text(
-                  'View Team',
+                  context.loc.statsViewTeam,
                   style: TextStyle(
                     color: _currentPage == 0 ? Colors.amber : Colors.white,
                     backgroundColor: Colors.black,
@@ -1175,7 +1180,7 @@ class GameDetailsPageState extends State<GameDetailsPage> {
                         _pageController.jumpToPage(1);
                       },
                 child: Text(
-                  'View Game Stats',
+                  context.loc.statsViewGameStats,
                   style: TextStyle(
                     color: _currentPage == 1 ? Colors.amber : Colors.white,
                     backgroundColor: Colors.black,
@@ -1206,9 +1211,9 @@ class GameDetailsPageState extends State<GameDetailsPage> {
         context.push(AppRoutes.spectateLivePath(game.id));
       },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-      child: const Text(
-        'View Table',
-        style: TextStyle(color: Colors.black),
+      child: Text(
+        context.loc.statsViewTable,
+        style: const TextStyle(color: Colors.black),
       ),
     );
   }
@@ -1222,24 +1227,24 @@ class GameDetailsPageState extends State<GameDetailsPage> {
       scrollDirection: Axis.horizontal,
       child: DataTable(
         columnSpacing: 10,
-        columns: const [
+        columns: [
           DataColumn(
-            label: Text('Player', style: TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColumnPlayer, style: const TextStyle(color: Colors.white)),
           ),
           DataColumn(
-            label: Text('S', style: TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevScore, style: const TextStyle(color: Colors.white)),
           ),
           DataColumn(
-            label: Text('M', style: TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevMisses, style: const TextStyle(color: Colors.white)),
           ),
           DataColumn(
-            label: Text('T', style: TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevThrows, style: const TextStyle(color: Colors.white)),
           ),
           DataColumn(
-            label: Text('A', style: TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevAirballs, style: const TextStyle(color: Colors.white)),
           ),
           DataColumn(
-            label: Text('HR', style: TextStyle(color: Colors.white)),
+            label: Text(context.loc.statsColAbbrevHitRate, style: const TextStyle(color: Colors.white)),
           ),
         ],
         rows: players.map((player) {
@@ -1351,9 +1356,9 @@ class GameDetailsPageState extends State<GameDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Achievements',
-                style: TextStyle(
+              Text(
+                context.loc.statsAchievements,
+                style: const TextStyle(
                   color: Colors.amber,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -1366,9 +1371,9 @@ class GameDetailsPageState extends State<GameDetailsPage> {
               const SizedBox(height: 10),
               _buildAchievementsSection(mvp, airballer, missManiac, sniper),
               const SizedBox(height: 20),
-              const Text(
-                'Team Statistics',
-                style: TextStyle(
+              Text(
+                context.loc.statsTeamStatistics,
+                style: const TextStyle(
                   color: Colors.amber,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -1397,16 +1402,16 @@ class GameDetailsPageState extends State<GameDetailsPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildAchievementIcon(Icons.star, 'MVP', mvp),
-            _buildAchievementIcon(Icons.air, 'Airballer', airballer),
+            _buildAchievementIcon(Icons.star, context.loc.statsMvp, mvp),
+            _buildAchievementIcon(Icons.air, context.loc.statsAirballer, airballer),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildAchievementIcon(Icons.clear, 'Miss Maniac', missManiac),
-            _buildAchievementIcon(Icons.album, 'Sniper', sniper),
+            _buildAchievementIcon(Icons.clear, context.loc.statsMissManiac, missManiac),
+            _buildAchievementIcon(Icons.album, context.loc.statsSniper, sniper),
           ],
         ),
       ],

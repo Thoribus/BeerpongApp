@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../helpers/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -6,7 +7,7 @@ import 'package:beerpongapp/widgets/user_card.dart';
 User _makeUser({String backgroundKey = '', String avatarKey = 'avatar_aggroracoon'}) =>
     User(id: 'u1', username: 'Tester', avatarKey: avatarKey, backgroundKey: backgroundKey);
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => wrapWithL10n(child);
 
 void main() {
   group('UserCard — background rendering (Phase 7.3)', () {

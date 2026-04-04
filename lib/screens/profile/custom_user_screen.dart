@@ -7,6 +7,7 @@ import 'package:beerpongapp/constants.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/level_system.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -39,6 +40,8 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
   late String _selectedAvatarKey;
   late String _selectedBackgroundKey;
   late String _selectedTitle;
+  late int _userLevel;
+  late List<String> _availableTitles;
   bool _isSaving = false;
   UsernameStatus _usernameStatus = UsernameStatus.idle;
   String _currentUsername = '';
@@ -55,15 +58,14 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
             : _backgroundKeys.first;
     _selectedTitle = widget.user.title;
     _currentUsername = widget.user.username;
-  }
-
-  List<String> get _availableTitles {
+    _userLevel = LevelSystem.levelFromXp(widget.user.xp);
     final unlocked = widget.user.unlockedTitles;
-    final base = unlocked.isNotEmpty ? unlocked : ['Beginner', 'Pro Player', 'Champion'];
-    if (widget.user.isSupporter && !base.contains('Supporter')) {
-      return [...base, 'Supporter'];
-    }
-    return base;
+    final base = unlocked.isNotEmpty
+        ? unlocked
+        : ['Beginner', 'Pro Player', 'Champion'];
+    _availableTitles = (widget.user.isSupporter && !base.contains('Supporter'))
+        ? [...base, 'Supporter']
+        : base;
   }
 
   bool get _canSave =>
@@ -93,8 +95,8 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated!'),
+        SnackBar(
+          content: Text(context.loc.profileUpdated),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ),
@@ -103,7 +105,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save: $e'),
+          content: Text(context.loc.profileSaveFailed(e.toString())),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
@@ -130,7 +132,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
                     strokeWidth: 2, color: Colors.white),
               )
             : const Icon(Icons.check),
-        label: Text(_isSaving ? 'Saving…' : 'Save'),
+        label: Text(_isSaving ? context.loc.btnSaving : context.loc.btnSave),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -148,7 +150,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
             ),
             const SizedBox(height: 28),
 
-            const _SectionHeader(title: 'Username'),
+            _SectionHeader(title: context.loc.profileSectionUsername),
             const SizedBox(height: 12),
             // Extracted into its own StatefulWidget so username status changes
             // only rebuild the field, not the whole screen.
@@ -163,19 +165,19 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
             const SizedBox(height: 28),
 
-            const _SectionHeader(title: 'Avatar'),
+            _SectionHeader(title: context.loc.profileSectionAvatar),
             const SizedBox(height: 12),
             _buildAvatarGrid(),
 
             const SizedBox(height: 28),
 
-            const _SectionHeader(title: 'Background'),
+            _SectionHeader(title: context.loc.profileSectionBackground),
             const SizedBox(height: 12),
             _buildBackgroundGrid(),
 
             const SizedBox(height: 28),
 
-            const _SectionHeader(title: 'Title'),
+            _SectionHeader(title: context.loc.profileSectionTitle),
             const SizedBox(height: 12),
             _buildTitlePicker(),
           ],
@@ -186,7 +188,6 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
   Widget _buildAvatarGrid() {
     final c = AppColors.of(context);
-    final userLevel = LevelSystem.levelFromXp(widget.user.xp);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -201,7 +202,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
         final key = _avatarKeys[index];
         final isSelected = _selectedAvatarKey == key;
         final requiredLevel = AppConstants.avatarLevelRequirements[key] ?? 1;
-        final isLocked = userLevel < requiredLevel;
+        final isLocked = _userLevel < requiredLevel;
 
         return GestureDetector(
           onTap: isLocked ? null : () => setState(() => _selectedAvatarKey = key),
@@ -243,7 +244,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
                         Icon(Icons.lock, color: c.subtle, size: 22),
                         const SizedBox(height: 2),
                         Text(
-                          'Lv $requiredLevel',
+                          context.loc.profileLevelRequired(requiredLevel),
                           style: TextStyle(
                             color: c.subtle,
                             fontSize: 11,
@@ -277,7 +278,6 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
 
   Widget _buildBackgroundGrid() {
     final c = AppColors.of(context);
-    final userLevel = LevelSystem.levelFromXp(widget.user.xp);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -293,7 +293,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
         final isSelected = _selectedBackgroundKey == key;
         final requiredLevel =
             AppConstants.backgroundLevelRequirements[key] ?? 1;
-        final isLocked = userLevel < requiredLevel;
+        final isLocked = _userLevel < requiredLevel;
         final gradient = AppBackgrounds.gradientFor(key);
 
         return GestureDetector(
@@ -333,7 +333,7 @@ class _CustomUserScreenState extends State<CustomUserScreen> {
                         const Icon(Icons.lock, color: Colors.white70, size: 18),
                         const SizedBox(height: 2),
                         Text(
-                          'Lv $requiredLevel',
+                          context.loc.profileLevelRequired(requiredLevel),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 10,
@@ -496,15 +496,15 @@ class _UsernameFieldState extends State<_UsernameField> {
     final (color, icon, hint) = switch (_status) {
       UsernameStatus.idle => (Colors.grey.shade600, null, ''),
       UsernameStatus.checking =>
-        (Colors.grey.shade400, Icons.hourglass_empty, 'Checking…'),
+        (Colors.grey.shade400, Icons.hourglass_empty, context.loc.profileUsernameChecking),
       UsernameStatus.available =>
-        (Colors.green, Icons.check_circle_outline, 'Available'),
+        (Colors.green, Icons.check_circle_outline, context.loc.profileUsernameAvailable),
       UsernameStatus.taken =>
-        (Colors.red, Icons.cancel_outlined, 'Already taken'),
+        (Colors.red, Icons.cancel_outlined, context.loc.profileUsernameTaken),
       UsernameStatus.invalid => (
           Colors.orange,
           Icons.warning_amber_outlined,
-          '3–20 chars, letters/numbers/underscores/spaces, no consecutive __ or spaces'
+          context.loc.profileUsernameInvalid,
         ),
     };
 
@@ -518,7 +518,7 @@ class _UsernameFieldState extends State<_UsernameField> {
           maxLength: 20,
           style: TextStyle(color: c.onBackground),
           decoration: InputDecoration(
-            hintText: 'Choose a username',
+            hintText: context.loc.profileUsernamePlaceholder,
             hintStyle: TextStyle(color: c.subtle),
             counterStyle: TextStyle(color: c.subtle),
             filled: true,

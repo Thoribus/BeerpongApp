@@ -4,6 +4,7 @@ import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +33,34 @@ class ReadOnlyLobbyScreen extends StatefulWidget {
 class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
   bool _navigated = false;
   bool _cancelling = false;
+  StreamSubscription<dynamic>? _inviteSub;
+
+  @override
+  void initState() {
+    super.initState();
+    final invId = widget.invitationId;
+    if (invId != null) {
+      _inviteSub = FirestoreService.instance
+          .streamInvitation(invId)
+          .skip(1) // ignore the initial snapshot — we're already here
+          .listen((snap) {
+        if (_cancelling || _navigated || !mounted) return;
+        // Invitation was deleted (kicked) or status changed away from accepted.
+        final deleted = !snap.exists;
+        final status = snap.data()?['status'] as String?;
+        final kicked = deleted || (status != null && status != InvitationStatus.accepted.name);
+        if (kicked) {
+          context.go(AppRoutes.home);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _inviteSub?.cancel();
+    super.dispose();
+  }
 
   Future<void> _cancel() async {
     if (_cancelling) return;
@@ -58,11 +87,11 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
             backgroundColor: c.background,
             appBar: AppBar(
               backgroundColor: c.surface,
-              title: Text('Lobby', style: TextStyle(color: c.onBackground)),
+              title: Text(context.loc.spectatelobbyTitle, style: TextStyle(color: c.onBackground)),
             ),
             body: Center(
               child:
-                  Text('Error loading game.', style: TextStyle(color: c.subtle)),
+                  Text(context.loc.spectateLobbyError, style: TextStyle(color: c.subtle)),
             ),
           );
         }
@@ -72,7 +101,7 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
             backgroundColor: c.background,
             appBar: AppBar(
               backgroundColor: c.surface,
-              title: Text('Lobby', style: TextStyle(color: c.onBackground)),
+              title: Text(context.loc.spectatelobbyTitle, style: TextStyle(color: c.onBackground)),
             ),
             body: const Center(child: CircularProgressIndicator()),
           );
@@ -102,12 +131,12 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
             backgroundColor: c.surface,
             elevation: 0,
             automaticallyImplyLeading: false,
-            title: Text('Game Lobby', style: TextStyle(color: c.onBackground)),
+            title: Text(context.loc.spectateLobbyGameTitle, style: TextStyle(color: c.onBackground)),
             actions: [
               TextButton(
                 onPressed: _cancelling ? null : _cancel,
                 child: Text(
-                  'Leave',
+                  context.loc.btnLeave,
                   style: TextStyle(
                     color: _cancelling ? c.subtle : Colors.red.shade400,
                   ),
@@ -119,9 +148,9 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildTeamPanel(c, 'Team Blue', team1, Colors.blue.shade400),
+                _buildTeamPanel(c, context.loc.labelTeamBlue, team1, Colors.blue.shade400),
                 const SizedBox(height: 12),
-                _buildTeamPanel(c, 'Team Red', team2, Colors.red.shade400),
+                _buildTeamPanel(c, context.loc.labelTeamRed, team2, Colors.red.shade400),
                 const SizedBox(height: 12),
                 _buildGameSettings(c, gameMode, rulesList, startingTeam),
                 const SizedBox(height: 24),
@@ -156,7 +185,7 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
           ),
           const SizedBox(height: 10),
           if (team.players.isEmpty)
-            Text('No players yet',
+            Text(context.loc.spectateLobbyNoPlayers,
                 style: TextStyle(color: c.subtle, fontSize: 13))
           else
             ...team.players.map(
@@ -191,7 +220,7 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Game Settings',
+            context.loc.spectateLobbyGameSettings,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -199,18 +228,18 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _settingsRow(c, Icons.sports_bar_outlined, 'Mode', mode),
+          _settingsRow(c, Icons.sports_bar_outlined, context.loc.spectateLobbyMode, mode),
           if (rules.isNotEmpty) ...[
             const SizedBox(height: 8),
             _settingsRow(
               c,
               Icons.rule_outlined,
-              'Rules',
+              context.loc.labelRules,
               rules.join(', '),
             ),
           ],
           const SizedBox(height: 8),
-          _settingsRow(c, Icons.flag_outlined, 'Starting Team', starting),
+          _settingsRow(c, Icons.flag_outlined, context.loc.spectateLobbyStartingTeam, starting),
         ],
       ),
     );
@@ -239,7 +268,7 @@ class _ReadOnlyLobbyScreenState extends State<ReadOnlyLobbyScreen> {
         const CircularProgressIndicator(color: Colors.orange),
         const SizedBox(height: 16),
         Text(
-          'Waiting for the host to start the game…',
+          context.loc.spectateLobbyWaiting,
           textAlign: TextAlign.center,
           style: TextStyle(color: c.subtle, fontSize: 14),
         ),

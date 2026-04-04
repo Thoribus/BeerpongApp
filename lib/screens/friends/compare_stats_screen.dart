@@ -1,3 +1,4 @@
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -81,7 +82,7 @@ class ComparisonScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                'Comparison',
+                context.loc.compareTitle,
                 style: TextStyle(
                   color: c.onBackground,
                   fontWeight: FontWeight.bold,
@@ -162,7 +163,7 @@ class ComparisonScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            'OVERVIEW',
+            context.loc.compareOverview,
             style: TextStyle(
               color: c.subtle,
               fontSize: 11,
@@ -226,12 +227,12 @@ class ComparisonScreen extends StatelessWidget {
         titleTextStyle:
             const TextStyle(color: Colors.white70, fontSize: 11),
         getTitle: (index, angle) {
-          const titles = [
-            'Win Rate',
-            'Hit Rate',
-            'Bounce %',
-            'Island %',
-            'On Fire',
+          final titles = [
+            context.loc.compareWinRate,
+            context.loc.compareHitRate,
+            context.loc.compareBouncePercent,
+            context.loc.compareIslandPercent,
+            context.loc.compareOnFire,
           ];
           return RadarChartTitle(text: titles[index], angle: angle);
         },
@@ -274,42 +275,42 @@ class ComparisonScreen extends StatelessWidget {
 
     final stats = [
       _StatRow(
-        label: 'Win Rate',
+        label: context.loc.statWinRate,
         userValue: _winRate(currentUser),
         friendValue: _winRate(friend),
         format: (v) => '${v.toStringAsFixed(1)}%',
         higherIsBetter: true,
       ),
       _StatRow(
-        label: 'Hit Rate',
+        label: context.loc.statHitRate,
         userValue: _hitRate(currentUser),
         friendValue: _hitRate(friend),
         format: (v) => '${v.toStringAsFixed(1)}%',
         higherIsBetter: true,
       ),
       _StatRow(
-        label: 'Bounce %',
+        label: context.loc.compareBouncePercent,
         userValue: _bounceRate(currentUser),
         friendValue: _bounceRate(friend),
         format: (v) => '${v.toStringAsFixed(1)}%',
         higherIsBetter: true,
       ),
       _StatRow(
-        label: 'Island %',
+        label: context.loc.compareIslandPercent,
         userValue: _islandRate(currentUser),
         friendValue: _islandRate(friend),
         format: (v) => '${v.toStringAsFixed(1)}%',
         higherIsBetter: true,
       ),
       _StatRow(
-        label: 'Total Wins',
+        label: context.loc.compareTotalWins,
         userValue: currentUser.wins.toDouble(),
         friendValue: friend.wins.toDouble(),
         format: (v) => v.toInt().toString(),
         higherIsBetter: true,
       ),
       _StatRow(
-        label: 'On Fire',
+        label: context.loc.compareOnFire,
         userValue: currentUser.onFire.toDouble(),
         friendValue: friend.onFire.toDouble(),
         format: (v) => v.toInt().toString(),
@@ -323,7 +324,7 @@ class ComparisonScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            'STAT COMPARISON',
+            context.loc.compareStatComparison,
             style: TextStyle(
               color: c.subtle,
               fontSize: 11,

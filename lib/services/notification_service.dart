@@ -36,7 +36,10 @@ class NotificationService {
 
   String? _currentToken;
   StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<RemoteMessage>? _onMessageSub;
+  StreamSubscription<RemoteMessage>? _onMessageOpenedSub;
   bool _messageHandlersSetup = false;
+  int _notificationId = 0;
 
   // ---------------------------------------------------------------------------
   // Public API
@@ -54,7 +57,7 @@ class NotificationService {
     );
 
     await _localNotifications.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       ),
@@ -75,6 +78,14 @@ class NotificationService {
 
   /// Call after a successful login.
   Future<void> initForUser(String userId) async {
+    // Explicitly suppress system banners on iOS while the app is in the
+    // foreground — we show our own local notification banner instead.
+    // badge:true keeps the app icon badge updated.
+    await _messaging.setForegroundNotificationPresentationOptions(
+      alert: false,
+      badge: true,
+      sound: false,
+    );
     await _requestPermission();
     await _saveToken(userId);
     _listenToTokenRefresh(userId);
@@ -85,6 +96,11 @@ class NotificationService {
   Future<void> removeTokenForUser(String userId) async {
     await _tokenRefreshSub?.cancel();
     _tokenRefreshSub = null;
+    await _onMessageSub?.cancel();
+    _onMessageSub = null;
+    await _onMessageOpenedSub?.cancel();
+    _onMessageOpenedSub = null;
+    _messageHandlersSetup = false;
     if (_currentToken != null) {
       await FirestoreService.instance.removeFcmToken(userId, _currentToken!);
       _currentToken = null;
@@ -146,8 +162,8 @@ class NotificationService {
     if (_messageHandlersSetup) return;
     _messageHandlersSetup = true;
 
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_routeFromMessage);
+    _onMessageSub = FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    _onMessageOpenedSub = FirebaseMessaging.onMessageOpenedApp.listen(_routeFromMessage);
 
     unawaited(_messaging.getInitialMessage().then((msg) {
       if (msg != null) _routeFromMessage(msg);
@@ -184,10 +200,11 @@ class NotificationService {
     const iosDetails = DarwinNotificationDetails();
 
     await _localNotifications.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      const NotificationDetails(android: androidDetails, iOS: iosDetails),
+      id: _notificationId++,
+      title: title,
+      body: body,
+      notificationDetails:
+          const NotificationDetails(android: androidDetails, iOS: iosDetails),
       payload: jsonEncode(data),
     );
   }

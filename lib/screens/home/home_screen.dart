@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/models/cup.dart';
 import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/models/team.dart';
@@ -33,6 +34,10 @@ class HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _goRouter = GoRouter.of(context);
       _goRouter!.routerDelegate.addListener(_onRouteChanged);
+      // Re-check after the first frame so that if the initState check was
+      // interrupted by a GoRouter redirect rebuild (!mounted early return),
+      // this run happens once the widget tree has settled.
+      _checkSavedGame();
     });
   }
 
@@ -67,24 +72,24 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.amber,
-          title: const Text(
-            'New Game',
-            style: TextStyle(
+          title: Text(
+            context.loc.homeNewGameDialogTitle,
+            style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: const Text(
-            'Starting a new game will delete the current game. Do you want to continue?',
-            style: TextStyle(
+          content: Text(
+            context.loc.homeNewGameDialogContent,
+            style: const TextStyle(
               color: Colors.black,
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
+              child: Text(
+                context.loc.btnCancel,
+                style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
@@ -94,9 +99,9 @@ class HomeScreenState extends State<HomeScreen> {
               },
             ),
             TextButton(
-              child: const Text(
-                'Start New Game',
-                style: TextStyle(
+              child: Text(
+                context.loc.homeNewGameDialogConfirm,
+                style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
@@ -141,15 +146,14 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _onReturnFromNextScreen() => _checkSavedGame();
 
-  void _navigate({required bool isTournament}) {
+  Future<void> _navigate({required bool isTournament}) async {
     void go() {
       context
           .push(
             '/game-mode',
             extra: GameModeArgs(
-              title: isTournament ? 'Tournament' : 'Play Beerpong',
-              subtitle:
-                  isTournament ? 'Bracket-style play' : 'Quick, fun rounds',
+              title: isTournament ? context.loc.homeTournamentTitle : context.loc.homeGameModeTitle,
+              subtitle: isTournament ? context.loc.homeTournamentSubtitle : context.loc.homeGameModeSubtitle,
               details: '',
               iconPath: isTournament
                   ? 'assets/racoon_winner.svg'
@@ -161,11 +165,18 @@ class HomeScreenState extends State<HomeScreen> {
           .then((_) => _onReturnFromNextScreen());
     }
 
-    if (_hasSavedGame && !isTournament) {
-      _showNewGameConfirmationDialog(context, go);
-    } else {
-      go();
+    // Check SharedPreferences directly so the confirmation fires even when
+    // _hasSavedGame hasn't been updated yet (e.g. within the 150 ms window
+    // after returning from the game screen).
+    if (!isTournament) {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      if (prefs.containsKey('currentGameState')) {
+        unawaited(_showNewGameConfirmationDialog(context, go));
+        return;
+      }
     }
+    go();
   }
 
   void _resumeGame() {
@@ -218,9 +229,7 @@ class HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    count == 1
-                        ? 'You have 1 pending invitation'
-                        : 'You have $count pending invitations',
+                    context.loc.homePendingInvitations(count),
                     style: TextStyle(
                       color: c.onBackground,
                       fontWeight: FontWeight.w600,
@@ -276,57 +285,36 @@ class HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Let's play!",
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        Text(
+                          context.loc.homeLetsPlay,
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'Beer Pong',
-                          style: TextStyle(
+                        Text(
+                          context.loc.homeBeerPong,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const Spacer(),
-                        Row(
-                          children: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFFE05000),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
-                                elevation: 0,
-                              ),
-                              onPressed: () => _navigate(isTournament: false),
-                              child: const Text(
-                                'New Game',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                            ),
-                            if (_hasSavedGame) ...[
-                              const SizedBox(width: 10),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.white,
-                                  side: const BorderSide(
-                                      color: Colors.white60, width: 1.5),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 18, vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14)),
-                                ),
-                                onPressed: _resumeGame,
-                                child: const Text('Resume',
-                                    style: TextStyle(fontSize: 15)),
-                              ),
-                            ],
-                          ],
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFFE05000),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                          onPressed: () => unawaited(_navigate(isTournament: false)),
+                          child: Text(
+                            context.loc.homeBtnNewGame,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
                         ),
                       ],
                     ),
@@ -337,6 +325,50 @@ class HomeScreenState extends State<HomeScreen> {
           ),
 
           const SizedBox(height: 12),
+
+          // ── Resume game card ───────────────────────────────────────────
+          if (_hasSavedGame) ...[
+            GestureDetector(
+              onTap: _resumeGame,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade700,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.play_circle_fill_rounded,
+                        color: Colors.white, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.loc.homeResumeTitle,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          Text(
+                            context.loc.homeResumeSubtitle,
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        color: Colors.white70, size: 16),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // ── Pending invitations badge ──────────────────────────────────
           _buildInvitationBadge(c),
@@ -353,11 +385,11 @@ class HomeScreenState extends State<HomeScreen> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
             ),
-            onPressed: () => _navigate(isTournament: true),
+            onPressed: () => unawaited(_navigate(isTournament: true)),
             icon: const Icon(Icons.emoji_events_outlined, size: 18),
-            label: const Text(
-              'Tournament',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            label: Text(
+              context.loc.labelTournament,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
             ),
           ),
         ],
@@ -402,7 +434,7 @@ class HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Rulebook',
+                      context.loc.homeRulebookTitle,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -411,7 +443,7 @@ class HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Learn how every special rule works',
+                      context.loc.homeRulebookSubtitle,
                       style: TextStyle(fontSize: 12, color: c.subtle),
                     ),
                   ],
@@ -424,168 +456,4 @@ class HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-// ignore: unused_element
-Widget _buildRulebookSection() {
-  final rules = [
-    {
-      'title': 'Overtime Rules',
-      'description': 'Learn what happens in a tie situation.',
-      'longDescription':
-          'In the event of a tie, the game proceeds to an overtime round. Each team gets an additional turn to try and outscore the opponent. If still tied, the game continues until one team leads after a complete round.',
-      'iconName': 'frog_island',
-      'rating': 4,
-    },
-    {
-      'title': 'Re-Rack Mechanics',
-      'description': 'Understand how re-racks work mid-game.',
-      'longDescription':
-          'Re-racks are allowed at designated points during the game. Teams may request a rearrangement of cups, with standard formations such as "diamond", "line", or "triangle". Misuse may result in forfeiture of turn.',
-      'iconName': 'frog_island',
-      'rating': 3,
-    },
-    {
-      'title': 'Redemption Rules',
-      'description': 'See how redemption throws are handled.',
-      'longDescription':
-          'When one team clears the opponent’s cups, the losing team is granted redemption throws. Each player gets one chance to bring the game into overtime. Missing any results in an immediate loss.',
-      'iconName': 'frog_island',
-      'rating': 5,
-    },
-  ];
-
-  return SizedBox(
-    height: 160,
-    child: ListView.builder(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: rules.length,
-      itemBuilder: (context, index) {
-        final rule = rules[index];
-        final int rating = (rule['rating'] as int?) ?? 0;
-
-        final c = AppColors.of(context);
-        return GestureDetector(
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) => Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/${rule['iconName']}.svg',
-                          width: 80,
-                          height: 80,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          rule['title'] as String,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: c.onBackground,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(5, (starIndex) {
-                            return Icon(
-                              starIndex < rating
-                                  ? Icons.star
-                                  : Icons.star_border,
-                              size: 24,
-                              color: Colors.amber,
-                            );
-                          }),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          rule['longDescription'] as String,
-                          textAlign: TextAlign.justify,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: c.onBackground,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-          child: Container(
-            width: 220,
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: c.surface2,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.15),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    SvgPicture.asset(
-                      'assets/${rule['iconName']}.svg',
-                      width: 30,
-                      height: 30,
-                    ),
-                    const SizedBox(width: 8),
-                    Row(
-                      children: List.generate(5, (starIndex) {
-                        return Icon(
-                          starIndex < rating ? Icons.star : Icons.star_border,
-                          size: 20,
-                          color: Colors.amber,
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  rule['title'] as String,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: c.onBackground,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  rule['description'] as String,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: c.subtle,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    ),
-  );
 }

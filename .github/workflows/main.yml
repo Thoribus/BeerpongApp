@@ -36,12 +36,18 @@ jobs:
         keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
+    - name: Read version from pubspec.yaml
+      id: version
+      run: |
+        VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+        echo "name=$VERSION" >> $GITHUB_OUTPUT
+
     - name: Deploy to Play Store
       uses: r0adkll/upload-google-play@v1.0.18
       with:
         serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         packageName: com.tecbreak.beerpongapp
-        releaseName: "1.0.1"
+        releaseName: ${{ steps.version.outputs.name }}
         releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
         mappingFile: ./build/app/outputs/mapping/release/mapping.txt
         track: internal

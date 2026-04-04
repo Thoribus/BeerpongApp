@@ -1,3 +1,4 @@
+import 'package:beerpongapp/l10n/app_localizations.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/screens/shop/shop_screen.dart';
 import 'package:beerpongapp/services/purchase_service.dart';
@@ -25,7 +26,11 @@ Widget _buildShopApp(UserProvider provider) {
       ChangeNotifierProvider<UserProvider>.value(value: provider),
       ChangeNotifierProvider<PurchaseService>(create: (_) => _FakePurchaseService()),
     ],
-    child: const MaterialApp(home: ShopScreen()),
+    child: const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: ShopScreen(),
+    ),
   );
 }
 

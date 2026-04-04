@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../helpers/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/player.dart';
@@ -66,7 +67,7 @@ GameStatistics _makeGame({
   );
 }
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => wrapWithL10n(child);
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 

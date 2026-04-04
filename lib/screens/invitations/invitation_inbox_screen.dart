@@ -4,6 +4,7 @@ import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -25,11 +26,11 @@ class InvitationInboxScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: c.surface,
         elevation: 0,
-        title: Text('Invitations', style: TextStyle(color: c.onBackground)),
+        title: Text(context.loc.invitationsTitle, style: TextStyle(color: c.onBackground)),
         iconTheme: IconThemeData(color: c.onBackground),
       ),
       body: user == null
-          ? Center(child: Text('Not signed in', style: TextStyle(color: c.subtle)))
+          ? Center(child: Text(context.loc.invitationsNotSignedIn, style: TextStyle(color: c.subtle)))
           : StreamBuilder<List<Invitation>>(
               stream: FirestoreService.instance.pendingInvitationsStream(user.id),
               builder: (context, snapshot) {
@@ -45,7 +46,7 @@ class InvitationInboxScreen extends StatelessWidget {
                         Icon(Icons.mail_outline, size: 64, color: c.subtle),
                         const SizedBox(height: 16),
                         Text(
-                          'No pending invitations',
+                          context.loc.invitationsNoPending,
                           style: TextStyle(color: c.subtle, fontSize: 16),
                         ),
                       ],
@@ -101,16 +102,17 @@ class _InvitationCardState extends State<_InvitationCard> {
     if (!mounted) return;
     setState(() => _loading = false);
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Invitation declined')));
+        .showSnackBar(SnackBar(content: Text(context.loc.invitationsDeclined)));
   }
 
   @override
   Widget build(BuildContext context) {
     final inv = widget.invitation;
     final c = AppColors.of(context);
-    final label = inv.gameType == GameType.tournament ? 'Tournament' : 'Game';
+    final isTournament = inv.gameType == GameType.tournament;
+    final badgeLabel = isTournament ? context.loc.labelTournament : context.loc.gameLoadingTitle;
     final senderName =
-        inv.fromUsername.isNotEmpty ? inv.fromUsername : 'A player';
+        inv.fromUsername.isNotEmpty ? inv.fromUsername : context.loc.invitationsFromPlayer;
 
     return Card(
       color: c.surface,
@@ -140,7 +142,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                         ),
                       ),
                       Text(
-                        'Invited you to a $label',
+                        isTournament ? context.loc.invitationsInvitedToTournament : context.loc.invitationsInvitedToGame,
                         style: TextStyle(color: c.subtle, fontSize: 13),
                       ),
                     ],
@@ -154,7 +156,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    label,
+                    badgeLabel,
                     style: const TextStyle(
                       color: Colors.orange,
                       fontWeight: FontWeight.bold,
@@ -179,7 +181,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                             borderRadius: BorderRadius.circular(10)),
                       ),
                       onPressed: _decline,
-                      child: const Text('Decline'),
+                      child: Text(context.loc.invitationsDeclineBtn),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -192,7 +194,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                             borderRadius: BorderRadius.circular(10)),
                       ),
                       onPressed: _accept,
-                      child: const Text('Accept'),
+                      child: Text(context.loc.invitationsAcceptBtn),
                     ),
                   ),
                 ],

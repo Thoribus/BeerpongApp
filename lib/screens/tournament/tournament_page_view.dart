@@ -1,4 +1,5 @@
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 import 'tournament_overview_screen.dart';
 import 'tournament_standings.dart';
@@ -56,9 +57,9 @@ class _TournamentPageViewState extends State<TournamentPageView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tournament',
+        title: Text(context.loc.labelTournament,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.grey.shade700,
         bottom: PreferredSize(

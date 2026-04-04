@@ -1,6 +1,7 @@
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -20,16 +21,16 @@ class BreakdownScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _sectionTitle(context, 'Shot Distribution'),
+            _sectionTitle(context, context.loc.breakdownShotDistribution),
             _buildShotDonut(context),
             const SizedBox(height: 16),
-            _sectionTitle(context, 'Special Shots'),
+            _sectionTitle(context, context.loc.breakdownSpecialShots),
             _buildSpecialShotCards(context),
             const SizedBox(height: 16),
-            _sectionTitle(context, 'Win Context'),
+            _sectionTitle(context, context.loc.breakdownWinContext),
             _buildWinContextSection(context),
             const SizedBox(height: 16),
-            _sectionTitle(context, 'Head to Head'),
+            _sectionTitle(context, context.loc.breakdownHeadToHead),
             _buildHeadToHeadSection(context),
           ],
         ),
@@ -61,7 +62,7 @@ class BreakdownScreen extends StatelessWidget {
     final c = AppColors.of(context);
     final total = user.totalThrows;
     if (total == 0) {
-      return _emptyCard(context, 'No throws recorded yet.');
+      return _emptyCard(context, context.loc.breakdownNoThrows);
     }
 
     final hits = user.totalScore.toInt();
@@ -128,7 +129,7 @@ class BreakdownScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text('throws',
+                    Text(context.loc.breakdownThrowsLabel,
                         style: TextStyle(color: c.subtle, fontSize: 10)),
                   ],
                 ),
@@ -139,11 +140,11 @@ class BreakdownScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _legend('Hits', Colors.green),
+              _legend(context.loc.breakdownHits, Colors.green),
               const SizedBox(width: 16),
-              _legend('Misses', Colors.redAccent),
+              _legend(context.loc.liveStatMisses, Colors.redAccent),
               const SizedBox(width: 16),
-              _legend('Airballs', Colors.blue),
+              _legend(context.loc.liveStatAirballs, Colors.blue),
             ],
           ),
         ],
@@ -169,7 +170,7 @@ class BreakdownScreen extends StatelessWidget {
       children: [
         _shotCard(
           context,
-          label: 'Bounce Shot',
+          label: context.loc.breakdownBounceShot,
           accent: Colors.purple,
           makes: user.bounceMakes,
           attempts: user.bounceAttempts,
@@ -177,7 +178,7 @@ class BreakdownScreen extends StatelessWidget {
         const SizedBox(height: 8),
         _shotCard(
           context,
-          label: 'Island Shot',
+          label: context.loc.breakdownIslandShot,
           accent: Colors.teal,
           makes: user.islandMakes,
           attempts: user.islandAttempts,
@@ -185,7 +186,7 @@ class BreakdownScreen extends StatelessWidget {
         const SizedBox(height: 8),
         _shotCard(
           context,
-          label: 'Defended',
+          label: context.loc.statsDefended,
           accent: Colors.indigo,
           makes: user.defended,
           attempts: null, // no attempt tracking — show total only
@@ -311,19 +312,19 @@ class BreakdownScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Win Margin Distribution',
+                Text(context.loc.breakdownWinMarginTitle,
                     style: TextStyle(
                         color: c.onBackground,
                         fontWeight: FontWeight.w600,
                         fontSize: 13)),
                 const SizedBox(height: 12),
-                _winBar(context, 'Dominant (5+ cups)', dominant, totalBucketed,
+                _winBar(context, context.loc.breakdownDominant, dominant, totalBucketed,
                     Colors.green),
                 const SizedBox(height: 8),
-                _winBar(context, 'Comfortable (3–4)', comfortable,
+                _winBar(context, context.loc.breakdownComfortable, comfortable,
                     totalBucketed, Colors.amber),
                 const SizedBox(height: 8),
-                _winBar(context, 'Close (1–2)', close, totalBucketed,
+                _winBar(context, context.loc.breakdownClose, close, totalBucketed,
                     Colors.redAccent),
               ],
             ),
@@ -337,12 +338,12 @@ class BreakdownScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Clutch Rate',
+                    Text(context.loc.breakdownClutchRate,
                         style: TextStyle(
                             color: c.onBackground,
                             fontWeight: FontWeight.w600,
                             fontSize: 13)),
-                    Text('Hit the last cup to win',
+                    Text(context.loc.breakdownClutchDesc,
                         style: TextStyle(color: c.subtle, fontSize: 11)),
                   ],
                 ),
@@ -411,7 +412,7 @@ class BreakdownScreen extends StatelessWidget {
 
   Widget _buildHeadToHeadSection(BuildContext context) {
     if (games.isEmpty) {
-      return _emptyCard(context, 'No games recorded yet.');
+      return _emptyCard(context, context.loc.breakdownNoGames);
     }
 
     // Aggregate W/L per opponent
@@ -431,7 +432,7 @@ class BreakdownScreen extends StatelessWidget {
     }
 
     if (records.isEmpty) {
-      return _emptyCard(context, 'No opponents found.');
+      return _emptyCard(context, context.loc.breakdownNoOpponents);
     }
 
     // Sort by total games descending, cap at 5

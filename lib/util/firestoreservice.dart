@@ -155,6 +155,9 @@ class FirestoreService {
 
   // ----- Friends -----
 
+  Stream<List<String>> streamFriendIds(String userId) =>
+      FriendRepository.instance.streamFriendIds(userId);
+
   Future<List<User>> getFriends(String userId) =>
       FriendRepository.instance.getFriends(userId);
 
@@ -199,6 +202,10 @@ class FirestoreService {
           String invitationId, String gameId) =>
       InvitationRepository.instance
           .updateInvitationGameId(invitationId, gameId);
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> streamInvitation(
+          String invitationId) =>
+      InvitationRepository.instance.streamInvitation(invitationId);
 
   Future<void> deleteGameInvitation(String invitationId) =>
       InvitationRepository.instance.deleteGameInvitation(invitationId);

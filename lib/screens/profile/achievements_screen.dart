@@ -3,6 +3,7 @@ import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/achievement_engine.dart';
 import 'package:beerpongapp/util/level_system.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 
 class AchievementsScreen extends StatelessWidget {
@@ -26,26 +27,36 @@ class AchievementsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     final grouped = AchievementEngine.evaluateGrouped(user);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      children: [
-        _LevelCard(user: user),
-        const SizedBox(height: 20),
-        for (final category in AchievementCategory.values) ...[
-          _CategoryHeader(
-            category: category,
-            progresses: grouped[category] ?? [],
-          ),
-          const SizedBox(height: 10),
-          _AchievementGrid(
-            progresses: grouped[category] ?? [],
-            onTap: (p) => _showDetail(context, p),
-          ),
+    return Scaffold(
+      backgroundColor: c.background,
+      appBar: AppBar(
+        backgroundColor: c.background,
+        foregroundColor: c.onBackground,
+        title: Text(context.loc.statsAchievements),
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        children: [
+          _LevelCard(user: user),
           const SizedBox(height: 20),
+          for (final category in AchievementCategory.values) ...[
+            _CategoryHeader(
+              category: category,
+              progresses: grouped[category] ?? [],
+            ),
+            const SizedBox(height: 10),
+            _AchievementGrid(
+              progresses: grouped[category] ?? [],
+              onTap: (p) => _showDetail(context, p),
+            ),
+            const SizedBox(height: 20),
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -108,7 +119,7 @@ class _LevelCard extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      'Lv $level',
+                      context.loc.labelLevelShort(level),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -149,8 +160,8 @@ class _LevelCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         isMax
-                            ? 'Max level reached'
-                            : '${user.xp} XP · $toNext XP to Level ${level + 1}',
+                            ? context.loc.achievementsMaxLevel
+                            : context.loc.achievementsXpProgress(user.xp, toNext, level + 1),
                         style: TextStyle(fontSize: 11, color: c.subtle),
                       ),
                     ],
@@ -162,20 +173,19 @@ class _LevelCard extends StatelessWidget {
             Divider(color: c.divider, height: 1),
             const SizedBox(height: 10),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _StatChip(
+                Expanded(child: _StatChip(
                     icon: Icons.emoji_events,
                     label: '$unlocked / $total',
-                    sub: 'Achievements'),
-                _StatChip(
+                    sub: context.loc.statsAchievements)),
+                Expanded(child: _StatChip(
                     icon: Icons.trending_up,
                     label: '${user.bestWinStreak}',
-                    sub: 'Best Streak'),
-                _StatChip(
+                    sub: context.loc.achievementsBestStreak)),
+                Expanded(child: _StatChip(
                     icon: Icons.gps_fixed,
                     label: '${(user.hitRate * 100).toStringAsFixed(0)}%',
-                    sub: 'Hit Rate'),
+                    sub: context.loc.statHitRate)),
               ],
             ),
           ],
@@ -204,7 +214,13 @@ class _StatChip extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: c.onBackground,
                 fontSize: 14)),
-        Text(sub, style: TextStyle(fontSize: 10, color: c.subtle)),
+        Text(
+          sub,
+          style: TextStyle(fontSize: 10, color: c.subtle),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
@@ -323,15 +339,17 @@ class _AchievementCard extends StatelessWidget {
                   const Icon(Icons.lock, size: 16, color: Colors.white38),
               ],
             ),
-            Text(
-              p.def.title,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: locked ? Colors.white38 : Colors.white,
+            Flexible(
+              child: Text(
+                p.def.title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: locked ? Colors.white38 : Colors.white,
+                ),
               ),
             ),
             Column(
@@ -339,7 +357,9 @@ class _AchievementCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: p.progressToNextStage,
+                    value: p.isMaxed
+                        ? 1.0
+                        : (p.currentValue / p.nextThreshold).clamp(0.0, 1.0),
                     minHeight: 4,
                     backgroundColor: Colors.black26,
                     valueColor: AlwaysStoppedAnimation<Color>(
@@ -350,7 +370,7 @@ class _AchievementCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   p.isMaxed
-                      ? 'Maxed!'
+                      ? context.loc.achievementMaxed
                       : '${p.currentValue} / ${p.nextThreshold}',
                   style: TextStyle(
                     fontSize: 10,
@@ -376,7 +396,7 @@ class _AchievementDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = progress;
     final c = AppColors.of(context);
-    final stageLabels = ['Bronze', 'Silver', 'Gold', 'Diamond'];
+    final stageLabels = [context.loc.achievementStagesBronze, context.loc.achievementStagesSilver, context.loc.achievementStagesGold, context.loc.achievementStagesDiamond];
 
     return AlertDialog(
       backgroundColor: c.card,
@@ -402,6 +422,7 @@ class _AchievementDetailDialog extends StatelessWidget {
           // Stage progress dots
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (int i = 0; i < p.def.thresholds.length; i++) ...[
                 _StageDot(
@@ -412,10 +433,15 @@ class _AchievementDetailDialog extends StatelessWidget {
                   stageIndex: i + 1,
                 ),
                 if (i < p.def.thresholds.length - 1)
+                  // Padding(top: 13) centres the 2px line on the 28px dot
+                  // circle: (28 / 2) - (2 / 2) = 13.
                   Expanded(
-                    child: Container(
-                      height: 2,
-                      color: Colors.grey.shade700,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 13),
+                      child: Container(
+                        height: 2,
+                        color: Colors.grey.shade700,
+                      ),
                     ),
                   ),
               ],
@@ -424,8 +450,8 @@ class _AchievementDetailDialog extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             p.isMaxed
-                ? 'Fully mastered!'
-                : 'Progress: ${p.currentValue} / ${p.nextThreshold}',
+                ? context.loc.achievementFullyMastered
+                : context.loc.achievementProgress(p.currentValue, p.nextThreshold),
             style:
                 TextStyle(color: c.onBackground, fontWeight: FontWeight.w600),
           ),
@@ -434,7 +460,9 @@ class _AchievementDetailDialog extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: LinearProgressIndicator(
-                value: p.progressToNextStage,
+                value: p.isMaxed
+                    ? 1.0
+                    : (p.currentValue / p.nextThreshold).clamp(0.0, 1.0),
                 minHeight: 8,
                 backgroundColor: c.border,
                 valueColor:
@@ -445,7 +473,7 @@ class _AchievementDetailDialog extends StatelessWidget {
           if (p.def.titleToGrant != null) ...[
             const SizedBox(height: 12),
             Text(
-              'Unlocks title: "${p.def.titleToGrant}"',
+              context.loc.achievementUnlocksTitle(p.def.titleToGrant!),
               style: const TextStyle(
                 fontSize: 12,
                 color: Colors.amber,
@@ -458,7 +486,7 @@ class _AchievementDetailDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Close', style: TextStyle(color: c.onBackground)),
+          child: Text(context.loc.btnClose, style: TextStyle(color: c.onBackground)),
         ),
       ],
     );

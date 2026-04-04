@@ -124,9 +124,9 @@ class GameController extends ChangeNotifier {
     if (cup.color == Colors.green) {
       _checkProximity(index);
     } else {
+      cup.color = Colors.green;
       checkBallsBack(ctx);
       checkBitchCup(index, ctx);
-      cup.color = Colors.green;
     }
     notifyListeners();
   }
@@ -214,10 +214,13 @@ class GameController extends ChangeNotifier {
   }
 
   void checkBitchCup(int index, BuildContext ctx) {
-    if (currentTeam.cups
-            .every((cup) => cup.isVisible && cup.color == currentTeam.color) &&
-        index == 4 &&
-        currentTeam.cups.length == 10) {
+    if (index != 4 || currentTeam.cups.length != 10) return;
+    // Bitch cup fires when cup 4 (middle) is the FIRST cup hit.
+    // All other 9 cups must still be untouched (visible + original team color).
+    final allOthersUntouched = currentTeam.cups
+        .where((cup) => cup.index != 4)
+        .every((cup) => cup.isVisible && cup.color == currentTeam.color);
+    if (allOthersUntouched) {
       addEvent('Bitchcup', currentTeam, null);
       DialogHelpers.showBitchCupDialog(ctx);
     }

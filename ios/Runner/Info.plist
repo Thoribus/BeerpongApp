@@ -51,6 +51,13 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict/>
+	</dict>
 	<key>GIDClientID</key>
 	<string>8746505211-bq6r301gbm1gb8amq41c9hg519e8d5r8.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>

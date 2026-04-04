@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:beerpongapp/constants/routes.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
+import 'package:beerpongapp/models/invitation.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/locale_provider.dart';
 import 'package:beerpongapp/util/theme_provider.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
@@ -23,8 +28,10 @@ class BaseScreenState extends State<BaseScreen> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
     final user = userProvider.user;
     final isDarkMode = themeProvider.isDarkMode;
+    final currentLang = localeProvider.locale.languageCode;
     final selectedIndex = widget.shell.currentIndex;
     final c = AppColors.of(context);
 
@@ -55,26 +62,30 @@ class BaseScreenState extends State<BaseScreen> {
                                 size: 28, color: c.onBackground),
                           ),
                           const SizedBox(width: 12),
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user?.username ?? 'Peppa Wutz',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: c.onBackground,
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user?.username ?? 'Peppa Wutz',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: c.onBackground,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '@${user?.username ?? 'guest'}',
-                                style: TextStyle(
-                                  color: c.subtle,
+                                const SizedBox(height: 4),
+                                Text(
+                                  '@${user?.username ?? 'guest'}',
+                                  style: TextStyle(
+                                    color: c.subtle,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -100,7 +111,7 @@ class BaseScreenState extends State<BaseScreen> {
                 Divider(color: c.divider),
                 SwitchListTile(
                   title: Text(
-                    'Dark Mode',
+                    context.loc.settingsDarkMode,
                     style: TextStyle(color: c.onBackground),
                   ),
                   value: isDarkMode,
@@ -111,10 +122,27 @@ class BaseScreenState extends State<BaseScreen> {
                   ),
                 ),
                 ListTile(
+                  leading: Icon(Icons.language, color: c.onBackground),
+                  title: Text(
+                    context.loc.settingsLanguage,
+                    style: TextStyle(color: c.onBackground),
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _langChip(context, 'EN', currentLang == 'en', c,
+                          () => localeProvider.setLocale(const Locale('en'))),
+                      const SizedBox(width: 6),
+                      _langChip(context, 'DE', currentLang == 'de', c,
+                          () => localeProvider.setLocale(const Locale('de'))),
+                    ],
+                  ),
+                ),
+                ListTile(
                   leading: Icon(Icons.privacy_tip_outlined,
                       color: c.onBackground),
                   title: Text(
-                    'Privacy Settings',
+                    context.loc.settingsPrivacy,
                     style: TextStyle(color: c.onBackground),
                   ),
                   onTap: () {
@@ -149,7 +177,7 @@ class BaseScreenState extends State<BaseScreen> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        _getAppBarTitle(selectedIndex),
+                        _getAppBarTitle(selectedIndex, context),
                         style: TextStyle(
                           color: c.onBackground,
                           fontSize: 20,
@@ -159,13 +187,54 @@ class BaseScreenState extends State<BaseScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.notifications_none),
-                    color: c.onBackground,
-                    onPressed: () {
-                      // Push notifications: not yet implemented
-                    },
-                  ),
+                  if (user != null)
+                    StreamBuilder<List<Invitation>>(
+                      stream: FirestoreService.instance
+                          .pendingInvitationsStream(user.id),
+                      builder: (context, snapshot) {
+                        final count = snapshot.data?.length ?? 0;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                count > 0
+                                    ? Icons.notifications
+                                    : Icons.notifications_none,
+                                color: c.onBackground,
+                              ),
+                              onPressed: () =>
+                                  context.push(AppRoutes.invitations),
+                            ),
+                            if (count > 0)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: Container(
+                                  width: 16,
+                                  height: 16,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.orange,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      count > 9 ? '9+' : '$count',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    )
+                  else
+                    Icon(Icons.notifications_none, color: c.onBackground),
                 ],
               ),
             ),
@@ -209,11 +278,11 @@ class BaseScreenState extends State<BaseScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildNavItem(Icons.shopping_bag_outlined, 'Shop', 0, selectedIndex),
-                    _buildNavItem(Icons.favorite_outline, 'Friends', 1, selectedIndex),
-                    _buildNavItem(Icons.sports_bar_outlined, 'Home', 2, selectedIndex),
-                    _buildNavItem(Icons.workspaces_outlined, 'Games', 3, selectedIndex),
-                    _buildNavItem(Icons.account_circle_outlined, 'Profile', 4, selectedIndex),
+                    _buildNavItem(Icons.shopping_bag_outlined, context.loc.navShop, 0, selectedIndex),
+                    _buildNavItem(Icons.favorite_outline, context.loc.navFriends, 1, selectedIndex),
+                    _buildNavItem(Icons.sports_bar_outlined, context.loc.navHome, 2, selectedIndex),
+                    _buildNavItem(Icons.workspaces_outlined, context.loc.navGames, 3, selectedIndex),
+                    _buildNavItem(Icons.account_circle_outlined, context.loc.navProfile, 4, selectedIndex),
                   ],
                 ),
               ],
@@ -251,11 +320,37 @@ class BaseScreenState extends State<BaseScreen> {
     );
   }
 
-  String _getAppBarTitle(int index) => [
-        'Shop',
-        'Friends',
-        'Beerpong Companion',
-        'Games',
-        'Profile',
+  Widget _langChip(BuildContext context, String label, bool selected,
+      AppColors c, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected ? Colors.orange : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: selected ? Colors.orange : c.subtle,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : c.subtle,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getAppBarTitle(int index, BuildContext context) => [
+        context.loc.navShop,
+        context.loc.navFriends,
+        context.loc.appTitle,
+        context.loc.navGames,
+        context.loc.navProfile,
       ][index];
 }

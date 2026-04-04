@@ -1,6 +1,7 @@
 import 'package:beerpongapp/repositories/user_repository.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/shop_catalog.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +25,9 @@ class InGameShopView extends StatelessWidget {
 
     return ListView(
       children: [
-        _buildSection(context, 'Cup Skins', cupItems, user.activeCupSkin,
+        _buildSection(context, context.loc.shopSectionCupSkins, cupItems, user.activeCupSkin,
             'activeCupSkin'),
-        _buildSection(context, 'Table Themes', tableItems, user.activeTableTheme,
+        _buildSection(context, context.loc.shopSectionTableThemes, tableItems, user.activeTableTheme,
             'activeTableTheme'),
         const SizedBox(height: 24),
       ],
@@ -79,7 +80,7 @@ class InGameShopView extends StatelessWidget {
         children: [
           Icon(Icons.lock_outline, color: c.subtle, size: 48),
           const SizedBox(height: 12),
-          Text('Sign in to browse the shop',
+          Text(context.loc.shopSignInBrowse,
               style: TextStyle(color: c.subtle, fontSize: 15)),
         ],
       ),
@@ -331,7 +332,7 @@ class _EquipButtonState extends State<_EquipButton> {
               : null,
         ),
         child: Text(
-          widget.equipped ? 'Unequip' : 'Equip',
+          widget.equipped ? context.loc.shopUnequip : context.loc.shopEquip,
           style: TextStyle(
             color: widget.equipped ? Colors.red.shade300 : Colors.white,
             fontSize: 11,
@@ -422,7 +423,7 @@ class _BuyDialogState extends State<_BuyDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Your balance',
+                  Text(context.loc.shopYourBalance,
                       style: TextStyle(color: c.subtle, fontSize: 13)),
                   Row(children: [
                     const Icon(Icons.star_rounded,
@@ -439,7 +440,7 @@ class _BuyDialogState extends State<_BuyDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Cost',
+                  Text(context.loc.shopCost,
                       style: TextStyle(color: c.subtle, fontSize: 13)),
                   Row(children: [
                     const Icon(Icons.star_rounded,
@@ -470,7 +471,7 @@ class _BuyDialogState extends State<_BuyDialog> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : Text('Buy for ⭐ ${widget.item.starPrice}',
+                      : Text(context.loc.shopBuyForStars(widget.item.starPrice),
                           style:
                               const TextStyle(fontWeight: FontWeight.bold)),
                 ),
@@ -492,7 +493,7 @@ class _BuyDialogState extends State<_BuyDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'You need $needed more ⭐ to buy this.',
+                        context.loc.shopNeedMoreStars(needed),
                         style: const TextStyle(
                             color: Colors.white70, fontSize: 13),
                       ),
@@ -504,7 +505,7 @@ class _BuyDialogState extends State<_BuyDialog> {
             const SizedBox(height: 8),
             TextButton(
               onPressed: _loading ? null : () => Navigator.of(context).pop(),
-              child: Text('Cancel', style: TextStyle(color: c.subtle)),
+              child: Text(context.loc.btnCancel, style: TextStyle(color: c.subtle)),
             ),
           ],
         ),
@@ -529,7 +530,7 @@ class _BuyDialogState extends State<_BuyDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${widget.item.name} purchased! ⭐'),
+            content: Text(context.loc.shopItemPurchased(widget.item.name)),
             backgroundColor: Colors.green.shade700,
             duration: const Duration(seconds: 2),
           ),

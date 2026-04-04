@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:beerpongapp/models/game_statistics.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -69,18 +70,18 @@ class PersonalStatisticsScreen extends StatelessWidget {
     final avgCups = user.totalScore / totalGames;
     final avgThrows = user.totalThrows / totalGames;
     final streak = _currentStreak();
-    final streakLabel =
-        '${streak.length}-game ${streak.isWin ? 'W' : 'L'} streak';
+    final streakLabel = context.loc
+        .statsStreakChip(streak.length, streak.isWin ? 'W' : 'L');
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
           _derivedChip(context, Icons.sports_bar, avgCups.toStringAsFixed(1),
-              'cups/game', Colors.orange),
+              context.loc.statsCupsPerGame, Colors.orange),
           const SizedBox(width: 8),
           _derivedChip(context, Icons.track_changes,
-              avgThrows.toStringAsFixed(1), 'throws/game', Colors.blue),
+              avgThrows.toStringAsFixed(1), context.loc.statsThrowsPerGame, Colors.blue),
           const SizedBox(width: 8),
           _derivedChip(
             context,
@@ -159,7 +160,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'CAREER HIGHLIGHTS',
+          context.loc.statsCareerHighlights,
           style: TextStyle(
             color: c.subtle,
             fontSize: 11,
@@ -174,7 +175,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
               child: _highlightCard(
                 context,
                 '$longestStreak',
-                'Best Streak',
+                context.loc.statsBestStreak,
                 Colors.amber,
               ),
             ),
@@ -183,7 +184,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
               child: _highlightCard(
                 context,
                 '${bestHitRate.toStringAsFixed(0)}%',
-                'Best Hit Rate',
+                context.loc.statsBestHitRate,
                 Colors.blue,
               ),
             ),
@@ -192,7 +193,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
               child: _highlightCard(
                 context,
                 '$mostCupsInGame',
-                'Most Cups',
+                context.loc.statsMostCups,
                 Colors.deepOrange,
               ),
             ),
@@ -367,7 +368,7 @@ class PersonalStatisticsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Recent Form',
+          context.loc.statsRecentForm,
           style: TextStyle(
             color: c.subtle,
             fontSize: 12,
@@ -431,71 +432,71 @@ class PersonalStatisticsScreen extends StatelessWidget {
     final avgCups = totalGames > 0 ? user.totalScore / totalGames : 0.0;
 
     final tiles = [
-      _TileDef(Icons.emoji_events, 'Wins', '${user.wins}', Colors.amber),
-      _TileDef(Icons.close_rounded, 'Losses', '${user.losses}', Colors.redAccent),
+      _TileDef(Icons.emoji_events, context.loc.statsWins, '${user.wins}', Colors.amber),
+      _TileDef(Icons.close_rounded, context.loc.statsLosses, '${user.losses}', Colors.redAccent),
       _TileDef(
         Icons.percent,
-        'Win Rate',
+        context.loc.statsWinRate,
         '${winPct.toStringAsFixed(0)}%',
         Colors.green,
       ),
       _TileDef(
         Icons.auto_fix_high,
-        'Hit Rate',
+        context.loc.statsHitRate,
         '${hitPct.toStringAsFixed(0)}%',
         Colors.blue,
       ),
       _TileDef(
         Icons.sports_bar,
-        'Cups Hit',
+        context.loc.liveStatCupsHit,
         '${user.cupsHit.length}',
         Colors.orange,
       ),
       _TileDef(
         Icons.local_fire_department,
-        'On Fire',
+        context.loc.statsOnFire,
         '${user.onFire}',
         Colors.deepOrange,
       ),
       _TileDef(
         Icons.sports_tennis_rounded,
-        'Bounce%',
+        context.loc.statsBouncePercent,
         '${bouncePct.toStringAsFixed(0)}%',
         Colors.purple,
       ),
       _TileDef(
         Icons.workspaces_outlined,
-        'Islands',
+        context.loc.statsIslands,
         '${user.islandMakes}',
         Colors.teal,
       ),
       _TileDef(
         Icons.shield_outlined,
-        'Defended',
+        context.loc.statsDefended,
         '${user.defended}',
         Colors.indigo,
       ),
       _TileDef(
         Icons.thermostat,
-        'Heating Up',
+        context.loc.statsHeatingUp,
         '${user.totalHeatingUp}',
         Colors.orange.shade300,
       ),
       _TileDef(
         Icons.flag_rounded,
-        'Last Cup',
+        context.loc.statsLastCup,
         '${user.hitLastCup}',
         Colors.amber,
       ),
       _TileDef(
         Icons.bar_chart,
-        'Avg/Game',
+        context.loc.statsAvgPerGame,
         avgCups.toStringAsFixed(1),
         Colors.grey,
       ),
       _TileDef(
         Icons.nightlight_round,
-        'Night Games',
+        context.loc.statsNightGames,
         '${user.nightGames}',
         Colors.deepPurple,
       ),

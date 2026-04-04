@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:beerpongapp/screens/game/dialog_helpers.dart';
 import 'package:beerpongapp/screens/game/game_controller.dart';
 import 'package:beerpongapp/screens/game/game_persistence.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/player.dart';
@@ -111,7 +112,7 @@ class GameScreenState extends State<GameScreen> {
   Future<void> showPlayerSelectionDialog(BuildContext ctx, int cupIndex) async {
     await DialogHelpers.showSelectionDialog(
       ctx,
-      'Select Player',
+      ctx.loc.gameSelectPlayer,
       _ctrl.currentTeam.currentPlayers,
       (player) => _handleNormalHit(player, cupIndex),
     );
@@ -123,7 +124,7 @@ class GameScreenState extends State<GameScreen> {
     Player? selected;
     await DialogHelpers.showSelectionDialog(
       context,
-      'Select Player',
+      context.loc.gameSelectPlayer,
       _ctrl.currentTeam.currentPlayers.where((p) => p.islandAttempts == 0).toList(),
       (player) {
         selected = player;
@@ -146,7 +147,7 @@ class GameScreenState extends State<GameScreen> {
     Player? selected;
     await DialogHelpers.showSelectionDialog(
       context,
-      'Who made the island shot?',
+      context.loc.gameWhoMadeIslandShot,
       _ctrl.currentTeam.currentPlayers,
       (player) => selected = player,
     );
@@ -217,18 +218,18 @@ class GameScreenState extends State<GameScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Choose your free bonus cup',
-                style: TextStyle(
+              Text(
+                context.loc.gameBonusCupTitle,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Island shot reward — pick any remaining cup',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+              Text(
+                context.loc.gameBonusCupSubtitle,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
               ),
               const SizedBox(height: 16),
               Wrap(
@@ -269,8 +270,8 @@ class GameScreenState extends State<GameScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Skip bonus',
-                    style: TextStyle(color: Colors.white54)),
+                child: Text(context.loc.gameBonusCupSkip,
+                    style: const TextStyle(color: Colors.white54)),
               ),
             ],
           ),
@@ -301,7 +302,7 @@ class GameScreenState extends State<GameScreen> {
   Future<void> _handleBounceShot() async {
     await DialogHelpers.showSelectionDialog(
       context,
-      'Bounce Shot — Select Thrower',
+      context.loc.gameBounceSelectThrower,
       _ctrl.currentTeam.currentPlayers,
       (player) {
         _ctrl.activateBounceShot(player);
@@ -405,7 +406,7 @@ class GameScreenState extends State<GameScreen> {
     final enemyTeam = (_ctrl.currentTeam == _ctrl.team1) ? _ctrl.team2 : _ctrl.team1;
     final chosenPlayer = await DialogHelpers.showNachwurfSelectionDialog(
       context,
-      'Enemy Team\'s Last Turn',
+      context.loc.gameEnemyLastTurn,
       enemyTeam.players,
     );
     if (chosenPlayer != null) {
@@ -420,9 +421,42 @@ class GameScreenState extends State<GameScreen> {
 
   // ----- UI Build Methods -----
 
+  Future<void> _onBackPressed() async {
+    if (_ctrl.gameEnded) {
+      if (mounted) context.pop();
+      return;
+    }
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(context.loc.gameLeaveTitle),
+        content: Text(context.loc.gameLeaveContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(context.loc.gameLeaveStay),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(context.loc.gameLeaveLeave),
+          ),
+        ],
+      ),
+    );
+    if ((leave ?? false) && mounted) {
+      await _ctrl.persistIfNotEnded();
+      if (mounted) context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBackPressed();
+      },
+      child: Scaffold(
       appBar: _buildAppBar(),
       backgroundColor: Colors.black,
       body: FutureBuilder<void>(
@@ -431,7 +465,7 @@ class GameScreenState extends State<GameScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text(context.loc.liveGameError));
           } else {
             return Column(
               children: [
@@ -452,6 +486,7 @@ class GameScreenState extends State<GameScreen> {
         },
       ),
       bottomNavigationBar: _buildBottomBar(),
+      ),
     );
   }
 
@@ -466,7 +501,7 @@ class GameScreenState extends State<GameScreen> {
         backgroundColor: Colors.grey.shade900,
         elevation: 0,
         centerTitle: true,
-        title: const Text('Game', style: TextStyle(color: Colors.white)),
+        title: Text(context.loc.gameLoadingTitle, style: const TextStyle(color: Colors.white)),
       );
     }
 
@@ -475,14 +510,14 @@ class GameScreenState extends State<GameScreen> {
         backgroundColor: Colors.orange.shade900,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          'Tap the cup you sank',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+        title: Text(
+          context.loc.gameTapCupSank,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: _ctrl.cancelBounceShot,
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            child: Text(context.loc.btnCancel, style: const TextStyle(color: Colors.white70)),
           ),
         ],
       );
@@ -513,7 +548,7 @@ class GameScreenState extends State<GameScreen> {
           ),
           const SizedBox(width: 8),
           Text(
-            "$teamName's Turn",
+            context.loc.gameTeamTurn(teamName),
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -537,8 +572,8 @@ class GameScreenState extends State<GameScreen> {
       ),
       child: Row(
         children: [
-          _buildNavPill(label: 'Table', index: 0),
-          _buildNavPill(label: 'Stats', index: 1),
+          _buildNavPill(label: context.loc.gameNavTable, index: 0),
+          _buildNavPill(label: context.loc.gameNavStats, index: 1),
         ],
       ),
     );
@@ -601,7 +636,7 @@ class GameScreenState extends State<GameScreen> {
           _buildTeamScore(t1Name, _ctrl.team1.color, t1Cups,
               isActive: _ctrl.currentTeam == _ctrl.team1),
           const Spacer(),
-          const Text('vs', style: TextStyle(color: Colors.white38, fontSize: 12)),
+          Text(context.loc.gameVs, style: const TextStyle(color: Colors.white38, fontSize: 12)),
           const Spacer(),
           _buildTeamScore(t2Name, _ctrl.team2.color, t2Cups,
               isActive: _ctrl.currentTeam == _ctrl.team2, reversed: true),
@@ -671,7 +706,7 @@ class GameScreenState extends State<GameScreen> {
             Icon(Icons.close_rounded, color: attackColor, size: 16),
             const SizedBox(width: 6),
             Text(
-              'Miss Zone — tap to log airball',
+              context.loc.gameMissZone,
               style: TextStyle(color: attackColor, fontSize: 12),
             ),
           ],
@@ -766,9 +801,9 @@ class GameScreenState extends State<GameScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Team Statistics',
-                style: TextStyle(
+              Text(
+                context.loc.gameTeamStatistics,
+                style: const TextStyle(
                     color: Colors.amber,
                     fontSize: 14,
                     fontWeight: FontWeight.bold),
@@ -843,27 +878,27 @@ class GameScreenState extends State<GameScreen> {
                 4: FlexColumnWidth(1),
               },
               children: [
-                const TableRow(
+                TableRow(
                   children: [
                     Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Text('Player', style: headerStyle),
+                      padding: const EdgeInsets.all(6),
+                      child: Text(context.loc.gameStatsPlayer, style: headerStyle),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Text('Score', style: headerStyle, textAlign: TextAlign.center),
+                      padding: const EdgeInsets.all(6),
+                      child: Text(context.loc.gameStatsScore, style: headerStyle, textAlign: TextAlign.center),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Text('Throws', style: headerStyle, textAlign: TextAlign.center),
+                      padding: const EdgeInsets.all(6),
+                      child: Text(context.loc.gameStatsThrows, style: headerStyle, textAlign: TextAlign.center),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Text('Misses', style: headerStyle, textAlign: TextAlign.center),
+                      padding: const EdgeInsets.all(6),
+                      child: Text(context.loc.gameStatsMisses, style: headerStyle, textAlign: TextAlign.center),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Text('Airballs', style: headerStyle, textAlign: TextAlign.center),
+                      padding: const EdgeInsets.all(6),
+                      child: Text(context.loc.gameStatsAirballs, style: headerStyle, textAlign: TextAlign.center),
                     ),
                   ],
                 ),
@@ -920,23 +955,23 @@ class GameScreenState extends State<GameScreen> {
         children: [
           _buildDockButton(
             icon: Icons.undo_rounded,
-            label: 'Undo',
+            label: context.loc.gameUndoLabel,
             onTap: _ctrl.undoLastAction,
           ),
           if (_ctrl.selectedRules['Rearrange'] == true)
             _buildDockButton(
               icon: Icons.workspaces_outlined,
-              label: 'Cups',
+              label: context.loc.gameCupsLabel,
               onTap: () => _ctrl.toggleRearranged(context),
             ),
           _buildDockButton(
             icon: Icons.more_horiz_rounded,
-            label: 'More',
+            label: context.loc.gameMoreLabel,
             onTap: _showActionsSheet,
           ),
           _buildDockButton(
             icon: Icons.check_rounded,
-            label: 'End Turn',
+            label: context.loc.gameEndTurnLabel,
             onTap: () => DialogHelpers.confirmEndTurn(context, _ctrl),
             isPrimary: true,
           ),
@@ -996,7 +1031,7 @@ class GameScreenState extends State<GameScreen> {
                 _buildSheetAction(
                   ctx: ctx,
                   icon: BeerpongIcons.skull,
-                  label: 'Death Cup',
+                  label: context.loc.gameDeathCupLabel,
                   color: _ctrl.currentTeam == _ctrl.team1
                       ? _ctrl.team2.color
                       : _ctrl.team1.color,
@@ -1010,7 +1045,7 @@ class GameScreenState extends State<GameScreen> {
                 _buildSheetAction(
                   ctx: ctx,
                   icon: BeerpongIcons.palmTree,
-                  label: 'Island Shot',
+                  label: context.loc.gameIslandShotLabel,
                   color: _ctrl.islandBackgroundColor,
                   enabled: _ctrl.currentTeam.canIslandShot &&
                       _ctrl.currentTeam.cups
@@ -1021,7 +1056,7 @@ class GameScreenState extends State<GameScreen> {
                 _buildSheetAction(
                   ctx: ctx,
                   icon: Icons.sports_tennis_rounded,
-                  label: 'Bounce Shot',
+                  label: context.loc.gameBounceShotLabel,
                   color: Colors.orange,
                   onTap: _handleBounceShot,
                 ),
@@ -1029,7 +1064,7 @@ class GameScreenState extends State<GameScreen> {
                 _buildSheetAction(
                   ctx: ctx,
                   icon: Icons.workspaces_outlined,
-                  label: 'Rearrange Cups',
+                  label: context.loc.gameRearrangeCupsLabel,
                   color: Colors.green,
                   onTap: () => _ctrl.toggleRearranged(context),
                 ),

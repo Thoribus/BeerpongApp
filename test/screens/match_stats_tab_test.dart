@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../helpers/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beerpongapp/screens/liveticker/live_game_stats_screen.dart';
 import 'package:beerpongapp/screens/liveticker/match_stats_tab.dart';
@@ -40,7 +41,7 @@ void main() {
       final gameData = buildGameData();
 
       await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: MatchStatsTab(gameData: gameData))),
+        wrapWithL10n(MatchStatsTab(gameData: gameData)),
       );
 
       expect(find.text('Score'), findsOneWidget);
@@ -56,7 +57,7 @@ void main() {
       final gameData = buildGameData();
 
       await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: MatchStatsTab(gameData: gameData))),
+        wrapWithL10n(MatchStatsTab(gameData: gameData)),
       );
 
       // The score row shows "5" for team1 (left side)
@@ -69,7 +70,7 @@ void main() {
       final gameData = buildGameData();
 
       await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: MatchStatsTab(gameData: gameData))),
+        wrapWithL10n(MatchStatsTab(gameData: gameData)),
       );
 
       expect(find.text('9'), findsWidgets);
@@ -81,7 +82,7 @@ void main() {
       final gameData = buildGameData();
 
       await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: MatchStatsTab(gameData: gameData))),
+        wrapWithL10n(MatchStatsTab(gameData: gameData)),
       );
 
       // "2" will appear for team2 airballs
@@ -92,15 +93,11 @@ void main() {
       final gameData = buildGameData();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: SizedBox(
-              width: 400,
-              height: 800,
-              child: MatchStatsTab(gameData: gameData),
-            ),
-          ),
-        ),
+        wrapWithL10n(SizedBox(
+          width: 400,
+          height: 800,
+          child: MatchStatsTab(gameData: gameData),
+        )),
       );
 
       // If there were layout errors the test would fail automatically

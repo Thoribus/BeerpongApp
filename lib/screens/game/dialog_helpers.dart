@@ -7,6 +7,7 @@ import 'package:beerpongapp/screens/game/game_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:beerpongapp/constants/routes.dart';
 import 'package:beerpongapp/util/router.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter_svg/svg.dart';
 
 /// A utility class to hold all the AwesomeDialog-based methods.
@@ -18,7 +19,7 @@ class DialogHelpers {
     List<Player> players,
     Function(Player) onSelected,
   ) async {
-    AwesomeDialog(
+    await AwesomeDialog(
       context: context,
       dialogType: DialogType.question,
       animType: AnimType.topSlide,
@@ -33,9 +34,9 @@ class DialogHelpers {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10.0),
-          const Text(
-            'Select the player for the cup action:',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+          Text(
+            context.loc.dialogSelectPlayerBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20.0),
@@ -56,8 +57,8 @@ class DialogHelpers {
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: 'Cancel',
-    ).show().ignore();
+      btnCancelText: context.loc.btnCancel,
+    ).show();
   }
 
   /// Dialog to pick a player for the Airball rule.
@@ -68,7 +69,7 @@ class DialogHelpers {
   ) async {
     await DialogHelpers.showSelectionDialog(
       context,
-      'Select Player',
+      context.loc.gameSelectPlayer,
       currentTeam.currentPlayers,
       onSelected,
     );
@@ -96,9 +97,9 @@ class DialogHelpers {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10.0),
-          const Text(
-            'Select the player for the cup action:',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+          Text(
+            context.loc.dialogSelectPlayerBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20.0),
@@ -155,7 +156,7 @@ class DialogHelpers {
           ),
         ],
       ),
-      btnCancelText: 'Cancel',
+      btnCancelText: context.loc.btnCancel,
       btnCancelOnPress: () {
         if (!completer.isCompleted) {
           completer.complete(null);
@@ -174,7 +175,7 @@ class DialogHelpers {
   ) async {
     await DialogHelpers.showSelectionDialog(
       context,
-      'Select Player',
+      context.loc.gameSelectPlayer,
       currentTeam.currentPlayers,
       onSelected,
     );
@@ -188,22 +189,22 @@ class DialogHelpers {
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
       dialogBackgroundColor: Colors.redAccent.shade100,
-      body: const Column(
+      body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Rearrange Error!',
-            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            context.loc.dialogRearrangeErrorTitle,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10.0),
+          const SizedBox(height: 10.0),
           Text(
-            'You can only rearrange if you have 6 or fewer cups!',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            context.loc.dialogRearrangeErrorBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 20.0),
-          Row(
+          const SizedBox(height: 20.0),
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.scatter_plot_outlined, size: 50.0, color: Colors.red),
@@ -213,11 +214,11 @@ class DialogHelpers {
               Icon(Icons.workspaces_outlined, size: 50.0, color: Colors.red),
             ],
           ),
-          SizedBox(height: 20.0),
+          const SizedBox(height: 20.0),
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: 'OK',
+      btnCancelText: context.loc.btnOk,
     ).show().ignore();
   }
 
@@ -229,22 +230,22 @@ class DialogHelpers {
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
       dialogBackgroundColor: Colors.amberAccent.shade100,
-      body: const Column(
+      body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'End your turn!',
-            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            context.loc.dialogEndTurnTitle,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10.0),
+          const SizedBox(height: 10.0),
           Text(
-            'Confirm that all cup actions were selected!',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            context.loc.dialogEndTurnBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 20.0),
-          Row(
+          const SizedBox(height: 20.0),
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.red),
@@ -252,16 +253,16 @@ class DialogHelpers {
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.green),
             ],
           ),
-          SizedBox(height: 20.0),
+          const SizedBox(height: 20.0),
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: 'Cancel',
+      btnCancelText: context.loc.btnCancel,
       btnOkOnPress: () {
         ctrl.saveCurrentState();
         ctrl.endTurn();
       },
-      btnOkText: 'End Turn',
+      btnOkText: context.loc.dialogEndTurnConfirm,
     ).show().ignore();
   }
 
@@ -276,18 +277,18 @@ class DialogHelpers {
       body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Airball Milestone',
-            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+          Text(
+            context.loc.dialogAirballTitle,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10.0),
-          const Text(
-            'All players need to drink a shot!',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+          Text(
+            context.loc.dialogAirballBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
-          Text('Total airballs: $airballs'),
+          Text(context.loc.dialogAirballCount(airballs)),
           const SizedBox(height: 20.0),
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -299,7 +300,7 @@ class DialogHelpers {
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: 'OK',
+      btnOkText: context.loc.btnOk,
     ).show().ignore();
   }
 
@@ -311,22 +312,22 @@ class DialogHelpers {
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
       dialogBackgroundColor: Colors.blueAccent.shade100,
-      body: const Column(
+      body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Balls Back!',
-            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            context.loc.dialogBallsBackTitle,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10.0),
+          const SizedBox(height: 10.0),
           Text(
-            'All players hit this round!',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            context.loc.dialogBallsBackBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 20.0),
-          Row(
+          const SizedBox(height: 20.0),
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.green),
@@ -334,11 +335,11 @@ class DialogHelpers {
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.green),
             ],
           ),
-          SizedBox(height: 20.0),
+          const SizedBox(height: 20.0),
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: 'OK',
+      btnOkText: context.loc.btnOk,
     ).show().ignore();
   }
 
@@ -350,27 +351,27 @@ class DialogHelpers {
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
       dialogBackgroundColor: Colors.redAccent.shade100,
-      body: const Column(
+      body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'On Fire!',
-            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            context.loc.dialogOnFireTitle,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10.0),
+          const SizedBox(height: 10.0),
           Text(
-            'Three consecutive hits!',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            context.loc.dialogOnFireBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 20.0),
-          Icon(Icons.fireplace_outlined, size: 50.0, color: Colors.red),
-          SizedBox(height: 20.0),
+          const SizedBox(height: 20.0),
+          const Icon(Icons.fireplace_outlined, size: 50.0, color: Colors.red),
+          const SizedBox(height: 20.0),
         ],
       ),
       btnOkOnPress: () {},
-      btnOkText: 'OK',
+      btnOkText: context.loc.btnOk,
     ).show().ignore();
   }
 
@@ -382,22 +383,22 @@ class DialogHelpers {
       animType: AnimType.topSlide,
       headerAnimationLoop: false,
       dialogBackgroundColor: Colors.redAccent.shade100,
-      body: const Column(
+      body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Bitch Cup!',
-            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            context.loc.dialogBitchCupTitle,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 10.0),
+          const SizedBox(height: 10.0),
           Text(
-            'Drop your pants!',
-            style: TextStyle(fontSize: 16.0, color: Colors.black54),
+            context.loc.dialogBitchCupBody,
+            style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 20.0),
-          Row(
+          const SizedBox(height: 20.0),
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.directions_walk_outlined, size: 50.0, color: Colors.red),
@@ -407,11 +408,11 @@ class DialogHelpers {
               Icon(Icons.dry_cleaning_outlined, size: 50.0, color: Colors.red),
             ],
           ),
-          SizedBox(height: 20.0),
+          const SizedBox(height: 20.0),
         ],
       ),
       btnCancelOnPress: () {},
-      btnCancelText: 'OK',
+      btnCancelText: context.loc.btnOk,
     ).show().ignore();
   }
 
@@ -434,14 +435,14 @@ class DialogHelpers {
       body: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Game Over',
-            style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+          Text(
+            context.loc.dialogGameOverTitle,
+            style: const TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10.0),
           Text(
-            '${players.map((p) => p.name).join(', ')} have won the game!',
+            context.loc.dialogGameOverWinners(players.map((p) => p.name).join(', ')),
             style: const TextStyle(fontSize: 16.0, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -463,14 +464,14 @@ class DialogHelpers {
           await onNavigate?.call();
         });
       },
-      btnOkText: 'Go to Stats',
+      btnOkText: context.loc.dialogGameOverGoStats,
       btnCancelOnPress: () {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           AppRouter.router.go(AppRoutes.home);
           await onNavigate?.call();
         });
       },
-      btnCancelText: 'Go to Home',
+      btnCancelText: context.loc.dialogGameOverGoHome,
     ).show().ignore();
   }
 

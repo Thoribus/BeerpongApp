@@ -16,6 +16,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:beerpongapp/util/route_args.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/app_tab_bar.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 
 enum _FeedEventType { sharedGame, winStreak, achievement, friendActive }
 
@@ -39,16 +40,17 @@ class _FeedEvent {
   final bool? userWon; // for sharedGame
 }
 
-enum _SortKey {
-  totalScore('Total Score'),
-  winRate('Win Rate'),
-  hitRate('Hit Rate'),
-  onFire('On Fire'),
-  bounceRate('Bounce %'),
-  gamesPlayed('Games');
+enum _SortKey { totalScore, winRate, hitRate, onFire, bounceRate, gamesPlayed }
 
-  const _SortKey(this.label);
-  final String label;
+extension _SortKeyLabel on _SortKey {
+  String label(AppLocalizations l) => switch (this) {
+        _SortKey.totalScore => l.leaderboardTotalScore,
+        _SortKey.winRate => l.statsWinRate,
+        _SortKey.hitRate => l.statsHitRate,
+        _SortKey.onFire => l.statsOnFire,
+        _SortKey.bounceRate => l.compareBouncePercent,
+        _SortKey.gamesPlayed => l.leaderboardGames,
+      };
 }
 
 /// Returns a human-readable relative time string, e.g. "just now", "3d ago".
@@ -127,6 +129,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  StreamSubscription<List<String>>? _friendIdsSub;
+  List<String>? _lastKnownFriendIds;
+
   @override
   void initState() {
     super.initState();
@@ -135,7 +140,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final user = Provider.of<UserProvider>(context, listen: false).user;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
     if (user != null && _friends == null) {
       final loadFriends =
           widget.friendsLoader ?? FirestoreService.instance.getFriends;
@@ -145,11 +151,28 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       _friends = loadFriends(user.id);
       _friendsWithUser = _friends!.then((friends) => [user, ...friends]);
       _myGames = loadGames(user);
+
+      // Watch the current user's friends array for remote changes (e.g. when
+      // someone else adds this user). Skip the first emission — it duplicates
+      // the initial load above.
+      _friendIdsSub ??= FirestoreService.instance
+          .streamFriendIds(user.id)
+          .skip(1)
+          .listen((ids) {
+        if (!mounted) return;
+        // Only refresh when the set of IDs actually changed.
+        final changed = _lastKnownFriendIds == null ||
+            ids.length != _lastKnownFriendIds!.length ||
+            ids.toSet().difference(_lastKnownFriendIds!.toSet()).isNotEmpty;
+        _lastKnownFriendIds = ids;
+        if (changed) _refreshFriendsOnly(userProvider);
+      });
     }
   }
 
   @override
   void dispose() {
+    _friendIdsSub?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -158,7 +181,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   Future<void> _showAddFriendDialog(BuildContext context) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     if (userProvider.user == null) {
-      _showErrorSnackBar('You must be signed in to add friends.');
+      _showErrorSnackBar(context.loc.friendsMustSignIn);
       return;
     }
     await showDialog<void>(
@@ -218,15 +241,17 @@ class FriendsListScreenState extends State<FriendsListScreen> {
   }
 
   void _refreshFriends(UserProvider userProvider) {
+    // Games are unaffected by friend add/remove — only reload the friend list.
+    _refreshFriendsOnly(userProvider);
+  }
+
+  void _refreshFriendsOnly(UserProvider userProvider) {
     setState(() {
       final loadFriends =
           widget.friendsLoader ?? FirestoreService.instance.getFriends;
-      final loadGames =
-          widget.gamesLoader ?? FirestoreService.instance.retrieveGames;
       _friends = loadFriends(userProvider.user!.id);
       _friendsWithUser =
           _friends!.then((friends) => [userProvider.user!, ...friends]);
-      _myGames = loadGames(userProvider.user!);
     });
   }
 
@@ -267,13 +292,13 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               const Icon(Icons.people_outline, color: Colors.grey, size: 48),
               const SizedBox(height: 16),
               Text(
-                'Sign in to view your friends',
+                context.loc.friendsSignInPrompt,
                 style: TextStyle(color: c.onBackground, fontSize: 16),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () async => userProvider.signIn(),
-                child: const Text('Sign in with Google'),
+                child: Text(context.loc.btnSignInGoogle),
               ),
             ],
           ),
@@ -307,7 +332,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
 
   Widget _buildPageSelector() {
     return AppTabBar(
-      tabs: const ['Friendlist', 'Leaderboard', 'Socials'],
+      tabs: [context.loc.friendsTabFriendlist, context.loc.friendsTabLeaderboard, context.loc.friendsTabSocials],
       selectedIndex: _currentPage,
       onTabSelected: (index) {
         if (_currentPage != index) {
@@ -328,7 +353,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         }
         if (snapshot.hasError) {
           return Center(
-            child: Text('Error: ${snapshot.error}',
+            child: Text(context.loc.liveGameError,
                 style: TextStyle(color: c.onBackground)),
           );
         }
@@ -336,6 +361,19 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         final myGames = snapshot.data![1] as List<GameStatistics>;
         final userProvider = Provider.of<UserProvider>(context);
         final currentUserId = userProvider.user?.id ?? '';
+
+        // Pre-compute H2H map once — avoids O(friends × games) linear scan
+        // inside itemBuilder on every frame.
+        final h2hByFriend = <String, List<GameStatistics>>{};
+        for (final g in myGames) {
+          for (final pid in g.participants) {
+            if (pid == currentUserId) continue;
+            (h2hByFriend[pid] ??= []).add(g);
+          }
+        }
+        for (final list in h2hByFriend.values) {
+          list.sort((a, b) => b.date.compareTo(a.date));
+        }
 
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -376,7 +414,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Text(
-                    'No friends yet. Add one using the + button above.',
+                    context.loc.friendsNoFriends,
                     style: TextStyle(color: c.subtle, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
@@ -388,10 +426,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               itemCount: friends.length,
               itemBuilder: (ctx, index) {
                 final friend = friends[index];
-                final h2hGames = myGames
-                    .where((g) => g.participants.contains(friend.id))
-                    .toList()
-                  ..sort((a, b) => b.date.compareTo(a.date));
+                final h2hGames = h2hByFriend[friend.id] ?? [];
                 return FriendTile(
                   friend: friend,
                   currentUserId: currentUserId,
@@ -415,6 +450,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
     List<User> friends,
     List<GameStatistics> myGames,
     String currentUserId,
+    AppLocalizations l,
   ) {
     final events = <_FeedEvent>[];
     final friendById = {for (final f in friends) f.id: f};
@@ -446,9 +482,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           type: _FeedEventType.sharedGame,
           date: game.date,
           title: userWon
-              ? 'Beat ${friend.username}'
-              : 'Lost to ${friend.username}',
-          subtitle: '$myScore–$oppScore · $hitPct% hit rate',
+              ? l.socialBeatFriend(friend.username)
+              : l.socialLostToFriend(friend.username),
+          subtitle: l.socialSharedGameResult(myScore, oppScore, hitPct),
           friend: friend,
           game: game,
           userWon: userWon,
@@ -472,8 +508,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
       events.add(_FeedEvent(
         type: _FeedEventType.winStreak,
         date: sorted.isNotEmpty ? sorted.first.date : DateTime.now(),
-        title: '🔥 $streak-game win streak!',
-        subtitle: "You're on fire — keep the momentum going.",
+        title: l.socialWinStreak(streak),
+        subtitle: l.socialWinStreakSubtitle,
       ));
     }
 
@@ -486,8 +522,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           events.add(_FeedEvent(
             type: _FeedEventType.achievement,
             date: friend.lastGameAt ?? DateTime.now(),
-            title: '🏆 ${friend.username} reached $m wins',
-            subtitle: 'A true beer pong legend.',
+            title: l.socialFriendReachedWins(friend.username, m),
+            subtitle: l.socialFriendLegendSubtitle,
             friend: friend,
           ));
           break;
@@ -498,8 +534,8 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           events.add(_FeedEvent(
             type: _FeedEventType.achievement,
             date: friend.lastGameAt ?? DateTime.now(),
-            title: '🔥 ${friend.username} went on fire $m+ times',
-            subtitle: 'Serious heat.',
+            title: l.socialFriendOnFire(friend.username, m),
+            subtitle: l.socialSeriousHeatSubtitle,
             friend: friend,
           ));
           break;
@@ -514,9 +550,9 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         events.add(_FeedEvent(
           type: _FeedEventType.friendActive,
           date: friend.lastGameAt!,
-          title: '${friend.username} is active',
-          subtitle:
-              'Played ${_timeAgo(friend.lastGameAt!)} · ${friend.wins + friend.losses} total games',
+          title: l.socialFriendIsActive(friend.username),
+          subtitle: l.socialFriendActiveSubtitle(
+              _timeAgo(friend.lastGameAt!), friend.wins + friend.losses),
           friend: friend,
         ));
       }
@@ -536,7 +572,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         }
         if (snapshot.hasError) {
           return Center(
-              child: Text('Error: ${snapshot.error}',
+              child: Text(context.loc.liveGameError,
                   style: TextStyle(color: c.onBackground)));
         }
 
@@ -545,11 +581,11 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         final currentUserId =
             Provider.of<UserProvider>(context, listen: false).user?.id ?? '';
 
-        final events = _buildFeedEvents(friends, myGames, currentUserId);
+        final events = _buildFeedEvents(friends, myGames, currentUserId, context.loc);
 
         if (events.isEmpty && friends.isEmpty) {
           return Center(
-            child: Text('Add friends to see activity here.',
+            child: Text(context.loc.friendsNoActivity,
                 style: TextStyle(color: c.subtle)),
           );
         }
@@ -561,7 +597,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
               Center(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 32),
-                  child: Text('No recent activity yet.',
+                  child: Text(context.loc.friendsNoRecentActivity,
                       style: TextStyle(color: c.subtle)),
                 ),
               )
@@ -746,10 +782,10 @@ class FriendsListScreenState extends State<FriendsListScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
+          return Center(child: Text(context.loc.liveGameError));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No friends found.'));
+          return Center(child: Text(context.loc.friendsNoFriendsFound));
         }
 
         final friends = snapshot.data!;
@@ -888,7 +924,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                label: Text(key.label),
+                label: Text(key.label(context.loc)),
                 selected: selected,
                 onSelected: (_) => setState(() => _sortKey = key),
                 selectedColor: Colors.amber,
@@ -1100,17 +1136,17 @@ class FriendTile extends StatelessWidget {
         return await showDialog<bool>(
           context: context,
           builder: (dialogCtx) => AlertDialog(
-            title: const Text('Remove Friend'),
-            content: Text('Remove ${friend.username} from your friends?'),
+            title: Text(context.loc.friendsRemoveTitle),
+            content: Text(context.loc.friendsRemoveBody(friend.username)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, false),
-                child: const Text('Cancel'),
+                child: Text(context.loc.btnCancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(dialogCtx, true),
-                child:
-                    const Text('Remove', style: TextStyle(color: Colors.red)),
+                child: Text(context.loc.friendsRemoveConfirm,
+                    style: const TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -1210,8 +1246,8 @@ class FriendTile extends StatelessWidget {
                         ),
                         icon:
                             const Icon(Icons.remove_red_eye_outlined, size: 14),
-                        label: const Text('Watch',
-                            style: TextStyle(fontSize: 12)),
+                        label: Text(context.loc.friendsWatchBtn,
+                            style: const TextStyle(fontSize: 12)),
                         onPressed: () => context.push(
                             AppRoutes.spectateLobbyPath(
                                 friend.activeGameId!)),
@@ -1308,7 +1344,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
               children: [
                 // ── Title ──────────────────────────────────────────────
                 Text(
-                  'Add a Friend',
+                  context.loc.friendsAddTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1323,7 +1359,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   autofocus: true,
                   onChanged: _onSearchChanged,
                   decoration: InputDecoration(
-                    hintText: 'Search by username…',
+                    hintText: context.loc.friendsSearchHint,
                     hintStyle: TextStyle(fontSize: 14, color: c.subtle),
                     prefixIcon: Icon(Icons.search, color: c.subtle, size: 20),
                     filled: true,
@@ -1364,9 +1400,17 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                       final users = snap.data ?? [];
                       if (users.isEmpty) {
                         return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text('No users found.',
-                              style: TextStyle(color: c.subtle, fontSize: 13)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              Icon(Icons.person_search,
+                                  color: c.subtle, size: 18),
+                              const SizedBox(width: 8),
+                              Text(context.loc.friendsNoUsersFound,
+                                  style:
+                                      TextStyle(color: c.subtle, fontSize: 13)),
+                            ],
+                          ),
                         );
                       }
                       return ListView.builder(
@@ -1398,7 +1442,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                                     },
                                     style: TextButton.styleFrom(
                                         foregroundColor: Colors.orange),
-                                    child: const Text('Add'),
+                                    child: Text(context.loc.friendsAddBtn),
                                   ),
                           );
                         },
@@ -1418,7 +1462,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                         size: 18,
                       ),
                       const SizedBox(width: 6),
-                      Text('Share / Scan QR',
+                      Text(context.loc.friendsShareQr,
                           style: TextStyle(fontSize: 13, color: c.subtle)),
                     ],
                   ),
@@ -1429,11 +1473,11 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                     child: GestureDetector(
                       onTap: () {
                         final messenger = ScaffoldMessenger.of(context);
+                        final copiedMsg = context.loc.friendsIdCopied;
                         Clipboard.setData(
                                 ClipboardData(text: widget.currentUser.id))
                             .then((_) => messenger.showSnackBar(
-                                  const SnackBar(
-                                      content: Text('ID copied to clipboard')),
+                                  SnackBar(content: Text(copiedMsg)),
                                 ));
                       },
                       child: Text(
@@ -1463,7 +1507,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                     child: ElevatedButton.icon(
                       onPressed: widget.onScanQr,
                       icon: const Icon(Icons.qr_code_scanner, size: 16),
-                      label: const Text('Scan QR Code'),
+                      label: Text(context.loc.friendsScanQrBtn),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.black,
@@ -1481,7 +1525,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child:
-                        Text('Close', style: TextStyle(color: c.onBackground)),
+                        Text(context.loc.btnClose, style: TextStyle(color: c.onBackground)),
                   ),
                 ),
               ],

@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 
 class FeedbackSheet extends StatefulWidget {
@@ -49,14 +50,25 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thanks for your feedback!')),
+        SnackBar(content: Text(context.loc.feedbackSuccess)),
       );
     } catch (_) {
       if (!mounted) return;
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not send feedback. Try again.')),
+        SnackBar(content: Text(context.loc.feedbackError)),
       );
+    }
+  }
+
+  String _categoryDisplayName(String key, BuildContext context) {
+    switch (key) {
+      case 'Bug':
+        return context.loc.feedbackCategoryBug;
+      case 'Suggestion':
+        return context.loc.feedbackCategorySuggestion;
+      default:
+        return context.loc.feedbackCategoryOther;
     }
   }
 
@@ -79,7 +91,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
           Row(
             children: [
               Text(
-                'Send Feedback',
+                context.loc.feedbackSheetTitle,
                 style: TextStyle(
                   color: c.onBackground,
                   fontSize: 17,
@@ -103,7 +115,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChoiceChip(
-                  label: Text(cat),
+                  label: Text(_categoryDisplayName(cat, context)),
                   selected: selected,
                   onSelected: (_) => setState(() => _category = cat),
                   selectedColor: Colors.amber,
@@ -125,7 +137,7 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
             autofocus: true,
             style: TextStyle(color: c.onBackground),
             decoration: InputDecoration(
-              hintText: 'Describe the issue or idea…',
+              hintText: context.loc.feedbackHint,
               hintStyle: TextStyle(color: c.subtle),
               filled: true,
               fillColor: c.surface2,
@@ -156,10 +168,10 @@ class _FeedbackSheetState extends State<FeedbackSheet> {
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.black),
                     )
-                  : const Text(
-                      'Send',
+                  : Text(
+                      context.loc.feedbackSend,
                       style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                     ),
             ),
           ),

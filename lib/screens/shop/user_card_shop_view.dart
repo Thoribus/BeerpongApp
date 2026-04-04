@@ -1,5 +1,6 @@
 import 'package:beerpongapp/screens/shop/shop_item_card.dart';
 import 'package:beerpongapp/theme.dart';
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/shop_catalog.dart';
 import 'package:beerpongapp/util/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +25,9 @@ class UserCardShopView extends StatelessWidget {
 
     return ListView(
       children: [
-        ShopItemGrid(sectionTitle: 'Titles', items: titles),
+        ShopItemGrid(sectionTitle: context.loc.shopSectionTitles, items: titles),
         if (backgrounds.isNotEmpty)
-          ShopItemGrid(sectionTitle: 'Card Backgrounds', items: backgrounds),
+          ShopItemGrid(sectionTitle: context.loc.shopSectionCardBackgrounds, items: backgrounds),
         _LevelBackgroundsNote(context),
         const SizedBox(height: 24),
       ],
@@ -41,7 +42,7 @@ class UserCardShopView extends StatelessWidget {
         children: [
           Icon(Icons.lock_outline, color: c.subtle, size: 48),
           const SizedBox(height: 12),
-          Text('Sign in to browse the shop',
+          Text(context.loc.shopSignInBrowse,
               style: TextStyle(color: c.subtle, fontSize: 15)),
         ],
       ),
@@ -72,8 +73,7 @@ class _LevelBackgroundsNote extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Card backgrounds are unlocked for free by levelling up. '
-                'Manage them in your profile.',
+                outerContext.loc.shopCardBackgroundsNote,
                 style: TextStyle(color: c.subtle, fontSize: 12),
               ),
             ),

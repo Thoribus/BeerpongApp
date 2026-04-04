@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/services/ad_rate_limiter.dart';
 import 'package:beerpongapp/services/ad_service.dart';
 import 'package:beerpongapp/services/purchase_service.dart';
@@ -32,7 +33,7 @@ class ShopScreenState extends State<ShopScreen> {
 
   Widget _buildTabPageSelector() {
     return AppTabBar(
-      tabs: const ['Avatar', 'User Card', 'In Game'],
+      tabs: [context.loc.shopTabAvatar, context.loc.shopTabUserCard, context.loc.shopTabInGame],
       selectedIndex: _currentTabPage,
       onTabSelected: (index) {
         if (_currentTabPage != index) {
@@ -97,7 +98,7 @@ class _ShopHeader extends StatelessWidget {
       ),
       child: user == null
           ? Text(
-              'Sign in to earn Stars',
+              context.loc.shopSignInEarnStars,
               style: TextStyle(color: c.subtle, fontSize: 13),
               textAlign: TextAlign.center,
             )
@@ -117,7 +118,7 @@ class _ShopHeader extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => _showGetStarsSheet(context),
                   icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Get Stars'),
+                  label: Text(context.loc.shopGetStars),
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.amber.shade700,
                     foregroundColor: Colors.white,
@@ -140,7 +141,7 @@ class _ShopHeader extends StatelessWidget {
 
 /// Bottom sheet — rewarded video ads + IAP packs (packs wired in Phase 12).
 class GetStarsSheet extends StatefulWidget {
-  const GetStarsSheet();
+  const GetStarsSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet<void>(
         context: context,
@@ -180,27 +181,24 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
         showDialog<void>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Thank you! ⭐'),
-            content: const Text(
-              'You\'re now a Supporter! Your Supporter badge is live on your profile, '
-              'and you\'ve received 300 ⭐ bonus stars.',
-            ),
+            title: Text(context.loc.shopSupporterTitle),
+            content: Text(context.loc.shopSupporterBody),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Awesome!'),
+                child: Text(context.loc.shopSupporterBtn),
               ),
             ],
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You got ${event.starsAwarded} ⭐!')),
+          SnackBar(content: Text(context.loc.shopStarsAwarded(event.starsAwarded))),
         );
       }
     } else if (event is PurchaseFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Purchase failed: ${event.message}')),
+        SnackBar(content: Text(context.loc.shopPurchaseFailed(event.message))),
       );
     }
     // PurchaseCanceled — no feedback needed.
@@ -233,9 +231,7 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
       if (mounted) {
         setState(() => _isLoadingAd = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No ad available right now. Try again later.'),
-          ),
+          SnackBar(content: Text(context.loc.shopNoAdAvailable)),
         );
       }
       return;
@@ -255,7 +251,7 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
             _isLoadingAd = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You earned 50 ⭐!')),
+            SnackBar(content: Text(context.loc.shopEarned50Stars)),
           );
         }
       },
@@ -277,7 +273,7 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Get Stars',
+              context.loc.shopGetStars,
               style: TextStyle(
                 color: c.onBackground,
                 fontWeight: FontWeight.bold,
@@ -286,7 +282,7 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Earn ⭐ stars to spend in the shop.',
+              context.loc.shopEarnStarsHint,
               style: TextStyle(color: c.subtle, fontSize: 13),
             ),
             const SizedBox(height: 20),
@@ -323,36 +319,36 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
               // Fallback when store is unavailable or products not yet loaded.
               return Column(
                 children: [
-                  const _SheetRow(
+                  _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.amber,
-                    title: 'Starter Pack  ·  €1.99',
-                    subtitle: '200 ⭐',
-                    badgeLabel: 'Coming soon',
+                    title: context.loc.shopStarterPackTitle,
+                    subtitle: context.loc.shopStarterPackSubtitle,
+                    badgeLabel: context.loc.shopComingSoon,
                   ),
                   const SizedBox(height: 12),
-                  const _SheetRow(
+                  _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.orange,
-                    title: 'Popular Pack  ·  €4.99',
-                    subtitle: '600 ⭐  ·  Best value',
-                    badgeLabel: 'Coming soon',
+                    title: context.loc.shopPopularPackTitle,
+                    subtitle: context.loc.shopPopularPackSubtitle,
+                    badgeLabel: context.loc.shopComingSoon,
                   ),
                   const SizedBox(height: 12),
-                  const _SheetRow(
+                  _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.deepOrange,
-                    title: 'Mega Pack  ·  €9.99',
-                    subtitle: '1 500 ⭐',
-                    badgeLabel: 'Coming soon',
+                    title: context.loc.shopMegaPackTitle,
+                    subtitle: context.loc.shopMegaPackSubtitle,
+                    badgeLabel: context.loc.shopComingSoon,
                   ),
                   const SizedBox(height: 12),
                   _SheetRow(
                     icon: Icons.star_rounded,
                     iconColor: Colors.amber,
-                    title: 'Supporter Pack  ·  €2.99',
-                    subtitle: '300 ⭐  ·  Supporter badge on your profile',
-                    badgeLabel: isSupporter ? 'You\'re a Supporter ✓' : 'Coming soon',
+                    title: context.loc.shopSupporterPackFull,
+                    subtitle: context.loc.shopSupporterPackFullSubtitle,
+                    badgeLabel: isSupporter ? context.loc.shopSupporterBadge : context.loc.shopComingSoon,
                   ),
                 ],
               );
@@ -360,7 +356,7 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
             const SizedBox(height: 20),
             Center(
               child: Text(
-                'Earn stars for free by playing games!',
+                context.loc.shopEarnFreeStars,
                 style: TextStyle(color: c.subtle, fontSize: 12),
               ),
             ),
@@ -369,7 +365,7 @@ class _GetStarsSheetState extends State<GetStarsSheet> {
               child: TextButton(
                 onPressed: () => context.read<PurchaseService>().restorePurchases(),
                 child: Text(
-                  'Restore Purchases',
+                  context.loc.shopRestorePurchases,
                   style: TextStyle(color: c.subtle, fontSize: 12),
                 ),
               ),
@@ -415,7 +411,7 @@ class _WatchVideoRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Watch a short video',
+                    context.loc.shopWatchVideo,
                     style: TextStyle(
                       color: c.onBackground,
                       fontWeight: FontWeight.w600,
@@ -423,8 +419,8 @@ class _WatchVideoRow extends StatelessWidget {
                   ),
                   Text(
                     remaining > 0
-                        ? '+50 ⭐  ·  $remaining of ${AdRateLimiter.dailyLimit} watches remaining today'
-                        : 'Daily limit reached — come back tomorrow',
+                        ? context.loc.shopWatchesRemaining(remaining, AdRateLimiter.dailyLimit)
+                        : context.loc.shopDailyLimitReached,
                     style: TextStyle(color: c.subtle, fontSize: 12),
                   ),
                 ],
@@ -512,9 +508,9 @@ class _IapPackRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
                 ),
-                child: const Text(
-                  'You\'re a Supporter ✓',
-                  style: TextStyle(
+                child: Text(
+                  context.loc.shopSupporterBadge,
+                  style: const TextStyle(
                     color: Colors.amber,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -536,7 +532,7 @@ class _IapPackRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
-                child: const Text('Buy'),
+                child: Text(context.loc.shopBuyBtn),
               ),
           ],
         ),
