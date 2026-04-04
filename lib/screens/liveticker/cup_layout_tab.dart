@@ -230,11 +230,14 @@ class CupLayoutTab extends StatelessWidget {
                 right: 160,
                 top: 10,
                 bottom: 10,
-                child: Transform.rotate(
-                  angle: -90 * 3.14159 / 180,
-                  child: Transform.scale(
-                    scale: 0.5,
-                    child: CupLayout.buildCupsArea(team: team1),
+                child: OverflowBox(
+                  maxHeight: double.infinity,
+                  child: Transform.rotate(
+                    angle: -90 * 3.14159 / 180,
+                    child: Transform.scale(
+                      scale: 0.5,
+                      child: CupLayout.buildCupsArea(team: team1),
+                    ),
                   ),
                 ),
               ),
@@ -243,11 +246,14 @@ class CupLayoutTab extends StatelessWidget {
                 left: 160,
                 top: 10,
                 bottom: 10,
-                child: Transform.rotate(
-                  angle: 90 * 3.14159 / 180,
-                  child: Transform.scale(
-                    scale: 0.5,
-                    child: CupLayout.buildCupsArea(team: team2),
+                child: OverflowBox(
+                  maxHeight: double.infinity,
+                  child: Transform.rotate(
+                    angle: 90 * 3.14159 / 180,
+                    child: Transform.scale(
+                      scale: 0.5,
+                      child: CupLayout.buildCupsArea(team: team2),
+                    ),
                   ),
                 ),
               ),
