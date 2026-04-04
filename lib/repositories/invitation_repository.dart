@@ -44,10 +44,16 @@ class InvitationRepository {
 
   Future<void> updateInvitationStatus(
       String invitationId, String newStatus) async {
-    await _db
-        .collection('invitations')
-        .doc(invitationId)
-        .update({'status': newStatus});
+    try {
+      await _db
+          .collection('invitations')
+          .doc(invitationId)
+          .update({'status': newStatus});
+    } on FirebaseException catch (e) {
+      // Invitation was already deleted (expired or cancelled) — safe to ignore.
+      if (e.code == 'not-found') return;
+      rethrow;
+    }
   }
 
   Future<void> updateInvitationGameId(
