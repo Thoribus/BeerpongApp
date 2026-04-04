@@ -356,13 +356,14 @@ class StatisticsScreenState extends State<StatisticsScreen> {
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.3)),
         const SizedBox(height: 4),
-        IntrinsicHeight(
-        child: SingleChildScrollView(
+        SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: UnconstrainedBox(
+            constrainedAxis: Axis.horizontal,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
               // Header row
               Row(children: [
                 cell(Text(context.loc.statsColumnPlayer, style: headerStyle), col0),
