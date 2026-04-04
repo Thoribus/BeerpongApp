@@ -10,7 +10,7 @@ User _makeUser({String backgroundKey = '', String avatarKey = 'avatar_aggroracoo
 Widget _wrap(Widget child) => wrapWithL10n(child);
 
 void main() {
-  group('UserCard — background rendering (Phase 7.3)', () {
+  group('UserCard — background rendering', () {
     testWidgets('renders without error for bg_default', (tester) async {
       await tester.pumpWidget(_wrap(
         UserCard(

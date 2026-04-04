@@ -78,8 +78,7 @@ void main() {
     });
   });
 
-  // Phase 5.1 — AccountScreen simplified (no tabs, Profile header only)
-  group('AccountScreen Phase 5.1 — simplified layout', () {
+  group('AccountScreen — simplified layout (no tabs, Profile header only)', () {
     testWidgets('shows Profile header when user is signed in', (tester) async {
       final provider = UserProvider();
       provider.setUserForTesting(makeTestUser());

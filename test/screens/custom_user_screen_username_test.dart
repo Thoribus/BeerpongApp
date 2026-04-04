@@ -78,8 +78,7 @@ void main() {
     });
   });
 
-  // Phase 7.2 — Background key constants used by the selection grid
-  group('AppConstants — backgroundKeys (Phase 7.2)', () {
+  group('AppConstants — backgroundKeys', () {
     test('backgroundKeys has 6 entries matching the grid columns', () {
       expect(AppConstants.backgroundKeys.length, 6);
     });
