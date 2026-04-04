@@ -814,7 +814,7 @@ class FriendsListScreenState extends State<FriendsListScreen> {
         child: Container(
           height: 270,
           width: double.infinity,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppTheme.surfaceDark2, // Fallback background color
           ),
           child: Stack(
