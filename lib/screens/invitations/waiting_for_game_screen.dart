@@ -129,7 +129,7 @@ class _WaitingForGameScreenState extends State<WaitingForGameScreen> {
                   foregroundColor: c.subtle,
                   side: BorderSide(color: c.border),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text(context.loc.btnCancel),
               ),

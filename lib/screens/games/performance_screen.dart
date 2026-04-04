@@ -110,13 +110,13 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: selected ? Colors.amber : Colors.white12,
+          color: selected ? Colors.amber : AppColors.of(context).chip,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: selected ? Colors.black : Colors.white70,
+            color: selected ? Colors.black : AppColors.of(context).muted,
             fontSize: 12,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -236,7 +236,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     Container(
                       height: 18,
                       decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: AppColors.of(context).divider,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -491,8 +491,8 @@ class StatisticsTable extends StatelessWidget {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          backgroundColor: Colors.black87,
-          title: Text(attribute, style: const TextStyle(color: Colors.white)),
+          backgroundColor: AppColors.of(ctx).surface,
+          title: Text(attribute, style: TextStyle(color: AppColors.of(ctx).onBackground)),
           content: SizedBox(
             height: 300,
             width: 400,
@@ -528,8 +528,8 @@ class StatisticsTable extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             '${d.day}/${d.month}',
-                            style: const TextStyle(
-                              color: Colors.white54,
+                            style: TextStyle(
+                              color: AppColors.of(ctx).muted,
                               fontSize: 9,
                             ),
                           ),

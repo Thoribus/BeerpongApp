@@ -178,7 +178,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                         foregroundColor: Colors.red,
                         side: const BorderSide(color: Colors.red),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: _decline,
                       child: Text(context.loc.invitationsDeclineBtn),
@@ -191,7 +191,7 @@ class _InvitationCardState extends State<_InvitationCard> {
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: _accept,
                       child: Text(context.loc.invitationsAcceptBtn),

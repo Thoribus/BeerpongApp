@@ -234,7 +234,7 @@ class BreakdownScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: pct!.clamp(0.0, 1.0),
-                      backgroundColor: Colors.white12,
+                      backgroundColor: AppColors.of(context).divider,
                       valueColor: AlwaysStoppedAnimation<Color>(accent),
                       minHeight: 6,
                     ),
@@ -243,7 +243,7 @@ class BreakdownScreen extends StatelessWidget {
                   Container(
                     height: 6,
                     decoration: BoxDecoration(
-                      color: Colors.white12,
+                      color: AppColors.of(context).divider,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -384,7 +384,7 @@ class BreakdownScreen extends StatelessWidget {
               Container(
                   height: 14,
                   decoration: BoxDecoration(
-                      color: Colors.white10,
+                      color: AppColors.of(context).divider,
                       borderRadius: BorderRadius.circular(4))),
               FractionallySizedBox(
                 widthFactor: pct.clamp(0.0, 1.0),
