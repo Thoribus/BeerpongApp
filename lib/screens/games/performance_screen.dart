@@ -164,19 +164,22 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
       [9]
     ];
 
-    return Column(
-      children: pyramidRows.map((row) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: row.map((index) {
-            Cup cup = Cup(
-              index: index,
-              color: _getHeatColor(cupCounts[index], cupCounts),
-            );
-            return cup.widget(onTap: () => {}, hitCount: cupCounts[index]);
-          }).toList(),
-        );
-      }).toList(),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Column(
+        children: pyramidRows.map((row) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: row.map((index) {
+              Cup cup = Cup(
+                index: index,
+                color: _getHeatColor(cupCounts[index], cupCounts),
+              );
+              return cup.widget(onTap: () => {}, hitCount: cupCounts[index]);
+            }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
