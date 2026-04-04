@@ -1,4 +1,4 @@
-package com.tecbreak.beerpongapp
+package com.tecbreak.beerpongcompanion
 
 import io.flutter.embedding.android.FlutterActivity
 
