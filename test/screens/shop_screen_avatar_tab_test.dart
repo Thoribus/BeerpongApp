@@ -27,7 +27,7 @@ UserProvider _signedIn({int stars = 999, List<String> purchased = const []}) {
 }
 
 void main() {
-  group('ShopScreen Phase 10 — Avatar tab (borders + emblems)', () {
+  group('ShopScreen —Avatar tab (borders + emblems)', () {
     testWidgets('renders border section header', (tester) async {
       await tester.pumpWidget(_buildApp(_signedIn()));
       await tester.pump();
@@ -76,7 +76,7 @@ void main() {
     });
   });
 
-  group('ShopScreen Phase 10 — User Card tab (titles)', () {
+  group('ShopScreen —User Card tab (titles)', () {
     testWidgets('shows Titles section after tapping User Card tab',
         (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 3000));
@@ -118,7 +118,7 @@ void main() {
     });
   });
 
-  group('ShopScreen Phase 10 — In-Game tab', () {
+  group('ShopScreen —In-Game tab', () {
     testWidgets('shows Cup Skins and Table Themes sections', (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 3000));
       addTearDown(() async => tester.binding.setSurfaceSize(null));
@@ -148,7 +148,7 @@ void main() {
     });
   });
 
-  group('ShopScreen Phase 10 — ShopItemCard states', () {
+  group('ShopScreen —ShopItemCard states', () {
     testWidgets('owned item shows checkmark icon', (tester) async {
       await tester.pumpWidget(_buildApp(
         _signedIn(purchased: ['border_gold']),
@@ -218,7 +218,7 @@ void main() {
     });
   });
 
-  group('ShopScreen Phase 10 — catalog coverage', () {
+  group('ShopScreen —catalog coverage', () {
     test('all border IDs contain "border_"', () {
       final ids = ShopCatalog.byCategory(ShopItemCategory.border)
           .map((i) => i.id)

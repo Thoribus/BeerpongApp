@@ -95,7 +95,7 @@ Widget _buildScreen({
 }
 
 void main() {
-  group('FriendsListScreen Phase 1-3', () {
+  group('FriendsListScreen', () {
     testWidgets('loads friends/games once (no per-friend N+1 behavior)',
         (tester) async {
       var friendLoads = 0;
