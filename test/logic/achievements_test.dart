@@ -113,5 +113,93 @@ void main() {
       expect(wins.currentStageIndex, 1);
       expect(friends.currentStageIndex, 1);
     });
+
+    test('evaluateGrouped returns one entry per category', () {
+      final user = makeUser();
+      final grouped = AchievementEngine.evaluateGrouped(user);
+      expect(grouped.keys.toSet(), containsAll(AchievementCategory.values));
+      for (final cat in AchievementCategory.values) {
+        expect(grouped[cat], isNotEmpty);
+      }
+    });
+
+    test('evaluateGrouped entries belong to their declared category', () {
+      final user = makeUser();
+      final grouped = AchievementEngine.evaluateGrouped(user);
+      for (final cat in AchievementCategory.values) {
+        for (final p in grouped[cat]!) {
+          expect(p.def.category, cat);
+        }
+      }
+    });
+
+    test('upcomingUnlocks returns non-maxed achievements sorted by gap', () {
+      final user = makeUser(totalScore: 49); // 1 away from first cups_hit stage
+      final upcoming = AchievementEngine.upcomingUnlocks(user);
+      expect(upcoming, isNotEmpty);
+      // Verify none of the returned achievements are maxed
+      for (final p in upcoming) {
+        expect(p.isMaxed, isFalse);
+      }
+      // Verify sorted ascending by gapToNextStage
+      for (int i = 0; i < upcoming.length - 1; i++) {
+        expect(
+          upcoming[i].gapToNextStage,
+          lessThanOrEqualTo(upcoming[i + 1].gapToNextStage),
+        );
+      }
+    });
+
+    test('upcomingUnlocks excludes maxed achievements', () {
+      // Diamond cups_hit requires 2000 — very high user should max it
+      final user = makeUser(totalScore: 2001);
+      final upcoming = AchievementEngine.upcomingUnlocks(user);
+      final cupsEntry = upcoming.where((p) => p.def.id == 'cups_hit');
+      expect(cupsEntry, isEmpty);
+    });
+  });
+
+  group('AchievementEngine accuracy valueGetters', () {
+    test('hit_rate returns 0 when fewer than 20 games played', () {
+      final def = AchievementEngine.allAchievements
+          .firstWhere((d) => d.id == 'hit_rate');
+      final user = makeUser(wins: 5, losses: 5); // 10 games total
+      expect(def.valueGetter(user), 0);
+    });
+
+    test('hit_rate returns non-zero after 20 games with hits', () {
+      final def = AchievementEngine.allAchievements
+          .firstWhere((d) => d.id == 'hit_rate');
+      final user = makeUser(
+        wins: 10,
+        losses: 10,
+        totalScore: 1000,
+        totalThrows: 1500,
+      );
+      expect(def.valueGetter(user), greaterThan(0));
+    });
+
+    test('bounce_accuracy returns 0 when fewer than 10 attempts', () {
+      final def = AchievementEngine.allAchievements
+          .firstWhere((d) => d.id == 'bounce_accuracy');
+      final user = makeUser(bounceAttempts: 5, bounceMakes: 4);
+      // User model maps to u.bounceAttempts — need to use the right field
+      expect(def.valueGetter(user), 0);
+    });
+
+    test('island_accuracy returns 0 when fewer than 5 attempts', () {
+      final def = AchievementEngine.allAchievements
+          .firstWhere((d) => d.id == 'island_accuracy');
+      final user = makeUser(islandAttempts: 2, islandMakes: 2);
+      expect(def.valueGetter(user), 0);
+    });
+
+    test('island_accuracy returns correct percentage when criteria met', () {
+      final def = AchievementEngine.allAchievements
+          .firstWhere((d) => d.id == 'island_accuracy');
+      // 10 attempts, 7 makes → 70%
+      final user = makeUser(islandAttempts: 10, islandMakes: 7);
+      expect(def.valueGetter(user), 70);
+    });
   });
 }

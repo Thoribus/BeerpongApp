@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beerpongapp/models/game_statistics.dart';
+import 'package:beerpongapp/models/player.dart';
 
 // Minimal valid player JSON matching Player.fromJson requirements.
 Map<String, dynamic> _playerJson(String name) => {
@@ -147,6 +148,17 @@ void main() {
       expect(gs.durationSeconds, 300);
       expect(gs.gameMode, 'Tournament');
       expect(gs.specialRules, ['Island']);
+    });
+  });
+
+  group('UserStatsInGame', () {
+    test('constructor stores date and player', () {
+      final player = Player(name: 'Alice', score: 5.0);
+      final date = DateTime.utc(2026, 3, 1);
+      final stats = UserStatsInGame(date: date, player: player);
+      expect(stats.date, date);
+      expect(stats.player.name, 'Alice');
+      expect(stats.player.score, 5.0);
     });
   });
 }

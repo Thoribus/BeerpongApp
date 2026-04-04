@@ -142,5 +142,45 @@ void main() {
       final p2 = Player(name: 'Bob');
       expect(() => p1.mergedWith(p2), throwsException);
     });
+
+    test('incrementScoreBy adds fractional score', () {
+      final p = Player(name: 'Alice', score: 1.0);
+      p.incrementScoreBy(2.5);
+      expect(p.score, closeTo(3.5, 0.001));
+    });
+
+    test('fromJson coerces bool hitThisRound to int', () {
+      final json = <String, dynamic>{
+        'name': 'Alice',
+        'hitThisRound': true, // legacy bool field
+        'score': 0.0,
+        'throws': 0,
+        'misses': 0,
+        'airballs': 0,
+        'cupsHit': <dynamic>[],
+        'lastCupHit': false,
+      };
+      final p = Player.fromJson(json);
+      expect(p.hitThisRound, 1);
+    });
+
+    test('operator == is true for same name regardless of other fields', () {
+      final p1 = Player(name: 'Alice', score: 1.0);
+      final p2 = Player(name: 'Alice', score: 5.0);
+      // ignore: unrelated_type_equality_checks
+      expect(p1 == p2, isTrue);
+    });
+
+    test('operator == is false for different names', () {
+      final p1 = Player(name: 'Alice');
+      final p2 = Player(name: 'Bob');
+      expect(p1 == p2, isFalse);
+    });
+
+    test('hashCode is consistent with name', () {
+      final p1 = Player(name: 'Alice');
+      final p2 = Player(name: 'Alice');
+      expect(p1.hashCode, p2.hashCode);
+    });
   });
 }

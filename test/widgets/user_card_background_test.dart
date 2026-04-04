@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:beerpongapp/models/user.dart';
 import 'package:beerpongapp/widgets/user_card.dart';
 
-User _makeUser({String backgroundKey = '', String avatarKey = 'avatar_aggroracoon'}) =>
-    User(id: 'u1', username: 'Tester', avatarKey: avatarKey, backgroundKey: backgroundKey);
+User _makeUser({String backgroundKey = '', String avatarKey = 'avatar_aggroracoon', String title = ''}) =>
+    User(id: 'u1', username: 'Tester', avatarKey: avatarKey, backgroundKey: backgroundKey, title: title);
 
 Widget _wrap(Widget child) => wrapWithL10n(child);
 
@@ -90,6 +90,19 @@ void main() {
         expect(find.text('Tester'), findsOneWidget,
             reason: 'Username missing for backgroundKey="$key"');
       }
+    });
+
+    testWidgets('shows non-empty title text with colored style', (tester) async {
+      await tester.pumpWidget(_wrap(
+        UserCard(
+          user: _makeUser(backgroundKey: 'bg_default', title: 'Beer Pong King'),
+          onTitleTap: () {},
+          onAvatarTap: () {},
+        ),
+      ));
+      expect(find.text('Beer Pong King'), findsOneWidget);
+      // 'No Title Yet' placeholder should NOT appear
+      expect(find.text('No Title Yet'), findsNothing);
     });
   });
 }

@@ -143,5 +143,29 @@ void main() {
         expect(user.toJson()['usernameLower'], 'beerpongking');
       });
     });
+
+    group('mapAvatarKeyToAsset', () {
+      test('returns empty string when avatarKey is empty', () {
+        final user = User(id: 'u1', username: 'Alice', avatarKey: '');
+        expect(user.mapAvatarKeyToAsset(), '');
+      });
+
+      test('returns asset path when avatarKey is set', () {
+        final user = User(id: 'u1', username: 'Alice', avatarKey: 'avatar_cat');
+        expect(user.mapAvatarKeyToAsset(), 'assets/avatars/avatar_cat.svg');
+      });
+    });
+
+    group('unlockedAchievementStages fromJson', () {
+      test('parses unlockedAchievementStages from JSON', () {
+        final user = User.fromJson({
+          'id': 'u1',
+          'username': 'Alice',
+          'unlockedAchievementStages': {'cups_hit': 2, 'wins': 1},
+        });
+        expect(user.unlockedAchievementStages['cups_hit'], 2);
+        expect(user.unlockedAchievementStages['wins'], 1);
+      });
+    });
   });
 }
