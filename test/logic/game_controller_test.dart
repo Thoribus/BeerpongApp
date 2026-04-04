@@ -139,6 +139,66 @@ void main() {
       expect(ctrl.roundCount, 1);
     });
 
+    testWidgets('endTurn — 1-player team with 0 hits gets 2 misses and 2 throws',
+        (tester) async {
+      final solo = Player(name: 'Solo');
+      final ctrl = await _loadController(
+        tester,
+        team1: _team(Colors.blue, [solo], cupCount: 3),
+        team2: _team(Colors.red, [Player(name: 'C')], cupCount: 3),
+      );
+
+      // solo player hits nothing this round
+      solo.hitThisRound = 0;
+      ctrl.endTurn();
+      await tester.pump();
+
+      expect(solo.misses, 2, reason: '1 player takes both throws; both missed');
+      expect(solo.throws, 2);
+      expect(solo.hitThisRound, 0);
+    });
+
+    testWidgets('endTurn — 1-player team with 1 hit gets 1 miss and 1 throw',
+        (tester) async {
+      final solo = Player(name: 'Solo');
+      final ctrl = await _loadController(
+        tester,
+        team1: _team(Colors.blue, [solo], cupCount: 3),
+        team2: _team(Colors.red, [Player(name: 'C')], cupCount: 3),
+      );
+
+      // The UI already called incrementPlayerThrows once for the hit.
+      solo.throws = 1;
+      solo.hitThisRound = 1;
+      ctrl.endTurn();
+      await tester.pump();
+
+      expect(solo.misses, 1, reason: '1 player throws twice; 1 hit + 1 miss');
+      expect(solo.throws, 2, reason: 'hit throw was pre-counted; endTurn adds the miss throw');
+      expect(solo.hitThisRound, 0);
+    });
+
+    testWidgets('endTurn — 1-player balls-back bonus round all-miss gives 2 misses/throws',
+        (tester) async {
+      final solo = Player(name: 'Solo');
+      final ctrl = await _loadController(
+        tester,
+        team1: _team(Colors.blue, [solo], cupCount: 3),
+        team2: _team(Colors.red, [Player(name: 'C')], cupCount: 3),
+      );
+
+      // Simulate: original round both hit (tracked by UI), balls back fired
+      // and reset hitThisRound to 0. Bonus round: both missed.
+      solo.throws = 2; // already counted for the two original hits
+      solo.hitThisRound = 0; // bonus round produced no hits
+
+      ctrl.endTurn();
+      await tester.pump();
+
+      expect(solo.misses, 2, reason: 'bonus round: 2 throws, 0 hits → 2 misses');
+      expect(solo.throws, 4, reason: '2 original hits + 2 bonus misses = 4 total throws');
+    });
+
     testWidgets(
         'selectIslandShooter disables team island when the last player uses it',
         (tester) async {

@@ -237,8 +237,14 @@ class GameController extends ChangeNotifier {
       currentBounceShooter = null;
     }
 
+    // A team always throws 2 balls per round. With 1 active player they
+    // take both throws; with 2 active players each takes one.
+    // Record a miss+throw for every ball that did not sink a cup.
+    final throwsPerPlayer = currentTeam.currentPlayers.length == 1 ? 2 : 1;
     for (final player in currentTeam.currentPlayers) {
-      if (player.hitThisRound == 0) {
+      final missedThrows =
+          (throwsPerPlayer - player.hitThisRound).clamp(0, throwsPerPlayer);
+      for (int i = 0; i < missedThrows; i++) {
         player.incrementMisses();
         player.incrementThrows();
       }
