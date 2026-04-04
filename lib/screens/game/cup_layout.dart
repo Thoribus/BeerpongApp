@@ -11,73 +11,74 @@ class CupLayout {
     required Team team,
     void Function(int cupIndex)? onCupTap,
     Color? skinColor,
+    bool showNumbers = false,
   }) {
     return team.isRearranged
-        ? _buildRearrangedCupsLayout(team.cups, onCupTap, skinColor)
-        : _buildDefaultCupsLayout(team.cups, onCupTap, skinColor);
+        ? _buildRearrangedCupsLayout(team.cups, onCupTap, skinColor, showNumbers)
+        : _buildDefaultCupsLayout(team.cups, onCupTap, skinColor, showNumbers);
   }
 
   static Widget _buildDefaultCupsLayout(
-      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor) {
+      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor, bool showNumbers) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildCupRow(cups.sublist(6, 10), onCupTap, skinColor),
-        _buildCupRow(cups.sublist(3, 6), onCupTap, skinColor),
-        _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor),
-        _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor),
+        _buildCupRow(cups.sublist(6, 10), onCupTap, skinColor, showNumbers),
+        _buildCupRow(cups.sublist(3, 6), onCupTap, skinColor, showNumbers),
+        _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor, showNumbers),
+        _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor, showNumbers),
       ],
     );
   }
 
   static Widget _buildRearrangedCupsLayout(
-      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor) {
+      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor, bool showNumbers) {
     switch (cups.length) {
       case 6:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 3), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(3, 5), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(5, 6), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(0, 3), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(3, 5), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(5, 6), onCupTap, skinColor, showNumbers),
           ],
         );
       case 5:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(3, 4), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(4, 5), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(3, 4), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(4, 5), onCupTap, skinColor, showNumbers),
           ],
         );
       case 4:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(3, 4), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(0, 1), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(1, 3), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(3, 4), onCupTap, skinColor, showNumbers),
           ],
         );
       case 3:
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildCupRow(cups.sublist(0, 2), onCupTap, skinColor),
-            _buildCupRow(cups.sublist(2, 3), onCupTap, skinColor),
+            _buildCupRow(cups.sublist(0, 2), onCupTap, skinColor, showNumbers),
+            _buildCupRow(cups.sublist(2, 3), onCupTap, skinColor, showNumbers),
           ],
         );
       case 2:
-        return _buildCupRow(cups.sublist(0, 2), onCupTap, skinColor);
+        return _buildCupRow(cups.sublist(0, 2), onCupTap, skinColor, showNumbers);
       default:
-        return _buildCupRow(cups.take(1).toList(), onCupTap, skinColor);
+        return _buildCupRow(cups.take(1).toList(), onCupTap, skinColor, showNumbers);
     }
   }
 
   static Widget _buildCupRow(
-      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor) {
+      List<Cup> cups, void Function(int)? onCupTap, Color? skinColor, bool showNumbers) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: cups.map((cup) {
@@ -91,6 +92,9 @@ class CupLayout {
         return cup.widget(
           onTap: onCupTap != null ? () => onCupTap(cup.index) : () {},
           overrideColor: override,
+          hitCount: showNumbers && cup.isVisible && cup.color != Colors.green
+              ? cup.index + 1
+              : null,
         );
       }).toList(),
     );

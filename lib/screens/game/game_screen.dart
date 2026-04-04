@@ -311,7 +311,7 @@ class GameScreenState extends State<GameScreen> {
   }
 
   /// Step 2 — called from [onCupTap] while bounce mode is active.
-  void _handleBounceCupTap(int cupIndex) {
+  Future<void> _handleBounceCupTap(int cupIndex) async {
     final player = _ctrl.currentBounceShooter!;
     _ctrl.addEvent('Bounce Hit', _ctrl.currentTeam, player);
     _ctrl.saveCurrentState();
@@ -324,13 +324,13 @@ class GameScreenState extends State<GameScreen> {
     _ctrl.incrementPlayerScore(player);
     _ctrl.addCupToPlayer(player, cupIndex);
     _ctrl.handleCupHit(cupIndex, context);
-    try {
-      final extraIndex = _ctrl.getRandomCupIndex(
-          _ctrl.currentTeam.cups, cupIndex, _ctrl.currentTeam.color);
+    final extraIndex = await _showBonusCupPicker(cupIndex);
+    if (!mounted) return;
+    if (extraIndex != null) {
       _ctrl.handleCupHit(extraIndex, context);
       _ctrl.addCupToPlayer(player, extraIndex);
       _ctrl.incrementPlayerScore(player);
-    } catch (_) {}
+    }
     _ctrl.checkOnFire(player, context);
     _checkGameEnd(player, cupIndex);
   }
@@ -757,6 +757,7 @@ class GameScreenState extends State<GameScreen> {
               team: _ctrl.currentTeam,
               onCupTap: onCupTap,
               skinColor: skinColor,
+              showNumbers: _ctrl.bounceShotActive,
             ),
           ),
           Container(
