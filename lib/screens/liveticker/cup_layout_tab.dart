@@ -213,14 +213,14 @@ class CupLayoutTab extends StatelessWidget {
   Widget _buildCupLayoutsRow(BuildContext context, Team team1, Team team2) {
     final c = AppColors.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: SizedBox(
         height: 200,
         width: double.infinity,
         child: Container(
           decoration: BoxDecoration(
             color: c.surface,
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: c.border),
           ),
           child: Stack(

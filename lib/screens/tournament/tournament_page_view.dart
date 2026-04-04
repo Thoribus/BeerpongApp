@@ -1,4 +1,5 @@
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:flutter/material.dart';
 import 'tournament_overview_screen.dart';
@@ -49,7 +50,7 @@ class _TournamentPageViewState extends State<TournamentPageView> {
         setState(() => _currentTabPage = index);
       },
       pageController: _pageController,
-      backgroundColor: Colors.grey.shade700,
+      backgroundColor: AppTheme.tabBarBackground,
     );
   }
 
@@ -59,9 +60,9 @@ class _TournamentPageViewState extends State<TournamentPageView> {
       appBar: AppBar(
         title: Text(context.loc.labelTournament,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            style: TextStyle(color: AppColors.of(context).onBackground, fontWeight: FontWeight.bold)),
         centerTitle: true,
-        backgroundColor: Colors.grey.shade700,
+        backgroundColor: AppTheme.tabBarBackground,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: _buildTabPageSelector(),

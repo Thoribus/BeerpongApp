@@ -1,6 +1,7 @@
 import 'package:beerpongapp/models/player.dart';
 import 'package:beerpongapp/models/team.dart';
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:beerpongapp/util/firestoreservice.dart';
 import 'package:beerpongapp/util/localization_extensions.dart';
 import 'package:beerpongapp/util/route_args.dart';
@@ -169,7 +170,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
+                                color: AppColors.of(context).onBackground.withValues(alpha: 0.2),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2)),
                           ],
@@ -222,11 +223,11 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.of(context).surface,
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: AppColors.of(context).onBackground.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -237,16 +238,17 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                 children: [
                   Text(
                     team.players.map((p) => p.name).join(' & '),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
+                      color: AppColors.of(context).onBackground,
                     ),
                   ),
                   Text(
                     '${team.wins}W - ${team.losses}L',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: AppColors.of(context).subtle,
                     ),
                   ),
                 ],
@@ -298,14 +300,15 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
   }
 
   Widget _buildMatchCard(TournamentMatch match, int index) {
+    final c = AppColors.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.card,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: c.onBackground.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -321,7 +324,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                   'Match',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: c.subtle,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -330,21 +333,21 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildTeamColumn(match.team1, true),
-                    const Column(
+                    Column(
                       children: [
-                        Text(
+                        const Text(
                           'VS',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           '14:00', // Replace with actual time if available
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: c.subtle,
                           ),
                         ),
                       ],
@@ -358,7 +361,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: c.surface2,
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(16),
                 bottomRight: Radius.circular(16),
@@ -375,7 +378,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
                       : 'Not played yet',
                   style: TextStyle(
                     fontSize: 12,
-                    color: match.played ? Colors.green[700] : Colors.grey,
+                    color: match.played ? Colors.green[700] : c.subtle,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -415,7 +418,7 @@ class _TournamentOverviewScreenState extends State<TournamentOverviewScreen> {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: AppColors.of(context).onBackground.withValues(alpha: 0.2),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),

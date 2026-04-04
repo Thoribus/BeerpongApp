@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:beerpongapp/models/tournament.dart';
+import 'package:beerpongapp/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -35,7 +36,7 @@ class TournamentAnalysisScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            _buildConfrontationMatrix(),
+            _buildConfrontationMatrix(context),
           ],
         ),
       ),
@@ -132,8 +133,9 @@ class TournamentAnalysisScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildConfrontationMatrix() {
+  Widget _buildConfrontationMatrix(BuildContext context) {
     final teams = tournament.teams;
+    final col = AppColors.of(context);
 
     // Build lookup: "rowColorKey-colColorKey" → true if row team won
     final Map<String, bool> results = {};
@@ -147,7 +149,7 @@ class TournamentAnalysisScreen extends StatelessWidget {
     }
 
     return Table(
-      border: TableBorder.all(color: Colors.grey.shade400),
+      border: TableBorder.all(color: col.border),
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
         TableRow(
@@ -171,8 +173,8 @@ class TournamentAnalysisScreen extends StatelessWidget {
                 final colKey = colTeam.color.toARGB32().toString();
                 final result = results['$rowKey-$colKey'];
                 if (result == null) {
-                  return const Center(
-                    child: Text('?', style: TextStyle(color: Colors.grey)),
+                  return Center(
+                    child: Text('?', style: TextStyle(color: col.subtle)),
                   );
                 }
                 return Center(

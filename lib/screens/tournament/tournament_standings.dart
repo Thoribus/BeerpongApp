@@ -29,9 +29,9 @@ class TournamentStandingsScreen extends StatelessWidget {
 
   Widget _buildTeamStanding(BuildContext context, Team team, int rank) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
-        padding: const EdgeInsets.all(14.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

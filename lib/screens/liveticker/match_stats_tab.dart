@@ -54,7 +54,7 @@ class MatchStatsTab extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.7),
+                    color: c.onBackground.withValues(alpha: 0.7),
                     blurRadius: 6,
                     offset: const Offset(0, 4),
                   ),
@@ -101,7 +101,7 @@ class MatchStatsTab extends StatelessWidget {
                           height: 8,
                           decoration: BoxDecoration(
                             color: gameData.team1.color,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                       ),
@@ -112,7 +112,7 @@ class MatchStatsTab extends StatelessWidget {
                           height: 8,
                           decoration: BoxDecoration(
                             color: gameData.team2.color,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                       ),
