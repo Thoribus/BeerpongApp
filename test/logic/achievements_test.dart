@@ -183,8 +183,15 @@ void main() {
       final def = AchievementEngine.allAchievements
           .firstWhere((d) => d.id == 'bounce_accuracy');
       final user = makeUser(bounceAttempts: 5, bounceMakes: 4);
-      // User model maps to u.bounceAttempts — need to use the right field
       expect(def.valueGetter(user), 0);
+    });
+
+    test('bounce_accuracy returns correct percentage when criteria met', () {
+      final def = AchievementEngine.allAchievements
+          .firstWhere((d) => d.id == 'bounce_accuracy');
+      // 10 attempts, 6 makes → 60%
+      final user = makeUser(bounceAttempts: 10, bounceMakes: 6);
+      expect(def.valueGetter(user), 60);
     });
 
     test('island_accuracy returns 0 when fewer than 5 attempts', () {

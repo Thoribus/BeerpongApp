@@ -114,4 +114,59 @@ void main() {
       expect(colors.divider.a, greaterThan(0));
     });
   });
+
+  group('AppColors — muted getter', () {
+    testWidgets('muted returns white38 in dark mode', (tester) async {
+      late AppColors colors;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Builder(builder: (ctx) {
+            colors = AppColors.of(ctx);
+            return const SizedBox();
+          }),
+        ),
+      );
+      expect(colors.muted, Colors.white38);
+    });
+
+    testWidgets('muted returns black38 in light mode', (tester) async {
+      late AppColors colors;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Builder(builder: (ctx) {
+            colors = AppColors.of(ctx);
+            return const SizedBox();
+          }),
+        ),
+      );
+      expect(colors.muted, Colors.black38);
+    });
+  });
+
+  group('AppTheme.dark switchTheme callbacks', () {
+    testWidgets('switchTheme thumbColor is amber when selected', (tester) async {
+      final theme = AppTheme.dark;
+      final thumbResolver = theme.switchTheme.thumbColor!;
+
+      final selected = thumbResolver.resolve({WidgetState.selected});
+      final unselected = thumbResolver.resolve({});
+
+      expect(selected, AppTheme.primary);
+      expect(unselected, Colors.grey);
+    });
+
+    testWidgets('switchTheme trackColor is amber700 when selected and null when not',
+        (tester) async {
+      final theme = AppTheme.dark;
+      final trackResolver = theme.switchTheme.trackColor!;
+
+      final selected = trackResolver.resolve({WidgetState.selected});
+      final unselected = trackResolver.resolve({});
+
+      expect(selected, Colors.amber.shade700);
+      expect(unselected, isNull);
+    });
+  });
 }
