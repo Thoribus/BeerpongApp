@@ -133,7 +133,8 @@ class GameRepository {
           .collection('games')
           .where('participants', arrayContains: user.id)
           .orderBy('timestamp', descending: true)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 15));
       return snapshot.docs
           .map((doc) => GameStatistics.fromFirestore(doc.id, doc.data()))
           .toList();
