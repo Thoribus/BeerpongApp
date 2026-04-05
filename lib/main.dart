@@ -17,6 +17,7 @@ import 'package:beerpongapp/l10n/app_localizations.dart';
 import 'package:beerpongapp/theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'firebase_options.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -30,6 +31,11 @@ Future<void> main() async {
   } on FirebaseException catch (e) {
     if (e.code != 'duplicate-app') rethrow;
   }
+
+  await GoogleSignIn.instance.initialize(
+    serverClientId:
+        '8746505211-sjj3i2ni99c8fp0mantorghvm9rdcp0f.apps.googleusercontent.com',
+  );
 
   // On iOS 14+, request ATT permission before initialising ads so AdMob can
   // serve personalised ads. On Android this is a no-op.
