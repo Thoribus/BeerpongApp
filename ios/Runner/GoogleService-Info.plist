@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>8746505211-bq6r301gbm1gb8amq41c9hg519e8d5r8.apps.googleusercontent.com</string>
+	<string>8746505211-sfqa13c380d8c1iu3f28aembb50j4tuq.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.8746505211-bq6r301gbm1gb8amq41c9hg519e8d5r8</string>
+	<string>com.googleusercontent.apps.8746505211-sfqa13c380d8c1iu3f28aembb50j4tuq</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>8746505211-20ep1ou2bnn5fts9c21k5g8ucmcl4jmg.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.tecbreak.beerpongapp</string>
+	<string>com.tecbreak.beerpongcompanion</string>
 	<key>PROJECT_ID</key>
 	<string>beerpong-companion</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:8746505211:ios:992005a460dc0e84d9315e</string>
+	<string>1:8746505211:ios:6ebd59b362609a3cd9315e</string>
 </dict>
 </plist>

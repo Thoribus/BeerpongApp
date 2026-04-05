@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '8746505211',
     projectId: 'beerpong-companion',
     storageBucket: 'beerpong-companion.firebasestorage.app',
-    iosBundleId: 'com.tecbreak.beerpongapp',
+    iosBundleId: 'com.tecbreak.beerpongcompanion',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '8746505211',
     projectId: 'beerpong-companion',
     storageBucket: 'beerpong-companion.firebasestorage.app',
-    iosBundleId: 'com.tecbreak.beerpongapp',
+    iosBundleId: 'com.tecbreak.beerpongcompanion',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

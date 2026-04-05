@@ -2,17 +2,70 @@
   "project_info": {
     "project_number": "8746505211",
     "project_id": "beerpong-companion",
-    "storage_bucket": "beerpong-companion.appspot.com"
+    "storage_bucket": "beerpong-companion.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:8746505211:android:f902a6477023436ed9315e",
+        "mobilesdk_app_id": "1:8746505211:android:714b104c389f805fd9315e",
         "android_client_info": {
-          "package_name": "com.tecbreak.beerpongapp"
+          "package_name": "com.tecbreak.beerpongcompanion"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "8746505211-4m8u6q8b2aaitt24v3ifnekrisn7ops1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tecbreak.beerpongcompanion",
+            "certificate_hash": "7ce82a1d25b6f035b2df0beac7dc0210ac24c741"
+          }
+        },
+        {
+          "client_id": "8746505211-e3c2nt3asgp40t37nu2flf2ir558g81s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tecbreak.beerpongcompanion",
+            "certificate_hash": "b3b66a0678e073388a64c0af49d2677dd8d278bf"
+          }
+        },
+        {
+          "client_id": "8746505211-eu3239j3st09lcdu1f5a4dsjofqjgdgl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tecbreak.beerpongcompanion",
+            "certificate_hash": "ef67be1cc0c27a7a16264afbf32aedcbb9985d56"
+          }
+        },
+        {
+          "client_id": "8746505211-m5j5p2k7o1odeoqosgmgl88rhhts539l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tecbreak.beerpongcompanion",
+            "certificate_hash": "05fb38d7c5b83b4cbd900fef078ba028303b7bec"
+          }
+        },
+        {
+          "client_id": "8746505211-p161k1nbakjb3fd1323f4dhjq47qbm3i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tecbreak.beerpongcompanion",
+            "certificate_hash": "baaab4e8633de0b972ef195b52cfcdf65467e1f4"
+          }
+        },
+        {
+          "client_id": "8746505211-uj0k12lv6vc84ugqhoggnl3e0jud9d57.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tecbreak.beerpongcompanion",
+            "certificate_hash": "b01fda7eb91bc2b749cddccc29014bba936c3808"
+          }
+        },
+        {
+          "client_id": "8746505211-sjj3i2ni99c8fp0mantorghvm9rdcp0f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD3RverPf0L3m8hgv5q_xZeJXqSM4YjgEI"
@@ -20,7 +73,20 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "8746505211-sjj3i2ni99c8fp0mantorghvm9rdcp0f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "8746505211-1tff4gng0ri9lfh6bn1pp7d4h9g26lul.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tecbreak.beerpongapp",
+                "app_store_id": "6761659556"
+              }
+            }
+          ]
         }
       }
     }
