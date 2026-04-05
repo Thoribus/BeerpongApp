@@ -39,16 +39,30 @@ jobs:
     - name: Read version from pubspec.yaml
       id: version
       run: |
-        VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
-        echo "name=$VERSION" >> $GITHUB_OUTPUT
+        VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+        BUILD_NUMBER=${{ github.run_number }}
+        echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
+        echo "build=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+        echo "full=${VERSION_NAME}+${BUILD_NUMBER}" >> $GITHUB_OUTPUT
 
     - name: Deploy to Play Store
       uses: r0adkll/upload-google-play@v1.0.18
       with:
         serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-        packageName: com.tecbreak.beerpongapp
+        packageName: com.tecbreak.beerpongcompanion
         releaseName: ${{ steps.version.outputs.name }}
         releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
         mappingFile: ./build/app/outputs/mapping/release/mapping.txt
         track: internal
         inAppUpdatePriority: 5
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: android-v${{ steps.version.outputs.full }}
+        name: Android v${{ steps.version.outputs.name }} (build ${{ steps.version.outputs.build }})
+        body: |
+          **Android release** — v${{ steps.version.outputs.name }} (build ${{ steps.version.outputs.build }})
+          Deployed to Google Play internal track.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
