@@ -69,5 +69,10 @@ sentry.properties
 beerpong-companion-*.json
 *-firebase-adminsdk-*.json
 
+# Apple certificates and provisioning profiles — never commit
+*.p12
+*.mobileprovision
+*.p8
+
 # Temporary / generated files
 encoded_file.txt
