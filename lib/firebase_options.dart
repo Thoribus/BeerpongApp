@@ -2,7 +2,7 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -16,23 +16,11 @@ import 'package:flutter/foundation.dart'
 /// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    if (kIsWeb) {
-      return web;
-    }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
         return ios;
-      case TargetPlatform.macOS:
-        return macos;
-      case TargetPlatform.windows:
-        return windows;
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -40,19 +28,9 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBZwJl6lVPx9Vg6JlLcRJDFQ76wXoc4CRs',
-    appId: '1:8746505211:web:2c61bddf8d52e34ed9315e',
-    messagingSenderId: '8746505211',
-    projectId: 'beerpong-companion',
-    authDomain: 'beerpong-companion.firebaseapp.com',
-    storageBucket: 'beerpong-companion.appspot.com',
-    measurementId: 'G-QHX1EB6K97',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyD3RverPf0L3m8hgv5q_xZeJXqSM4YjgEI',
-    appId: '1:8746505211:android:f902a6477023436ed9315e',
+    appId: '1:8746505211:android:714b104c389f805fd9315e',
     messagingSenderId: '8746505211',
     projectId: 'beerpong-companion',
     storageBucket: 'beerpong-companion.appspot.com',
@@ -60,29 +38,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCLwMud47v8KKd7PNXUS4O3xp31SqycBNA',
-    appId: '1:8746505211:ios:992005a460dc0e84d9315e',
+    appId: '1:8746505211:ios:6ebd59b362609a3cd9315e',
     messagingSenderId: '8746505211',
     projectId: 'beerpong-companion',
     storageBucket: 'beerpong-companion.firebasestorage.app',
     iosBundleId: 'com.tecbreak.beerpongcompanion',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCLwMud47v8KKd7PNXUS4O3xp31SqycBNA',
-    appId: '1:8746505211:ios:992005a460dc0e84d9315e',
-    messagingSenderId: '8746505211',
-    projectId: 'beerpong-companion',
-    storageBucket: 'beerpong-companion.firebasestorage.app',
-    iosBundleId: 'com.tecbreak.beerpongcompanion',
-  );
-
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBZwJl6lVPx9Vg6JlLcRJDFQ76wXoc4CRs',
-    appId: '1:8746505211:web:7db62eb5f71fb21dd9315e',
-    messagingSenderId: '8746505211',
-    projectId: 'beerpong-companion',
-    authDomain: 'beerpong-companion.firebaseapp.com',
-    storageBucket: 'beerpong-companion.appspot.com',
-    measurementId: 'G-3KRJYC9SJG',
   );
 }
