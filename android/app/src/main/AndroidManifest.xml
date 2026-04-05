@@ -8,7 +8,7 @@
     <application
         android:label="BeerPong"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/ic_launcher">
 
         <!-- FCM: default channel for background/terminated notification messages -->
         <meta-data
