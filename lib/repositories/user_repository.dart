@@ -48,18 +48,42 @@ class UserRepository {
     }
   }
 
+  Future<void> deleteAccount(String userId, String? usernameLower) async {
+    try {
+      final batch = _db.batch();
+      batch.delete(_db.collection('users').doc(userId));
+      if (usernameLower != null && usernameLower.isNotEmpty) {
+        batch.delete(_db.collection('usernames').doc(usernameLower));
+      }
+      await batch.commit();
+    } catch (e) {
+      AppLogger.error('Error deleting account', e);
+      rethrow;
+    }
+  }
+
   Future<void> setActiveGameId(String userId, String gameId) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .update({'activeGameId': gameId});
+    try {
+      await _db
+          .collection('users')
+          .doc(userId)
+          .update({'activeGameId': gameId});
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') return;
+      rethrow;
+    }
   }
 
   Future<void> clearActiveGameId(String userId) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .update({'activeGameId': FieldValue.delete()});
+    try {
+      await _db
+          .collection('users')
+          .doc(userId)
+          .update({'activeGameId': FieldValue.delete()});
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') return;
+      rethrow;
+    }
   }
 
   /// Sets a single equip field (e.g. 'activeCupSkin') to [itemId].
@@ -69,9 +93,14 @@ class UserRepository {
     required String field,
     required String? itemId,
   }) async {
-    await _db.collection('users').doc(userId).update({
-      field: itemId ?? FieldValue.delete(),
-    });
+    try {
+      await _db.collection('users').doc(userId).update({
+        field: itemId ?? FieldValue.delete(),
+      });
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') return;
+      rethrow;
+    }
   }
 
   User _userFromDoc(DocumentSnapshot doc) {
@@ -222,9 +251,14 @@ class UserRepository {
     required String userId,
     required int amount,
   }) async {
-    await _db.collection('users').doc(userId).update({
-      'stars': FieldValue.increment(amount),
-    });
+    try {
+      await _db.collection('users').doc(userId).update({
+        'stars': FieldValue.increment(amount),
+      });
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') return;
+      rethrow;
+    }
   }
 
   /// Prefix-searches users by lowercase username.

@@ -89,7 +89,12 @@ class GameRepository {
     }
 
     if (updates.isEmpty) return;
-    await _db.collection('games').doc(gameId).update(updates);
+    try {
+      await _db.collection('games').doc(gameId).update(updates);
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') return;
+      rethrow;
+    }
   }
 
   Stream<DocumentSnapshot> getGameDocStream(String gameId) {
