@@ -41,6 +41,7 @@ class GameController extends ChangeNotifier {
 
   bool bounceShotActive = false;
   Player? currentBounceShooter;
+  bool ballsBackBonusRound = false;
 
   // Gradient animation state used by the player-name cards.
   Alignment beginAlignment = Alignment.topLeft;
@@ -191,7 +192,9 @@ class GameController extends ChangeNotifier {
   }
 
   void checkBallsBack(BuildContext ctx) {
+    if (ballsBackBonusRound) return;
     if (currentTeam.ballsBack()) {
+      ballsBackBonusRound = true;
       // Remove cups hit this round immediately so they cannot be tapped or
       // trigger bomb detection during the Balls Back second round of throws.
       for (final cup in currentTeam.cups) {
@@ -236,6 +239,8 @@ class GameController extends ChangeNotifier {
       bounceShotActive = false;
       currentBounceShooter = null;
     }
+
+    ballsBackBonusRound = false;
 
     // A team always throws 2 balls per round. With 1 active player they
     // take both throws; with 2 active players each takes one.
