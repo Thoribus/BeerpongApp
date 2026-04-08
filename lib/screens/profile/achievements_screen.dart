@@ -412,7 +412,8 @@ class _AchievementDetailDialog extends StatelessWidget {
           ),
         ],
       ),
-      content: Column(
+      content: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -482,6 +483,7 @@ class _AchievementDetailDialog extends StatelessWidget {
             ),
           ],
         ],
+      ),
       ),
       actions: [
         TextButton(

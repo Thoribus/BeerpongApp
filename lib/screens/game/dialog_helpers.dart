@@ -204,13 +204,13 @@ class DialogHelpers {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20.0),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          const Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10.0,
+            runSpacing: 10.0,
             children: [
               Icon(Icons.scatter_plot_outlined, size: 50.0, color: Colors.red),
-              SizedBox(width: 10.0),
               Icon(Icons.arrow_forward_outlined, size: 50.0, color: Colors.red),
-              SizedBox(width: 10.0),
               Icon(Icons.workspaces_outlined, size: 50.0, color: Colors.red),
             ],
           ),
@@ -245,11 +245,11 @@ class DialogHelpers {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20.0),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          const Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10.0,
             children: [
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.red),
-              SizedBox(width: 10.0),
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.green),
             ],
           ),
@@ -327,11 +327,11 @@ class DialogHelpers {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20.0),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          const Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 10.0,
             children: [
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.green),
-              SizedBox(width: 10.0),
               Icon(Icons.circle_outlined, size: 50.0, color: Colors.green),
             ],
           ),

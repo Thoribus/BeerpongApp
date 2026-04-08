@@ -493,9 +493,11 @@ class StatisticsTable extends StatelessWidget {
         return AlertDialog(
           backgroundColor: AppColors.of(ctx).surface,
           title: Text(attribute, style: TextStyle(color: AppColors.of(ctx).onBackground)),
-          content: SizedBox(
-            height: 300,
-            width: 400,
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(ctx).size.height * 0.4,
+              maxWidth: 400,
+            ),
             child: LineChart(
               LineChartData(
                 borderData: FlBorderData(show: true),
