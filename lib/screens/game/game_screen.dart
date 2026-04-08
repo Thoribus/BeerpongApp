@@ -145,12 +145,19 @@ class GameScreenState extends State<GameScreen> {
 
   Future<void> handleIslandShot(int cupIndex) async {
     Player? selected;
-    await DialogHelpers.showSelectionDialog(
-      context,
-      context.loc.gameWhoMadeIslandShot,
-      _ctrl.currentTeam.currentPlayers,
-      (player) => selected = player,
-    );
+    // Show only current players so the user can pick who made the shot.
+    // If there's only one current player, auto-select them.
+    final candidates = _ctrl.currentTeam.currentPlayers;
+    if (candidates.length == 1) {
+      selected = candidates.first;
+    } else {
+      await DialogHelpers.showSelectionDialog(
+        context,
+        context.loc.gameWhoMadeIslandShot,
+        candidates,
+        (player) => selected = player,
+      );
+    }
     if (selected == null || !mounted) return;
 
     final player = selected!;
@@ -176,6 +183,8 @@ class GameScreenState extends State<GameScreen> {
       }
     } else {
       // Someone else hit the island cup — treat as a normal hit.
+      _ctrl.toggleIslandCups();
+      _ctrl.currentIslandShooter = null;
       _ctrl.incrementPlayerScore(player);
       _ctrl.addCupToPlayer(player, cupIndex);
       _ctrl.incrementPlayerHitThisRound(player);
