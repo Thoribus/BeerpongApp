@@ -8,8 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 /// Call [preload] once at app startup and after every shown ad.
 /// Call [showRewardedAd] when the user initiates the "Watch a video" action.
 ///
-/// Ad unit IDs are Google's official test IDs during development.
-/// Replace with real unit IDs (from the AdMob console) before production.
+/// Ad unit IDs below are production IDs from the AdMob console.
 class AdService {
   static final instance = AdService._();
   AdService._();
@@ -17,7 +16,7 @@ class AdService {
   RewardedAd? _rewardedAd;
   bool _isLoading = false;
 
-  // Official Google test ad unit IDs — swap before production.
+  // Production ad unit IDs from AdMob console.
   static const _androidAdUnitId = 'ca-app-pub-6815089400235059/1626702859';
   static const _iosAdUnitId = 'ca-app-pub-6815089400235059/5804086160';
 

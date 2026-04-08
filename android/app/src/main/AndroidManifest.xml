@@ -15,7 +15,7 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="beerpong_invitations" />
 
-        <!-- AdMob: App ID (test ID — replace before production) -->
+        <!-- AdMob: Production App ID -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-6815089400235059~3766047934"/>
