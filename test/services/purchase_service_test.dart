@@ -5,15 +5,15 @@ void main() {
   group('PurchaseService — static helpers', () {
     test('starsForProduct returns correct amount for each product', () {
       expect(
-        PurchaseService.starsForProduct('com.tecbreak.beerpongapp.stars_200'),
+        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars_200'),
         200,
       );
       expect(
-        PurchaseService.starsForProduct('com.tecbreak.beerpongapp.stars_600'),
+        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars_600'),
         600,
       );
       expect(
-        PurchaseService.starsForProduct('com.tecbreak.beerpongapp.stars_1500'),
+        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars_1500'),
         1500,
       );
     });
@@ -26,9 +26,9 @@ void main() {
       expect(
         PurchaseService.productIds,
         containsAll([
-          'com.tecbreak.beerpongapp.stars_200',
-          'com.tecbreak.beerpongapp.stars_600',
-          'com.tecbreak.beerpongapp.stars_1500',
+          'com.tecbreak.beerpongcompanion.stars_200',
+          'com.tecbreak.beerpongcompanion.stars_600',
+          'com.tecbreak.beerpongcompanion.stars_1500',
         ]),
       );
     });

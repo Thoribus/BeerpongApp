@@ -206,13 +206,13 @@ exports.onGameStarted = onDocumentUpdated(
 
 /** Star amounts per product ID. Must match the Flutter PurchaseService. */
 const STAR_AMOUNTS = {
-  "com.tecbreak.beerpongapp.stars_200": 200,
-  "com.tecbreak.beerpongapp.stars_600": 600,
-  "com.tecbreak.beerpongapp.stars_1500": 1500,
-  "com.tecbreak.beerpongapp.supporter_pack": 300, // bonus stars included with pack
+  "com.tecbreak.beerpongcompanion.stars_200": 200,
+  "com.tecbreak.beerpongcompanion.stars_600": 600,
+  "com.tecbreak.beerpongcompanion.stars_1500": 1500,
+  "com.tecbreak.beerpongcompanion.supporter_pack": 300, // bonus stars included with pack
 };
 
-const SUPPORTER_PACK_ID = "com.tecbreak.beerpongapp.supporter_pack";
+const SUPPORTER_PACK_ID = "com.tecbreak.beerpongcompanion.supporter_pack";
 
 /**
  * Validates an Apple App Store receipt by posting to Apple's verifyReceipt endpoint.
@@ -279,7 +279,7 @@ async function validateGooglePurchase(purchaseToken, productId) {
     });
     const androidPublisher = google.androidpublisher({version: "v3", auth});
     const result = await androidPublisher.purchases.products.get({
-      packageName: "com.tecbreak.beerpongapp",
+      packageName: "com.tecbreak.beerpongcompanion",
       productId,
       token: purchaseToken,
     });
