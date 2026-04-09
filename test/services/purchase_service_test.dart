@@ -5,15 +5,15 @@ void main() {
   group('PurchaseService — static helpers', () {
     test('starsForProduct returns correct amount for each product', () {
       expect(
-        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars-200'),
+        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars_200'),
         200,
       );
       expect(
-        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars-600'),
+        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars_600'),
         600,
       );
       expect(
-        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars-1500'),
+        PurchaseService.starsForProduct('com.tecbreak.beerpongcompanion.stars_1500'),
         1500,
       );
     });
@@ -26,9 +26,9 @@ void main() {
       expect(
         PurchaseService.productIds,
         containsAll([
-          'com.tecbreak.beerpongcompanion.stars-200',
-          'com.tecbreak.beerpongcompanion.stars-600',
-          'com.tecbreak.beerpongcompanion.stars-1500',
+          'com.tecbreak.beerpongcompanion.stars_200',
+          'com.tecbreak.beerpongcompanion.stars_600',
+          'com.tecbreak.beerpongcompanion.stars_1500',
         ]),
       );
     });
@@ -47,8 +47,8 @@ void main() {
 
   group('PurchaseEvent types', () {
     test('PurchaseSuccess carries productId and starsAwarded', () {
-      final event = PurchaseSuccess(productId: 'stars-200', starsAwarded: 200);
-      expect(event.productId, 'stars-200');
+      final event = PurchaseSuccess(productId: 'stars_200', starsAwarded: 200);
+      expect(event.productId, 'stars_200');
       expect(event.starsAwarded, 200);
     });
 

@@ -38,19 +38,19 @@ class PurchaseService extends ChangeNotifier {
 
   // Product IDs — must match App Store Connect and Google Play Console.
   static const Set<String> productIds = {
-    'com.tecbreak.beerpongcompanion.stars-200',
-    'com.tecbreak.beerpongcompanion.stars-600',
-    'com.tecbreak.beerpongcompanion.stars-1500',
-    'com.tecbreak.beerpongcompanion.supporter-pack',
+    'com.tecbreak.beerpongcompanion.stars_200',
+    'com.tecbreak.beerpongcompanion.stars_600',
+    'com.tecbreak.beerpongcompanion.stars_1500',
+    'com.tecbreak.beerpongcompanion.supporter_pack',
   };
 
-  static const String supporterPackId = 'com.tecbreak.beerpongcompanion.supporter-pack';
+  static const String supporterPackId = 'com.tecbreak.beerpongcompanion.supporter_pack';
 
   static const Map<String, int> _starAmounts = {
-    'com.tecbreak.beerpongcompanion.stars-200': 200,
-    'com.tecbreak.beerpongcompanion.stars-600': 600,
-    'com.tecbreak.beerpongcompanion.stars-1500': 1500,
-    'com.tecbreak.beerpongcompanion.supporter-pack': 300,
+    'com.tecbreak.beerpongcompanion.stars_200': 200,
+    'com.tecbreak.beerpongcompanion.stars_600': 600,
+    'com.tecbreak.beerpongcompanion.stars_1500': 1500,
+    'com.tecbreak.beerpongcompanion.supporter_pack': 300,
   };
 
   final _eventController = StreamController<PurchaseEvent>.broadcast();

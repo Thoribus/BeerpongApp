@@ -206,13 +206,13 @@ exports.onGameStarted = onDocumentUpdated(
 
 /** Star amounts per product ID. Must match the Flutter PurchaseService. */
 const STAR_AMOUNTS = {
-  "com.tecbreak.beerpongcompanion.stars-200": 200,
-  "com.tecbreak.beerpongcompanion.stars-600": 600,
-  "com.tecbreak.beerpongcompanion.stars-1500": 1500,
-  "com.tecbreak.beerpongcompanion.supporter-pack": 300, // bonus stars included with pack
+  "com.tecbreak.beerpongcompanion.stars_200": 200,
+  "com.tecbreak.beerpongcompanion.stars_600": 600,
+  "com.tecbreak.beerpongcompanion.stars_1500": 1500,
+  "com.tecbreak.beerpongcompanion.supporter_pack": 300, // bonus stars included with pack
 };
 
-const SUPPORTER_PACK_ID = "com.tecbreak.beerpongcompanion.supporter-pack";
+const SUPPORTER_PACK_ID = "com.tecbreak.beerpongcompanion.supporter_pack";
 
 /**
  * Validates an Apple App Store receipt by posting to Apple's verifyReceipt endpoint.
