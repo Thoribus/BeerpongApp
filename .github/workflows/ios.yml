@@ -1,16 +1,16 @@
-name: Build and Deploy to TestFlight
+name: Deploy to TestFlight
 
 on:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: write
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
 
 jobs:
-  build:
+  deploy:
+    name: Build & Deploy iOS
     runs-on: macos-latest
+    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
     - uses: actions/checkout@v4
@@ -23,17 +23,13 @@ jobs:
     - name: Flutter Pub Get
       run: flutter pub get
 
-    - name: Run Tests
-      run: flutter test
-
-    - name: Read version from pubspec.yaml
+    - name: Read version
       id: version
       run: |
         VERSION_NAME=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
-        BUILD_NUMBER=${{ github.run_number }}
+        BUILD_NUMBER=${{ github.event.workflow_run.run_number }}
         echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
         echo "build=$BUILD_NUMBER" >> $GITHUB_OUTPUT
-        echo "full=${VERSION_NAME}+${BUILD_NUMBER}" >> $GITHUB_OUTPUT
 
     - name: Install Apple Distribution Certificate
       env:
@@ -64,7 +60,6 @@ jobs:
         echo -n "$APPLE_PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
-        # Extract UUID so xcodebuild can reference it by name
         UUID=$(security cms -D -i "$PP_PATH" | plutil -extract UUID raw -)
         echo "uuid=$UUID" >> $GITHUB_OUTPUT
         cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/${UUID}.mobileprovision
@@ -91,9 +86,8 @@ jobs:
           "PROVISIONING_PROFILE=$PROFILE_UUID" \
           CODE_SIGN_IDENTITY="Apple Distribution" \
           OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/app-signing.keychain-db" \
-          IPHONEOS_DEPLOYMENT_TARGET=13.0
+          IPHONEOS_DEPLOYMENT_TARGET=15.0
 
-        # Generate ExportOptions.plist with manual signing
         cat > $RUNNER_TEMP/ExportOptions.plist << EOF
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -141,22 +135,8 @@ jobs:
           --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
           --private-key "$KEY_PATH"
 
-    - name: Clean up p8 key
+    - name: Clean up
       if: always()
-      run: rm -f "$RUNNER_TEMP/AuthKey.p8"
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ios-v${{ steps.version.outputs.full }}
-        name: iOS v${{ steps.version.outputs.name }} (build ${{ steps.version.outputs.build }})
-        body: |
-          **iOS release** — v${{ steps.version.outputs.name }} (build ${{ steps.version.outputs.build }})
-          Deployed to TestFlight. Available to testers shortly.
-        files: ${{ runner.temp }}/ipa/*.ipa
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Clean up keychain
-      if: always()
-      run: security delete-keychain $RUNNER_TEMP/app-signing.keychain-db 2>/dev/null || true
+      run: |
+        rm -f "$RUNNER_TEMP/AuthKey.p8"
+        security delete-keychain $RUNNER_TEMP/app-signing.keychain-db 2>/dev/null || true
