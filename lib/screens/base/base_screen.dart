@@ -243,7 +243,6 @@ class BaseScreenState extends State<BaseScreen> {
       ),
       body: widget.shell,
       bottomNavigationBar: Container(
-        height: 60,
         decoration: BoxDecoration(
           color: c.navBar,
           borderRadius: const BorderRadius.only(
@@ -251,43 +250,49 @@ class BaseScreenState extends State<BaseScreen> {
             topRight: Radius.circular(28),
           ),
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final itemWidth = constraints.maxWidth / 5;
-            const indicatorWidth = 42.0;
-            final indicatorLeft =
-                selectedIndex * itemWidth + (itemWidth - indicatorWidth) / 2;
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 60,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final itemWidth = constraints.maxWidth / 5;
+                const indicatorWidth = 42.0;
+                final indicatorLeft =
+                    selectedIndex * itemWidth + (itemWidth - indicatorWidth) / 2;
 
-            return Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  top: 0,
-                  left: indicatorLeft,
-                  child: Container(
-                    width: indicatorWidth,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                return Stack(
+                  alignment: Alignment.topCenter,
                   children: [
-                    _buildNavItem(Icons.shopping_bag_outlined, context.loc.navShop, 0, selectedIndex),
-                    _buildNavItem(Icons.favorite_outline, context.loc.navFriends, 1, selectedIndex),
-                    _buildNavItem(Icons.sports_bar_outlined, context.loc.navHome, 2, selectedIndex),
-                    _buildNavItem(Icons.workspaces_outlined, context.loc.navGames, 3, selectedIndex),
-                    _buildNavItem(Icons.account_circle_outlined, context.loc.navProfile, 4, selectedIndex),
+                    AnimatedPositioned(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      top: 0,
+                      left: indicatorLeft,
+                      child: Container(
+                        width: indicatorWidth,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildNavItem(Icons.shopping_bag_outlined, context.loc.navShop, 0, selectedIndex),
+                        _buildNavItem(Icons.favorite_outline, context.loc.navFriends, 1, selectedIndex),
+                        _buildNavItem(Icons.sports_bar_outlined, context.loc.navHome, 2, selectedIndex),
+                        _buildNavItem(Icons.workspaces_outlined, context.loc.navGames, 3, selectedIndex),
+                        _buildNavItem(Icons.account_circle_outlined, context.loc.navProfile, 4, selectedIndex),
+                      ],
+                    ),
                   ],
-                ),
-              ],
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
