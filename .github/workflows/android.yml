@@ -31,6 +31,15 @@ jobs:
         echo "name=$VERSION_NAME" >> $GITHUB_OUTPUT
         echo "build=$BUILD_NUMBER" >> $GITHUB_OUTPUT
 
+    - name: Setup keystore
+      run: |
+        echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 -d > android/app/keystore.jks
+        printf 'storeFile=keystore.jks\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+          '${{ secrets.ANDROID_KEYSTORE_PASSWORD }}' \
+          '${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}' \
+          '${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}' \
+          > android/key.properties
+
     - name: Build AAB
       run: flutter build appbundle --release --no-tree-shake-icons
 
@@ -38,19 +47,8 @@ jobs:
       run: |
         SYMBOLS_DIR=build/app/outputs/native-debug-symbols
         mkdir -p "$SYMBOLS_DIR"
-        NDK_DIR=$(find build/app/intermediates -name "*.so" -path "*/release/*" -exec dirname {} \; | sort -u | head -1 | xargs dirname)
         cd build/app/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib
         zip -r "$GITHUB_WORKSPACE/$SYMBOLS_DIR/native-debug-symbols.zip" . || true
-
-    - name: Sign App Bundle
-      uses: r0adkll/sign-android-release@v1
-      id: sign_app
-      with:
-        releaseDirectory: build/app/outputs/bundle/release/
-        signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-        alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
-        keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
     - name: Deploy to Play Store
       uses: r0adkll/upload-google-play@v1.0.18
@@ -58,7 +56,7 @@ jobs:
         serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         packageName: com.tecbreak.beerpongcompanion
         releaseName: ${{ steps.version.outputs.name }}
-        releaseFiles: ${{ steps.sign_app.outputs.signedReleaseFile }}
+        releaseFiles: build/app/outputs/bundle/release/app-release.aab
         mappingFile: ./build/app/outputs/mapping/release/mapping.txt
         debugSymbols: ./build/app/outputs/native-debug-symbols/native-debug-symbols.zip
         track: internal
